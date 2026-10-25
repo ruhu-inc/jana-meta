@@ -1,0 +1,97 @@
+<div class="my-2 rounded-card border border-line p-3" role="group" aria-label="A reaction rate simulation at 298 K with a reactant concentration of 1 mol per cubic decimetre: the rate constant is 0.00911 per second and the reaction is all but over after 1520 seconds." data-kind="rates_sim" data-visual-id="vis_WRD5HX1D5EP56Q836ABC7JGKVF">
+<svg viewBox="0 0 480 260" class="w-full" role="img" aria-label="Reacting particles in a box: circles are the reactant and squares the product, with a bar for the product made so far">
+<rect x="30" y="30" width="300" height="200" fill="#F7F7F8" stroke="#121319" stroke-width="1.5">
+</rect>
+<rect x="48.148769527065745" y="136.21229948724124" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="232.3693911992591" y="147.7354792018814" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="126.74871340750192" y="75.42412869507339" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="60.12871090147962" y="138.5219021886138" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="311.0135300950357" y="153.89758634095077" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="170.1808795878963" y="105.5621015150454" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="58.823663899172104" y="34.71427653913659" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="295.21004533251414" y="189.58064688215015" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="220.65730420048786" y="89.22125041065291" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="185.94962293488757" y="194.63767518096643" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="206.24492873582238" y="134.46918581449017" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="227.89153218194872" y="111.97066161055044" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="139.22865138030926" y="206.48599478727488" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="283.2291075853807" y="77.89683910867483" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="301.04657811196904" y="58.104329443905556" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<rect x="42.77139265128896" y="68.09460500030619" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1" data-sim-particle="product">
+</rect>
+<g data-sim-progress="true">
+<rect x="360" y="30" width="24" height="200" fill="#F7F7F8" stroke="#121319" stroke-width="1.5">
+</rect>
+<rect x="361" y="30.000200000000007" width="22" height="199.9998" fill="#997777">
+</rect>
+<text x="372" y="248" text-anchor="middle" font-size="12" fill="#40414A">Product</text>
+</g>
+<g font-size="12" fill="#40414A">
+<circle cx="410" cy="60" r="6" fill="#6677ff" stroke="#121319" stroke-width="1">
+</circle>
+<text x="422" y="64">Reactant</text>
+<rect x="404" y="84" width="12" height="12" fill="#997777" stroke="#121319" stroke-width="1">
+</rect>
+<text x="422" y="94">Product</text>
+</g>
+</svg>
+<div class="mt-3 grid gap-2">
+<label for="vis_WRD5HX1D5EP56Q836ABC7JGKVF-temperature" class="grid grid-cols-[10rem_1fr_6rem] items-center gap-2 text-ui">
+<span>Temperature (K)</span>
+<input id="vis_WRD5HX1D5EP56Q836ABC7JGKVF-temperature" type="range" class="min-h-11" min="273" max="373" step="1" aria-valuetext="298 K" data-part="ctrl.temperature" value="298"/>
+<output for="vis_WRD5HX1D5EP56Q836ABC7JGKVF-temperature" class="tabular-nums">298 K</output>
+</label>
+<label for="vis_WRD5HX1D5EP56Q836ABC7JGKVF-concentration" class="grid grid-cols-[10rem_1fr_6rem] items-center gap-2 text-ui">
+<span>Concentration (mol/dm³)</span>
+<input id="vis_WRD5HX1D5EP56Q836ABC7JGKVF-concentration" type="range" class="min-h-11" min="0.1" max="2" step="0.1" aria-valuetext="1 mol/dm³" data-part="ctrl.concentration" value="1"/>
+<output for="vis_WRD5HX1D5EP56Q836ABC7JGKVF-concentration" class="tabular-nums">1 mol/dm³</output>
+</label>
+<label for="vis_WRD5HX1D5EP56Q836ABC7JGKVF-catalyst" class="flex min-h-11 items-center gap-2 text-ui">
+<input id="vis_WRD5HX1D5EP56Q836ABC7JGKVF-catalyst" type="checkbox" data-part="ctrl.catalyst"/>Catalyst</label>
+</div>
+<dl class="mt-3 grid grid-cols-2 gap-x-4 text-ui">
+<div class="contents">
+<dt class="text-muted">Time <span class="text-meta">(3 s.f.)</span>
+</dt>
+<dd class="tabular-nums">1520 s</dd>
+</div>
+<div class="contents">
+<dt class="text-muted">Rate constant <span class="text-meta">(3 s.f.)</span>
+</dt>
+<dd class="tabular-nums" data-part="out.rate_constant" tabindex="0">0.00911 /s</dd>
+</div>
+<div class="contents">
+<dt class="text-muted">Rate <span class="text-meta">(3 s.f.)</span>
+</dt>
+<dd class="tabular-nums" data-part="out.rate" tabindex="0">9.11e-9 mol/dm³/s</dd>
+</div>
+<div class="contents">
+<dt class="text-muted">Product <span class="text-meta">(3 s.f.)</span>
+</dt>
+<dd class="tabular-nums" data-part="out.product" tabindex="0">1.00 mol/dm³</dd>
+</div>
+</dl>
+<p class="sr-only" aria-live="polite" data-sim-live="true">
+</p>
+<div class="mt-3 flex flex-wrap gap-2">
+<button type="button" class="rounded-control border border-line px-3 py-1 text-ui" aria-pressed="false">Play</button>
+<button type="button" class="rounded-control border border-line px-3 py-1 text-ui">Reset</button>
+<button type="button" class="rounded-control border border-line px-3 py-1 text-ui">Record this reading</button>
+<button type="button" class="rounded-control border border-line px-3 py-1 text-ui" aria-pressed="false">Show readings as a table</button>
+</div>
+</div>
