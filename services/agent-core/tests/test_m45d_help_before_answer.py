@@ -164,3 +164,9 @@ def test_uxs68_title_is_six_words_with_no_value() -> None:
     assert chat_title("**Why** does ice float on water when it is solid?") == "Why does ice float on water"
     assert chat_title("\\(2x + 3 = 7\\)") == ""
     assert chat_title("\n\n  Balance  \\(H_2 + O_2\\)\nsecond line") == "Balance"
+
+
+def test_cur13_text_latex_keeps_maths_that_starts_with_a_number_and_prices_as_words() -> None:
+    assert text_latex("Work out $5 - (-4) \\times 2$.") == "\\text{Work out }5 - (-4) \\times 2\\text{.}"
+    assert text_latex("($5$, k)") == "\\text{(}5\\text{, k)}"
+    assert text_latex("It costs $210 and $35.") == "\\text{It costs $210 and $35.}"
