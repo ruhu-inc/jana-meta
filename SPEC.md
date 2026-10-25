@@ -1,139 +1,322 @@
-# jana-meta — stack specification (Meta Global AI Developer Hackathon)
+# jana-meta — specification for moving the fork onto Meta models
 
-Status: **spec only** (2026-10-20). No code is written until Jana's product is finished on its own stack (owner's rule)
-and the hackathon's Official Rules are read on Oct 26. Source research:
-`../jana-hackathon-research/meta-hackathon-brief.md`. This spec is separate from Jana's product specification
-(`../jana/docs`) and changes nothing in it.
+Status: **approved to build** (owner, 2026-10-26). This replaces the spec-only version of 2026-10-20 (kept in commit
+7cf6c6e and in `../jana-meta-spec-backup`). The codebase is a history-free copy of jana-nebius at c4354de. This spec
+says what changes, in which files, and what "done" means. It changes nothing in Jana's product (`../jana`).
 
-## 1. What it is
+Sources: the research brief `../jana-hackathon-research/meta-hackathon-brief.md` (models, prices, limits as of
+2026-10-20), the event page and Official Rules (read 2026-10-25), and a file-level map of this repository.
+Every Meta API detail marked **(verify)** must be confirmed with a real key on day 1 before code depends on it.
+
+## 1. What we are building
 
 **Jana for adult learners, on Meta.** A voice-first AI tutor for learners **aged 18 and over** preparing for O level
-exams: WAEC and NECO private candidates (GCE series), JAMB/UTME re-takers, NABTEB and adult-education students, and
-university first-years revising maths and physics. It keeps Jana's teaching rules: it never simply gives homework
-answers, it checks every number with tools before saying it, and it labels anything it could not check.
+exams (WAEC/NECO private candidates, JAMB re-takers, adult-education students, first-year university revision). It
+keeps Jana's teaching rules: it never just hands over an answer, every number is checked by tools before it is said,
+and anything it could not check is labelled.
 
-Event: Meta Global AI Developer Hackathon (remote, Oct 26 – Nov 4, 2026), **Startup track**, theme **"Build for Your
-World"**. The owner's application named Jana and was approved.
+Event: Meta Global AI Developer Hackathon, remote, **Oct 26 12:00 PM – Nov 4 9:00 PM ET**, Startup track, theme
+"Build for Your World". Judging: Impact 30%, Use of Meta AI tooling 25% (beyond a basic integration), Technical
+depth 20%, Demo 25% (works live, holds up, video quality).
 
-## 2. Decisions (owner, 2026-10-20)
+## 2. Decisions
+
+Kept from 2026-10-20: JM-D1 (18+ only), JM-D6 (cascaded voice; every spoken word comes from an accepted engine
+turn), JM-D7 (separate hosting project), JM-D8 (nothing with a non-commercial licence goes back into Jana).
 
 | # | Decision |
 |---|---|
-| JM-D1 | Audience is **18+ only**, because the Meta Model API terms (§10.1) forbid end users and products aimed at under-18s. Jana's under-18 product stays on its own stack (Gemini, D7). |
-| JM-D2 | **Thinking stays on Meta**: every tutoring reply is produced by Meta's **Muse Spark** inside Jana's engine. |
-| JM-D3 | **Hearing on Meta**: speech to text is Meta's **Muse Voice Transcribe** (realtime). |
-| JM-D4 | **Speaking on NVIDIA**: text to speech is **NVIDIA Magpie TTS** (`nvidia/magpie-tts-multilingual`, voice `Magpie-Multilingual.EN-US.Aria.Neutral`). Development uses the API catalog's hosted trial (gRPC to `grpc.nvcf.nvidia.com:443`, `SynthesizeOnline`, one call per accepted sentence). Because the trial terms are evaluation-only and forbid distributing generated audio, the **judged demo and video use self-hosted open weights** (`nvidia/magpie_tts_multilingual_357m`, NVIDIA Open Model License, commercial use) on a Baseten or Modal GPU, unless NVIDIA confirms hackathon use is covered (owner decides on Oct 26). Meta has no text to speech; a third-party voice is acceptable because the thinking stays on Meta. |
-| JM-D5 | **Offline on Meta open weights: Muse Glimmer 30B** (Apache-2.0, official GGUF `Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf`, 16.8 GB) through llama-server, on a **32 GB-or-larger laptop** for the demo (owner, 2026-10-21). In the research benchmark it had the best structured output and tool use. Llama 3.1 8B is **not** used in the demo: it fits 8 GB laptops, but in the engine it verified few plans (15/80 numeric WAEC items correct). It appears only as a "runs on 8 GB, lower quality" note. Kokoro remains the offline voice (CPU). |
-| JM-D6 | **Cascaded voice, not speech-to-speech**: no Meta model does realtime speech in and out, and a model that answers for itself would bypass the engine's checks. Every spoken word comes from an accepted engine turn. |
-| JM-D7 | Hosted in a **separate GCP project, `jana-meta`** (proposed id `jana-meta-512005`; to be created with the owner's OK and billing account). |
-| JM-D8 | **Separate from the product**: a `jana-meta` fork/branch of Jana if the rules allow existing code, otherwise a fresh repo built from Jana's engine design. Nothing with a non-commercial licence (Meta MMS, Seamless) is merged back into Jana. |
+| JM-D9 | **Online reasoning is Muse Spark** for every engine role (Coach, Diagnoser, Solver, Checker, Reflector, auxiliary roles) and for Study and Ask generation. No other cloud language model is configured. |
+| JM-D10 | **Online vision is Muse Spark + SAM 3.1.** Muse Spark reads the photo (what the question is, which regions matter); SAM 3.1 turns those regions into exact masks so Jana can crop for a second, sharper read and point at the exact place on the learner's own photo. |
+| JM-D11 | **Local inference is Muse Glimmer 30B** (Apache-2.0, official GGUF Q4_K_M, ~16.8 GB) under the existing llama-server supervisor, on 32 GB+ machines. Smaller machines run online only. No non-Meta local model ships in the entry. |
+| JM-D12 | **Speech to text is Meta.** Online: Muse Voice Transcribe (realtime). Offline: Meta **Omnilingual ASR** (Apache-2.0) if it passes the latency gate in §6.3; otherwise faster-whisper stays as the offline fallback. |
+| JM-D13 | **Text to speech is not Meta**, because Meta has no commercially usable TTS (MMS-TTS is CC-BY-NC and not streaming). Online: **NVIDIA Magpie TTS** (self-hosted open weights for anything judges see; §6.4). Offline: **Kokoro-82M** (Apache-2.0, already in the speech pack). |
+| JM-D14 | **Removed:** Nebius Token Factory, all Nemotron models, Tavily web search, and the Google/Gemini cloud stack (Gemini models, Gemini Live, Chirp STT/TTS) from configuration and from the submission. |
+| JM-D15 | **Adult product:** every profile is `18_plus`; guardian consent, parent summaries, family plan and under-18 Ask policies are hidden or removed. Sign-up asks for date of birth and blocks under-18s. |
+| JM-D16 | **Muse Spark Standard mode only**, never Contributor mode (Meta trains on Contributor data). Request zero data retention for the project account. Muse Code, if used, must not run in Contributor mode on this repository. |
+| JM-D17 | **Submission scope:** the organisers receive a perpetual licence to whatever is submitted (Official Rules, "Hackathon Submission"). Only what the entry needs is submitted (§9). The owner signs off on the scope before submission. |
 
 ## 3. Architecture
 
 ```
-                         ┌──────────────── GCP project jana-meta ────────────────┐
- Browser / desktop app   │                                                       │
- ┌───────────────────┐   │  voice gateway (Cloud Run, WebSocket)                 │
- │ mic → Silero VAD  │──►│   ├─► Meta Muse Voice Transcribe (realtime WS) ──┐    │
- │ (barge-in)        │   │   │                                              ▼    │
- │ speaker ◄─────────│◄──│   │   Jana engine (agent-core, Cloud Run)             │
- └───────────────────┘   │   │     input guard → Diagnoser → Solver + tools      │
-                         │   │     → Checker → Coach → gates → Finalise          │
-                         │   │     model: Meta Muse Spark (api.meta.ai/v1)       │
-                         │   │                     │ accepted say_spoken only    │
-                         │   └─◄ NVIDIA Magpie TTS (API catalog, streaming) ◄────┘
-                         │  Secret Manager: Meta key, NVIDIA key · Firestore: users │
-                         └───────────────────────────────────────────────────────┘
- Offline (laptop, 32 GB+): Jana desktop + llama-server (Muse Glimmer 30B) + faster-whisper + Kokoro
+ Learner (browser demo host or desktop app)
+   mic ─► client VAD (barge-in) ─────────────┐                 photo ─► perception worker (local, sandboxed):
+   speaker ◄─────────────────────────────┐   │                 orientation, face/person screen, crop, deskew,
+                                         │   ▼                 privacy mask, ≤1600 px JPEG
+ ┌──────────── cloud gateway (jana-meta) ┴──────────────────────┐        │
+ │ voice WS: Muse Voice Transcribe (STT) ─► transcript ─────────┼──► Jana engine (agent-core, on device)
+ │           NVIDIA Magpie TTS ◄── accepted say_spoken only ◄───┼─── input guard → Diagnoser → Solver + tools
+ │ chat:     Muse Spark (api.meta.ai/v1) ◄──────────────────────┼─── → Checker → Coach → release gates
+ │ vision:   Muse Spark (read) ⇄ SAM 3.1 (masks) ◄──────────────┼─── PhotoReader (engine/vision.py)
+ │ budget ledger (credits cap) · secrets · no payload logging   │
+ └──────────────────────────────────────────────────────────────┘
+ Offline (32 GB+): llama-server + Muse Glimmer 30B · Omnilingual ASR or faster-whisper · Kokoro · same engine
 ```
 
-### 3.1 Components
+The engine, tools, gates and voice bridge do not change design. Only providers, configuration, speech stages and
+the vision step change.
 
-| Stage | Online (hackathon) | Offline (laptop) | Licence |
+## 4. Online reasoning: Muse Spark (JM-D9)
+
+### 4.1 Model and routing
+
+| Alias (device sends `primary/<alias>`) | Model | Used by | Reasoning |
 |---|---|---|---|
-| Voice activity / barge-in | Silero VAD in the client; Voice Transcribe server endpointing (`speechStart`, `speechEnd`, `speechComplete`) | Silero VAD + Smart Turn v3 | MIT / BSD-2 |
-| Speech to text | **Muse Voice Transcribe 1.0**, `wss://api.meta.ai/v1/asr/realtime`, PCM16 mono 24 or 16 kHz, `ENDPOINTING`, `languageBias: en`, `keywords`: WAEC physics/maths terms | faster-whisper small.en | Meta API ToS / MIT |
-| Tutor engine | Jana agent-core (unchanged design: guards, tools, gates) | same | Jana |
-| Reasoning model | **Muse Spark 1.2** (`muse-spark-1.2`), `json_schema` structured output, `reasoning_effort: low`, Standard mode (never Contributor mode) | Muse Glimmer 30B Q4_K_M (`Reasoning strength: low`; reasoning cannot be turned off) | Meta API ToS / Apache-2.0 |
-| Text to speech | **NVIDIA Magpie TTS**: API-catalog trial in development, self-hosted 357M open weights for the demo; streaming LINEAR_PCM at 22.05 kHz (resampled to the bridge's 24 kHz); sentence by sentence from the accepted `say_spoken`; US English voices only (a Nigerian English voice is future work) | Kokoro-82M (`af_heart`) with Jana's spelling-to-sound fallback | NVIDIA API catalog terms (development use) / Apache-2.0 |
-| Orchestration | Jana's voice bridge (provisional turns, filler, barge-in, heard text) | same, through the local sidecar | Jana |
+| `fast-model` | `muse-spark-1.2` **(verify; prefer 1.3 if it passes §4.4)** | coach, diagnoser, title, input_guard, ask | low |
+| `strong-model` | same model id | solver, checker, reflector, study | solver high, checker medium |
+| `small-model` | removed | — | — |
 
-### 3.2 Adapters jana-meta adds to Jana's engine
+One model serves both aliases; the aliases stay so the router's tiers and `router.yaml` keep working. Muse Wonder is
+not used (preview, about 5× the output price).
 
-1. **Meta provider** (`providers/meta.py`): OpenAI-compatible Chat Completions to `https://api.meta.ai/v1`.
-   - Muse Spark accepts only `tool_choice: "auto"`. The adapter maps `required` to `auto` plus the engine's existing
-     tool nudge, and `none` to *no tools sent* (the cloud path of D123), never `tool_choice: "none"`.
-   - Structured output uses `json_schema` mode (constrained decoding); the router's `tool` structured mode is not
-     offered for this provider.
-   - Reasoning tokens count against `max_tokens`: budgets are raised accordingly and `reasoning_effort: low` is the
-     default for the Coach.
-2. **Voice Transcribe STT stage** in place of the sidecar's faster-whisper, emitting the same Realtime events the
-   bridge already understands (transcript deltas, speech start and stop).
-3. **Magpie TTS stage**: a streaming client to NVIDIA's API catalog that returns 24 kHz PCM16 to the bridge, so the
-   bridge's playback tracking, heard-text and barge-in rules work unchanged.
+### 4.2 Changes
 
-## 4. Safety, age and data
-
-- **Age gate (JM-D1)**: sign-up asks for date of birth and states the service is for 18+; an under-18 date blocks
-  sign-up with a pointer to Jana's free offline app. No "I am 18" checkbox alone. The demo never shows an under-18 user.
-- **Same safeguards as Jana**: input guard and safety screen on every transcript, the engine's gates on every reply
-  (schema, safety, checked numbers, no answer leak), distress templates, honest "not checked" labels.
-- **No training on learner data**: Muse Spark **Standard** mode only (Contributor mode trains on data, ToS §6.2).
-  Request **zero data retention** from Meta for the project account.
-- **Audio**: streamed only, never stored; transcripts kept per learner like typed messages; NVIDIA and Meta keys in
-  Secret Manager, never in the client.
-- **Region**: GCP europe-west2 (London) or europe-west1 (Belgium); confirm Meta API availability for Nigerian users
-  (not on the restricted list; supported list unpublished).
-
-## 5. GCP project `jana-meta`
-
-| Item | Setting |
+| File | Change |
 |---|---|
-| Project | `jana-meta-512005` (pending the owner's OK and billing account) |
-| Region | europe-west1 (GPU availability) or europe-west2 |
-| Services | Cloud Run (engine, voice gateway, web), Artifact Registry, Secret Manager, Cloud Build, Firestore (users, sessions), Cloud Logging (no payload logging) |
-| Secrets | `META_API_KEY`, `NVIDIA_API_KEY` |
-| Cost guard | Budget alert; Cloud Run min instances 0 outside demo windows |
+| `services/cloud-gateway/cloud_gateway/providers/meta.py` (new) | `MetaAdapter(OpenAICompatAdapter)`: base `https://api.meta.ai/v1`, Bearer `meta_api_key`. `prepare_body`: `tool_choice` `"required"` → `"auto"` (Spark accepts only `auto`; the engine's existing tool nudge stays), a named-function `tool_choice` → `"auto"`, `"none"` → send no `tools`; keep `response_format: json_schema` as is (Spark does constrained decoding, so no schema-in-prompt copy like Nebius needed); drop `chat_template_kwargs`; map `reasoning_effort` none → low. Usage: read `reasoning_tokens` and bill them as output. |
+| `cloud_gateway/providers/__init__.py`, `config.py` (`AdapterKind`) | Register `meta`; remove `nebius`. |
+| `cloud_gateway/defaults.toml` | `[slots] primary="meta"`; `[providers.meta]` with the aliases above; prices $1.25 input / $0.15 cached / $4.25 output per 1M tokens **(verify)**. |
+| `cloud_gateway/custody.py`, `secret_scan.py` | `META_API_KEY` environment secret and keychain account `meta_api_key` under service `jana-meta.cloud-gateway`; remove Nebius and Tavily sources and the `tvly-` pattern; add a Meta key pattern. |
+| `services/agent-core/agent_core/router/cloud_models.json` | Two aliases with Spark's context (1M advertised; cap the engine at 131072 to bound cost), max output 16384 (reasoning tokens share the budget), `vision: true`, prices. |
+| `agent_core/router/router.yaml` | Comments and tier lists name Spark; `cloud.send_photos: true` (still gated by the photo notice, §5). |
+| `cloud_gateway/study.py` | Remove the Nebius branches (~507, ~542, `structured_math = provider == "nebius"` ~1048, malformed-verifier retry ~1643); use the generic path. |
+| `scripts/jana_tools/hackathon_app.py` | Expect `slots.primary == "meta"`; use `meta.prepare_body` in `GatewayHop`; rename env vars `JANA_NEBIUS_*` → `JANA_META_*`. |
+| `apps/desktop/dev/sidecar.ts`, `scripts/jana_tools/hackathon_dev.py` | Same renames; default data dir `/tmp/jana-meta-browser`. |
+| `services/cloud-gateway/deploy/meta-dev.toml` (rename of `nebius-dev.toml`) | Meta slot; quotas sized to the $150 credit (§8.3); `[tavily]` removed. |
 
-## 6. Latency budget (to measure on day 1–3; nothing measured yet)
+### 4.3 Budget fixes that matter with $150 of credit
+
+From the 2026-10-25 review; both protect the credit:
+- A dropped stream is recorded at $0 (`cloud_gateway/app.py` ~283–302). Charge at least the input estimate on
+  disconnect and record `client_disconnected`.
+- `InferenceBudget.reserve` refuses image content parts (`inference_budget.py` ~70–73). Allow image parts and price
+  them (Spark image tokens **(verify)**; SAM per image).
+
+### 4.4 Day-1 checks (before building on Spark)
+
+1. Tool calling with `tool_choice: auto` and the engine's tools: the Solver calls tools on 10 seeded items.
+2. `json_schema` output with `tutor-turn.schema.json` validates first time on 10 Coach turns.
+3. Streaming with `stream_options.include_usage` returns usage, including reasoning tokens.
+4. Image input (`image_url` data URL) is accepted.
+5. Latency: time to an accepted Coach turn at `reasoning_effort: low`. Target ≤ 3 s typical (§12).
+6. 1.2 vs 1.3: pick the one that passes 1–4 with the better latency.
+
+**Done when:** `test_m19_gw_conformance.py` runs with the `meta` provider, and a typed maths and a typed physics
+question each complete a full tutoring turn on Spark in the browser demo host, with checked numbers.
+
+## 5. Online vision: Muse Spark + SAM 3.1 (JM-D10)
+
+### 5.1 Flow
+
+1. **Local privacy pass first** (unchanged): the perception worker screens faces and people, crops, deskews,
+   masks private text, outputs ≤ 1600 px JPEG. Nothing leaves the device before this and the photo notice.
+2. **Spark reads** (`engine/vision.py`, `PhotoReader.read`): the existing `reader_output` — question text, regions
+   with `bbox` (0–1000 scale), `number_label`, `diagram_description`, `refusal`.
+3. **SAM 3.1 sharpens** (new): for each region Spark returns, call SAM 3.1 with a box prompt (and, for diagrams, a
+   text concept prompt such as "force arrow", "angle label", "handwritten line") **(verify the API's prompt types)**.
+   Result: a mask and tight box per region.
+4. **Spark re-reads crops** only when the first read marked a region uncertain (`[?]` tokens or low-confidence
+   numbers): crop by the SAM mask, send the crop, merge. One extra call at most per photo.
+5. **Pointing on the learner's photo**: masks become pointer targets on the photo, so the tutor's `<point at>` cue
+   (`engine/pointing.py`, `client-core/src/pointer.ts`) highlights the exact line of working or part of the diagram
+   ("this line is where the sign changed").
+
+### 5.2 Uses in the demo
+
+- **Marking photographed working line by line**: SAM separates the lines; the Checker marks each line; the first wrong
+  line lights up on the learner's own photo.
+- **Diagram questions**: SAM finds every arrow or label in a physics diagram so Jana can ask "which of these is the
+  normal force?" by pointing, not describing.
+
+### 5.3 Changes
+
+| File | Change |
+|---|---|
+| `cloud_gateway/providers/sam.py` (new) + route `POST /v1/vision/segment` | SAM 3.1 client: image + box/point/text prompts → masks (RLE or polygon) and boxes; price $2.50 per 1,000 images **(verify)**; budgeted like chat. |
+| `agent_core/engine/vision.py` | After `read()`, call the segment route for returned regions; attach masks; optional crop re-read. Offline fallback: Glimmer's own read with boxes only (no SAM offline). |
+| `agent_core/engine/pointing.py`, `packages/client-core/src/pointer.ts`, `packages/ui/src/composer/CaptureDiagrams.tsx` | New pointer target kind `photo_region` (mask outline drawn over the learner's photo). |
+| `cloud_models.json`, `router.yaml`, `inference_budget.py` | Enable cloud vision (§4.2, §4.3). |
+
+**Done when:** a photo of three lines of handwritten working with one sign error is read, the wrong line is
+highlighted on the photo, and the tutor asks about that line, within ~6 s of upload.
+
+## 6. Speech (JM-D12, JM-D13)
+
+### 6.1 Online speech to text: Muse Voice Transcribe
+
+`wss://api.meta.ai/v1/asr/realtime`, PCM16 mono 24 kHz, `ENDPOINTING` mode, `languageBias: en`, `keywords` from the
+curriculum glossary (physics and maths terms) **(verify the message format)**. Server events `speechStart`,
+`speechEnd`, `speechComplete` map to the gateway's `Heard(begin/end/partial/final)`; barge-in stays ours (cancel TTS
+on `speechStart`). Price $0.18 per audio hour. Sessions are capped at 60 minutes, so the gateway reconnects between
+turns.
+
+| File | Change |
+|---|---|
+| `cloud_gateway/providers/meta_speech.py` (new) | `MetaRecognizer` / `MetaRecognition` implementing `Recognizer` and `Recognition` from `providers/speech.py`. |
+| `cloud_gateway/voice.py`, `config.py` | Build `SpeechStack(MetaRecognizer, live=None, MagpieSynthesizer)`; replace `config.voice_google` with `config.voice_meta`; `voice_enabled=true` in the dev config. With `live=None` the TTS-only reader path is used (it already exists as the drift fallback). |
+| `cloud_gateway/voice.py` (~1054–1067) | Re-check quota and credential every turn (review finding: sessions currently run past caps). |
+
+### 6.2 Online text to speech: NVIDIA Magpie
+
+`cloud_gateway/podcast_speech.py` already calls Magpie (NVCF HTTP, LINEAR_PCM 22.05 kHz). Generalise it into a
+`MagpieSynthesizer` implementing `Synthesizer`: one request per accepted sentence, resample 22.05 → 24 kHz for the
+bridge, voice `Magpie-Multilingual.EN-US.Aria.Calm` (Neutral as fallback). Podcast narration keeps using it.
+
+### 6.3 Offline speech to text: Omnilingual ASR, gated
+
+Omnilingual ASR is per utterance (clips under 40 s), which fits Jana's VAD-endpointed turns. It is a new
+`speech_to_speech` STT handler: add `"omnilingual"` to `SpeechProfile.stt` and the allowed engines
+(`agent_core/store/speech_packs.py` ~45), its arguments in `net/voice_sidecar.py`, and package the 300M model in the
+dev speech pack (`apps/desktop/dev/speech_pack.py`).
+
+**Gate (day 3):** on the demo laptop, a 10 s English utterance transcribes in ≤ 0.6 s, and word error on 20 recorded
+physics questions is no more than 2 points worse than faster-whisper `small.en`. If it fails, faster-whisper stays the
+default and Omnilingual is shown only as the Yoruba/Hausa/Igbo/Pidgin input option (a demo line, not the default).
+
+### 6.4 Offline text to speech, and the licence rule for demo audio
+
+- Offline: Kokoro-82M (`af_heart`), unchanged.
+- The NVIDIA API-catalog trial forbids distributing generated audio. **Anything judges hear (live demo, video) uses
+  self-hosted Magpie open weights** (`nvidia/magpie_tts_multilingual_357m`, NVIDIA Open Model License) on a Modal or
+  Baseten GPU from the partner credits, unless NVIDIA confirms trial use is fine. Development may use the trial.
+  If self-hosting is not ready by Nov 2, the demo uses Kokoro served from the gateway (Apache-2.0).
+
+**Done when:** a spoken physics question gets a spoken, checked answer online in ≤ 4 s typical from end of speech
+(filler at 1.5 s), barge-in stops playback, and the same works offline after the network is pulled.
+
+## 7. Local inference: Muse Glimmer 30B (JM-D11)
+
+| File | Change |
+|---|---|
+| `agent_core/router/recommended_models.json` | Replace the Qwen/Gemma entries with `muse-glimmer-30b` (Q4_K_M), class `high` only (32 GB+), `context_for_agents` 16384, `max_output` 4096, `thinking.available: true`, `default: on` (reasoning cannot be turned off), per-role sampling. |
+| `agent_core/router/router.yaml` (`local:`) | `thinking_budget` > 0 for Glimmer (it always reasons; budget it rather than disable it); tiers list only `local:muse-glimmer-30b`. |
+| `agent_core/providers/llama.py` | Confirm thinking detection and `chat_template_kwargs` against Glimmer's template; keep reasoning out of the released text. |
+| `scripts/jana_tools/hackathon_dev.py` | `--local-model` downloads and pins the official Glimmer GGUF (SHA-256 recorded on first download) instead of Nemotron Nano 4B; `hackathon_app.connect()` keeps the `local` provider so offline works. |
+| Model pack | If Glimmer ships a vision projector (mmproj) **(verify)**, include it as `vision_projector` so offline photos work; otherwise offline photos use OCR text only. |
+
+Power cut: when the gateway is unreachable the router falls to `local:muse-glimmer-30b` and the offline speech pack
+(§6.3, §6.4); the UI shows "Working offline".
+
+**Done when:** with Wi-Fi off on the 32 GB demo laptop, a typed and a spoken maths question each complete a checked
+tutoring turn on Glimmer.
+
+## 8. Removals and the adult product (JM-D14, JM-D15)
+
+### 8.1 Remove
+
+| What | Where |
+|---|---|
+| Nebius adapter, Nemotron ids and prices | `providers/nebius.py`, `providers/__init__.py`, `config.py`, `defaults.toml`, `custody.py`, `cloud_models.json`, `deploy/nebius-dev.toml`, `test_nebius.py` |
+| Tavily | `cloud_gateway/tavily.py`; `app.py` (~126–128, routes ~434–440); `ask.py` (branches ~213–249, ~316); `config.py` (`TavilySettings`, validator ~377–387); `custody.py`; `secret_scan.py`; `agent_core/api/study.py` (`/v1/study/web` ~593–656); `client-core/src/study-workspace.ts` (~291); `client-core/src/ask-anything.ts` (`web_confirmed`); UI `StudyWorkspace.tsx` (~243); i18n `ask.web_permission`, `ask.search_web`, `study.web_consent`, `study.import_web`; tests `test_tavily.py`, `test_study_web.py` |
+| Google/Gemini cloud stack | `providers/gemini.py`, `vertex.py`, `gemini_live.py`, `google_speech.py` out of configuration (deleted before submission if time allows); `config.voice_google` |
+
+**Ask anything after Tavily:** answers from the curriculum packs and Muse Spark only, labelled "from your course".
+Web search is out of scope for the entry. **Study:** file and paste import stay; web-page import is removed.
+
+### 8.2 Adult product
+
+| Area | Change |
+|---|---|
+| Sign-up | Date of birth field; under 18 → blocked with a short explanation. Store `age_band = "18_plus"` (`store/profiles.py` `ADULT_BAND`). |
+| Ask policy | `engine/ask_anything.py` `policy_for()` and `cloud_gateway/ask.py` audience: adult only; the `under_18` branch is removed from the UI. |
+| Consent | Keep per-feature consent (the learner's own consent now). Remove guardian flows: `store/subscription.py` guardian consent, `plans.toml` `jana_family`, UI `ParentSummary.tsx`, `FamilyControls.tsx`, guardian parts of `OnlineFeatures.tsx`, `Studies.tsx`, `StudyWorkspace.tsx`; `engine/parents.py` not wired. |
+| Copy | Rewrite `parents.*`, `settings.study.needs_guardian`, `study.access.guardian`, `error.guardian_consent_required` and related keys for an adult managing their own settings; the study banner "A parent or guardian needs to approve" becomes the learner's own consent prompt. |
+| Safety | Keep the input guard, distress templates and all release gates. "Trusted adult" wording in `study.safety.tpl.*` becomes adult-appropriate support wording. |
+
+### 8.3 Credit budget
+
+$150 of Meta credit for 10 days. Dev config: $10/day cap and $120 total, leaving $30 for judging. Output tokens
+dominate (reasoning is billed as output), so Coach `reasoning_effort` stays low and `max_tokens` is clamped per role.
+SAM: ≤ 300 images over the event (~$0.75).
+
+## 9. Submission scope (JM-D17, owner signs off)
+
+The Official Rules grant the organisers a perpetual, irrevocable, royalty-free licence to the Submission. Submit only:
+
+- the engine (`services/agent-core`, `services/tool-worker`, `services/perception-worker`), the cloud gateway, the
+  desktop app and shared packages;
+- **Mathematics and Physics** content packs only (proposal; Chemistry and Accounting stay out);
+- not: Studio and authoring tools (`apps/studio`, `services/pack-builder`), `services/signing-service`,
+  `services/ingest`, `services/study-worker` if Study is cut, private specs, evals with licensed material.
+
+The submission repository is built from this one at the end with only the parts above (same `git archive` method,
+no history). Licence: Apache-2.0 for code; content packs under the owner's licence (`LicenseRef-Own`).
+
+## 10. Demo-visible bugs to fix (from the 2026-10-25 review)
+
+1. Maths starting with a digit shows as raw LaTeX (fixed in Jana main, uncommitted:
+   `packages/ui/src/learn/PackText.tsx` and `agent_core/engine/assessment/items.py`; port it).
+2. The subject switches from Mathematics to Physics mid-question; "Next up" and Practice recommend Physics after a
+   Mathematics placement.
+3. The composer accepts questions with no model available and never says so.
+4. A message the core refused is re-sent on every reconnect (`packages/client-core/src/session.ts` ~393, ~472).
+5. The learning-journey route skips input screening (`test_a1_input_routes.py`), if not already fixed upstream.
+6. Tutor picker: radios announced as raw keys (`avatar.*`); "Choose this tutor" disabled when the default is picked.
+7. Unit field and °C/Ω chips on unitless numeric answers.
+
+## 11. Tests to update
+
+- Gateway: `test_nebius.py` → `test_meta.py`; `test_m19_gw_conformance.py`, `test_m19_gw_gemini.py`,
+  `test_m19_gw_keys.py`, `test_inference_budget.py` (images allowed), `test_m42_study.py`,
+  `test_study_math_format.py`, `test_podcast_speech.py`, `gateway_stubs.py`; remove `test_tavily.py`. New:
+  `test_meta_speech.py` (Recognizer against a fake socket), `test_sam.py` (segment route, budget).
+- Agent core: remove `test_study_web.py`; update `test_a1_input_routes.py`, `test_study_podcast_speech.py`; new tests
+  for `photo_region` pointing and the Glimmer model entry.
+- Scripts: `test_hackathon_app.py`, `test_m42_release_preparation.py`.
+- TypeScript: `client-core` `ask-anything.test.ts`, `study-workspace.test.ts`; `ui` `ask-anything.test.tsx`,
+  `study-workspace.test.tsx`; `i18n` catalogue checks; `apps/desktop/test/podcast-audio.test.ts`.
+
+## 12. Latency budget (measure on days 1–3)
 
 | Step | Target |
 |---|---|
-| Speech end → final transcript (Voice Transcribe endpointing) | ≤ 0.7 s |
-| Filler spoken if no reply yet | at 1.5 s |
-| Engine with Muse Spark (guard + tools + Coach + gates) | ≤ 3 s typical |
-| Magpie first audio after accepted sentence | ≤ 0.4 s |
-| **Speech end → first answer audio** | **≤ 4 s typical, filler at 1.5 s** |
+| End of speech → final transcript (Voice Transcribe) | ≤ 0.7 s |
+| Filler if no reply yet | at 1.5 s |
+| Engine turn on Muse Spark (guard, tools, Coach, gates) | ≤ 3 s typical |
+| Magpie first audio after an accepted sentence | ≤ 0.4 s |
+| **End of speech → first answer audio** | **≤ 4 s typical** |
+| Photo upload → highlighted line (Spark + SAM) | ≤ 6 s |
 
-Lever if slow: a single Muse Spark call for simple turns; the conceptual path (D122) for definitions.
+Levers if slow: one Spark call for Coach+Solver on simple turns; the conceptual path for definitions; skip the crop
+re-read.
 
-## 7. Demo (about 3 minutes)
+## 13. Workstreams and plan
 
-1. An adult WAEC private candidate signs up (18+ gate), opens Jana and asks by voice: "A car speeds up from rest to
-   20 m/s in 5 s. What's its acceleration?"
-2. Jana answers in real time (Voice Transcribe → Muse Spark in the engine → Magpie): guides instead of telling,
-   checks the student's spoken answer with tools, and refuses to just give the final number.
-3. A definition question ("What is the formula for kinetic energy?") is explained directly with a check question.
-4. **Power cut**: the network drops; Jana continues offline on Muse Glimmer 30B (32 GB+ laptop) with Kokoro on the laptop.
-5. Close: every number checked, never the answer handed over, works with no internet; Meta for hearing and thinking.
+Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter lands; W5 and W6 any time):
 
-## 8. Open items to settle on Oct 26
-
-1. Official Rules: is existing code allowed (fork) or fresh code only (new repo)? IP and submission format.
-2. Meta Model API access and credits ($150 reported, unconfirmed); request zero data retention.
-3. NVIDIA Magpie: confirm the NVCF function id (`877104f7-e885-42b9-8de8-f6e4c6303969`, from pipecat), the trial's
-   rate limit (~40 RPM reported), and whether demo use is covered; otherwise stand up the self-hosted 357M weights.
-4. Benchmarks: done (research brief §2.4 format/tool tests, §2.5 subject eval). Glimmer 30B chosen for the offline demo; a Glimmer run of the 100-question subject eval is optional, when the machine is free.
-5. GCP project creation and billing account.
-
-## 9. Plan (Oct 26 – Nov 4)
+| W | Scope | Sections |
+|---|---|---|
+| W1 | Meta provider, routing, budget, removal of Nebius and Tavily | 4, 8.1, 8.3 |
+| W2 | Vision: SAM route, PhotoReader, photo pointing | 5 |
+| W3 | Local: Glimmer entry, launcher, offline switch | 7 |
+| W4 | Speech: Voice Transcribe, Magpie synthesizer, Omnilingual gate | 6 |
+| W5 | Adult product and copy | 8.2 |
+| W6 | Demo bugs | 10 |
 
 | Day | Work |
 |---|---|
-| Oct 26 | Read rules; create the repo/fork and GCP project; keys in Secret Manager |
-| Oct 27–28 | Meta provider adapter; engine on Muse Spark passes Jana's engine tests; measure latency |
-| Oct 29–30 | Voice Transcribe STT stage and Magpie TTS stage in the bridge; spoken round trip end to end |
-| Oct 31 | 18+ sign-up, web client, deploy to Cloud Run |
-| Nov 1 | Offline tier on Muse Glimmer 30B (32 GB+ laptop); the power-cut switch |
-| Nov 2–3 | Polish, safety checks, eval run, demo recording |
-| Nov 4 | Submit by 9:00 PM ET |
+| Oct 26 | Kickoff; read the final Official Rules; claim credits; Meta key in the keychain; §4.4 checks; start W1, W5, W6 |
+| Oct 27–28 | W1 done; start W2, W3, W4 |
+| Oct 29–30 | Voice round trip online; Omnilingual gate; Glimmer offline |
+| Oct 31 | SAM photo marking; adult sign-up; deploy the demo host |
+| Nov 1 | Power-cut switch end to end; self-hosted Magpie |
+| Nov 2–3 | Polish, safety checks, eval run, record the video; owner signs off the §9 scope |
+| Nov 4 | Build the submission repo (§9) and submit by 9:00 PM ET |
+
+## 14. Demo (about 3 minutes)
+
+1. An adult WAEC private candidate signs up (date of birth, 18+) and asks by voice: "A car speeds up from rest to
+   20 m/s in 5 s. What's its acceleration?" Jana guides rather than telling, and checks the spoken answer with tools.
+2. The learner photographs three lines of their own working. Jana highlights the line with the sign error **on their
+   photo** (Muse Spark reads, SAM 3.1 outlines) and asks about that line.
+3. A definition question is answered directly, with a check question.
+4. **Power cut:** the network drops; Jana carries on with Muse Glimmer 30B and offline speech on the laptop.
+5. Close: Meta for hearing, thinking, seeing and offline; every number checked; never the answer handed over.
+
+## 15. Open items for the owner
+
+1. Final Official Rules (published by kickoff): confirm nothing changes existing-code use or scope.
+2. Meta API key and credit claim; request zero data retention.
+3. NVIDIA: is trial audio allowed in the video? If not, approve the self-hosted Magpie spend (Modal/Baseten credits).
+4. Submission scope in §9 (which subjects; whether Study stays).
+5. Hosting: GCP project `jana-meta` (JM-D7) or partner credits only.
