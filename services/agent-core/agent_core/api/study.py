@@ -15,7 +15,6 @@ from fastapi.responses import JSONResponse
 
 from agent_core.api.core import CURRENT_PROFILE, CoreService
 from agent_core.api.errors import ApiError
-from agent_core.config.personal_data import Redactor
 from agent_core.engine.events import new_id
 from agent_core.engine.study import StudyDesk, StudyError, atomic, checked
 from agent_core.engine.study_journey import StudyJourney
@@ -589,90 +588,6 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
             return d.create_quiz_help_job(quiz_id, item_id, body)
 
         return await command(request, "JobCreate", run, ("quiz", quiz_id), status=202)
-
-    @app.post("/v1/study/web")
-    async def import_web(request: Request) -> Response:
-        """Explicitly import a public web page; no uploaded file is ever sent to Tavily."""
-        from urllib.parse import urlsplit
-
-        from agent_core.api import screening
-
-        try:
-            d = desk()
-            raw = await request.body()
-            if len(raw) > 4096:
-                raise ApiError("payload_too_large")
-            body = json.loads(raw)
-            if (
-                not isinstance(body, dict)
-                or set(body) != {"url", "tavily_consent"}
-                or body["tavily_consent"] is not True
-                or not isinstance(body["url"], str)
-                or not 1 <= len(body["url"]) <= 2048
-            ):
-                raise StudyError("invalid_public_url")
-            key = request.headers.get("idempotency-key", "")
-            import re
-
-            if not re.fullmatch(r"cli_[0-9A-HJKMNP-TV-Z]{26}", key):
-                raise ApiError("invalid_request")
-            core.limit_command(request.url.path)
-            screening.screen(core, "POST /v1/study/web", {}, body)
-            identifying = d.conn.execute("SELECT display_name,profile_id FROM profile").fetchone()
-            if Redactor(identifying or ()).blocks(body):
-                raise StudyError("safety_blocked")
-            cloud = core.study.cloud
-            if cloud is None:
-                raise StudyError("consent_required")
-            cloud.guard(d.conn)
-            sha = core.idempotency.digest(request.method, request.url.path, body)
-            cache_key = "study:" + key
-            cached = d.conn.execute(
-                "SELECT request_sha256,response FROM idempotency_responses WHERE idempotency_key=?", (cache_key,)
-            ).fetchone()
-            if cached:
-                if cached[0] != sha:
-                    raise ApiError("request_conflict")
-                stored = json.loads(cached[1])
-                authorise(request, stored["sources"])
-                return response(stored["body"])
-            page = await cloud.send(
-                d.conn, "POST", "/v1/web/extract", {**body, "request_id": key.replace("cli_", "ask_", 1)}
-            )
-            if core.study.connection() is not d.conn or CURRENT_PROFILE.get() != core.records_profile:
-                raise ApiError("profile_token_expired")
-            if (
-                not isinstance(page, dict)
-                or set(page) != {"url", "title", "text"}
-                or not all(isinstance(v, str) for v in page.values())
-                or not 1 <= len(page["text"]) <= 180000
-                or not 1 <= len(page["title"]) <= 160
-            ):
-                raise StudyError("web_page_unreadable")
-            if (
-                urlsplit(page["url"]).scheme != "https"
-                or urlsplit(page["url"]).hostname != urlsplit(body["url"]).hostname
-            ):
-                raise StudyError("web_page_unreadable")
-            with atomic(d.conn):
-                source = d.create(
-                    {
-                        "kind": "text",
-                        "title": page["title"],
-                        "text": "Source URL: " + page["url"] + "\n\n" + page["text"],
-                    }
-                )
-                cached_body = {
-                    "body": source,
-                    "sources": [{"source_id": source["source_id"], "revision": source["revision"]}],
-                }
-                d.conn.execute(
-                    "INSERT INTO idempotency_responses VALUES (?,?,200,?,?)",
-                    (cache_key, sha, json.dumps(cached_body), core.clock_ms()),
-                )
-            return response(source)
-        except (ValueError, StudyError) as error:
-            raise fail(StudyError(getattr(error, "reason", "invalid_public_url"))) from None
 
     @app.get("/v1/study/jobs/{job_id}")
     async def job(job_id: str, request: Request) -> Response:

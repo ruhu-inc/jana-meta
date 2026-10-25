@@ -27,7 +27,7 @@ const tabOf = (kind: string): Tab => (kind === "chat" ? "chat" : "generate");
 const picked = (answer: string | undefined) => (answer ?? "").split(",").filter(Boolean);
 
 /** `onTab` hears which tab is open: the voice conversation lives in Chat (VOC-53, D130). */
-export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened }: { controller: StudyWorkspaceController; onPractice?: (subject: string, kcIds: string[]) => void; onTab?: (tab: Tab) => void; onReviewAccess?: () => void; initialAdd?: "link" | "paste" | null; onJourneyStarted?: (node: string, subject: string) => void; initialJourney?: "next" | "lesson" | "quiz" | null; onJourneyOpened?: () => void; initialSource?: Pick<W.Source, "source_id" | "revision"> | null; onSourceOpened?: () => void }) {
+export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened }: { controller: StudyWorkspaceController; onPractice?: (subject: string, kcIds: string[]) => void; onTab?: (tab: Tab) => void; onReviewAccess?: () => void; initialAdd?: "paste" | null; onJourneyStarted?: (node: string, subject: string) => void; initialJourney?: "next" | "lesson" | "quiz" | null; onJourneyOpened?: () => void; initialSource?: Pick<W.Source, "source_id" | "revision"> | null; onSourceOpened?: () => void }) {
   const openLesson = useOpenLesson(), openTopic = useOpenTopic();
   const view = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView), t = useT();
   const [journeyChoices, setJourneyChoices] = useState<Record<string, string>>({});
@@ -73,7 +73,6 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
   const [questionTries, setQuestionTries] = useState<Record<string, number>>({});
   const [checkedAnswers, setCheckedAnswers] = useState<Record<string, string>>({});
   const [pasting, setPasting] = useState(initialAdd === "paste"), [managing, setManaging] = useState(false), [dragging, setDragging] = useState(false);
-  const [linking, setLinking] = useState(initialAdd === "link"), [webUrl, setWebUrl] = useState(""), [webAgreed, setWebAgreed] = useState(false);
   const [tab, setTab] = useState<Tab>(view.aid ? tabOf(view.aid.kind) : "generate");
   useEffect(() => { onTab?.(tab); }, [onTab, tab]);
   useEffect(() => { if (view.aid) setTab(tabOf(view.aid.kind)); }, [view.aid?.aid_id, view.aid?.kind]);
@@ -220,12 +219,12 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
   // --- the library -------------------------------------------------------------------------------------------------
   if (!view.source) return <><section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10" aria-labelledby="study-heading">
     <header className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h1 id="study-heading" className="text-title text-ink">{t("study.title")}</h1><Button size="sm" tone="primary" aria-expanded={adding || pasting || linking || view.sources.length === 0} onClick={() => { setAdding((v) => !v); setPasting(false); setLinking(false); }}>{t("study.library_add")}</Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h1 id="study-heading" className="text-title text-ink">{t("study.title")}</h1><Button size="sm" tone="primary" aria-expanded={adding || pasting || view.sources.length === 0} onClick={() => { setAdding((v) => !v); setPasting(false); }}>{t("study.library_add")}</Button></div>
       <p className="text-ui text-muted">{t("study.library_intro")}</p>
       <div className="flex flex-wrap gap-2">{activityButton}{view.sets.length > 0 && <Button size="sm" tone="ghost" onClick={() => setAllSetsOpen(true)}><Icon name="learn" size={16} />{t("study.all_sets")}</Button>}</div>
     </header>
     {status}
-    <div hidden={!adding && !pasting && !linking && view.sources.length > 0} className="flex flex-col gap-4 rounded-card border border-line bg-canvas p-5">
+    <div hidden={!adding && !pasting && view.sources.length > 0} className="flex flex-col gap-4 rounded-card border border-line bg-canvas p-5">
       {/* A drop zone over the native picker, which stays in the tab order (focus rings the whole zone). */}
       <label data-study-drop={dragging ? "over" : ""} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDragging(true); } }} onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); const file = e.dataTransfer.files[0]; if (file && !view.busy) void controller.upload(file, undefined, preferCloud); }}
@@ -236,12 +235,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
         <input type="file" accept={ACCEPT} disabled={view.busy} onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void controller.upload(file, undefined, preferCloud); }} className="sr-only" />
       </label>
       <p className="text-meta text-muted">{t("study.file_help")}</p>
-      <span className="flex flex-wrap gap-2"><Button size="sm" tone="ghost" aria-expanded={pasting} onClick={() => setPasting((open) => !open)}><Icon name="notes" size={16} />{t("study.paste")}</Button><Button size="sm" tone="ghost" aria-expanded={linking} onClick={() => { setLinking((open) => !open); setWebAgreed(false); }}>{t("study.add_link")}</Button></span>
-      {linking && <form className="flex flex-col items-start gap-3" onSubmit={(e) => { e.preventDefault(); if (webAgreed) void controller.addWeb(webUrl).then(() => { if (!controller.getView().error) { setWebUrl(""); setWebAgreed(false); } }); }}>
-        <label className="flex w-full flex-col gap-2 text-ui text-ink">{t("study.web_url")}<input type="url" required maxLength={2048} placeholder={t("study.web_url_placeholder")} value={webUrl} disabled={view.busy} onChange={(e) => { setWebUrl(e.target.value); setWebAgreed(false); }} className={FIELD_LOOK} /></label>
-        <label className="flex items-start gap-2 text-ui text-ink"><input type="checkbox" checked={webAgreed} disabled={view.busy} onChange={(e) => setWebAgreed(e.target.checked)} />{t("study.web_consent")}</label>
-        <Button type="submit" disabled={view.busy || !!accessBlocked || !webAgreed || !webUrl.trim()}>{t("study.import_web")}</Button>
-      </form>}
+      <span className="flex flex-wrap gap-2"><Button size="sm" tone="ghost" aria-expanded={pasting} onClick={() => setPasting((open) => !open)}><Icon name="notes" size={16} />{t("study.paste")}</Button></span>
       {pasting && <form className="flex flex-col items-start gap-3" onSubmit={(e) => { e.preventDefault(); void controller.addText(title.trim(), text).then(() => { if (!controller.getView().error) { setTitle(""); setText(""); } }); }}>
           <label className="flex w-full flex-col gap-2 text-ui text-ink">{t("study.source_title")}<input required maxLength={200} value={title} disabled={view.busy} onChange={(e) => setTitle(e.target.value)} className={FIELD_LOOK} /></label>
           <label className="flex w-full flex-col gap-2 text-ui text-ink">{t("study.paste_label")}<textarea required maxLength={200000} rows={6} disabled={view.busy} value={text} onChange={(e) => setText(e.target.value)} className={FIELD_LOOK} /></label>

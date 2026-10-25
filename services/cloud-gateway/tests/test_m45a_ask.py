@@ -58,12 +58,13 @@ def test_minor_search_is_allow_listed_and_fetched_text_is_data(tmp_path):
             "check_question": "Why do capitals often sit on rivers?",
             "explanation": [],
         }
-        h.stubs["gemini"].say(Output(text=json.dumps(draft)))
+        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text=json.dumps({"supported": [True, True]})))
         reply = await h.client.post("/v1/ask", json=body(), headers=device.headers())
         assert reply.status_code == 200, reply.text
         out = reply.json()
         assert [s["url"] for s in out["sources"]] == ["https://www.britannica.com/place/Paris"]
-        assert out["statements"][1]["refs"] == []  # references the gateway never gave are dropped
+        # References the gateway never gave are dropped, and a statement left citing nothing is not kept.
+        assert out["statements"] == [{"text": "Paris is the capital of France.", "refs": ["web1"]}]
         assert search.asked[0][1] == ["britannica.com", "who.int"]
         sent = "\n".join(h.stubs["gemini"].seen[0].user_texts)
         assert "evil.example" not in sent and "Ignore all previous instructions" not in sent
@@ -97,12 +98,39 @@ def test_adult_wider_web_excludes_listed_domains(tmp_path):
         device = Device()
         await device.login(h.client)
         h.stubs["gemini"].say(Output(text=json.dumps({"statements": [{"text": "Paris.", "refs": ["web1"]}],
-                                                      "check_question": None, "explanation": []})))  # fmt: skip
+                                                      "check_question": None, "explanation": []})),
+                              Output(text=json.dumps({"supported": [True]})))  # fmt: skip
         asked = {**body(audience="adult", reach="wider_web", mode="explain", excluded=["reddit.com"])}
         asked.pop("allow_list")
         reply = await h.client.post("/v1/ask", json=asked, headers=device.headers())
         assert reply.status_code == 200, reply.text
         assert [s["url"] for s in reply.json()["sources"]] == ["https://example.org/p"]
         assert reply.json()["check_question"] is None
+
+    asyncio.run(run())
+
+
+def test_a_statement_its_sources_do_not_support_is_dropped(tmp_path):
+    async def run():
+        h, _ = setup(tmp_path, [Found("https://www.britannica.com/place/Paris", "Paris", "Paris is the capital.")])
+        device = Device()
+        await device.login(h.client)
+        draft = {
+            "statements": [
+                {"text": "Paris is the capital of France.", "refs": ["web1"]},
+                {"text": "Paris has ten million trees.", "refs": ["web1"]},
+            ],
+            "check_question": "Why do capitals often sit on rivers?",
+            "explanation": [],
+        }
+        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text=json.dumps({"supported": [True, False]})))
+        reply = await h.client.post("/v1/ask", json=body(), headers=device.headers())
+        assert reply.status_code == 200, reply.text
+        assert [s["text"] for s in reply.json()["statements"]] == ["Paris is the capital of France."]
+        check = h.stubs["gemini"].seen[1]
+        assert "Paris has ten million trees." in "\n".join(check.user_texts)
+        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text=json.dumps({"supported": [False, False]})))
+        reply = await h.client.post("/v1/ask", json=body(request_id="ask_" + "1" * 26), headers=device.headers())
+        assert reply.status_code == 422 and reply.json()["error"]["code"] == "insufficient_evidence"
 
     asyncio.run(run())

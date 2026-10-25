@@ -345,7 +345,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   const { profiles } = runtime;
   const view = useProfiles(profiles);
   const [screen, setScreen] = useState<Screen>("home");
-  const [studyAdd, setStudyAdd] = useState<"link" | "paste" | null>(null);
+  const [studyAdd, setStudyAdd] = useState<"paste" | null>(null);
   const [studyResume, setStudyResume] = useState<"next" | "lesson" | "quiz" | null>(null);
   const [studySource, setStudySource] = useState<{ source_id: string; revision: number } | null>(null);
   // The student menu (D115): Settings at a section, the keyboard help, and what it says about the student.
@@ -1047,10 +1047,9 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       : session === null || session === "failed" ? waiting
       : withSpeech(<Composer sessionId={session.sessionId} asking placement="inline" onSent={() => { setFromLesson(null); setFromPractice(false); setFromReport(false); setScreen("tutor"); }} route={routeHome} {...warmingProps} />,
         session, ASK_PLACE, (answer) => runtime.ask.voiced(answer));
-    const openStudy = (add: "link" | "paste" | null = null) => { runtime.ask.clear(); setStudyAdd(add); setScreen("study"); };
+    const openStudy = (add: "paste" | null = null) => { runtime.ask.clear(); setStudyAdd(add); setScreen("study"); };
     const materials = studyAvailable && lock === null ? {
       onUpload: (file: File) => { void runtime.studyWorkspace.upload(file, undefined, true); openStudy(); },
-      onLink: () => openStudy("link"),
       onPaste: () => openStudy("paste"),
       onRecord: (file: File) => { void runtime.studyWorkspace.upload(file, undefined, true); openStudy(); },
     } : null;
@@ -1062,7 +1061,6 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       onStudy: () => openStudy(),
       onExplain: () => runtime.ask.explain(),
       onAgain: (options) => void runtime.ask.ask(askView.question, options),
-      onSearchWeb: () => void runtime.ask.confirmWeb(),
     }} />;
     const heldNote = held === null ? null : <p role="status" data-held-question="" className="px-1 text-meta text-muted">{t("home.question_held")}</p>;
     const newest = mockView.sittings[0];

@@ -30,20 +30,12 @@ function view(v: AskView, calls: string[] = []) {
   return render(
     <LocaleProvider locale="en">
       <AskAnswer view={v} actions={{ onTutor: () => calls.push("tutor"), onStudy: () => calls.push("study"), onExplain: () => calls.push("explain"),
-        onAgain: (o) => calls.push(`again:${o.mode}:${o.reach}`), onSearchWeb: () => calls.push("search-web") }} />
+        onAgain: (o) => calls.push(`again:${o.mode}:${o.reach}`) }} />
     </LocaleProvider>,
   );
 }
 
 describe("STU-20", () => {
-  test("web search explains Tavily's data use and waits for the explicit action", () => {
-    const calls: string[] = [];
-    view({ ...EMPTY_ASK, status: "unavailable", question: "Where is Paris?", reason: "web_permission_required" }, calls);
-    expect(screen.getByText(/send this question to Tavily/)).toBeTruthy();
-    expect(calls).toEqual([]);
-    fireEvent.click(screen.getByRole("button", { name: "Search the web with Tavily" }));
-    expect(calls).toEqual(["search-web"]);
-  });
   test("the search shows before the answer, citations and the label are on each statement, nothing is checked", () => {
     const calls: string[] = [];
     const { container } = view(answered(ANSWER), calls);
@@ -103,29 +95,28 @@ describe("STU-20", () => {
 });
 
 describe("UXS-67", () => {
-  test("Home leads with one input under Ready to learn, with Upload, Link, Paste and Record above the box", () => {
+  test("Home leads with one input under Ready to learn, with Upload, Paste and Record above the box", () => {
     const picked: string[] = [];
     render(
       <LocaleProvider locale="en">
         <Home name="Ada" ask={<textarea aria-label="Ask anything, or paste a question" />} answer={<p>the answer</p>}
-          materials={{ onUpload: (f) => picked.push(`upload:${f.name}`), onLink: () => picked.push("link"), onPaste: () => picked.push("paste"), onRecord: (f) => picked.push(`record:${f.name}`) }}
+          materials={{ onUpload: (f) => picked.push(`upload:${f.name}`), onPaste: () => picked.push("paste"), onRecord: (f) => picked.push(`record:${f.name}`) }}
           plan={<p data-plan="">Next up</p>} subjects={[]} onSubject={() => undefined} pickup={[]} onPickup={() => undefined}
           practice={{ ideas: [], refreshes: 0, subjectLabel: (s) => s }} onPractice={() => undefined} />
       </LocaleProvider>,
     );
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Ready to learn, Ada?");
     const group = screen.getByRole("group", { name: "Add material" });
-    expect(within(group).getAllByRole("button").map((b) => b.textContent)).toEqual(["Upload", "Link", "Paste", "Record"]);
+    expect(within(group).getAllByRole("button").map((b) => b.textContent)).toEqual(["Upload", "Paste", "Record"]);
     const box = screen.getByRole("textbox", { name: "Ask anything, or paste a question" });
     // Results precede the input; material controls remain directly above it, and the plan follows both.
     expect(group.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByText("the answer").compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByText("the answer").compareDocumentPosition(document.querySelector("[data-plan]")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    fireEvent.click(within(group).getByRole("button", { name: "Link" }));
     fireEvent.click(within(group).getByRole("button", { name: "Paste" }));
     const [upload, record] = [...document.querySelectorAll<HTMLInputElement>("[data-home-materials] input[type=file]")];
     fireEvent.change(upload!, { target: { files: [new File(["x"], "notes.pdf")] } });
     fireEvent.change(record!, { target: { files: [new File(["x"], "lecture.m4a")] } });
-    expect(picked).toEqual(["link", "paste", "upload:notes.pdf", "record:lecture.m4a"]);
+    expect(picked).toEqual(["paste", "upload:notes.pdf", "record:lecture.m4a"]);
   });
 });

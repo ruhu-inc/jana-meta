@@ -10,7 +10,7 @@ Sources, by environment:
   the Secret Service (`secret-tool lookup service jana.cloud-gateway account gemini_api_key`).
 - `dev` only: a developer's own key from the environment, `JANA_DEV_<NAME>` (for example `JANA_DEV_GEMINI_API_KEY`).
   Staging, pilot and production ignore environment keys.
-- The hackathon's server integrations accept `NEBIUS_API_KEY` and `TAVILY_API_KEY` in the gateway process
+- The hackathon's server integrations accept `NEBIUS_API_KEY` and `NVIDIA_API_KEY` in the gateway process
   environment. Each source resolves only its own provider secret; neither loads a dotenv file.
 
 A `Secret` never shows its value in `repr`, `str`, formatting or pickling; code asks for it with `reveal()` at the
@@ -158,19 +158,6 @@ class ChainedSecrets:
 
 
 @dataclass(frozen=True)
-class TavilyEnvironmentSecrets:
-    """Only the gateway process may receive the owner's Tavily credential."""
-
-    environ: Mapping[str, str] = field(repr=False)
-
-    def get(self, name: str) -> Secret | None:
-        if name != "tavily_api_key":
-            return None
-        value = self.environ.get("TAVILY_API_KEY", "").strip()
-        return Secret(value) if value else None
-
-
-@dataclass(frozen=True)
 class NvidiaEnvironmentSecrets:
     """A server-only NVIDIA API-catalog key; never read by the browser or native learner core."""
 
@@ -190,7 +177,6 @@ def secret_source(
     runtime_environ = os.environ if environ is None else environ
     sources: list[SecretSource] = [
         NebiusEnvironmentSecrets(runtime_environ),
-        TavilyEnvironmentSecrets(runtime_environ),
         NvidiaEnvironmentSecrets(runtime_environ),
     ]
     if config.environment == "dev":

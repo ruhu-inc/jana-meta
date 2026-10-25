@@ -23,7 +23,7 @@ test("returning to curriculum material waits for workspace setup and retains the
 });
 function show(extra: Partial<StudyWorkspaceView>, onReviewAccess?: () => void, onJourneyStarted?: (node: string, subject: string) => void) {
   const view = { ...EMPTY_STUDY, status: "ready", ...extra } as StudyWorkspaceView;
-  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), addWeb: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}) };
+  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}) };
   const connected = { ...controller, beginJourney: vi.fn(async () => true) };
   render(<StudyWorkspace controller={connected as unknown as StudyWorkspaceController} {...(onReviewAccess ? { onReviewAccess } : {})} {...(onJourneyStarted ? { onJourneyStarted } : {})} />);
   return connected;
@@ -36,23 +36,6 @@ test("a selected material objective starts its journey before handing off to cur
   expect(controller.beginJourney).toHaveBeenCalledWith(node, kc);
   await waitFor(() => expect(onJourneyStarted).toHaveBeenCalledWith(node, "cur.phy.o"));
   expect(controller.generate).not.toHaveBeenCalled();
-});
-test("web imports name Tavily, require consent, and reset that agreement if the URL changes", () => {
-  const controller = show({ access: { status: "ready", needsGuardian: false } });
-  fireEvent.click(screen.getByRole("button", { name: "Add a web link" }));
-  const input = screen.getByRole("textbox", { name: "Public web page URL" });
-  fireEvent.change(input, { target: { value: "https://www.britannica.com/place/Paris" } });
-  const button = screen.getByRole("button", { name: "Import page with Tavily" });
-  expect(button.hasAttribute("disabled")).toBe(true);
-  const agree = screen.getByRole("checkbox", { name: /Send this public page URL to Tavily/ });
-  fireEvent.click(agree);
-  expect(button.hasAttribute("disabled")).toBe(false);
-  fireEvent.change(input, { target: { value: "https://www.britannica.com/place/London" } });
-  expect(button.hasAttribute("disabled")).toBe(true);
-  expect(controller.addWeb).not.toHaveBeenCalled();
-  fireEvent.click(agree);
-  fireEvent.click(button);
-  expect(controller.addWeb).toHaveBeenCalledWith("https://www.britannica.com/place/London");
 });
 test("lesson follow-up buttons retain the displayed lesson instead of losing their referent", async () => {
   const aid = { aid_id: `aid_${"0".repeat(26)}`, job_id: `stj_${"0".repeat(26)}`, kind: "chat" as const, title: "Biology", sources: [{ source_id: sid, revision: 1 }], claims: [cited("DNA stores genetic information.")], status: "ready" as const, created_at: now };

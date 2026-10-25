@@ -545,7 +545,7 @@ function Component({ state }: { state: GalleryState }): ReactNode {
       const payload = state.payload as { name: string; pickup: { sessionId: string; title: string; subject: string; subjectLabel: string; day: "today" | "yesterday" | "week" | "older" }[]; ideas: DueIdea[]; goal?: GoalProgress };
       return (
         <Home {...(payload.goal !== undefined ? { goal: <DailyGoalChip progress={payload.goal} onChange={() => undefined} /> } : {})} name={payload.name} ask={<Composer sessionId={SESSION} asking placement="inline" />} subjects={[]} onSubject={() => undefined}
-          materials={{ onUpload: () => undefined, onLink: () => undefined, onPaste: () => undefined, onRecord: () => undefined }}
+          materials={{ onUpload: () => undefined, onPaste: () => undefined, onRecord: () => undefined }}
           pickup={payload.pickup} onPickup={() => undefined} practice={{ ideas: payload.ideas, refreshes: payload.ideas.filter((i) => i.kc.state === "needs_review").length, subjectLabel: (s) => s }}
           onPractice={() => undefined} />
       );

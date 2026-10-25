@@ -9,8 +9,10 @@ audience and the reach, and for an under-18 profile the allow-list it may search
 3. hands the results and the learner's own excerpts to the model as data, never as instructions: wrapped and
    escaped, and any text carrying instruction-like spans withheld whole; the model answers in a strict JSON shape
    whose every citation must name one of the given references;
-4. drops any citation to a reference it did not give, meters the call like a tutor call (`feature ask_anything`) and
-   returns the `AskReply`. The device applies its own policy again; nothing here labels an answer checked.
+4. drops any citation to a reference it did not give, then has the model check each statement against only the
+   passages it cites, separately, keeping a statement only if its citations support it;
+5. meters both calls like a tutor call (`feature ask_anything`) and returns the `AskReply`. The device applies its
+   own policy again; nothing here labels an answer checked.
 
 Nothing is stored but the request's metadata (OBS-22)."""
 
@@ -157,7 +159,6 @@ def _domains(value: Any) -> list[str] | None:
 def validate(body: Any) -> dict[str, Any]:
     if not isinstance(body, dict) or not set(body) <= {
         "request_id", "question", "mode", "audience", "reach", "output_locale", "own", "allow_list", "excluded",
-        "web_confirmed",
     }:  # fmt: skip
         raise Refused("invalid_request", 400)
     question = body.get("question")
@@ -172,7 +173,6 @@ def validate(body: Any) -> dict[str, Any]:
         or body.get("reach") not in ("allow_list", "wider_web")
         or not isinstance(body.get("own", []), list)
         or len(body.get("own", [])) > OWN_MAX
-        or type(body.get("web_confirmed", False)) is not bool
     ):
         raise Refused("invalid_request", 400)
     # Under 18: the allow-list only, and Teach me (STU-20). A device that asks otherwise is refused, not obeyed.
@@ -210,10 +210,8 @@ class AskService:
         if minimise.refusal(request.headers, body):
             raise Refused("safety_blocked")
         resolved = self.gw.providers.resolve(self.gw.config.ask_model)
-        if resolved is None or (self.search is None and self.gw.tavily is None):
+        if resolved is None or self.search is None:
             raise Refused("model_unavailable", 503)
-        if self.gw.tavily is not None and not body.get("web_confirmed"):
-            raise Refused("web_permission_required", 403)
         provider, adapter, model = resolved
         started = self.gw.clock()
         device_hash = self.gw.store.device_hash(session.account, started)
@@ -224,31 +222,15 @@ class AskService:
         allow = _domains(body.get("allow_list")) if body["reach"] == "allow_list" else None
         excluded = [d.lower() for d in body.get("excluded", []) if isinstance(d, str)][:100]
         limit = self.gw.config.ask_search_results
-        if self.gw.tavily is not None:
-            from cloud_gateway.tavily import TavilyError
-
-            try:
-                retrieved = await self.gw.tavily.search(
-                    body["question"], allow or [], limit, session.credential_id, body["request_id"]
-                )
-                found = [Found(**item) for item in retrieved]
-            except TavilyError as error:
-                raise Refused(error.reason, 503) from None
-        else:
-            assert self.search is not None
-            found = await self.search.search(body["question"], allow or [], limit)
+        found = await self.search.search(body["question"], allow or [], limit)
         sources: list[dict[str, Any]] = []
         seen: set[str] = set()
         for item in found:
             if not permitted(item.url, allow, excluded) or item.url in seen:
                 continue  # not on the list: never shown to the model, never returned
             seen.add(item.url)
-            # Tavily has already bounded extracted evidence to 3,000 characters.
-            # Retain it for grounding instead of discarding most of each passage
-            # through the older search backend's short-snippet limit.
-            evidence_limit = 3000 if self.gw.tavily is not None else SNIPPET_CHARS
             sources.append({"ref": f"web{len(sources) + 1}", "url": item.url, "title": item.title[:160],
-                            "snippet": inert(item.snippet, evidence_limit)})  # fmt: skip
+                            "snippet": inert(item.snippet, SNIPPET_CHARS)})  # fmt: skip
             if len(sources) == limit:
                 break
         own = [{"ref": o["ref"], "title": inert(o["title"], 120), "text": inert(o["text"], OWN_CHARS)}
@@ -313,8 +295,7 @@ class AskService:
             "check_question": check[:400] if isinstance(check, str) and body["mode"] == "teach" else None,
             "explanation": bound(result.get("explanation", [])),
         }
-        if self.gw.tavily is not None:
-            await self.support(call, material, answer)
+        await self.support(call, material, answer)
         return answer
 
     async def support(self, call: Any, material: str, answer: dict[str, Any]) -> None:
@@ -351,8 +332,7 @@ class AskService:
                             },
                             {"role": "user", "content": json.dumps({"sources": material, "claims": statements})},
                         ],
-                        # Nemotron bills reasoning inside the completion limit.
-                        # A 1,024-token ceiling can end before this tiny JSON
+                        # Reasoning shares the completion limit: a small ceiling can end before this tiny JSON
                         # verdict is emitted, falsely appearing as no evidence.
                         "max_tokens": 4096,
                         "reasoning_effort": "low",

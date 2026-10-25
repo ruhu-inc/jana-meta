@@ -119,14 +119,6 @@ class StudyCloud:
                     "neural_speech_unavailable",
                     "neural_speech_invalid_audio",
                     "safety_blocked",
-                    "invalid_public_url",
-                    "web_page_unreadable",
-                    "web_permission_required",
-                    "search_not_configured",
-                    "search_prepaid_only",
-                    "search_credits_exhausted",
-                    "search_attempt_already_sent",
-                    "search_unavailable",
                 )
                 else "processing_failed"
             )

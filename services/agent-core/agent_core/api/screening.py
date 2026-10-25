@@ -136,7 +136,6 @@ ROUTES: dict[str, Rule] = {
         "study_request", _study_request, NOTE | {"off_topic", "personal_data"}
     ),
     "POST /v1/study/jobs": Screened("study_request", _study_request, NOTE | {"off_topic", "personal_data"}),
-    "POST /v1/study/web": Screened("study_web", field_text("url"), NOTE | {"off_topic", "personal_data"}),
     "POST /v1/study/jobs/{job_id}/actions": _IDS,
     # The server prepares the saved passage; the body contains only its index,
     # offset, digest and explicit consent, never client-supplied narration text.

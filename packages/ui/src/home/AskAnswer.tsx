@@ -20,7 +20,6 @@ export interface AskActions {
   onExplain: () => void;
   /** Ask the same question again in another mode or reach (18 or over only). */
   onAgain: (options: { mode: AskMode; reach: AskReach }) => void;
-  onSearchWeb?: () => void;
 }
 
 function Statements({ items, number }: { items: AskStatement[]; number: (ref: string) => number }) {
@@ -76,12 +75,11 @@ export function AskAnswer({ view, actions, followUps }: { view: AskView; actions
   }
   if (view.status !== "answered" || view.answer === null) {
     const message = view.status === "unavailable"
-      ? t(view.reason === "web_permission_required" ? "ask.web_permission" : view.reason === "search_credits_exhausted" ? "ask.search_limit" : view.reason?.startsWith("search_") ? "ask.search_unavailable" : view.reason === "allowance_exhausted" ? "ask.allowance_used" : "ask.offline")
+      ? t(view.reason === "allowance_exhausted" ? "ask.allowance_used" : "ask.offline")
       : t(view.status === "blocked" ? "ask.blocked" : "ask.failed");
     return (
       <section aria-label={t("ask.title")} data-ask={view.status} className="flex flex-col gap-3">
         <Notice tone={view.status === "unavailable" ? "info" : "warn"} message={message} />
-        {view.status === "unavailable" && view.reason === "web_permission_required" && actions.onSearchWeb && <span><Button tone="primary" onClick={actions.onSearchWeb}>{t("ask.search_web")}</Button></span>}
         {elsewhere}
       </section>
     );

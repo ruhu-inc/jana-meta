@@ -123,9 +123,6 @@ class Gateway:
         )
         self.inference_budget = InferenceBudget(config, self.store, clock) if bounded else None
         self.providers = Providers(config, secrets, client_factory, budget=self.inference_budget)
-        from cloud_gateway.tavily import Tavily
-
-        self.tavily = Tavily(self) if config.tavily.enabled else None
         self.quotas = Quotas(config, self.store, alerts)
         self.operations = GatewayOperations(config.storage_dir, config.operations, alerts=alerts)
         self.health = UpstreamHealth(config.objectives)
@@ -431,15 +428,10 @@ def create_app(
             await app.state.voice.stack.aclose()
             await app.state.podcast_speech.client.aclose()
             await gw.providers.aclose()
-            if gw.tavily is not None:
-                await gw.tavily.client.aclose()
             gw.store.close()
 
     app = FastAPI(title="Jana cloud gateway", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.gateway = gw
-    from cloud_gateway.tavily import add_routes as web_routes
-
-    web_routes(app, gw)
     from cloud_gateway.study import add_routes as study_routes
 
     app.state.study = study_routes(app, gw)

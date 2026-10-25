@@ -50,10 +50,9 @@ function Row({ icon, name, meta, subject, onClick, children }: { icon: IconName;
   );
 }
 
-/** The four ways to add material above the box (UXS-67); each opens the study area. */
+/** The three ways to add material above the box (UXS-67); each opens the study area. */
 export interface HomeMaterials {
   onUpload: (file: File) => void;
-  onLink: () => void;
   onPaste: () => void;
   onRecord: (file: File) => void;
 }
@@ -73,7 +72,6 @@ function Materials({ materials }: { materials: HomeMaterials }) {
   return (
     <div role="group" aria-label={t("home.add_material")} data-home-materials="" className="flex flex-wrap gap-2">
       <SuggestionChip icon="study" onClick={() => upload.current?.click()}>{t("home.material.upload")}</SuggestionChip>
-      <SuggestionChip icon="share" onClick={materials.onLink}>{t("home.material.link")}</SuggestionChip>
       <SuggestionChip icon="notes" onClick={materials.onPaste}>{t("home.material.paste")}</SuggestionChip>
       <SuggestionChip icon="voice" onClick={() => record.current?.click()}>{t("home.material.record")}</SuggestionChip>
       <input ref={upload} type="file" tabIndex={-1} aria-hidden="true" accept={UPLOAD_ACCEPT} onChange={picked(materials.onUpload)} className="sr-only" />

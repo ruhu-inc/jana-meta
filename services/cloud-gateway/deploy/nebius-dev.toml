@@ -1,19 +1,11 @@
 # Local integration configuration. No key belongs in this file.
 # Prefer dev OS Keychain items with service jana-nebius.cloud-gateway and
-# accounts nebius_api_key and tavily_api_key. Gateway-only environment keys remain supported.
+# accounts nebius_api_key and nvidia_api_key. Gateway-only environment keys remain supported.
 environment = "dev"
 audience_host = "localhost"
 storage_dir = "/tmp/jana-nebius-gateway"
 keychain_service = "jana-nebius.cloud-gateway"
 voice_enabled = false
-
-# Use the owner's existing Tavily credits only. Paid overage must be disabled in Tavily.
-# One conservative credit is held per basic search or extraction batch, including uncertain failures.
-[tavily]
-enabled = true
-daily_credits = 50
-total_credits = 500
-expires_at = "2026-11-02T00:46:01Z"
 
 # Owner approved USD 25 total over ten days on 2026-10-23. Allocate USD 15 to inference and hold USD 10 for hosting.
 # The shared inference ledger reserves in-flight calls across all devices and persists totals across restarts.

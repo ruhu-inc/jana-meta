@@ -285,14 +285,6 @@ export class StudyWorkspaceController {
     });
     if (source) { await this.load(); await this.open((source as W.Source).source_id); }
   }
-  async addWeb(url: string): Promise<void> {
-    let source: W.Source | null = null;
-    await this.action(async (current) => {
-      const result = valid<W.Source>("Source", await this.mutate("POST", "/v1/study/web", { url: url.trim(), tavily_consent: true }));
-      if (current()) source = result;
-    });
-    if (source) { await this.load(); await this.open((source as W.Source).source_id); }
-  }
   async upload(file: File, existing?: W.Source, preferCloud = false, replacement = false): Promise<void> {
     let source: W.Source | null = null;
     await this.action(async (current) => {
