@@ -5,7 +5,8 @@
 // the operating system synthesiser's word boundaries. A caption arriving, model text or queued audio never fires a
 // cue. It also clears the temporary pointer at once on interruption, a flush, a session change, or the removal or
 // revision of its target, and after its time to live. It holds ids and times only, never audio or text beyond the
-// caption it was given.
+// caption it was given. A cue may also point at a place on the student's own photo (`cap_…:rgn_<n>`, JM-D10): a line
+// of their working or a part of their sketch, outlined by SAM 3.1.
 
 /** Where a cue's word time comes from: `measured` (word boundaries or alignment data from the speech engine) or
  * `estimated` (the caption synchroniser's syllable estimate inside a spoken unit). Estimated timing is never
@@ -15,8 +16,10 @@ export type CueTiming = "measured" | "estimated";
 export interface CaptionCue { char_offset: number; target: string; action?: "point" | "write"; end_offset?: number }
 export interface CaptionWord { w: string; start_ms: number }
 
-/** One thing on screen a cue addresses, by id only (VSL-19). */
-export type PointerTarget = { kind: "step"; step_id: string } | { kind: "part"; visual_id: string; part_id: string };
+/** One thing on screen a cue addresses, by id only (VSL-19): a board line, a part of a visual, or a region of the
+ * student's photo (`photo_region`, JM-D10). */
+export type PointerTarget = { kind: "step"; step_id: string } | { kind: "part"; visual_id: string; part_id: string }
+  | { kind: "photo_region"; capture_id: string; region_id: string };
 
 /** The temporary pointer (the ring of TABLE DSN-10a), and a line being written on in time with the words. */
 export interface PointerView {
@@ -38,10 +41,13 @@ export interface CueRecord { target: string; action: "point" | "write"; word_ms:
 
 const STEP = /^stp_[0-9A-HJKMNP-TV-Z]{26}$/;
 const PART = /^(vis_[0-9A-HJKMNP-TV-Z]{26}):([A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*)$/;
+const PHOTO_REGION = /^(cap_[0-9A-HJKMNP-TV-Z]{26}):(rgn_[0-9]{1,3})$/;
 
 /** A cue target as an id pair, or null for anything that is not one exact id (never guessed, VSL-45). */
 export function parseTarget(target: string): PointerTarget | null {
   if (STEP.test(target)) return { kind: "step", step_id: target };
+  const photo = PHOTO_REGION.exec(target);
+  if (photo !== null) return { kind: "photo_region", capture_id: photo[1] ?? "", region_id: photo[2] ?? "" };
   const part = PART.exec(target);
   return part === null ? null : { kind: "part", visual_id: part[1] ?? "", part_id: part[2] ?? "" };
 }

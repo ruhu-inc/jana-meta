@@ -162,7 +162,8 @@ export interface BoardRec {
   unknowns: unknown[];
   conventions: unknown[];
   await: { step_id: string; prompt: string; input_kind: string } | null;
-  highlight: { step_ids: string[]; ttl_ms: number | null; ts: number; spotlight?: boolean } | null;
+  /** `photo_regions`: the same places on the student's own photo (`cap_…:rgn_<n>`, JM-D10), when the lines came from it. */
+  highlight: { step_ids: string[]; ttl_ms: number | null; ts: number; spotlight?: boolean; photo_regions?: string[] } | null;
   annotation?: AnnotationRec | null;
   /** A manipulable visual is the student's turn (VSL-42): the awaiting line, the visual and its adjustable parts. */
   manipulation?: { step_id: string; visual_id: string; part_ids: string[]; prompt: string } | null;

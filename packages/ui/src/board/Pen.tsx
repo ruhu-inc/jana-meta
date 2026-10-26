@@ -11,6 +11,7 @@ export const PEN_TRAVEL_MS = 240;
 function selectorOf(pen: PenView): string | null {
   const t = pen.target;
   if (t === null) return null;
+  if (t.kind === "photo_region") return `[data-photo-region="${t.capture_id}:${t.region_id}"]`;
   return t.kind === "step" ? `[data-step-id="${t.step_id}"] .board-math` : `[data-part="${t.part_id}"]`;
 }
 

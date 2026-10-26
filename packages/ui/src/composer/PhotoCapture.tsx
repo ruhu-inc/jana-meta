@@ -214,10 +214,10 @@ export function PhotoCapture({ previewProcessingElapsed = false, previewStage, p
   };
   const confirming = capture?.status === "awaiting_confirmation";
   const unreadable = capture?.status === "unreadable";
-  return <div role="dialog" aria-modal="false" aria-label={t(purpose === "working" ? "photo.working_action" : "photo.title")} className="my-2 rounded-card border border-line bg-panel p-3" onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }} onPaste={(event) => {
+  return <div role="dialog" aria-modal="false" aria-label={t(purpose === "working" ? "photo.working_action" : purpose === "sketch" ? "photo.sketch_action" : "photo.title")} className="my-2 rounded-card border border-line bg-panel p-3" onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }} onPaste={(event) => {
     const incoming = event.clipboardData.files[0]; if (incoming !== undefined && incoming.type.startsWith("image/")) { event.preventDefault(); void choose(incoming, "photo_paste"); }
   }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const incoming = event.dataTransfer.files[0]; if (incoming !== undefined) void choose(incoming, "photo_drop"); }}>
-    <p className="font-semibold">{t(confirming ? purpose === "working" ? "photo.working_title" : "photo.confirm_title" : purpose === "working" ? "photo.working_action" : "photo.title")}</p>
+    <p className="font-semibold">{t(confirming ? purpose === "working" ? "photo.working_title" : purpose === "sketch" ? "photo.sketch_title" : "photo.confirm_title" : purpose === "working" ? "photo.working_action" : purpose === "sketch" ? "photo.sketch_action" : "photo.title")}</p>
     <p className="text-meta">{t(confirming ? "photo.confirm_instructions" : "photo.instructions")}</p>
     {capture?.injection.flagged && <p role="status">{t("photo.injection_removed")}</p>}
     {capture?.status === "confirmed" && <p role="status">{t("photo.confirmed")}</p>}
@@ -245,6 +245,9 @@ export function PhotoCapture({ previewProcessingElapsed = false, previewStage, p
             e.preventDefault(); const amount = e.shiftKey ? 0.05 : 0.01;
             setCorners((points) => points.map((p, n) => n === i ? { x: Math.max(0, Math.min(1, p.x + (e.key === "ArrowRight" ? amount : e.key === "ArrowLeft" ? -amount : 0))), y: Math.max(0, Math.min(1, p.y + (e.key === "ArrowDown" ? amount : e.key === "ArrowUp" ? -amount : 0))) } : p));
           }} />)}
+        {confirming && capture?.regions.some((region) => (region.outline?.length ?? 0) >= 3) && <svg aria-hidden="true" viewBox="0 0 1 1" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 size-full">
+          {capture.regions.map((region) => (region.outline?.length ?? 0) < 3 ? null : <polygon key={region.region_id} data-photo-region={`${capture.capture_id}:${region.region_id}`} points={(region.outline ?? []).map((p) => `${p.x},${p.y}`).join(" ")} vectorEffect="non-scaling-stroke" strokeWidth={highlight === region.region_id ? 3 : 1} className={highlight === region.region_id ? "fill-focus/15 stroke-focus" : "fill-none stroke-line-strong"} />)}
+        </svg>}
         {confirming && capture?.regions.map((region) => region.bbox == null ? null : <div key={region.region_id} role="button" tabIndex={0} aria-label={t("photo.region", { index: region.order + 1 })} onFocus={() => setHighlight(region.region_id)} onMouseEnter={() => setHighlight(region.region_id)} className={`absolute border ${highlight === region.region_id ? "border-2 border-focus" : "border-line-strong"}`} style={{ left: `${region.bbox.x * 100}%`, top: `${region.bbox.y * 100}%`, width: `${region.bbox.w * 100}%`, height: `${region.bbox.h * 100}%` }} />)}
       </div>}
       {confirming && <div className="min-w-60 flex-1">
@@ -266,7 +269,7 @@ export function PhotoCapture({ previewProcessingElapsed = false, previewStage, p
       <Button disabled={busy} onClick={() => { if (photoSource === "webcam") void startCamera(); else void backToCrop(); }}>{t("photo.retake")}</Button>
       {capture.quality.checks.some((c) => c.outcome === "blocking") && <Button disabled={busy} onClick={() => fileInput.current?.click()}>{t("photo.choose_another")}</Button>}
     </div>}
-    {purpose !== "working" && !confirming && !unreadable && <label className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={cloud} disabled={busy} onChange={(e) => setCloud(e.target.checked)} /> {t("photo.cloud_accept")} {cloud && t("photo.cloud_notice")}</label>}
+    {!confirming && !unreadable && <label className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={cloud} disabled={busy} onChange={(e) => setCloud(e.target.checked)} /> {t("photo.cloud_accept")} {cloud && t("photo.cloud_notice")}</label>}
     {slow && <p role="status">{t("photo.slow")}</p>}
     {busy && processingVisible && <p role="status">{t("photo.processing")}</p>}
     {capture?.refusal !== null && capture?.refusal !== undefined && <ErrorState message={t(`photo.refusal.${capture.refusal.reason}`)} />}

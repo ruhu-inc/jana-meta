@@ -196,7 +196,8 @@ function apply(store: Store, sessionId: string, envelope: Envelope): Store {
     }
     case "board.highlight": {
       const id = event.board_id as string;
-      const updated = { ...board(store, id), highlight: { step_ids: event.step_ids as string[], ttl_ms: event.ttl_ms as number | null, ts, ...(event.spotlight === true ? { spotlight: true } : {}) } };
+      const photo = Array.isArray(event.photo_regions) && event.photo_regions.length > 0 ? { photo_regions: event.photo_regions as string[] } : {};
+      const updated = { ...board(store, id), highlight: { step_ids: event.step_ids as string[], ttl_ms: event.ttl_ms as number | null, ts, ...(event.spotlight === true ? { spotlight: true } : {}), ...photo } };
       return addBoardToSession({ ...store, boards: put(store.boards, id, updated) }, sessionId, id);
     }
     case "visual.await": {
