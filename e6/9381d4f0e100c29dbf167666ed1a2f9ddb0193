@@ -1,0 +1,34 @@
+packages/ui/src/icons.tsx
+  s_207b3a26495062::t_12e09bbdb81bf9 9,56
+packages/ui/src/composer/PhotoCapture.tsx
+  s_207b3a26495062::t_9073276d63280f 224
+  s_207b3a26495062::t_d63303de1e3244 214
+  s_207b3a26495062::t_12e09bbdb81bf9 212-213,215,220,223
+packages/ui/src/composer/DiagramDrill.tsx
+  s_207b3a26495062::t_ce98478b12ec9b 14-15,123-124
+  s_207b3a26495062::t_e8781fd3689631 1-7,9-13,16-71,73-122,125-145
+  s_207b3a26495062::t_a50255f748a909 8,72
+packages/ui/src/composer/Composer.tsx
+  s_207b3a26495062::t_b193bec6d291f6 17,62-64,71,211-217
+packages/ui/test/diagram-drill.test.tsx
+  s_207b3a26495062::t_6af6a738ae7dbe 1-120
+packages/i18n/locales/en.json
+  s_207b3a26495062::t_12e09bbdb81bf9 1366-1367,2724-2743
+  s_207b3a26495062::t_9073276d63280f 1368-1369
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e69381d4f0e100c29dbf167666ed1a2f9ddb0193",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
