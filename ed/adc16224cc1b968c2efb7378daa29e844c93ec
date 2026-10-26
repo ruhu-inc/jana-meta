@@ -1,0 +1,20 @@
+scripts/jana_tools/turn_latency.py
+  s_f965fb2a5dbe36::t_10edacbce6e52d 81,152-153,410-413,451
+  s_f965fb2a5dbe36::t_140e0ea74d6b21 191-213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "edadc16224cc1b968c2efb7378daa29e844c93ec",
+  "prompts": {},
+  "sessions": {
+    "s_f965fb2a5dbe36": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7abaddee-199c-4c11-b84a-cc7e10f23e21",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
