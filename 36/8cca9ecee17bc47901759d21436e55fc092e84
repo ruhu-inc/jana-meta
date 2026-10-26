@@ -1,0 +1,29 @@
+services/agent-core/agent_core/config/personal_data.py
+  s_207b3a26495062::t_10bb4c4ffffb70 40-42
+services/agent-core/tests/test_m19d_redaction_forms.py
+  s_1b50c8256925d5::t_3641d0cea27fe5 56-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "368cca9ecee17bc47901759d21436e55fc092e84",
+  "prompts": {},
+  "sessions": {
+    "s_1b50c8256925d5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "61753e47-e99f-48c3-992c-d35781c227eb",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    },
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
