@@ -151,6 +151,7 @@ def test_the_coach_is_told_where_to_point_and_never_the_answer() -> None:
     result = checked(FREE_BODY, [arrow(1, "W", 270), arrow(2, "R", 120), arrow(3, "F", 210)])
     note = coach_note(result, CAP)
     assert f'<point at="{CAP}:rgn_3"/>' in note and "friction" in note
+    assert "say_spoken only" in note and "never in say" in note  # markers are for the ear, never the screen
     assert "never say which way it should point" in note
     for leak in ("30", "up the slope", "along the slope", "degrees"):
         assert leak not in note

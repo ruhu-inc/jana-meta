@@ -304,8 +304,10 @@ def coach_note(result: SketchCheck, capture_id: str) -> str:
     note = ("the student photographed their own sketch and the engine compared it with the checked diagram. "
             + PROBLEM_NOTES[first.outcome].format(name=first.name or "one"))  # fmt: skip
     if first.region_id is not None:
-        note += (f'; point at it on their photo with <point at="{capture_id}:{first.region_id}"/> and ask one question '
-                 "that leads them to see what is off")  # fmt: skip
+        note += ("; it is lit on their photo already: refer to it in words (the arrow you labelled ...) and ask "
+                 "one question that leads them to see what is off; in a voice turn's say_spoken only, you may mark it "
+                 "with "
+                 f'<point at="{capture_id}:{first.region_id}"/>, never in say')  # fmt: skip
     else:
         note += "; ask one question that leads them to notice it"
     others = len(result.problems) - 1
