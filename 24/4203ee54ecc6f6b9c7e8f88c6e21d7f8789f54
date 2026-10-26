@@ -1,0 +1,26 @@
+packages/client-core/test/diagram-drill.test.ts
+  s_207b3a26495062::t_800144027dfcc2 1-61
+packages/client-core/src/index.ts
+  s_207b3a26495062::t_800144027dfcc2 70
+packages/client-core/src/photo.ts
+  s_207b3a26495062::t_12e09bbdb81bf9 18-20
+packages/client-core/src/diagram-drill.ts
+  s_207b3a26495062::t_d63303de1e3244 47-48,57-58,69-72,109-110
+  s_207b3a26495062::t_1f877b0795e43b 1-46,49-56,59-68,73-108,111-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "244203ee54ecc6f6b9c7e8f88c6e21d7f8789f54",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
