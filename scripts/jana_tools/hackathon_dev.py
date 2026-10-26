@@ -1,6 +1,6 @@
 """Start the original browser app with an optional verified, local NVIDIA tutor.
 
-No download happens at launch and no Nebius provider key is needed here. The
+No download happens at launch and no Meta provider key is needed here. The
 separately running gateway owns that secret and the persistent inference budget.
 """
 
@@ -48,13 +48,15 @@ def main() -> int:
     parser.add_argument("--local-model", type=Path)
     parser.add_argument("--port", type=int, default=5187)
     parser.add_argument("--stable", action="store_true", help="Serve a built preview without source-triggered reloads")
-    parser.add_argument("--data-dir", type=Path, default=Path(tempfile.gettempdir()) / "jana-nebius-browser")
+    parser.add_argument("--data-dir", type=Path, default=Path(tempfile.gettempdir()) / "jana-meta-browser")
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port must be between 1 and 65535")
-    env = {key: value for key, value in os.environ.items() if key not in {"NEBIUS_API_KEY", "TAVILY_API_KEY"}}
+    # Only the gateway may hold a provider key: none reaches the app, its core or the local model runtime.
+    provider_keys = {"META_API_KEY", "MODEL_API_KEY", "NVIDIA_API_KEY", "NEBIUS_API_KEY", "TAVILY_API_KEY"}
+    env = {key: value for key, value in os.environ.items() if key not in provider_keys}
     env.update(
-        JANA_NEBIUS_GATEWAY_CONFIG="services/cloud-gateway/deploy/nebius-dev.toml",
+        JANA_META_GATEWAY_CONFIG="services/cloud-gateway/deploy/meta-dev.toml",
         JANA_DEV_DATA_DIR=str(args.data_dir.resolve()),
         JANA_DEV_HOST="127.0.0.1",
         PORT=str(args.port),
@@ -62,7 +64,7 @@ def main() -> int:
     pnpm = shutil.which("pnpm")
     if not pnpm:
         parser.error("pnpm is not installed")
-    with tempfile.TemporaryDirectory(prefix="jana-nebius-runtime-") as folder:
+    with tempfile.TemporaryDirectory(prefix="jana-meta-runtime-") as folder:
         runtime = None
         try:
             if args.local_model:

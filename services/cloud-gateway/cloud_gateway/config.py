@@ -12,13 +12,13 @@ import tomllib
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cloud_gateway.operations import OperationsPolicy
 
 DEFAULTS = Path(__file__).with_name("defaults.toml")
 Environment = Literal["dev", "staging", "pilot", "production"]
-AdapterKind = Literal["gemini", "vertex", "openai_compat", "nebius"]
+AdapterKind = Literal["gemini", "vertex", "openai_compat", "meta"]
 Effort = Literal["none", "low", "medium", "high"]
 
 
@@ -77,7 +77,10 @@ class ProviderSpec(_Strict):
     connect_timeout_s: float = key(5.0, serves="ARC-06", unit="s", ge=0.1)
     # The request field an OpenAI-compatible provider reads the session pseudonym from, if any (PRV-25).
     pseudonym_field: str | None = None
-    models: dict[str, ModelSpec]  # model alias (fast-model, strong-model, small-model) -> concrete model
+    # Study drafts display text as {prose, math} parts instead of LaTeX in strings, for a model that leaves raw
+    # equations in prose. Off by default: Muse Spark writes delimited LaTeX (switch on if day-1 checks show otherwise).
+    study_structured_math: bool = False
+    models: dict[str, ModelSpec]  # model alias (fast-model, strong-model) -> concrete model
 
 
 class Price(_Strict):
@@ -135,6 +138,9 @@ class Quotas(_Strict):
     deployment_total_spend_usd: float | None = key(None, serves="SEC-20", unit="USD", ge=0)
     deployment_budget_expires_at: AwareDatetime | None = key(None, serves="SEC-20")
     deployment_max_output_tokens: int = key(8192, serves="SEC-20", unit="tokens", ge=1, le=65536)
+    # The input-token bound reserved per image. Muse Spark bills images as input tokens, about 1,300-1,500 for a
+    # ~1280 px image (dev.meta.ai/docs/image-understanding); the perception worker sends at most 1600 px.
+    deployment_image_input_tokens: int = key(4096, serves="SEC-20", unit="tokens", ge=1, le=65536)
     # Spend anomaly: today's spend over this multiple of the trailing daily mean (per device within its licence,
     # and per licence), once it is above the floor.
     anomaly_multiple: float = key(5.0, serves="SEC-20", ge=1)
@@ -157,9 +163,9 @@ class Tier(_Strict):
     # Unset: computed from TABLE BIZ-18a's lowest price per student month. Set: the allowance, whatever the prices.
     allowance_usd_per_student_month: float | None = key(None, serves="BIZ-18", unit="USD", ge=0)
     # TABLE BIZ-08b's usage mix for `p_blend` (proposals until pilot traces replace them): model calls per tutor turn
-    # by the primary provider's model alias (Coach and the rule matcher on the fast model, Checker phrasing on the
-    # small one), and tokens per call with the cached share of the input.
-    calls_per_turn: dict[str, float] = key({"fast-model": 2.0, "small-model": 1.0}, serves="BIZ-08", unit="calls")
+    # by the primary provider's model alias (Coach, the rule matcher and Checker phrasing on the fast model), and
+    # tokens per call with the cached share of the input.
+    calls_per_turn: dict[str, float] = key({"fast-model": 3.0}, serves="BIZ-08", unit="calls")
     input_tokens_per_call: float = key(3000.0, serves="BIZ-08", unit="tokens", ge=0)
     output_tokens_per_call: float = key(250.0, serves="BIZ-08", unit="tokens", ge=0)
     cache_hit_share: float = key(0.6, serves="BIZ-08", unit="share", ge=0, le=1)
@@ -269,6 +275,13 @@ class GatewayConfig(_Strict):
     # Secret-manager mount: one file per secret, named after the secret (SEC-20).
     secrets_dir: Path | None = None
     keychain_service: str = "jana.cloud-gateway"
+
+    @field_validator("storage_dir", "log_path", "secrets_dir", mode="after")
+    @classmethod
+    def _home(cls, value: Path | None) -> Path | None:
+        """A leading `~` names the operator's home, so a dev ledger can live outside /tmp without a user name."""
+        return value.expanduser() if value is not None else None
+
     # At most an hour each: the gateway contract's bound on `expires_in` (SEC-21, D39).
     access_token_ttl_s: int = key(900, serves="SEC-21", unit="s", ge=60, le=3600)  # proposal: 15 minutes
     challenge_ttl_s: int = key(60, serves="SEC-21", unit="s", ge=5, le=3600)

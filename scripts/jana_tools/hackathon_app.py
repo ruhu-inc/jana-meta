@@ -1,4 +1,4 @@
-"""Run the original app against the owner's local, budgeted Nebius gateway.
+"""Run the app against the owner's local, budgeted Meta gateway (Muse Spark).
 
 Development host only. The original consent, first-use, egress ledger, profile,
 assessment and Study paths remain in use. This adapter never reads a provider key.
@@ -25,7 +25,7 @@ from agent_core.router.hardware import TutorPath
 from agent_core.store import subscription as subscriptions
 from agent_core.store.keystore import FileKeyStore, KeyStore, MemoryKeyStore
 from cloud_gateway.config import GatewayConfig, load_config
-from cloud_gateway.providers.nebius import prepare_body
+from cloud_gateway.providers.meta import prepare_body
 from cloud_gateway.store import GatewayStore
 from cloud_gateway.tier import monthly_allowance_tokens
 
@@ -87,19 +87,19 @@ class GatewayHop(httpx.AsyncBaseTransport):
 
 
 def gateway_config() -> GatewayConfig:
-    path = os.environ.get("JANA_NEBIUS_GATEWAY_CONFIG")
+    path = os.environ.get("JANA_META_GATEWAY_CONFIG")
     if not path:
-        raise ValueError("Set JANA_NEBIUS_GATEWAY_CONFIG to the approved gateway configuration")
+        raise ValueError("Set JANA_META_GATEWAY_CONFIG to the approved gateway configuration")
     config = load_config(Path(path))
     if (
         config.environment != "dev"
         or config.audience_host != HOST
-        or config.slots.get("primary") != "nebius"
+        or config.slots.get("primary") != "meta"
         or config.quotas.deployment_total_spend_usd is None
         or config.quotas.deployment_daily_spend_usd is None
         or config.quotas.deployment_budget_expires_at is None
     ):
-        raise ValueError("The browser host requires a local Nebius gateway with daily, total and expiry limits")
+        raise ValueError("The browser host requires a local Meta gateway with daily, total and expiry limits")
     return config
 
 
@@ -116,7 +116,7 @@ class SponsoredRuntime(AppRuntime):
         if self.release:
             raise ValueError("The local hackathon adapter is not a release deployment")
         self.gateway = gateway_config()
-        self.gateway_port = int(os.environ.get("JANA_NEBIUS_GATEWAY_PORT", "8081"))
+        self.gateway_port = int(os.environ.get("JANA_META_GATEWAY_PORT", "8081"))
         layer.hosts = {service: HOST for service in ("gateway",)}
         # Downloads/updates/voice keep their original implementations, but no such
         # external service is connected by this local inference adapter.

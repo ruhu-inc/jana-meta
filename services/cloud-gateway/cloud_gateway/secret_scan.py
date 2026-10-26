@@ -30,10 +30,12 @@ PATTERNS: dict[str, re.Pattern[bytes]] = {
     "anthropic_key": re.compile(rb"sk-ant-[A-Za-z0-9_\-]{8,}"),
     "openai_key": re.compile(rb"sk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_\-]{20,}"),
     "nvidia_api_key": re.compile(rb"nvapi-[A-Za-z0-9_\-]{20,}"),
+    # Meta Model API keys look like LLM_<numeric id>_<secret> (dev.meta.ai/docs/authentication).
+    "meta_api_key": re.compile(rb"LLM_[0-9]{4,}_[A-Za-z0-9_\-]{16,}"),
     "tavily_key": re.compile(rb"tvly-(?:dev-|prod-)?[A-Za-z0-9_\-]{20,}"),
     "goog_api_key_header": re.compile(rb"x-goog-api-key[\"']?\s*[:=]\s*[\"']?([a-z0-9_\-]{20,})"),
 }
-_BOUNDED = frozenset({"anthropic_key", "openai_key", "tavily_key", "nvidia_api_key"})
+_BOUNDED = frozenset({"anthropic_key", "openai_key", "tavily_key", "nvidia_api_key", "meta_api_key"})
 _HEADER = "goog_api_key_header"
 FIXTURE_WORDS = (b"canary", b"test", b"example", b"dummy", b"fake", b"placeholder")
 HISTORY_FIXTURES: dict[str, str] = {

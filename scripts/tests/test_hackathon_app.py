@@ -55,13 +55,14 @@ def test_transport_streaming_auth_and_compatibility() -> None:
             assert request.url == "http://127.0.0.1:8081/v1/chat/completions"
             assert request.headers["authorization"] == "Bearer synthetic-device-token"
             body = json.loads(await request.aread())
-            assert body["tool_choice"] == "auto"
-            assert body["messages"][0]["content"].startswith("Jana required output contract.")
+            assert body["tool_choice"] == "auto" and body["store"] is False
+            assert body["response_format"]["type"] == "json_schema"  # Spark decodes to the schema; no prompt copy
             assert int(request.headers["content-length"]) == len(request.content)
             return httpx.Response(200, content=b'data: {"choices":[]}\n\ndata: [DONE]\n\n')
 
         body = {
             "messages": [],
+            "tools": [{"type": "function", "function": {"name": "math_solve", "parameters": {"type": "object"}}}],
             "tool_choice": "required",
             "response_format": {"type": "json_schema", "json_schema": {"schema": {"type": "object"}}},
         }
@@ -86,7 +87,8 @@ def test_study_is_online_only_and_speech_is_not_billed() -> None:
     assert settings.build_stage == "S3"
     from agent_core.config.support import settings_sections
 
-    assert {s["id"] for s in settings_sections(settings.build_stage)} >= {"parent_summary", "alerts"}
+    sections = {s["id"] for s in settings_sections(settings.build_stage)}
+    assert "voice" in sections and not sections & {"parent_summary", "alerts"}  # adults only (JM-D15)
 
 
 def test_local_model_pin_keeps_cloud_candidates() -> None:
@@ -106,9 +108,9 @@ def test_sponsor_never_grants_consent_and_restart_keeps_credential(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     config = tmp_path / "gateway.toml"
-    original = (REPO_ROOT / "services/cloud-gateway/deploy/nebius-dev.toml").read_text()
-    config.write_text(original.replace('"/tmp/jana-nebius-gateway"', json.dumps(str(tmp_path / "gateway"))))
-    monkeypatch.setenv("JANA_NEBIUS_GATEWAY_CONFIG", str(config))
+    original = (REPO_ROOT / "services/cloud-gateway/deploy/meta-dev.toml").read_text()
+    config.write_text(original.replace('"~/.jana-meta/gateway"', json.dumps(str(tmp_path / "gateway"))))
+    monkeypatch.setenv("JANA_META_GATEWAY_CONFIG", str(config))
 
     async def available(_port: int) -> None:
         pass

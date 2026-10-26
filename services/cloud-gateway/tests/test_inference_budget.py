@@ -18,12 +18,16 @@ from gateway_stubs import Device, Output, gateway_config, harness
 NOW = 1792716361.0  # 2026-10-23T00:46:01Z
 
 
+# The ledger's arithmetic below is worked out at this price; the shipped price is checked in test_meta.py.
+TEST_PRICE = {"input": 0.30, "cached_input": 0.06, "output": 0.90}
+
+
 def config(**quotas):
-    return load_config(quotas={"deployment_total_spend_usd": 1.0, **quotas})
+    return load_config(quotas={"deployment_total_spend_usd": 1.0, **quotas}, prices={"muse-spark-1.3": TEST_PRICE})
 
 
 def request(**body) -> ProviderRequest:
-    model = load_config().providers["nebius"].models["fast-model"]
+    model = load_config().providers["meta"].models["fast-model"]
     return ProviderRequest(
         model,
         {"messages": [{"role": "user", "content": "Help me with algebra."}], "max_tokens": 64, **body},
@@ -191,19 +195,19 @@ def test_approval_expiry_and_output_bound_are_enforced(tmp_path: Path) -> None:
 
 def test_all_gateway_provider_paths_share_budget(tmp_path: Path) -> None:
     async def run() -> None:
-        h = harness(gateway_config(tmp_path, slots={"primary": "nebius"}, quotas={"deployment_total_spend_usd": 0}))
+        h = harness(gateway_config(tmp_path, slots={"primary": "meta"}, quotas={"deployment_total_spend_usd": 0}))
         device = Device()
         await device.login(h.client)
         response = await device.chat(
             h.client, {"model": "primary/fast-model", "messages": [{"role": "user", "content": "Help."}]}
         )
         assert response.status_code == 429
-        assert h.stubs["nebius"].seen == []
+        assert h.stubs["meta"].seen == []
         gw = h.client._transport.app.state.gateway
         _, study_adapter, model = gw.providers.resolve(gw.config.study_model)
         with pytest.raises(UpstreamError, match="budget exhausted"):
             await study_adapter.complete(ProviderRequest(model, request().body, "fake-study-session"))
-        assert h.stubs["nebius"].seen == []
+        assert h.stubs["meta"].seen == []
         await h.client.aclose()
 
     asyncio.run(run())
@@ -214,19 +218,19 @@ def test_gateway_counts_real_stream_usage_and_caps_output(tmp_path: Path) -> Non
         h = harness(
             gateway_config(
                 tmp_path,
-                slots={"primary": "nebius"},
+                slots={"primary": "meta"},
                 quotas={"deployment_total_spend_usd": 1, "deployment_max_output_tokens": 128},
             )
         )
         device = Device()
         await device.login(h.client)
-        h.stubs["nebius"].say(Output(text="A hint."))
+        h.stubs["meta"].say(Output(text="A hint."))
         response = await device.chat(
             h.client,
             {"model": "primary/fast-model", "stream": True, "messages": [{"role": "user", "content": "Help."}]},
         )
         assert response.status_code == 200
-        assert h.stubs["nebius"].seen[-1].body["max_completion_tokens"] == 128
+        assert h.stubs["meta"].seen[-1].body["max_completion_tokens"] == 128
         gw = h.client._transport.app.state.gateway
         assert gw.inference_budget.snapshot()["held_usd"] == 0
         assert gw.inference_budget.snapshot()["spent_usd"] > 0
@@ -256,7 +260,7 @@ def test_invalid_budget_limits_are_refused(amount: float) -> None:
         {"max_tokens": -1},
         {"max_tokens": "100"},
         {"max_tokens": 1.5},
-        {"messages": [{"role": "user", "content": [{"type": "image_url", "image_url": {"url": "fake-image"}}]}]},
+        {"messages": [{"role": "user", "content": [{"type": "input_audio", "input_audio": {"data": "fake"}}]}]},
     ],
 )
 def test_unbounded_inputs_are_refused_before_sending(tmp_path: Path, body: dict) -> None:
@@ -266,4 +270,23 @@ def test_unbounded_inputs_are_refused_before_sending(tmp_path: Path, body: dict)
     with pytest.raises(UpstreamError):
         asyncio.run(BudgetedAdapter(adapter, budget).complete(request(**body)))
     assert adapter.sends == 0 and budget.snapshot()["held_usd"] == 0
+    store.close()
+
+
+def test_images_are_reserved_at_their_token_allowance_not_their_bytes(tmp_path: Path) -> None:
+    store = GatewayStore(tmp_path)
+    budget = InferenceBudget(config(deployment_image_input_tokens=4096), store, lambda: NOW)
+    photo = "data:image/jpeg;base64," + "A" * 2_000_000  # a large encoding; its bytes are not its tokens
+    text_only = request()
+    with_photo = request(messages=[{"role": "user", "content": [
+        {"type": "text", "text": "Help me with algebra."}, {"type": "image_url", "image_url": {"url": photo}},
+    ]}])  # fmt: skip
+    _, sent = budget.reserve(with_photo)
+    assert sent.body["messages"][0]["content"][1]["image_url"]["url"] == photo  # the image itself is sent unchanged
+    held_photo = budget.snapshot()["held_usd"]
+    budget.reserve(text_only)
+    held_text = budget.snapshot()["held_usd"] - held_photo
+    price = config().prices["muse-spark-1.3"]
+    # The photo adds its allowance (plus the content-list framing), far below what 2 MB of bytes would cost.
+    assert 4096 * price.input / 1e6 <= held_photo - held_text < 4500 * price.input / 1e6
     store.close()

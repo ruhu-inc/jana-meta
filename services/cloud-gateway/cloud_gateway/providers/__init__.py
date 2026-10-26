@@ -11,7 +11,7 @@ from cloud_gateway.config import GatewayConfig, ModelSpec, ProviderSpec
 from cloud_gateway.custody import Secret, SecretSource
 from cloud_gateway.providers.base import ProviderAdapter
 from cloud_gateway.providers.gemini import GeminiAdapter
-from cloud_gateway.providers.nebius import NebiusAdapter
+from cloud_gateway.providers.meta import MetaAdapter
 from cloud_gateway.providers.openai_compat import OpenAICompatAdapter
 from cloud_gateway.providers.vertex import VertexAdapter
 
@@ -23,7 +23,7 @@ ADAPTERS: dict[str, Callable[[ProviderSpec, Secret | None, httpx.AsyncClient], P
     "gemini": GeminiAdapter,
     "vertex": VertexAdapter,
     "openai_compat": OpenAICompatAdapter,
-    "nebius": NebiusAdapter,
+    "meta": MetaAdapter,
 }
 
 

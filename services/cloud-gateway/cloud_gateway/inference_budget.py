@@ -1,6 +1,7 @@
 """Deployment-wide inference caps at the provider boundary, shared by tutor, Study, Ask and probes.
 
-Every text request reserves a conservative byte/token upper bound in SQLite before calling the adapter. Output
+Every request reserves a conservative byte/token upper bound in SQLite before calling the adapter: text by its UTF-8
+bytes, each image at a fixed input-token allowance (images are billed as input tokens). Output
 tokens (including reasoning) are explicitly bounded. A successful response with usage replaces the reservation
 with actual cost; missing usage, failures, cancellations and crashes retain the bound until operator reconciliation.
 No prompt, reply, account identifier or credential is stored here. Daily aggregate counters survive metadata purge;
@@ -67,10 +68,17 @@ class InferenceBudget:
         if price is None:
             raise UpstreamError("quota_or_billing", "no configured price for bounded inference")
         body = dict(request.body)
+        images = 0
+        measured_messages = []
         for message in body.get("messages", []):
             content = message.get("content")
-            if isinstance(content, list) and any(part.get("type") != "text" for part in content):
-                raise UpstreamError("format_error", "bounded inference accepts extracted text only")
+            if isinstance(content, list):
+                if any(part.get("type") not in ("text", "image_url") for part in content):
+                    raise UpstreamError("format_error", "bounded inference accepts text and images only")
+                images += sum(1 for part in content if part.get("type") == "image_url")
+                # An image's encoded bytes say nothing about its token cost; it is bounded by its allowance below.
+                content = [part for part in content if part.get("type") == "text"]
+            measured_messages.append({**message, "content": content})
         limit = self.config.quotas.deployment_max_output_tokens
         for field in ("max_tokens", "max_completion_tokens"):
             if body.get(field) is not None:
@@ -80,12 +88,12 @@ class InferenceBudget:
                 limit = min(limit, value)
         body.pop("max_tokens", None)
         body["max_completion_tokens"] = limit
-        # UTF-8 bytes bound text-token counts conservatively. Additional framing headroom is reserved per message
-        # plus a fixed tool/schema allowance. No cache discount is assumed in the upper bound.
-        # Nebius repeats the response schema in a system instruction. Reserve the request's byte size twice so
-        # that provider translation cannot add unbudgeted schema tokens.
-        body_bytes = len(json.dumps(body, ensure_ascii=False).encode())
-        input_bound = 2 * body_bytes + 4096 + 256 * len(body.get("messages", []))
+        # UTF-8 bytes bound text-token counts conservatively (a token is at least one byte). Additional framing
+        # headroom is reserved per message plus a fixed tool/schema allowance. No cache discount is assumed.
+        measured = {**body, "messages": measured_messages}
+        body_bytes = len(json.dumps(measured, ensure_ascii=False).encode())
+        input_bound = (body_bytes + 4096 + 256 * len(body.get("messages", []))
+                       + images * self.config.quotas.deployment_image_input_tokens)  # fmt: skip
         bound = micros(cost_usd(price, Usage(input_bound, limit)))
         key, day = secrets.token_hex(16), day_of(self.clock())
         with self.store._tx() as db:

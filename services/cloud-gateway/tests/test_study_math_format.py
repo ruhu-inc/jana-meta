@@ -41,7 +41,7 @@ def test_generation_contract_explains_math_format_for_claims_and_quiz_options():
     assert "LaTeX" in claim["description"]
 
 
-def test_nebius_parts_bind_to_renderable_text_and_leave_exact_quotes_and_keys_unchanged():
+def test_structured_parts_bind_to_renderable_text_and_leave_exact_quotes_and_keys_unchanged():
     quote = {"quote": "x_i=2"}
     display = [{"kind": "prose", "value": "The value is "}, {"kind": "math", "value": "x_i=2"}]
     draft = {

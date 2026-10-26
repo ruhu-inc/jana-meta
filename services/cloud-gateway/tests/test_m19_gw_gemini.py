@@ -185,5 +185,5 @@ REFUSED_LEVELS = {"gemini-3.8-flash": {"minimal"}}
 
 
 def test_shipped_models_map_efforts_to_levels_they_accept() -> None:
-    """The hackathon default is Nebius-only; Gemini adapters are tested above with explicit fixtures."""
-    assert set(load_config().providers) == {"nebius"}
+    """The shipped default is Meta only (JM-D9); Gemini adapters are tested above with explicit fixtures."""
+    assert set(load_config().providers) == {"meta"}

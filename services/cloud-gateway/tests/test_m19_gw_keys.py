@@ -176,9 +176,9 @@ def test_keychain_lookup_commands() -> None:
     assert ChainedSecrets((missing,)).get("gemini_api_key") is None
 
 
-@pytest.mark.parametrize("name", ["nebius_api_key", "nvidia_api_key"])
+@pytest.mark.parametrize("name", ["meta_api_key", "nvidia_api_key"])
 def test_hackathon_keychain_uses_dedicated_service_without_environment(name: str) -> None:
-    config = load_config(REPO / "services/cloud-gateway/deploy/nebius-dev.toml")
+    config = load_config(REPO / "services/cloud-gateway/deploy/meta-dev.toml")
     calls = []
 
     def run(argv: list[str]) -> subprocess.CompletedProcess[str]:
@@ -189,7 +189,7 @@ def test_hackathon_keychain_uses_dedicated_service_without_environment(name: str
     source = secret_source(config, environ={}, keychain=keychain)
     found = source.get(name)
     assert found is not None and found.reveal() == "synthetic-key-not-real"
-    assert calls == [["security", "find-generic-password", "-s", "jana-nebius.cloud-gateway", "-a", name, "-w"]]
+    assert calls == [["security", "find-generic-password", "-s", "jana-meta.cloud-gateway", "-a", name, "-w"]]
     assert "synthetic-key-not-real" not in repr(found)
 
 

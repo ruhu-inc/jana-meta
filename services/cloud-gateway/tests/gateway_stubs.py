@@ -44,7 +44,7 @@ def entitlement(subscription: str, licence: str = LICENCE, period: tuple[str, st
 
 
 FAKE_KEYS = {
-    "nebius_api_key": "stub-nebius-key-not-real",
+    "meta_api_key": "stub-meta-key-not-real",
     "gemini_api_key": "stub-gemini-key-not-real",
     "openai_api_key": "stub-openai-key-not-real",
     "admin_token": "stub-admin-token-not-real",
@@ -353,14 +353,14 @@ class FakeSecrets:
 
 
 PROVIDERS = {
-    "nebius": {
-        "adapter": "nebius",
-        "base_url": "https://nebius.stub/v1",
-        "secret": "nebius_api_key",
+    "meta": {
+        "adapter": "meta",
+        "base_url": "https://meta.stub/v1",
+        "secret": "meta_api_key",
+        "pseudonym_field": "safety_identifier",
         "models": {
-            "strong-model": {"id": "nebius-stub-ultra"},
-            "fast-model": {"id": "nebius-stub-super"},
-            "small-model": {"id": "nebius-stub-nano"},
+            "strong-model": {"id": "muse-stub-strong"},
+            "fast-model": {"id": "muse-stub-fast"},
         },
     },
     "gemini": {

@@ -6,7 +6,7 @@ import hashlib
 import json
 
 import pytest
-from gateway_stubs import Device, Output, gateway_config, harness
+from gateway_stubs import PROVIDERS, Device, Output, gateway_config, harness
 
 JID = "stj_" + "0" * 26
 SID = "src_" + "1" * 26
@@ -660,9 +660,12 @@ def test_math_format_gets_one_bounded_retry_before_independent_support(tmp_path,
 
 
 @pytest.mark.parametrize("second_valid,supported", [(True, True), (True, False), (False, False)])
-def test_malformed_nebius_display_parts_get_one_fresh_verified_retry(tmp_path, second_valid, supported):
+def test_malformed_display_parts_get_one_fresh_verified_retry(tmp_path, second_valid, supported):
     async def run():
-        h = harness(gateway_config(tmp_path, slots={"primary": "nebius", "fallback": "openai_compat"}))
+        # A provider configured for structured maths drafts display text as {prose, math} parts.
+        providers = {**PROVIDERS, "meta": {**PROVIDERS["meta"], "study_structured_math": True}}
+        slots = {"primary": "meta", "fallback": "openai_compat"}
+        h = harness(gateway_config(tmp_path, slots=slots, providers=providers))
         device = Device()
         await device.login(h.client)
 
@@ -673,7 +676,7 @@ def test_malformed_nebius_display_parts_get_one_fresh_verified_retry(tmp_path, s
             }
             return {"request_id": JID, "kind": "summary", "claims": [claim]}
 
-        h.stubs["nebius"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft(False))),
             Output(text=json.dumps(draft(second_valid))),
             *(
@@ -697,7 +700,7 @@ def test_malformed_nebius_display_parts_get_one_fresh_verified_retry(tmp_path, s
         )
         response = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert response.status_code == (200 if supported else 422), response.text
-        calls = h.stubs["nebius"].seen
+        calls = h.stubs["meta"].seen
         assert len(calls) == (3 if second_valid else 2)
         assert json.loads(calls[0].user_texts[0])["passages"] == json.loads(calls[1].user_texts[0])["passages"]
         assert "nonempty string" in calls[1].system
@@ -708,50 +711,6 @@ def test_malformed_nebius_display_parts_get_one_fresh_verified_retry(tmp_path, s
             assert (
                 json.loads(calls[2].user_texts[0])["draft"]["claims"][0]["text"] == "Enzymes are biological catalysts."
             )
-        store = h.client._transport.app.state.gateway.store
-        assert store._db.execute("SELECT count(*) FROM requests").fetchone()[0] == 1
-        assert store._db.execute("SELECT reserved_usd FROM study_receipts").fetchone()[0] == 0
-
-    asyncio.run(run())
-
-
-@pytest.mark.parametrize("second_valid", [True, False])
-def test_malformed_nebius_verdict_never_publishes_before_a_fresh_verified_draft(tmp_path, second_valid):
-    async def run():
-        h = harness(gateway_config(tmp_path, slots={"primary": "nebius", "fallback": "openai_compat"}))
-        device = Device()
-        await device.login(h.client)
-        draft = {
-            "request_id": JID,
-            "kind": "summary",
-            "claims": [
-                {
-                    "text": [{"kind": "prose", "value": "Enzymes are biological catalysts."}],
-                    "citations": [{"passage_id": "p0"}],
-                }
-            ],
-        }
-        verdict = {
-            "supported": True,
-            "safe": True,
-            "answerable": True,
-            "repairable": False,
-            "reason": "Checked",
-            "claim_support": [True],
-        }
-        malformed = {**verdict, "claim_support": "true"}
-        h.stubs["nebius"].say(
-            Output(text=json.dumps(draft)),
-            Output(text=json.dumps(malformed)),
-            Output(text=json.dumps(draft)),
-            Output(text=json.dumps(verdict if second_valid else malformed)),
-        )
-        response = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
-        assert response.status_code == (200 if second_valid else 422), response.text
-        calls = h.stubs["nebius"].seen
-        assert len(calls) == 4
-        assert "verification response was malformed" in calls[2].system
-        assert json.loads(calls[0].user_texts[0])["passages"] == json.loads(calls[2].user_texts[0])["passages"]
         store = h.client._transport.app.state.gateway.store
         assert store._db.execute("SELECT count(*) FROM requests").fetchone()[0] == 1
         assert store._db.execute("SELECT reserved_usd FROM study_receipts").fetchone()[0] == 0

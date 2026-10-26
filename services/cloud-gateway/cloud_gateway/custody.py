@@ -10,8 +10,9 @@ Sources, by environment:
   the Secret Service (`secret-tool lookup service jana.cloud-gateway account gemini_api_key`).
 - `dev` only: a developer's own key from the environment, `JANA_DEV_<NAME>` (for example `JANA_DEV_GEMINI_API_KEY`).
   Staging, pilot and production ignore environment keys.
-- The hackathon's server integrations accept `NEBIUS_API_KEY` and `NVIDIA_API_KEY` in the gateway process
-  environment. Each source resolves only its own provider secret; neither loads a dotenv file.
+- Every environment also accepts `META_API_KEY` (the Meta Model API key; Meta's docs call it `MODEL_API_KEY`) and
+  `NVIDIA_API_KEY` in the gateway process environment, as a hosting runtime's secret-to-environment mapping supplies
+  them. Each source resolves only its own provider secret; neither loads a dotenv file.
 
 A `Secret` never shows its value in `repr`, `str`, formatting or pickling; code asks for it with `reveal()` at the
 one place it is sent (a provider request header) and nowhere else."""
@@ -133,15 +134,15 @@ class DevEnvironmentSecrets:
 
 
 @dataclass(frozen=True)
-class NebiusEnvironmentSecrets:
-    """The server-only Token Factory credential supplied by the deployment runtime."""
+class MetaEnvironmentSecrets:
+    """The server-only Meta Model API key supplied by the deployment runtime."""
 
     environ: Mapping[str, str] = field(repr=False)
 
     def get(self, name: str) -> Secret | None:
-        if name != "nebius_api_key":
+        if name != "meta_api_key":
             return None
-        value = self.environ.get("NEBIUS_API_KEY", "").strip()
+        value = self.environ.get("META_API_KEY", "").strip()
         return Secret(value) if value else None
 
 
@@ -176,7 +177,7 @@ def secret_source(
     """The sources an environment may read, most specific first."""
     runtime_environ = os.environ if environ is None else environ
     sources: list[SecretSource] = [
-        NebiusEnvironmentSecrets(runtime_environ),
+        MetaEnvironmentSecrets(runtime_environ),
         NvidiaEnvironmentSecrets(runtime_environ),
     ]
     if config.environment == "dev":

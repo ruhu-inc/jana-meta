@@ -20,7 +20,6 @@ from typing import Any
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
-from jsonschema import Draft202012Validator
 
 from cloud_gateway import minimise
 from cloud_gateway.auth import AuthError
@@ -504,8 +503,8 @@ def generation_schema(
         variants = [v for v in (choice, item, plain) if v["properties"]["type"]["enum"]]
         definitions["QuizItem"] = {"anyOf": variants} if len(variants) > 1 else variants[0]
         if structured_math:
-            # Nemotron receives one shallow item shape rather than repeated text-part schemas in an
-            # anyOf. The canonical contract below still enforces each selected type's required fields.
+            # One shallow item shape rather than repeated text-part schemas in an anyOf. The canonical
+            # contract below still enforces each selected type's required fields.
             flat_item["properties"]["type"] = {
                 "type": "string",
                 "enum": allowed(
@@ -539,8 +538,8 @@ def generation_schema(
             return value
         if "$ref" in value:
             return inline(definitions[value["$ref"].rsplit("/", 1)[1]])
-        # Gemini's schema compiler needs the reduced dialect. Nemotron's draft contract keeps explicit
-        # size bounds, including the requested item count and display-part lengths, to avoid runaway drafts.
+        # The reduced dialect suits providers whose schema compilers refuse size bounds. The structured-math
+        # draft keeps explicit size bounds, including the requested item count and display-part lengths.
         omitted = {"pattern", "minimum", "maximum"}
         if not structured_math:
             omitted.update({"minLength", "maxLength", "maxItems"})
@@ -1045,7 +1044,8 @@ class StudyService:
         phase = "generation"
         deadline = asyncio.get_running_loop().time() + 180
         try:
-            structured_math = provider == "nebius" and body["kind"] in {"summary", "notes", "flashcards", "quiz"}
+            prose_kinds = {"summary", "notes", "flashcards", "quiz"}
+            structured_math = self.gw.config.providers[provider].study_structured_math and body["kind"] in prose_kinds
             draft_count = body.get("count", 12)
             draft_question_types = body.get("settings", {}).get("question_types")
             output_schema = generation_schema(
@@ -1638,21 +1638,7 @@ class StudyService:
                     usage.cached_tokens + check.usage.cached_tokens,
                 )
                 phase = "support_json"
-                try:
-                    verdict = completed_object(check)
-                    if provider == "nebius" and not Draft202012Validator(support_schema).is_valid(verdict):
-                        raise Refused("insufficient_evidence")
-                except Refused:
-                    if provider != "nebius" or draft_attempt != 0:
-                        raise
-                    # Malformed verifier JSON is no verdict. Discard this draft and use only the
-                    # already-reserved second generation/verification pair; never override a refusal.
-                    system += (
-                        " The previous verification response was malformed, so that draft was discarded. "
-                        "Return a fresh concise draft of explicit source facts with the exact output schema. "
-                        "Use only essential citations and preserve all conditions and requested item types."
-                    )
-                    continue
+                verdict = completed_object(check)  # malformed verifier JSON is no verdict: refused, never overridden
                 phase = "support_contract"
                 selector_failure = None
                 if selecting:

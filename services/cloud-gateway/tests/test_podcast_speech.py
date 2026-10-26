@@ -66,7 +66,7 @@ def body(index=0):
 def test_nvidia_key_source_and_scanner_do_not_expose_or_cross_providers():
     source = NvidiaEnvironmentSecrets({"NVIDIA_API_KEY": KEY})
     assert source.get("nvidia_api_key").reveal() == KEY
-    assert source.get("nebius_api_key") is None and KEY not in repr(source)
+    assert source.get("meta_api_key") is None and KEY not in repr(source)
     canary = b"nv" + b"api-" + b"A7" * 22
     finding = scan_bytes(canary, "fixture")[0]
     assert finding.pattern == "nvidia_api_key" and canary.decode() not in str(finding)

@@ -1,7 +1,7 @@
 # Router configuration shipped with the agent core (validated against agents/router-config at load).
 # Local model ids are the D58 candidates, provisional until the M7 bake-off decides D6: every local model is 7B or
-# larger, and the fast tier leads with the 8B class the minimum laptop runs. In this hackathon fork, an enabled,
-# consented online tier prefers Nemotron through the gateway; offline candidates remain available. Retry and backoff values
+# larger, and the fast tier leads with the 8B class the minimum laptop runs. An enabled, consented online tier prefers
+# Meta's Muse Spark through the gateway for every role (JM-D9); offline candidates remain available. Retry and backoff values
 # must equal the configuration keys router_retry_same_model and router_backoff_* (test: router_yaml_matches_keys).
 version: 1
 tiers:
@@ -11,7 +11,6 @@ tiers:
   - cloud:primary/fast-model
   strong:
   - cloud:primary/strong-model
-  - cloud:fallback/strong-model
   - local:gemma-4-26b-a4b
   - local:qwen3-vl-30b
   - local:gemma-4-12b

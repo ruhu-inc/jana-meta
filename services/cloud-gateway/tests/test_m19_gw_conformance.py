@@ -171,7 +171,7 @@ def _run(config_slots: dict[str, str], tmp: Path) -> dict[str, str]:
     return asyncio.run(main())
 
 
-@pytest.mark.parametrize("provider", ["gemini", "openai_compat", "nebius"])
+@pytest.mark.parametrize("provider", ["gemini", "openai_compat", "meta"])
 def test_conformance_per_adapter(provider: str, tmp_path: Path) -> None:
     other = "openai_compat" if provider == "gemini" else "gemini"
     served = _run({"primary": provider, "fallback": other}, tmp_path)
