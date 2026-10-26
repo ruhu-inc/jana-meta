@@ -1,0 +1,23 @@
+content/curriculum/mth/o/kcs/coordinate_geometry.yaml
+  s_1b50c8256925d5::t_68d258d2241922 87
+content/curriculum/phy/o/kcs/motion.yaml
+  s_1b50c8256925d5::t_3a52ff0701c6fc 182
+services/agent-core/agent_core/tools/fixtures/phys_projectile.yaml
+  s_1b50c8256925d5::t_6205d222dca414 3,16-20,24-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c27a4ebf47846780d834dd9e9f4bc84f9be2bdec",
+  "prompts": {},
+  "sessions": {
+    "s_1b50c8256925d5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "61753e47-e99f-48c3-992c-d35781c227eb",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
