@@ -409,6 +409,9 @@ def api07_id_format_and_order(tmp_path: Path):
     for key, value in ids:
         if key in ("check_id", "kc_id", "call_id"):
             continue
+        if key == "term_id":  # a board line's term position (API-12), not an entity
+            assert re.match(r"^t[0-9]{1,2}$", value), (key, value)
+            continue
         assert ID.match(value), (key, value)
     by_turn: dict = {}
     for envelope in frames:
