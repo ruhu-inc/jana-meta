@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import httpx
 import pytest
 from cloud_gateway.config import load_config
 from cloud_gateway.inference_budget import BudgetedAdapter, InferenceBudget
@@ -289,4 +290,50 @@ def test_images_are_reserved_at_their_token_allowance_not_their_bytes(tmp_path: 
     price = config().prices["muse-spark-1.3"]
     # The photo adds its allowance (plus the content-list framing), far below what 2 MB of bytes would cost.
     assert 4096 * price.input / 1e6 <= held_photo - held_text < 4500 * price.input / 1e6
+    store.close()
+
+
+@pytest.mark.parametrize("stream", [False, True])
+@pytest.mark.parametrize("status", [401, 403, 429])
+def test_calls_refused_before_processing_release_their_hold(tmp_path: Path, stream: bool, status: int) -> None:
+    from cloud_gateway.config import ProviderSpec
+    from cloud_gateway.custody import Secret
+    from cloud_gateway.providers.meta import MetaAdapter
+
+    store = GatewayStore(tmp_path)
+    budget = InferenceBudget(config(), store, lambda: NOW)
+    client = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(status, json={"error": {}})))
+    spec = ProviderSpec.model_validate(load_config().providers["meta"].model_dump())
+    adapter = BudgetedAdapter(MetaAdapter(spec, Secret("synthetic-key"), client), budget)
+
+    async def call() -> None:
+        if stream:
+            async for _ in adapter.stream(request()):
+                pass
+        else:
+            await adapter.complete(request())
+
+    with pytest.raises(UpstreamError):
+        asyncio.run(call())
+    assert budget.snapshot() == {"spent_usd": 0, "today_usd": 0, "held_usd": 0}
+    store.close()
+
+
+def test_a_missing_key_holds_nothing_but_a_server_error_keeps_its_bound(tmp_path: Path) -> None:
+    from cloud_gateway.custody import Secret
+    from cloud_gateway.providers.meta import MetaAdapter
+
+    store = GatewayStore(tmp_path)
+    budget = InferenceBudget(config(), store, lambda: NOW)
+    spec = load_config().providers["meta"]
+    keyless = BudgetedAdapter(MetaAdapter(spec, None, httpx.AsyncClient()), budget)
+    with pytest.raises(UpstreamError, match="no provider key"):
+        asyncio.run(keyless.complete(request()))
+    assert budget.snapshot()["held_usd"] == 0
+    failing = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(500, json={"error": {}})))
+    server_error = BudgetedAdapter(MetaAdapter(spec, Secret("synthetic-key"), failing), budget)
+    with pytest.raises(UpstreamError):
+        asyncio.run(server_error.complete(request()))
+    assert budget.snapshot()["held_usd"] > 0  # it may have been processed: the bound stays until reconciled
+    assert budget.release_all()[0] == 1 and budget.snapshot()["held_usd"] == 0
     store.close()

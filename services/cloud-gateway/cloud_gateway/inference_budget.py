@@ -122,6 +122,20 @@ class InferenceBudget:
                     (day_of(self.clock()), amount),
                 )
 
+    def release(self, key: str) -> None:
+        """Drop a reservation for a call the provider refused before processing it (it bills nothing)."""
+        with self.store._tx() as db:
+            db.execute("DELETE FROM inference_budget_pending WHERE id=?", (key,))
+
+    def release_all(self) -> tuple[int, float]:
+        """Operator reconciliation: drop every unresolved hold, once provider billing shows none of them was charged."""
+        with self.store._tx() as db:
+            count, held = db.execute(
+                "SELECT count(*), coalesce(sum(reserved_micros),0) FROM inference_budget_pending"
+            ).fetchone()
+            db.execute("DELETE FROM inference_budget_pending")
+        return int(count), held / MICROS
+
     def snapshot(self) -> dict[str, Any]:
         with self.store._lock:
             db = self.store._db
@@ -145,7 +159,12 @@ class BudgetedAdapter:
 
     async def complete(self, request: ProviderRequest) -> ProviderReply:
         key, bounded = self.budget.reserve(request)
-        reply = await self.adapter.complete(bounded)
+        try:
+            reply = await self.adapter.complete(bounded)
+        except UpstreamError as error:
+            if error.extra.get("unbilled"):
+                self.budget.release(key)  # refused before processing: nothing to hold
+            raise
         self.budget.settle(key, bounded, reply.usage)
         return reply
 
@@ -159,6 +178,10 @@ class BudgetedAdapter:
                 yield part
             if usage is not None:
                 self.budget.settle(key, bounded, usage)
+        except UpstreamError as error:
+            if error.extra.get("unbilled") and usage is None:
+                self.budget.release(key)  # refused before any output: nothing to hold
+            raise
         finally:
             await parts.aclose()
 

@@ -48,7 +48,7 @@ class OpenAICompatAdapter:
 
     def _headers(self) -> dict[str, str]:
         if self._key is None:
-            raise UpstreamError("upstream_auth", "no provider key in the secret source")
+            raise UpstreamError("upstream_auth", "no provider key in the secret source", extra={"unbilled": True})
         return {"authorization": f"Bearer {self._key.reveal()}", "content-type": "application/json"}
 
     def _body(self, request: ProviderRequest, stream: bool) -> dict[str, Any]:

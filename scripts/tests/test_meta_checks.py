@@ -64,3 +64,15 @@ def test_unknown_model_without_a_price_is_refused(tmp_path: Path) -> None:
     config = load_config(storage_dir=tmp_path)
     with pytest.raises(SystemExit, match="no configured price"):
         meta_checks.Run(config, "muse-wonder-1.0", 1.0)
+
+
+def test_no_key_stops_before_any_call(tmp_path: Path, monkeypatch) -> None:
+    from cloud_gateway import custody
+    from cloud_gateway.config import load_config
+
+    monkeypatch.delenv("META_API_KEY", raising=False)
+    monkeypatch.setattr(custody, "KeychainSecrets", lambda *a, **k: custody.ChainedSecrets(()))
+    config = load_config(REPO_ROOT / "services/cloud-gateway/deploy/meta-dev.toml", storage_dir=tmp_path)
+    with pytest.raises(SystemExit, match="No Meta API key found"):
+        meta_checks.Run(config, "muse-spark-1.3", 1.0)
+    assert not (tmp_path / "gateway.db").exists() and not list(tmp_path.iterdir())  # no ledger touched

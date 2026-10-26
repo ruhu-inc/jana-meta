@@ -45,10 +45,15 @@ def _param(body: Any) -> str | None:
     return param if isinstance(param, str) and param else None
 
 
+# Statuses a provider returns before it processes the request (bad key, no access, rate limit): nothing is billed.
+UNBILLED_STATUSES = frozenset({401, 403, 429})
+
+
 def upstream_error(status: int, raw: bytes, headers: httpx.Headers, classify: ErrorClassifier) -> UpstreamError:
     body = _json(raw)
     reason = classify(status, body)
-    return UpstreamError(reason, f"upstream status {status}", status, retry_after(headers), _param(body))
+    extra = {"unbilled": True} if status in UNBILLED_STATUSES else {}
+    return UpstreamError(reason, f"upstream status {status}", status, retry_after(headers), _param(body), extra)
 
 
 def _transport(exc: httpx.HTTPError) -> UpstreamError:

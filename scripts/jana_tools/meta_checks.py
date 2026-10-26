@@ -69,9 +69,15 @@ class Run:
         if model not in config.prices:
             raise SystemExit(f"{model} has no configured price; add it to defaults.toml first")
         self.config, self.model = config, ModelSpec(id=model)
+        secrets = secret_source(config)
+        if secrets.get(config.providers["meta"].secret) is None:
+            raise SystemExit(
+                "No Meta API key found. Add it to the login keychain (service jana-meta.cloud-gateway, account "
+                "meta_api_key) or set META_API_KEY for this command only; nothing was sent."
+            )
         self.store = GatewayStore(config.storage_dir)
         self.budget = InferenceBudget(config, self.store, time.time)
-        self.providers = Providers(config, secret_source(config), client_factory, budget=self.budget)
+        self.providers = Providers(config, secrets, client_factory, budget=self.budget)
         self.adapter: ProviderAdapter = self.providers.adapters["meta"]
         self.start_spent = self._spent()
         self.max_usd = max_usd
