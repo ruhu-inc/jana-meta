@@ -67,6 +67,11 @@ def tool_profile(tier: str, locality: str, fast_model: bool = False) -> Profile:
     return "small" if locality == "local" and (tier == "fast" or fast_model) else "full"
 
 
+# Output tokens a reasoning cloud model may spend thinking before its reply, by effort (Muse Spark measured 2026-10-26:
+# about 250-950 reasoning tokens at minimal and low on a tutor turn).
+REASONING_HEADROOM = {"none": 1536, "low": 2048, "medium": 4096, "high": 8192}
+
+
 class RouterOutsideEngineContextError(RuntimeError):
     """A model call was made outside an engine turn or job (ARC-20)."""
 
@@ -500,6 +505,15 @@ class Router:
         if entry.get("temperature") is not None:
             call_settings["temperature"] = entry["temperature"]
         call_settings.update({k: v for k, v in settings.items() if k != "effort"})
+        cloud_cap = call_settings.pop("cloud_max_tokens", None)
+        if caps.locality == "cloud" and call_settings.get("max_tokens"):
+            if cloud_cap:
+                call_settings["max_tokens"] = int(cloud_cap)  # the role's cloud column, whatever this computer's class
+            if caps.reasoning == "effort":
+                # A cloud model that always reasons (Muse Spark, JM-D9) spends output tokens on reasoning before its
+                # reply, so the role's cap is for the reply and reasoning gets room on top, within the model's limit.
+                headroom = REASONING_HEADROOM.get(str(call_settings.get("effort", "low")), REASONING_HEADROOM["low"])
+                call_settings["max_tokens"] = min(int(call_settings["max_tokens"]) + headroom, caps.max_output)
         if saving is not None and role == "coach":  # PLT-22: shorter answers
             cap = saving.max_output_tokens
             call_settings["max_tokens"] = min(int(call_settings.get("max_tokens") or cap), cap)

@@ -93,7 +93,8 @@ class Auxiliaries:
         try:
             result = await asyncio.wait_for(
                 self.router.complete(role, messages, output=(role, schema, checker),
-                                     max_tokens=int(limits["max_output_tokens"][hardware])),
+                                     max_tokens=int(limits["max_output_tokens"][hardware]),
+                                     cloud_max_tokens=int(limits["max_output_tokens"]["cloud"])),
                 timeout=float(limits["wall_clock_s"]),
             )  # fmt: skip
             served = result.turn.served_by

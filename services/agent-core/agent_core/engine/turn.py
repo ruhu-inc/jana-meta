@@ -3353,7 +3353,9 @@ class Engine(Coordination, Offers):
         hardware = self.state.hardware_class if self.state.hardware_class in ("low", "mid", "high") else "cloud"
         limits: dict[str, Any] = {}
         if manifest is not None:
-            limits["max_tokens"] = int(manifest.meta["limits"]["max_output_tokens"][hardware])
+            caps = manifest.meta["limits"]["max_output_tokens"]
+            limits["max_tokens"] = int(caps[hardware])
+            limits["cloud_max_tokens"] = int(caps["cloud"])  # the router uses it when the call goes to the cloud
         if self.voice_mode:
             limits["effort"] = "none" if role == "coach" else "low"
         return limits
