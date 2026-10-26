@@ -1,0 +1,21 @@
+services/agent-core/agent_core/config/keys.py
+  s_207b3a26495062::t_2b5daff3e0cc15 135-138
+services/agent-core/agent_core/router/router.yaml
+  s_207b3a26495062::t_f6aa1b04864a75 185-186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9d44997f3ecea183d0dd1a709d343cb1b42036ee",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
