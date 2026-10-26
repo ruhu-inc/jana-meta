@@ -278,6 +278,8 @@ MODEL_ENTRY_POINTS = {
     ("engine/vision.py", "read", "complete"): "photo pixels only; the words read are guarded when confirmed and sent",
     ("engine/vision.py", "_sharpen", "complete"): "crops of the screened photo only (JM-D10); the words re-read are "
     "guarded when confirmed and sent",
+    ("engine/sketch_flow.py", "_call", "complete"): "online candidates only, after the output critic accepted the "
+    "turn (_finalise); the only student text is the problem statement the turn's guard screened and redacted",
     ("engine/reflection.py", "call", "complete"): "guarded transcripts only; a window with safety_flagged is skipped",
     ("engine/auxiliary.py", "call", "complete"): "the auxiliary roles above, each reached from a guarded path",
     ("router/__init__.py", "complete", "complete"): "the router's module entry, inside an engine turn or job scope",
