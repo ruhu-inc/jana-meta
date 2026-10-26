@@ -132,8 +132,10 @@ class Settings(BaseModel):
     outbox_cap_mb: float = key(50.0, serves="ARC-09", layers=ENGINEERING, unit="MB", ge=1, le=4096)
     outbox_item_days: int = key(30, serves="ARC-09", layers=ENGINEERING, unit="days", ge=1, le=365)
     cloud_offline_added_wait_ms: int = key(200, serves="MDL-24", layers=ENGINEERING, unit="ms", ge=0, le=5000)
-    cloud_budget_session_usd: float = key(0.5, serves="MDL-29", layers=ENGINEERING, unit="USD", ge=0)
-    cloud_budget_student_day_usd: float = key(1.0, serves="MDL-29", layers=ENGINEERING, unit="USD", ge=0)
+    # A Muse Spark tutor turn costs about $0.04-0.06 with its reasoning (measured 2026-10-26), so a session gets room
+    # for 50 or more turns; the gateway's deployment ledger stays the hard limit on total spend.
+    cloud_budget_session_usd: float = key(3.0, serves="MDL-29", layers=ENGINEERING, unit="USD", ge=0)
+    cloud_budget_student_day_usd: float = key(10.0, serves="MDL-29", layers=ENGINEERING, unit="USD", ge=0)
     cloud_budget_reminders: tuple[float, ...] = key((0.5, 0.85), serves="MDL-29", layers=ENGINEERING, unit="share")
     cloud_disable_all_budget_s: float = key(5.0, serves="PRV-02", layers=ENGINEERING, unit="s", ge=0.1, le=60)
     startup_home_ready_budget_s: float = key(5.0, serves="ARC-22", layers=ENGINEERING, unit="s", ge=0.5, le=60)

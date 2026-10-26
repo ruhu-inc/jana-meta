@@ -182,8 +182,8 @@ cloud:
   - judge
   - vision
 budget:
-  per_session_usd: 0.5
-  per_student_day_usd: 1.0
+  per_session_usd: 3.0
+  per_student_day_usd: 10.0
   per_school_month_usd: 200
   reminders_at:
   - 0.5
