@@ -1,0 +1,88 @@
+services/agent-core/agent_core/contracts/compat.json
+  s_09726b09e7edac::t_5d61223db38532 123
+services/agent-core/agent_core/contracts/schemas/input/captured-question.schema.json
+  s_09726b09e7edac::t_5d61223db38532 2,70-71,691-816
+contracts/input/captured-question.schema.json
+  s_09726b09e7edac::t_979f68e17f71dd 69-70,690-817
+services/agent-core/agent_core/contracts/schemas/api/events.schema.json
+  s_09726b09e7edac::t_5d61223db38532 2,1432-1439,2194
+services/agent-core/tests/test_sketch_photo.py
+  s_09726b09e7edac::t_3e5c175baada8c 43,160-167
+  s_09726b09e7edac::t_680c72020201c5 1-42,44-159,168-202
+services/agent-core/agent_core/engine/state.py
+  s_09726b09e7edac::t_89aad9731ddf14 179-180
+  s_09726b09e7edac::t_7492ad574f4e41 176-178
+packages/contracts-ts/src/generated/input/captured_question.ts
+  s_09726b09e7edac::t_5d61223db38532 2,28,96-97,121-138
+services/agent-core/agent_core/contracts/api/commands.py
+  s_09726b09e7edac::t_5d61223db38532 2594,2773-2775,2785,3263-3305,3312,4718-4719,4743
+services/agent-core/agent_core/contracts/api/events.py
+  s_09726b09e7edac::t_5d61223db38532 2,513-515,525,760
+services/agent-core/agent_core/engine/board_input.py
+  s_09726b09e7edac::t_c4f8bdeb36c4df 39-40,42,47-48,50-51,149-150
+  s_09726b09e7edac::t_bc1e146a2fb898 41,43-46,49
+contracts/api/events.schema.json
+  s_09726b09e7edac::t_979f68e17f71dd 1435-1443,2198
+services/agent-core/tests/test_photo_regions.py
+  s_09726b09e7edac::t_3d92f2ce3c838e 79-80,151-153,176,178
+  s_09726b09e7edac::t_6270e2ff3cf290 362-382
+  s_09726b09e7edac::t_501411d16211cf 1-58,62-78,81-121,123-150,154-175,177,179-232,236-290,293-299,304-305,309-331,335-361
+  s_09726b09e7edac::t_3e5c175baada8c 122,291-292
+  s_09726b09e7edac::t_f4e3d9ea723ed2 59-61,233-235,300-303,306-308,332-334
+services/agent-core/agent_core/providers/gateway.py
+  s_09726b09e7edac::t_a212bdac7c55c3 39
+  s_09726b09e7edac::t_5c1ef3f21e4507 178-207
+services/agent-core/agent_core/api/core.py
+  s_09726b09e7edac::t_700ff663bc623b 1074-1081
+  s_09726b09e7edac::t_e1f7f4d2e8c5b6 1101
+  s_09726b09e7edac::t_d24c26c82ae661 1003,1006,1097-1100,1102
+packages/contracts-ts/src/generated/api/commands.ts
+  s_09726b09e7edac::t_5d61223db38532 167,1933,2001-2002,2026-2043,3684-3687,4533
+services/agent-core/agent_core/contracts/input/captured_question.py
+  s_09726b09e7edac::t_5d61223db38532 2,182-221,241-242,275
+services/agent-core/agent_core/engine/sketch_photo.py
+  s_09726b09e7edac::t_36335ae4be235b 1-24,26-27,30-117,134-135,137-163,167-189,192-213,215-226,228,230-253,255-269,271-275,279-325,327-350,352,355-359
+  s_09726b09e7edac::t_11485647cdc459 25
+  s_09726b09e7edac::t_ca3253b7c64292 214,227,229,254,351,353-354
+  s_09726b09e7edac::t_89aad9731ddf14 28-29,118-133,136,164-166,190-191,270,276-278,326
+packages/contracts-ts/src/generated/api/events.ts
+  s_09726b09e7edac::t_5d61223db38532 2,602-605
+packages/contracts-ts/src/generated/compat.ts
+  s_09726b09e7edac::t_5d61223db38532 5
+services/agent-core/agent_core/engine/vision.py
+  s_09726b09e7edac::t_f482e08f1e2069 23,41-42,49-50,54-63,83-84,121-123,162,191-199,210-211,214-248,254-261,263-264,266-271,273-274
+  s_09726b09e7edac::t_2dfb22c877f462 35,272,280
+services/agent-core/agent_core/router/router.yaml
+  s_09726b09e7edac::t_e83d3fe13c91bf 117,181
+services/agent-core/agent_core/api/captures.py
+  s_09726b09e7edac::t_8875ad7bf23611 56-57,368-369,425,507-508,531-532,576,583,600,602,696,793-795,822-832,834
+  s_09726b09e7edac::t_ca3253b7c64292 833
+  s_09726b09e7edac::t_2d012eb1918149 835-836
+services/agent-core/agent_core/engine/pointing.py
+  s_09726b09e7edac::t_89aad9731ddf14 65-66,77-78
+  s_09726b09e7edac::t_99c0aa8e03563c 12-15,37-38,75-76,131-139,153
+services/agent-core/agent_core/engine/photo_regions.py
+  s_09726b09e7edac::t_584357877f4c09 1-19,21-101,104-159
+  s_09726b09e7edac::t_700ff663bc623b 20,160-184
+  s_09726b09e7edac::t_2dfb22c877f462 102-103
+packages/contracts-ts/src/generated/client-validators.js
+  s_09726b09e7edac::t_7d4e9566eca712 10
+packages/contracts-ts/src/generated/validators.js
+  s_09726b09e7edac::t_35e5d8c67bf69f 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c232ada4afeef066ae7cfedbe8909350529fffb4",
+  "prompts": {},
+  "sessions": {
+    "s_09726b09e7edac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e5862a0-b0c4-4426-9881-98ae596ead81",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
