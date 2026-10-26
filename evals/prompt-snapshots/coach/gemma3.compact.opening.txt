@@ -70,8 +70,18 @@ pedagogy-worked-example-fade — Show a checked worked example of a similar prob
 Reply with the JSON object only. Use the field names exactly as given.
 When a tool is needed, call it; do not describe the call.
 
-Reply with compact JSON on one line. Keep this shape; replace sample values:
-{"say_spoken":null,"say":"...","board":[],"visual":[],"card":null,"hint_rung":0,"expects":"student_answer","numbers_from":[],"cites":[],"reveals":"none","confidence":"low"}
+Reply with one compact JSON object on one line (no indentation), with these fields:
+- say_spoken (string|null, required)
+- say (string, required)
+- board (array, required)
+- visual (array, required)
+- card (object|null, required)
+- hint_rung (integer, required)
+- expects (enum, required) one of student_answer, student_choice, next, none
+- numbers_from (array, required)
+- cites (array, required)
+- reveals (enum, required) one of none, current_step, solution
+- confidence (enum, required) one of low, medium, high
 
 Session: 2026-10-09; mode guided; subject physics; level O.
 ===== user =====

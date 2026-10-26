@@ -67,8 +67,7 @@ pedagogy-worked-example-fade — Show a checked worked example of a similar prob
 Reply with the JSON object only. Use the field names exactly as given.
 When a tool is needed, call it; do not describe the call.
 
-Reply with compact JSON on one line. Keep this shape; replace sample values:
-{"say_spoken":null,"say":"...","board":[],"visual":[],"card":null,"hint_rung":0,"expects":"student_answer","numbers_from":[],"cites":[],"reveals":"none","confidence":"low"}
+Reply with one compact JSON object on one line, with the fields: say_spoken, say, board, visual, card, hint_rung, expects, numbers_from, cites, reveals, confidence.
 
 <passage id="phy.o.kinematics.p1">
 At the top of a vertical throw the speed is zero.

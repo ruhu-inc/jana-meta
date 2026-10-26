@@ -65,8 +65,7 @@ Reply with the JSON object only, with no text before or after it.
 Call tools only through the tool interface, never by writing a call in text.
 Keep any thinking short; the answer goes in the JSON fields.
 
-Reply with compact JSON on one line. Keep this shape; replace sample values:
-{"say_spoken":null,"say":"...","board":[],"visual":[],"card":null,"hint_rung":0,"expects":"student_answer","numbers_from":[],"cites":[],"reveals":"none","confidence":"low"}
+Reply with one compact JSON object on one line, with the fields: say_spoken, say, board, visual, card, hint_rung, expects, numbers_from, cites, reveals, confidence.
 
 Session: 2026-10-09; mode guided; subject physics; level O.
 ===== user =====
