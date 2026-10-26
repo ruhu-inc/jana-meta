@@ -211,7 +211,7 @@ def test_router_prefers_spark_for_every_role_but_respects_the_online_switch() ->
 
 @pytest.mark.parametrize(
     ("alias", "asked", "sent"),
-    [("fast-model", "low", "minimal"), ("fast-model", "high", "medium"), ("strong-model", "high", "low"),
+    [("fast-model", "low", "minimal"), ("fast-model", "high", "medium"), ("strong-model", "high", "minimal"),
      ("strong-model", "medium", "minimal")],
 )  # fmt: skip
 def test_each_alias_sets_how_much_spark_reasons_for_a_requested_effort(alias: str, asked: str, sent: str) -> None:

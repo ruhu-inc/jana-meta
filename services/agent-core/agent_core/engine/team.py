@@ -188,7 +188,9 @@ async def new_problem(engine: Any, turn: Any, question: str) -> Any | None:
     else:
         session_topic(engine, diagnosed)
     engine.diagnosis = diagnosed
-    await name_session(engine, diagnosed)
+    # The title is the session list's alone: it is named while the Solver plans and settled before the Coach replies
+    # (`Engine._settle_title`), so it costs the student no wait (SPEC §12).
+    engine.title_pending = asyncio.ensure_future(name_session(engine, diagnosed))
     if other is not None:
         offer_subject(engine, turn, other)
     live_flows.outside_content(engine, diagnosed.topics, diagnosed.output)

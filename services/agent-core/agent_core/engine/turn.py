@@ -193,8 +193,15 @@ METHOD_NOTE = ("that line is right by the student's own method, not the plan's: 
                "sentence in those plain words and say it works; do not steer them back to another method")  # fmt: skip
 COMPUTATION_PHASE = (
     "Current phase: computation. Call an available calculation tool now. Do not return a JSON solution plan yet. "
-    "Substitute supplied numeric knowns, leaving only the requested unknowns. Wait for the tool results; the plan's "
-    "JSON contract applies afterwards."
+    "Substitute supplied numeric knowns, leaving only the requested unknowns. Make every call the plan needs in this "
+    "one reply, side by side, including any unit check of the answer: the tools close once a calculation has run. "
+    "Wait for the tool results; the plan's JSON contract applies afterwards."
+)
+# After a real calculation the Solver's tools close and its plan is due (`Engine._delegate`). Said plainly, so a model
+# that still wants a check writes the plan from the results it has instead of asking for a tool it cannot call.
+PLAN_PHASE = (
+    "Current phase: plan. The tools are closed. Return the JSON solution plan now, citing the check ids of the tool "
+    "results above."
 )
 STUCK_NOTE = "the stuck cap is reached: move on without blame and say we will come back to it on a later day"
 
@@ -512,7 +519,8 @@ class Engine(Coordination, Offers, Predictions):
         turn = self._begin("ask", ids)
         with turn_scope(turn.turn_id):
             try:
-                model = await self._guard_model(statement)  # the input-guard role, before any other call (AGT-02)
+                # the input-guard role, before any other call (AGT-02)
+                model = await self._guard_model(statement, question=True)
                 stopped, statement = self._intake(turn, statement, source, model, opening=True)
                 if stopped is not None:
                     live_flows.out_of_scope(self)  # the guided flow's template edge (AGT-19)
@@ -682,6 +690,7 @@ class Engine(Coordination, Offers, Predictions):
         self.state.transcript.append({"role": "user", "content": statement, "kind": "problem",
                                       **({"source": source} if source != "student_text" else {})})  # fmt: skip
         self._ack(turn, "Let me look at this problem.")
+        self._rules_ahead()
         if self.deps.stage >= "S2":  # the Diagnoser, then the Solver (TABLE AGT-15a)
             chosen = await team.new_problem(self, turn, statement)
             if chosen is not None:
@@ -925,6 +934,7 @@ class Engine(Coordination, Offers, Predictions):
             live_flows.reply(self, "stuck")  # the engine raises the rung (AGT-19, PED-06)
             return await self._hint(turn, show_step)
         attempt_arrived(self.state)  # an attempt lifts a gaming pause (LRN-19)
+        self._rules_ahead()
         s2 = self.deps.stage >= "S2"
         if self.state.practice:
             rung_before = self.state.rung
@@ -1004,18 +1014,25 @@ class Engine(Coordination, Offers, Predictions):
         kept = prompt_inputs.intake(turn.trace, lambda e: self._learn(turn, e), text, source)
         return self._screen(turn, normalise_input(text), kept=kept, model=model, opening=opening)
 
-    async def _guard_model(self, text: str, answer: bool = False) -> tuple[str, float] | None:
+    async def _guard_model(self, text: str, answer: bool = False,
+                           question: bool = False) -> tuple[str, float] | None:  # fmt: skip
         """The input-guard role on one student message (AGT-02, PRV-18 layer 1), from S2, before any other model
         call and on the redacted text only (PRV-20). Its patterns answer first with no call (distress above all); a
         failed call answers None and the guard's patterns and local classifier decide, its fallback. No call runs
         during a mock sitting (H7), nor for an `answer` to the open numeric part that is only a number and the part's
-        unit: there is no prose for the role to read, and the guard's patterns, classifier and redaction still run."""
+        unit, nor for an answer in a guided problem that is only a line of working (`working_only`), nor for a new
+        `question` that is one maths command on a line of working ("Solve 7x - 3 = 18", `command_only`): there is no
+        prose for the role to read, and the guard's patterns, classifier and redaction still run."""
         if self.deps.stage < "S2" or self.state.mock_running or not text.strip():
             return None
         if self._lean():
             return None  # D128: within its 3 s limit the role cannot answer on a lean class; its fallback decides
         redacted = redact_personal(normalise_input(text))[0]
         if answer and (key := self._open_numeric_key()) is not None and numeric_only(redacted, key.get("unit")):
+            return None
+        if answer and self.state.problem is not None and not self.state.practice and working_only(redacted):
+            return None  # a line of working in a guided problem ("x = 2", "a = (20 - 0)/5 = 4 m/s^2"): no prose
+        if question and not self.state.practice and command_only(redacted):
             return None
         found, confidence, source = await self.auxiliary.guard_input(redacted)
         return (found, confidence) if source == "model" else None
@@ -1335,16 +1352,43 @@ class Engine(Coordination, Offers, Predictions):
         if not output:
             return
         final = output.get("final_answer")
+        solved = self._solved_unknown(final)  # before any check below, so only the Solver's own tools count
         for raw in [*(output.get("steps") or []), *([final] if final else [])]:
             value = raw.get("value")
             if value is None or not numbers_in(value) or is_formula(value) or self._given(value):
                 continue
             if self._check_for(value, raw.get("check_id")) is not None:
                 continue
+            matched = False
             for expression in written_expressions(str(raw.get("latex") or "")):
                 _, check_id = await flows.run_tool(self, turn, "math_evaluate", {"expression": expression})
                 if check_id is not None and self._matches_check(value, check_id):
+                    matched = True
                     break
+            if matched or solved is None:
+                continue
+            # A step on the way to a checked answer ("7x = 21" before "x = 3"): its side in the unknown, evaluated at
+            # that answer, must give the step's value, so the step holds at the solution a tool found. A wrong step
+            # ("7x = 24") still has no check and the plan is refused.
+            symbol, answer = solved
+            for expression in unknown_sides(str(raw.get("latex") or ""), symbol):
+                _, check_id = await flows.run_tool(self, turn, "math_evaluate",
+                                                   {"expression": expression, "values": {symbol: answer}})  # fmt: skip
+                if check_id is not None and self._matches_check(value, check_id):
+                    break
+
+    def _solved_unknown(self, final: dict[str, Any] | None) -> tuple[str, str] | None:
+        """The plan's answer as (unknown, value) when it is one letter equal to a number (`x = 3`) that a tool result
+        of this session already holds; else None."""
+        if not final or final.get("value") is None:
+            return None
+        found = re.fullmatch(r"\s*([A-Za-z])\s*=\s*(.+?)\s*", str(final.get("latex") or ""))
+        value = str(final["value"])
+        if found is None or not numbers_in(value) or is_formula(value):
+            return None
+        if self._check_for(value, final.get("check_id")) is None:
+            return None
+        return found.group(1), value
 
     def _verified_plan(self, envelope: dict[str, Any]) -> tuple[Plan | None, str]:
         """Every computed step and the answer match a check record of this session by value (AGT-10). The engine
@@ -1616,7 +1660,11 @@ class Engine(Coordination, Offers, Predictions):
             fingerprint_prompt = sha256_of(build.fingerprints())
             fingerprint_tools = build.tool_set_sha256
             skills = [dict(s) for s in build.skills_delivered]
-            phase = [Message("user", self.app_events.wrap(COMPUTATION_PHASE))] if needs_check and offer else []
+            phase = (
+                [Message("user", self.app_events.wrap(COMPUTATION_PHASE))] if needs_check and offer
+                else [Message("user", self.app_events.wrap(PLAN_PHASE))] if role == "solver" and plan_due
+                else []
+            )  # fmt: skip
             # The build's task message, which on a lean class opens with the topic context (D128).
             messages = [*build.messages[:2], *history[1:], *phase]
             try:
@@ -1768,17 +1816,7 @@ class Engine(Coordination, Offers, Predictions):
         """The soft rules of this turn (PED-15): one matching per Coach turn, kept for every prepare of the turn."""
         if self.rules is None:
             return
-        state = self.state
-        extra = {**(self.rule_signals() if self.rule_signals is not None else {}), **self.flow_signals}
-        if extra.get("engine.tool_model_disagreement") and not self._disagreement_shown():
-            # H2 wins (PED-10 H1): while the result is withheld the Coach teaches the plan as its own method and says
-            # nothing of a disagreement, a tool or an error in its explanation.
-            extra.pop("engine.tool_model_disagreement")
-        situation = Situation(state.mode, state.subject, state.level,
-                              rule_signals(state, self.deps.settings, now_ms=self.events.clock_ms(), extra=extra),
-                              next((m["content"] for m in reversed(state.transcript) if m["role"] == "user"), ""),
-                              self.turn_number, state.step)  # fmt: skip
-        matched = await self.rules.match(situation, state.hardware_class)
+        matched = await self.rules.match(self._situation(), self.state.hardware_class)
         turn.rule_lines = tutor_context_lines(matched)
         self.rule_log.append(
             {
@@ -1789,6 +1827,34 @@ class Engine(Coordination, Offers, Predictions):
                 "fallback": matched.fallback,
             }
         )
+
+    def _situation(self) -> Situation:
+        """What the soft rules are matched on (PED-15): the session's state and signals and the latest student
+        message."""
+        state = self.state
+        extra = {**(self.rule_signals() if self.rule_signals is not None else {}), **self.flow_signals}
+        if extra.get("engine.tool_model_disagreement") and not self._disagreement_shown():
+            # H2 wins (PED-10 H1): while the result is withheld the Coach teaches the plan as its own method and says
+            # nothing of a disagreement, a tool or an error in its explanation.
+            extra.pop("engine.tool_model_disagreement")
+        return Situation(state.mode, state.subject, state.level,
+                         rule_signals(state, self.deps.settings, now_ms=self.events.clock_ms(), extra=extra),
+                         next((m["content"] for m in reversed(state.transcript) if m["role"] == "user"), ""),
+                         self.turn_number, state.step)  # fmt: skip
+
+    async def _settle_title(self) -> None:
+        """The session title started after the diagnosis (`team.new_problem`), finished before the Coach replies so its
+        `session.updated` stays inside the turn; the title role's own fallback covers a failed call."""
+        pending, self.title_pending = self.title_pending, None
+        if pending is not None:
+            await pending
+
+    def _rules_ahead(self) -> None:
+        """The soft rules' judged call started as soon as the student's message is in, so it runs while the
+        Diagnoser, Solver or Checker work instead of before the Coach (PED-15, SPEC §12). The Coach turn's matching
+        takes its answers when the candidates are still the same, and judges afresh when they are not."""
+        if self.rules is not None and self.deps.stage >= "S2":
+            self.rules.prefetch(self._situation(), self.state.hardware_class)
 
     async def _coach_turn(
         self, turn: _Turn, intent_note: str, *, tools: Sequence[str] | None = None, text_only: bool = False
@@ -1808,6 +1874,7 @@ class Engine(Coordination, Offers, Predictions):
                     "Do not redo arithmetic or introduce numerical results; refer to the checked working instead"
                 )
         await self._match_rules(turn, intent_note)
+        await self._settle_title()
         with speaking("coach"):
             if (
                 tools is None
@@ -2919,6 +2986,11 @@ class Engine(Coordination, Offers, Predictions):
 
     def _end(self, turn: _Turn, tutor_turn: dict[str, Any] | None) -> TurnResult:
         self.next_hint_trigger = None  # an accepted offer's trigger is this turn's only
+        if self.rules is not None:
+            self.rules.cancel_prefetch()  # a turn that ended without a Coach reply never needs its rules' answers
+        if self.title_pending is not None:  # a turn that ended without a Coach reply: the next problem names it
+            self.title_pending.cancel()
+            self.title_pending = None
         self.events.end_open_parts("interrupted" if turn.status == "interrupted" else "complete")
         if self.state.rung != turn.rung_at_start:  # the hint ladder the UI shows follows the engine's rung (PED-03)
             self.events.emit({"type": "session.updated", "hint_rung": self.state.rung})
@@ -3495,6 +3567,33 @@ def numeric_only(text: str, unit: str | None = None) -> bool:
     return len(text) <= 64 and re.fullmatch(rf"\+?(?:{NUMBER.pattern})", compact, re.ASCII) is not None
 
 
+# The words a line of working may hold besides one-letter symbols: units and function names, never prose.
+WORKING_WORDS = frozenset({
+    "cm", "mm", "km", "kg", "mg", "ms", "min", "Pa", "kPa", "Hz", "kHz", "kJ", "kW", "kV", "mA", "ohm", "ohms", "Ω",
+    "sin", "cos", "tan", "sqrt", "log", "ln", "pi",
+})  # fmt: skip
+WORKING_TEXT = re.compile("[0-9A-Za-z\u03a9\\s+\\-\u2212*/\u00d7\u00f7=^().,\u00b2\u00b3%\u00b0]+")
+
+
+def working_only(text: str) -> bool:
+    """The text is only a line of working: numbers, operators, one-letter symbols, units and function names, with a
+    number or an equals sign in it ("x = 2", "7x = 21", "a = (20 - 0)/5 = 4 m/s^2"). Any other word is prose."""
+    if len(text) > 120 or WORKING_TEXT.fullmatch(text) is None or not re.search(r"[0-9=]", text):
+        return False
+    return all(len(word) == 1 or word in WORKING_WORDS for word in re.findall(r"[A-Za-zΩ]+", text))
+
+
+# The maths commands a question may open with; anything after them must be working (`command_only`).
+COMMANDS = re.compile(r"\s*(?:solve|simplify|expand|factori[sz]e|evaluate|calculate|work out)\s*:?\s+(.*)",
+                      re.IGNORECASE | re.DOTALL)  # fmt: skip
+
+
+def command_only(text: str) -> bool:
+    """The text is one maths command and a line of working ("Solve 7x - 3 = 18", "Expand 3(x + 4)"), nothing else."""
+    found = COMMANDS.fullmatch(text)
+    return found is not None and working_only(found.group(1).strip())
+
+
 def _stated_value(text: str) -> Fraction | None:
     """The value a student states: the number after the last `=` when nothing but a unit follows it, or a bare number.
     A working line ("0 = 14^2 - 2(9.8)s") states no value."""
@@ -3561,6 +3660,18 @@ def written_expressions(latex: str) -> list[str]:
         side = side.strip()
         bare = re.sub(r"\\[a-z]+", "", side)
         if re.search(r"\d", side) and _OPERATOR.search(side) and not re.search(r"[A-Za-z]", bare):
+            found.append(side)
+    return found
+
+
+def unknown_sides(latex: str, symbol: str) -> list[str]:
+    """The sides of a step's equation written in one unknown (`7x = 21` gives `7x`): that letter and no other, with a
+    digit, an operator or a juxtaposed coefficient; units and spacing commands removed."""
+    found = []
+    for side in _LATEX_NOISE.sub(" ", latex).split("="):
+        side = side.strip()
+        letters = set(re.findall(r"[A-Za-z]", re.sub(r"\\[a-z]+", "", side)))
+        if letters == {symbol} and re.search(r"\d", side) and side != symbol:
             found.append(side)
     return found
 
