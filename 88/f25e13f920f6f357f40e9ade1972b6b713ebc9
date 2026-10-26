@@ -1,0 +1,21 @@
+services/agent-core/agent_core/api/screening.py
+  s_ea6884df61add6::t_1126ccb907c65d 155-157
+services/agent-core/tests/test_a1_input_routes.py
+  s_ea6884df61add6::t_1126ccb907c65d 281-282
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "88f25e13f920f6f357f40e9ade1972b6b713ebc9",
+  "prompts": {},
+  "sessions": {
+    "s_ea6884df61add6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5d476f1d-bd33-4bd4-8828-c98ff01898f8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
