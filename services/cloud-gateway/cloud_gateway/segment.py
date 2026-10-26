@@ -166,7 +166,7 @@ class Segmenter:
         price = gw.config.sam.image_usd
         budget = gw.inference_budget
         try:
-            hold = budget.reserve_flat(price) if budget is not None else None
+            hold = budget.reserve_flat(price, role="vision", model=self.model.id) if budget is not None else None
         except UpstreamError as exhausted:
             self.uncount_image(started)
             return _error(device_error(exhausted.reason))
@@ -175,10 +175,10 @@ class Segmenter:
             reply = await self.sam.segment(image, width, height, objects=objects, concept=concept)
         except Exception as raised:  # every failure becomes one classified reply
             failure = _upstream(raised)
+            if hold is not None and budget is not None:
+                budget.fail(hold, raised)  # releases an unbilled refusal; otherwise records why the hold stays
             if failure.extra.get("unbilled"):
                 self.uncount_image(started)
-                if hold is not None and budget is not None:
-                    budget.release(hold)
             error = device_error(failure.reason, failure.retry_after_s, failure.param)
             gw.finish(call, error.status, failure.reason, Usage(), cost=0.0)
             return _error(error)
