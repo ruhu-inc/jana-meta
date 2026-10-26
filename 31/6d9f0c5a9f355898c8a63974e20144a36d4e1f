@@ -1,0 +1,34 @@
+services/agent-core/agent_core/router/core.py
+  s_207b3a26495062::t_b3d79a64bf1dea 340-342,349-350
+contracts/agents/router-config.schema.json
+  s_207b3a26495062::t_9786a9e3e67ff2 474
+services/agent-core/agent_core/router/router.yaml
+  s_207b3a26495062::t_b3d79a64bf1dea 84-86,89,94,99,104
+  s_207b3a26495062::t_9786a9e3e67ff2 187-188
+packages/contracts-ts/src/generated/agents/router_config.ts
+  s_207b3a26495062::t_9786a9e3e67ff2 2,164-173
+services/agent-core/tests/test_aux_cloud_fallback.py
+  s_207b3a26495062::t_b20a5884eb9b10 1-39
+services/agent-core/agent_core/contracts/schemas/agents/router-config.schema.json
+  s_207b3a26495062::t_9786a9e3e67ff2 2,475
+services/agent-core/agent_core/contracts/agents/router_config.py
+  s_207b3a26495062::t_9786a9e3e67ff2 2,123-134
+packages/contracts-ts/src/generated/validators.js
+  s_207b3a26495062::t_502ecebc6bd6eb 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "316d9f0c5a9f355898c8a63974e20144a36d4e1f",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
