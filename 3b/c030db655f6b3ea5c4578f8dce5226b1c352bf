@@ -1,0 +1,78 @@
+SPEC.md
+  s_207b3a26495062::t_fe09a44e35eb42 406-409
+packages/ui/src/settings/OnlineFeatures.tsx
+  s_207b3a26495062::t_c1d76a51be9ca1 56-58,71,82,94-95,128-129,144,156
+services/agent-core/tests/test_m32_voice_named.py
+  s_207b3a26495062::t_742a8a797f901f 102
+packages/client-core/src/index.ts
+  s_207b3a26495062::t_68114f8277bd2f 73
+packages/ui/src/setup/FirstRun.tsx
+  s_207b3a26495062::t_fd1101fd636ae1 2-8,16,32-33,36,38-39,44-45,73,75-84
+packages/ui/src/setup/BirthDate.tsx
+  s_207b3a26495062::t_4281822c9f1317 1-36
+services/agent-core/tests/test_m32_voice_safety.py
+  s_207b3a26495062::t_742a8a797f901f 40,130
+packages/ui/test/settings.test.tsx
+  s_207b3a26495062::t_68142c858ca1f9 132-133,135-136
+packages/ui/src/settings/Studies.tsx
+  s_207b3a26495062::t_c1d76a51be9ca1 105,121-122,127
+packages/client-core/test/profilecore.ts
+  s_207b3a26495062::t_68142c858ca1f9 417
+content/agent/templates/en.yaml
+  s_207b3a26495062::t_742a8a797f901f 9
+  s_207b3a26495062::t_aa6a2f3a60f3fb 17
+packages/ui/test/family-experience.test.tsx
+  s_207b3a26495062::t_db3b42bac2a3ee 151
+packages/ui/gallery/states/first-run.canonical.json
+  s_207b3a26495062::t_a527f669d7b1fc 5,17
+packages/client-core/test/settings-sections.test.ts
+  s_207b3a26495062::t_68142c858ca1f9 17
+packages/ui/src/profiles/ProfilePicker.tsx
+  s_207b3a26495062::t_c593f64133b8bf 3-4,13,24-25,31,45,52,63,65
+packages/client-core/test/profile-renewal.test.ts
+  s_207b3a26495062::t_c5f870e94a773e 196-197
+  s_207b3a26495062::t_68114f8277bd2f 9,158-159,183-195
+services/agent-core/tests/test_m14f_safety.py
+  s_207b3a26495062::t_742a8a797f901f 234,249
+packages/ui/src/settings/FamilyControls.tsx
+  s_207b3a26495062::t_c593f64133b8bf 4,10,25,29,38,42,51
+services/agent-core/agent_core/config/support.py
+  s_207b3a26495062::t_f0e892502d685a 249-250
+packages/ui/src/settings/Settings.tsx
+  s_207b3a26495062::t_68142c858ca1f9 16-17,209
+  s_207b3a26495062::t_f0e892502d685a 53
+apps/desktop/test/first-run.test.tsx
+  s_207b3a26495062::t_3d348202cb8ff7 49,51-52,54,70,81-83,85,95,125,155-156,161,183,262-264,266-267,269,358,385,396
+  s_207b3a26495062::t_a527f669d7b1fc 100-108,110-115
+  s_207b3a26495062::t_fc9ae19c73029a 109,265
+  s_207b3a26495062::t_4160cbfbbc6556 116-117
+services/agent-core/tests/test_m25a_safety.py
+  s_207b3a26495062::t_742a8a797f901f 145,321
+packages/i18n/locales/en.json
+  s_207b3a26495062::t_db3b42bac2a3ee 1382
+  s_207b3a26495062::t_fc9ae19c73029a 1359-1360
+  s_207b3a26495062::t_aa6a2f3a60f3fb 2086,2183,2188
+  s_207b3a26495062::t_31e8203dde013e 1358,1361
+apps/desktop/src/App.tsx
+  s_207b3a26495062::t_68142c858ca1f9 1152
+packages/ui/src/icons.tsx
+  s_207b3a26495062::t_a527f669d7b1fc 78
+packages/client-core/src/setup.ts
+  s_207b3a26495062::t_68114f8277bd2f 38-57,67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3bc030db655f6b3ea5c4578f8dce5226b1c352bf",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
