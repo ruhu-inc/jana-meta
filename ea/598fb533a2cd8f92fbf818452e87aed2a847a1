@@ -1,0 +1,97 @@
+packages/ui/test/figures.test.tsx
+  s_1b50c8256925d5::t_370b7eaefb28c7 1-54
+  s_1b50c8256925d5::t_14b35aff267699 55-57
+services/agent-core/tests/test_figures_live.py
+  s_1b50c8256925d5::t_2cb57c0c570824 1-201
+  s_1b50c8256925d5::t_894a1338e59664 202-206
+services/agent-core/agent_core/engine/figures.py
+  s_1b50c8256925d5::t_34180a85b94f39 1-102
+services/pack-builder/tests/test_figures.py
+  s_1b50c8256925d5::t_748957e894685c 1-113
+services/pack-builder/pack_builder/figures.py
+  s_1b50c8256925d5::t_ec0f9ddd16c5b4 1-6,10-80,83,86-90,92-93,95-128,130-147,149-160,162-169
+  s_1b50c8256925d5::t_08e5c41b6cf2de 7-9
+  s_1b50c8256925d5::t_d0cbeefb8ab605 81-82
+  s_1b50c8256925d5::t_a0c5c2c635b50e 84-85
+  s_1b50c8256925d5::t_706ca0670efbca 91
+  s_1b50c8256925d5::t_73abdc0d500c0a 94
+  s_1b50c8256925d5::t_eac9bf4610c735 129
+  s_1b50c8256925d5::t_382fc8c6ed7b70 148
+  s_1b50c8256925d5::t_390a4b1d71fda0 161
+content/curriculum/mth/o/worked-examples/wex.mth.o.algebra_and_graphs.0037.yaml
+  s_1b50c8256925d5::t_b77391b073e122 20-38
+content/curriculum/mth/o/worked-examples/wex.mth.o.coordinate_geometry.0006.yaml
+  s_1b50c8256925d5::t_f0723789492bc6 19-43
+content/curriculum/phy/o/items/itm.phy.o.circuits.0001.yaml
+  s_1b50c8256925d5::t_9dd7c5964665a9 63-82
+content/curriculum/phy/o/items/itm.phy.o.motion.0077.yaml
+  s_1b50c8256925d5::t_0304a963a04aa2 73-90
+content/curriculum/phy/o/worked-examples/wex.phy.o.circuits.0001.yaml
+  s_1b50c8256925d5::t_ea3f26ea89a58e 25-42
+content/curriculum/phy/o/worked-examples/wex.phy.o.circuits.0003.yaml
+  s_1b50c8256925d5::t_c3f4b898b66aac 25-40
+content/curriculum/phy/o/worked-examples/wex.phy.o.forces.0002.yaml
+  s_1b50c8256925d5::t_cf45e2ec35f894 20-39
+content/curriculum/phy/o/worked-examples/wex.phy.o.light.0010.yaml
+  s_1b50c8256925d5::t_ea0f11b1e3bbfe 20-24
+content/curriculum/phy/o/worked-examples/wex.phy.o.motion.0002.yaml
+  s_1b50c8256925d5::t_5be778238c2e6d 24-41
+contracts/api/commands.schema.json
+  s_1b50c8256925d5::t_f698e7ffbb8c11 5559-5569
+contracts/content/content-pack.schema.json
+  s_1b50c8256925d5::t_bfffec6396da67 993-1019,1136-1152,2578-2581,3325-3342
+packages/client-core/src/learn.ts
+  s_1b50c8256925d5::t_4a37b241e12896 107-108,246-247
+packages/contracts-ts/src/generated/api/commands.ts
+  s_1b50c8256925d5::t_c7d4ecfbbaceb6 2,269-273,2546,2576-2581
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_1b50c8256925d5::t_c4bc377f24efc7 2
+packages/contracts-ts/src/generated/client-validators.js
+  s_1b50c8256925d5::t_958fe2a796eb74 10
+packages/contracts-ts/src/generated/content/content_pack.ts
+  s_1b50c8256925d5::t_2fa4f19c8afcd7 2,65-69,114-118,448-452,462-476,517-522,875,1211,1244-1247
+packages/contracts-ts/src/generated/validators.js
+  s_1b50c8256925d5::t_eedba581197489 10
+packages/ui/src/learn/LessonPlayer.tsx
+  s_1b50c8256925d5::t_2a2b96df099887 102-104,136,139
+packages/ui/src/learn/StepLesson.tsx
+  s_1b50c8256925d5::t_b93c87802b816c 259
+services/agent-core/agent_core/assets/visuals.py
+  s_1b50c8256925d5::t_62326be77c21f8 182-188
+services/agent-core/agent_core/contracts/api/commands.py
+  s_1b50c8256925d5::t_757ae29d1f2903 2,3113-3117,4971-4982,4991-4998,5239-5241,5253-5255
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_1b50c8256925d5::t_8801e50de5e3e2 2
+services/agent-core/agent_core/contracts/content/content_pack.py
+  s_1b50c8256925d5::t_0664b5f794d721 2,351-359,379,872-879,891,2026-2028,2040-2042,2112-2154
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_1b50c8256925d5::t_41fabd8c29ffd4 2,5560-5569
+services/agent-core/agent_core/contracts/schemas/content/content-pack.schema.json
+  s_1b50c8256925d5::t_28d6f48e3119cb 2,994-1019,1136-1150,2576-2578,3322-3337
+services/agent-core/agent_core/engine/assessment/items.py
+  s_1b50c8256925d5::t_6949ab13db3975 13,100,301
+services/agent-core/agent_core/engine/learn.py
+  s_1b50c8256925d5::t_4810546ff57b85 45,367-368
+services/agent-core/agent_core/engine/turn.py
+  s_1b50c8256925d5::t_9e47bedb744629 51,697-699,746-747,2404,2475,2482-2493
+services/agent-core/agent_core/store/pack_index.py
+  s_1b50c8256925d5::t_4c9eb0b02f9451 95-97,193-194,201-211
+services/pack-builder/pack_builder/build.py
+  s_1b50c8256925d5::t_aa65222327499e 39,275-276,323
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ea598fb533a2cd8f92fbf818452e87aed2a847a1",
+  "prompts": {},
+  "sessions": {
+    "s_1b50c8256925d5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "61753e47-e99f-48c3-992c-d35781c227eb",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
