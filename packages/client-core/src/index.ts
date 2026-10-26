@@ -67,6 +67,7 @@ export {
 } from "./search.js";
 
 export { PhotoCommands, type Corner } from "./photo.js";
+export { drillParts, drillOrder, markTap, partAt, inside, area, EDGE_SLACK, MIN_PARTS, type DrillPart, type TapMark, type Point as DrillPoint } from "./diagram-drill.js";
 
 export { checkPhotoHeader } from "./photo-header.js";
 
