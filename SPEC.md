@@ -334,26 +334,36 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
 | W4 | Speech: Voice Transcribe, Magpie synthesizer, Omnilingual gate | 6 |
 | W5 | Adult product and copy | 8.2 |
 | W6 | Demo bugs | 10 |
+| W7 | Research pack: long-running research agent, Learn from a picture | 18 |
 
 | Day | Work |
 |---|---|
-| Oct 26 | Kickoff; read the final Official Rules; claim credits; Meta key in the keychain; §4.4 checks; start W1, W5, W6 |
-| Oct 27–28 | W1 done; start W2, W3, W4 |
-| Oct 29–30 | Voice round trip online; Omnilingual gate; Glimmer offline |
-| Oct 31 | SAM photo marking; adult sign-up; deploy the demo host |
-| Nov 1 | Power-cut switch end to end; self-hosted Magpie |
+| Oct 26 | Done: W1 (Spark live, latency halved), W5 sign-up and copy, W6 #1/#4/#6, input guard on Spark, Glimmer downloaded and measured |
+| Oct 27–28 | W2: SAM route, photos of working, `photo_region` overlay, diagram drill (§5, §18.2) |
+| Oct 29 – Nov 1 | W7 research pack (§18): Responses client and fakes, the gateway job, synthesis and verification, device import and UI, Kokoro podcast |
+| Oct 31 – Nov 1 | W4 voice online (reduced: Voice Transcribe in, Magpie or Kokoro out); W3 lean offline path (pack hints instant, Glimmer for free-form questions) |
 | Nov 2–3 | Polish, safety checks, eval run, record the video; owner signs off the §9 scope |
 | Nov 4 | Build the submission repo (§9) and submit by 9:00 PM ET |
+(Re-planned 2026-10-26 with the owner: W2, then W7, ahead of voice and the offline model; see §18.)
 
 ## 14. Demo (about 3 minutes)
 
-1. An adult WAEC private candidate signs up (date of birth, 18+) and asks by voice: "A car speeds up from rest to
-   20 m/s in 5 s. What's its acceleration?" Jana guides rather than telling, and checks the spoken answer with tools.
-2. The learner photographs three lines of their own working. Jana highlights the line with the sign error **on their
-   photo** (Muse Spark reads, SAM 3.1 outlines) and asks about that line.
-3. A definition question is answered directly, with a check question.
-4. **Power cut:** the network drops; Jana carries on with Muse Glimmer 30B and offline speech on the laptop.
-5. Close: Meta for hearing, thinking, seeing and offline; every number checked; never the answer handed over.
+The organisers' "skip these overdone projects" list (kickoff, 2026-10-26) names "AI for Education" chatbots, basic
+RAG apps, simple image analyzers and dashboards. The demo therefore opens with what no chatbot does, shows the checks,
+and keeps Study's summaries, Ask anything and the Progress pages out of it. Pitch: an exam-prep system for adults that
+checks every step with code, keeps working without power or internet, and uses Meta's models to see, hear and reason.
+
+1. An adult candidate signs up (date of birth, 18+) and photographs three lines of their own handwritten working.
+   Muse Spark reads it, the maths tools find the sign error, and SAM 3.1 outlines **that line on their photo**; Jana
+   asks about it rather than correcting it.
+2. Diagram drill: a photographed physics diagram (our own) becomes "tap the component that…" questions, each tap
+   checked against SAM's outline.
+3. Research pack (§18): "Learn from a picture" starts a long-running research job; the finished pack (prepared before
+   the recording, its progress shown) has the tap-to-learn diagram, cited concepts, flashcards, quiz and a podcast.
+4. A spoken question ("A car speeds up from rest to 20 m/s in 5 s…") gets a guided, checked spoken reply.
+5. **Power cut:** the network drops; practice keeps marking instantly from the signed packs, a mock paper opens, and
+   one Muse Glimmer reply shows the tutor still works on the laptop.
+6. Close: Meta for seeing, reasoning, researching and offline; every number checked; never the answer handed over.
 
 ## 15. Open items for the owner
 
@@ -363,14 +373,14 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
    gives the organisers a perpetual licence to any "Materials" shared or used "in connection with the event", which is
    wider than §9 assumes: take a legal view before showing private Jana work in workshops, Discord or office hours.
    The Startup track's Representative must be an active employee of the startup.
-2. Meta API key and credit claim; request zero data retention (contact-sales form; it turns off search grounding).
+2. Meta API key (done 2026-10-26) and credit claim. Zero data retention or research: Meta's zero data retention turns
+   off search grounding, background and stored requests, which the research pack (§18) needs. Decide one.
 3. NVIDIA: is trial audio allowed in the video? If not, approve the self-hosted Magpie spend (Modal/Baseten credits).
 4. Submission scope in §9 (which subjects; whether Study stays). §9 as written does not install (§17).
 5. Hosting: GCP project `jana-meta` (JM-D7) or partner credits only.
 6. Photo demo (§5): may handwritten working go to the cloud, and what replaces the printed-text privacy check for it?
 7. Demo laptop: its specification, to set Glimmer's speed gate; and whether `--local-model` may download weights.
-8. Ask anything: build a "from your course" path (§8.1), use Spark's search grounding (Responses API only,
-   $2.50 per 1,000 searches, off under zero data retention), or leave Ask out of the demo.
+8. Ask anything: leave it out of the demo (anti-project list, §14); the research pack (§18) is the web-research feature.
 9. Budget dates: the copied dev config expires on 2026-11-02 00:46 UTC, before the deadline and judging, and keeps
    its ledger under `/tmp`; move both.
 
@@ -465,3 +475,112 @@ The project review of 2026-10-26 found these gaps in the plan above; each must b
   pitch and §1 accordingly.
 - **Budget arithmetic**: $10 a day over about 9.4 days is $94, so the $120 total never binds and the $30 kept for
   judging is not protected by any date.
+
+## 18. Research pack: a long-running research agent (W7)
+
+Status: **specified 2026-10-26** at the owner's request; open decisions in §18.10. Builds on W2 (SAM) and reuses
+Study's storage, review and marking, but not Study's batch pipeline, which is built for 300-page documents and would
+take minutes per aid here.
+
+### 18.1 What the learner gets
+
+In Study, **Learn from a picture** (a photo of a diagram, a textbook figure, a whiteboard) or **Research a topic**
+(typed, e.g. "how the heart pumps blood", with a level: O level or first year). Jana researches in the background,
+for minutes if it needs to, and the learner may close the app; when it is done Study shows a **research pack**:
+
+| Part | What it is |
+|---|---|
+| Tap-to-learn diagram | The learner's own picture with SAM outlines: tap a part for its name and role; drill mode asks "tap the part that…" and checks the tap against the outline. With a typed topic, the closest of Jana's own drawn visuals (packages/renderers) when one fits. Never a generated anatomy image. |
+| Key concepts | Short explanations at the chosen level, each statement citing the sources that support it |
+| Flashcards | Saved to Study with spaced repetition |
+| Quiz | Study's question types, marked as Study marks them |
+| Podcast | A verified script read on the device by Kokoro (Apache-2.0), so it plays offline and may appear in the video |
+| Sources | Every page used, each opening the original |
+
+Everything is saved on the device and opens offline afterwards.
+
+### 18.2 Guardrails
+
+- **Verification is the point**: every statement is checked against the passage it cites by a separate call, and
+  unsupported ones are dropped, so this is not "basic RAG" (§14). Labels say "from the web, checked against its sources".
+- **No health advice**: anatomy is study material; personal medical questions get the existing advice template.
+- **Images**: the demo uses our own pictures; textbook images stay the learner's own private study material.
+- Outside Jana's packs (e.g. Biology) nothing is checked by the maths tools, and the pack says so.
+
+### 18.3 The agent
+
+The agent runs **in the gateway as a durable job**, so the learner's laptop can sleep or go offline: the device
+submits the request, follows progress when online, and fetches the finished pack, which the gateway then deletes.
+Each stage writes a checkpoint; a restarted gateway resumes from the last finished stage.
+
+1. **Understand**: a photo is read by Spark (topic, labels, regions) and outlined by SAM (W2); a typed topic is turned
+   into a scoped title and level.
+2. **Plan**: Spark writes 4–8 focused sub-questions at the learner's level. Meta's docs warn that complex multi-hop
+   research "is less dependable today" and advise narrower requests, so each sub-question is one search.
+3. **Research**: one Responses API request per sub-question, `tools: [{"type": "web_search"}]`,
+   `include: ["web_search_call.results"]`, `background: true`, progress by streamed retrieval
+   (`GET /v1/responses/{id}?stream=true`). Findings keep their `url_citation`s and bounded source excerpts; any text
+   with instruction-like spans is withheld (the gateway's existing `inert` rule).
+4. **Synthesise**: one structured-output call writes the pack (concepts, diagram part map, flashcards, quiz, podcast
+   script), every claim citing evidence ids from stage 3.
+5. **Verify**: one call checks each claim against only its cited excerpts; unsupported claims are dropped. If too little
+   survives, at most one more research round for the gaps, then stop.
+6. **Assemble**: map each diagram label to its SAM mask, verbalise the podcast script, return the pack.
+
+### 18.4 Long-running behaviour
+
+- States: `queued`, `researching` (step k of n, with the sub-question titles and the number of sources found),
+  `verifying`, `ready`, `waiting_online`, `failed`, `cancelled`.
+- **Cancel** stops the job, cancels in-flight Meta responses (`POST /v1/responses/{id}/cancel`) and releases its holds.
+- One job per learner at a time; others queue. Target 1–5 minutes; hard stop at 15.
+- When the device is back online after the job finished, the pack is fetched and saved; a notice says it is ready.
+
+### 18.5 Budget
+
+- Each job reserves its upper bound before it starts: searches (a cap, e.g. 12 per job, at $2.50 per 1,000) and
+  tokens for every stage; a cap per job (proposed $0.30, set after measuring) within the gateway's daily and total
+  ledger. Searches are counted from `web_search_call` items and priced in the ledger.
+- A learner allowance per day (proposed 5 packs) in `plans.toml`.
+
+### 18.6 Privacy and consent
+
+- A separate consent, **Research on the web**, says what leaves: the topic, and for a photo the photo after the
+  on-device privacy pass. Never notes or files the learner did not choose. The device's redaction check applies.
+- Background and stored responses are kept by Meta (`store: true`); Standard mode means no training. This conflicts
+  with zero data retention (§15 item 2).
+- The gateway keeps a job's data only until the device fetches it, at most 24 hours, under the session pseudonym.
+
+### 18.7 Changes
+
+| Where | Change |
+|---|---|
+| `cloud_gateway/providers/meta_responses.py` (new) | Responses API client: background create, streamed retrieval, cancel; parses `web_search_call`, `url_citation` and Responses usage (`input_tokens`, `output_tokens`, reasoning inside output) |
+| `cloud_gateway/research.py` (new) | The job runner and stages, checkpoints in the gateway store; `POST /v1/research`, `GET /v1/research/{id}` (with an event stream), `POST /v1/research/{id}/cancel`, `DELETE /v1/research/{id}` |
+| `cloud_gateway/inference_budget.py`, `config.py` | Search pricing in the ledger; `[research]` settings (searches, rounds, time limits, allowance, source policy) |
+| `contracts/cloud/` and `contracts/study/` + codegen | The research request, job and pack contracts; a `research` source kind and web citations in Study |
+| `agent_core/api/study.py`, `net/study.py` | Start, follow, cancel and import a pack into Study's stores |
+| Study podcast | Read `audio_overview` scripts with Kokoro on the device instead of NVIDIA's trial |
+| `packages/ui` Study | Entry points, the progress view, the pack view (diagram, concepts, cards, quiz, podcast, sources) |
+| W2 dependency | SAM client, `photo_region` overlay and diagram drill |
+
+### 18.8 Done when
+
+- From our own photo of a labelled diagram, a pack arrives within about 5 minutes with: a tap-to-learn diagram with at
+  least 80% of its labels mapped to SAM outlines; at least 6 key concepts, each with at least one verified citation;
+  at least 10 flashcards; a 10-question quiz; a podcast that plays with the network off; and its sources.
+- Closing the app mid-research and reopening shows progress or the finished pack; Cancel stops all further spend.
+- Every citation opens its source, no unsupported claim is shown, and the ledger shows the job's searches and tokens.
+
+### 18.9 Tests
+
+A fake Responses server (background create, streamed retrieval, cancel, `web_search_call`, `url_citation`); stage
+checkpoints, resume and cancel; budget reservation including searches; verification dropping unsupported claims;
+withholding of instruction-like source text; import into Study's stores; the UI states.
+
+### 18.10 Open decisions
+
+1. Zero data retention or research (§15 item 2).
+2. The agent in the gateway (recommended: survives a sleeping laptop) or on the device.
+3. Allowance per learner per day and the cap per job.
+4. Source policy: which sites to prefer or exclude.
+5. Scope: any topic, or exam subjects plus Biology diagrams.
