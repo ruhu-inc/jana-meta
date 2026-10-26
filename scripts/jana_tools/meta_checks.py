@@ -22,14 +22,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from agent_core.contracts._validation import validator as contract_validator
+from agent_core.engine.assembly import bundled_schemas
 from cloud_gateway.config import GatewayConfig, ModelSpec, load_config
 from cloud_gateway.custody import secret_source
 from cloud_gateway.inference_budget import InferenceBudget
 from cloud_gateway.providers import ClientFactory, Providers, default_client
 from cloud_gateway.providers.base import ProviderAdapter, ProviderRequest, UpstreamError, Usage
 from cloud_gateway.store import GatewayStore
-from agent_core.contracts._validation import validator as contract_validator
-from agent_core.engine.assembly import bundled_schemas
 
 from jana_tools import REPO_ROOT
 
