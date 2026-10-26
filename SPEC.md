@@ -17,7 +17,7 @@ Work landed on `main` today, from this session and from parallel sessions merged
 | W | State | Remaining |
 |---|---|---|
 | W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, the Google stack still registered (§8.1), streaming the Coach to cut time to first words (§12) |
-| W2 Vision | **Mostly done** (parallel session): SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed | **Diagram drill** (tap a part, checked against SAM's outline; §5.2, needed by §18) |
+| W2 Vision | **Done**: SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed (parallel session); the diagram drill (§5.2, 2026-10-26) | Read time of a diagram (~15–20 s) |
 | W3 Glimmer | Downloaded and verified (with the DFlash draft); measured (§7) | Launcher and router entries, the lean offline path, power-cut switch timing and recovery |
 | W4 Speech | Not started | §6, re-baselined by §12 |
 | W5 Adult | Sign-up with date of birth, adult copy, parent sections removed, safety wording | Engine-side band check, remaining guardian copy (§17) |
@@ -170,9 +170,15 @@ question each complete a full tutoring turn on Spark in the browser demo host, w
   line lights up on the learner's own photo.
 - **Diagram questions**: SAM finds every arrow or label in a physics diagram so Jana can ask "which of these is the
   normal force?" by pointing, not describing.
-- **Diagram drill** (still to do; the research agent reuses it, §18): a photographed diagram becomes "tap the part
-  that…" questions; each tap is checked by testing whether it falls inside the right SAM outline, so the mark comes from
-  code, not a model. Tapping a part shows its name and role.
+- **Diagram drill** (done 2026-10-26; the research agent reuses it, §18): "Photo of a diagram to learn" in the tutor's
+  composer (capture purpose `diagram`). Spark names each labelled part and boxes the part and its printed label; SAM
+  outlines the part; the student confirms the names. "Learn the parts" names a tapped part; "Practise" covers the
+  printed labels and asks "Tap the …"; each tap is marked by code (`client-core/src/diagram-drill.ts`: inside the
+  outline, smallest part when parts nest, a finger's width of slack); two misses show the part; the end says how many
+  were found first time. Label covers use the device's own OCR line that names the part, since Spark's label boxes
+  were a line off in testing. Parts' roles are not shown (unchecked model text); study packs add verified roles (§18).
+  Measured on a synthetic labelled plant diagram (live Spark + SAM): all 5 parts named, 4–5 of 5 outlined by SAM (an
+  unoutlined part keeps its box), read ready in ~15–20 s, a wrong-part tap and a right tap marked correctly.
 
 ### 5.3 Changes
 
@@ -393,7 +399,7 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
 | Day | Work |
 |---|---|
 | Oct 26 | Done: W1 (Spark live, latency halved), W5 sign-up and copy, W6 #1/#4/#6, input guard on Spark, Glimmer downloaded and measured |
-| Oct 27 | Diagram drill (W2's remaining piece, §5.2); stream the Coach and cut calls on simple turns (§12) |
+| Oct 27 | Stream the Coach and cut calls on simple turns (§12); diagram drill done Oct 26 (§5.2) |
 | Oct 28 – Nov 1 | W7 research agent (§18): Responses client and fakes, the gateway job, synthesis and verification, device import and UI, Kokoro podcast |
 | Oct 31 – Nov 1 | W4 voice online (reduced: Voice Transcribe in, Magpie or Kokoro out); W3 lean offline path (pack hints instant, Glimmer for free-form questions) |
 | Nov 2–3 | Polish, safety checks, eval run, record the video; owner signs off the §9 scope |
@@ -647,7 +653,7 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
 | `contracts/study/` aid kinds | A new `diagram` aid kind (the photo, its SAM outlines and the part map) for the tap-to-learn view, since Study has no aid that holds masks |
 | Study podcast | Read `audio_overview` scripts with Kokoro on the device instead of NVIDIA's trial |
 | `packages/ui` Study | Entry points, the progress view, the pack view (diagram, concepts, cards, quiz, podcast, sources) |
-| W2 dependency | SAM client and `photo_region` overlay (done); diagram drill (to do, §5.2) |
+| W2 dependency | SAM client, `photo_region` overlay and diagram drill (done, §5.2); the pack view reuses `DiagramDrill` with the pack's own photo and part map |
 
 ### 18.8 Done when
 
