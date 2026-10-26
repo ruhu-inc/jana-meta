@@ -1,0 +1,22 @@
+packages/client-core/src/session.ts
+  s_207b3a26495062::t_b0333ae2b67151 478-480
+packages/client-core/test/stream.test.ts
+  s_207b3a26495062::t_c7f61f48ec0c4e 143-160,162-179
+  s_207b3a26495062::t_f6942d8b3c480b 161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "867246e390ad349c75026261d2fd60adb4aab498",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
