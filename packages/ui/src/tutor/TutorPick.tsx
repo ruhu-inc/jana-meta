@@ -93,7 +93,7 @@ export function TutorPickFields({ pick, actions }: { pick: Pick; actions: ReactN
             return (
               <label key={choice} data-character-tile={slug}
                 className={`relative flex cursor-pointer flex-col items-center gap-1 rounded-card border p-3 text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${selected ? "border-ink bg-wash" : "border-line hover:bg-wash"}`}>
-                <input type="radio" name={`${id}-character`} value={choice} checked={selected} disabled={pick.saving} onChange={() => pick.choose(choice)}
+                <input type="radio" name={`${id}-character`} checked={selected} disabled={pick.saving} onChange={() => pick.choose(choice)}
                   aria-labelledby={`${id}-${slug}-name`} aria-describedby={`${id}-${slug}-hint`} className="sr-only" />
                 {selected && <span data-selected-mark="" className="absolute end-2 top-2 inline-flex text-ink"><Icon name="verified" size={16} /></span>}
                 <Character id={choice} size={64} animate={false} />
@@ -168,8 +168,9 @@ export function FirstRunTutorPick({ profiles, settings, onDone, seed }: { profil
         <form className="w-full" onSubmit={(event) => { event.preventDefault(); choose(); }}>
           <TutorPickFields pick={pick} actions={(
             <>
-              {/* Choose waits for a change, as Settings' Save does: until then it would do just what "Keep Jana" does. */}
-              <Button type="submit" tone="primary" disabled={pick.saving || !pick.changed || pick.draft.name.trim() === ""}>{t("tutor.pick.choose")}</Button>
+              {/* Choose is always available: with nothing changed it keeps the selected tutor, as "Keep Jana" does, so a
+                  learner who likes the tutor shown is never left with a button that does nothing (§10.6). */}
+              <Button type="submit" tone="primary" disabled={pick.saving || pick.draft.name.trim() === ""}>{t("tutor.pick.choose")}</Button>
               <Button tone="ghost" disabled={pick.saving} onClick={onDone}>{keep}</Button>
             </>
           )} />

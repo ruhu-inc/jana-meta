@@ -397,6 +397,19 @@ describe("UXS-10 hand-off interview and the shared lab (JRN-03 step 3, D102)", (
     fireEvent.click(within(await screen.findByRole("region", { name: "Choose your tutor" })).getAllByRole("button", { name: "Keep Jana" })[0]!);
     await screen.findByRole("region", { name: "Two quick questions" });
     expect(tutorPatches(kept)).toEqual([]);
+    cleanup();
+
+    // Choosing the tutor already shown is allowed too: it saves nothing and goes on (§10.6).
+    const same = withPick();
+    start(same);
+    fireEvent.click(within(await firstRun("Ada")).getByRole("button", { name: "Continue" }));
+    const shown = await screen.findByRole("region", { name: "Choose your tutor" });
+    await within(shown).findByRole("radio", { name: "Jana" });
+    const choose = within(shown).getByRole("button", { name: "Choose this tutor" });
+    expect(choose.hasAttribute("disabled")).toBe(false);
+    fireEvent.click(choose);
+    await screen.findByRole("region", { name: "Two quick questions" });
+    expect(tutorPatches(same)).toEqual([]);
   });
 
   test.each(["light", "dark"] as const)("uxs09_lab_notice_shown: %s family and school picker", async (theme) => {
