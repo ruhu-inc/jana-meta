@@ -36,30 +36,6 @@ def test_only_auto_tool_choice_reaches_spark_without_mutating_the_caller() -> No
     assert {"tools", "tool_choice", "parallel_tool_calls"}.isdisjoint(no_tools)
 
 
-def test_self_referring_tool_schemas_are_unrolled_for_spark() -> None:
-    # Spark refuses a tool whose parameters refer to themselves (a 400 on `parameters`, 2026-10-26): the circuit
-    # tool's groups nest, so every physics Solver call failed. The schema Spark sees has no cycle left and still
-    # admits groups nested to the unrolled depth; tools without a cycle go unchanged.
-    from agent_core.tools.spec import InitCtx
-    from agent_core.tools.specs import registry
-    from cloud_gateway.providers.meta import UNROLLED_DEPTH, _refs
-    from jsonschema import Draft202012Validator
-
-    circuit = registry().specs["phys_circuit"].model_definition(InitCtx())
-    tools = [*TOOLS, {"type": "function", "function": circuit}]
-    sent = prepare_body({"messages": [], "tools": tools})["tools"]
-    assert sent[: len(TOOLS)] == TOOLS
-    params = sent[-1]["function"]["parameters"]
-    assert not _refs(params) & {"group", "members"} and "group" not in params.get("$defs", {})
-    assert circuit["parameters"]["$defs"]["group"]  # the caller's schema is untouched
-    nested: object = {"series": ["R1"]}
-    for _ in range(UNROLLED_DEPTH - 1):
-        nested = {"parallel": ["R1", nested]}
-    call = {"components": [{"id": "R1", "kind": "resistor", "resistance": 2}], "network": nested}
-    assert not list(Draft202012Validator(params).iter_errors(call))
-    assert not list(Draft202012Validator(circuit["parameters"]).iter_errors(call))
-
-
 @pytest.mark.parametrize(("asked", "sent"), [("none", "minimal"), ("low", "low"), ("high", "high")])
 def test_reasoning_effort_maps_none_to_minimal(asked: str, sent: str) -> None:
     assert prepare_body({"messages": [], "reasoning_effort": asked})["reasoning_effort"] == sent

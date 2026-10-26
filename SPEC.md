@@ -394,8 +394,8 @@ Checker 1.6 s. A call costs about 0.9 s plus 0.37 s per 100 output tokens; Spark
 a plan step on the way to a checked answer is checked at that answer instead of refusing the plan; an empty optional
 `sketch_wanted` no longer costs a Coach retry; the rule matcher's judgement and the session title run alongside the
 specialists; no guard model call for a line of working or a "Solve …" question (its patterns, classifier and redaction
-still run); `phys_circuit`'s self-referring schema, which Spark refused with a 400 on every physics Solver call, is
-unrolled. An opening is still five calls in a row (guard, Diagnoser, Solver tool, Solver plan, Coach), so ≤ 3 s needs
+still run); and (on main, 577fa5f) `phys_circuit`'s self-referring schema, which Spark refused with a 400 on every
+physics Solver call, is unrolled. An opening is still five calls in a row (guard, Diagnoser, Solver tool, Solver plan, Coach), so ≤ 3 s needs
 fewer of them: running the guard alongside the Diagnoser (about 1.2 s; `test_agt02` now requires no other call when
 the guard answers), the Coach alongside the Solver's plan (about 1.5 s; the opening note now depends on the plan), or
 streaming the Coach's `say` to speech before the gates finish.
