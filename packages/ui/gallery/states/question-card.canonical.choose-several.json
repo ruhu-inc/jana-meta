@@ -11,19 +11,19 @@
     "options": [
       {
         "id": "opt_0",
-        "label": "Getting ready for my exams"
+        "label": "Preparing for an exam, such as O level or university entry"
       },
       {
         "id": "opt_1",
-        "label": "Catching up on topics I missed"
+        "label": "Refreshing topics I studied before"
       },
       {
         "id": "opt_2",
-        "label": "Understanding the ideas better"
+        "label": "Understanding why the methods work"
       },
       {
         "id": "opt_3",
-        "label": "Getting quicker at answering questions"
+        "label": "Getting quicker and more accurate in exams"
       }
     ],
     "allow_free_text": true,

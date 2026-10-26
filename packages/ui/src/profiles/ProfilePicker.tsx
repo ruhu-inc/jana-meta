@@ -1,5 +1,5 @@
 // The profile picker (UXS-09, D86, D87; direction A "Studio"): on paper with the lockup (DSN-25), the students as large
-// avatars with their names; a tap opens that student's isolated learning space, with no PIN anywhere. "Add student" is
+// avatars with their names; a tap opens that learner's isolated learning space, with no PIN anywhere. "Add profile" is
 // open to anyone and asks for a name and a date of birth, which only confirms the learner is 18 or over (JM-D15);
 // everything else takes first run's defaults (TABLE PLT-17b), corrected later in Settings → Profiles. A profile that cannot be opened says so on screen, whatever the reason, and a profile that
 // closed after inactivity says why (SEC-19). When the profile store cannot be read, "Show recovery options" opens
@@ -21,7 +21,7 @@ export function useProfiles(profiles: ProfileController) {
 
 const TILE = "jana-press flex min-w-26 flex-col items-center gap-2.5 rounded-card px-2 py-3 text-ui font-medium text-ink hover:bg-wash disabled:cursor-not-allowed";
 
-/** "Add student": a name and a date of birth (18 or over), then the learner is added with first run's defaults for the
+/** "Add profile": a name and a date of birth (18 or over), then the learner is added with first run's defaults for the
  * installed subjects. */
 export function AddStudent({ profiles, onAdded }: { profiles: ProfileController; onAdded?: (profileId: string) => void }) {
   const t = useT();

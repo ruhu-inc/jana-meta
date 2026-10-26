@@ -222,7 +222,7 @@ describe("UXS-10 resume and UXS-47", () => {
     });
     start(fake);
     await screen.findByRole("heading", { name: "Who's learning?" });
-    const added = screen.getByRole("list", { name: "Students already added" });
+    const added = screen.getByRole("list", { name: "Profiles already added" });
     expect(within(added).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["AAda", "BBen"]);
     // Nothing more needs typing: "Start learning" opens the first student and records the step as done.
     fireEvent.click(screen.getByRole("button", { name: "Start learning" }));
@@ -257,9 +257,9 @@ describe("UXS-09", () => {
     const fake = core();
     start(fake);
     await screen.findByRole("heading", { name: "Who's learning?" });
-    fireEvent.click(screen.getByRole("button", { name: "Add student" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add profile" }));
     fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: "Dee" } });
-    const add = screen.getAllByRole("button", { name: "Add student" }).at(-1)!;
+    const add = screen.getAllByRole("button", { name: "Add profile" }).at(-1)!;
     fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "2015-03-01" } });
     expect(add.hasAttribute("disabled")).toBe(true); // under 18: nothing is added
     expect(screen.getByText(/this app is for learners aged 18 and over, so a profile cannot be made/)).toBeTruthy();
@@ -350,7 +350,7 @@ describe("UXS-10 hand-off interview and the shared lab (JRN-03 step 3, D102)", (
     const fake = core((c) => {
       c.profiles.splice(0);
       c.interview = [
-        { question_id: "goals", card: QUESTION("What would you most like help with?", ["Getting ready for my exams", "Catching up"], true) },
+        { question_id: "goals", card: QUESTION("What would you most like help with?", ["Preparing for an exam, such as O level or university entry", "Catching up"], true) },
         { question_id: "confidence", card: QUESTION("How confident do you feel about physics right now?", ["Very confident", "Not very confident"], false) },
       ];
     });
@@ -360,7 +360,7 @@ describe("UXS-10 hand-off interview and the shared lab (JRN-03 step 3, D102)", (
     const card = await screen.findByRole("region", { name: "Two quick questions" });
     expect(card.textContent).toContain("Question 1 of 2");
     expect(card.textContent).toContain("What would you most like help with?");
-    fireEvent.click(within(card).getByRole("button", { name: "Getting ready for my exams" }));
+    fireEvent.click(within(card).getByRole("button", { name: "Preparing for an exam, such as O level or university entry" }));
     fireEvent.click(within(card).getByRole("button", { name: "Send answer" })); // one Send for the picks and own words
     await waitFor(() => expect(fake.interviewAnswers.map((a) => a.question_id)).toEqual(["goals"]));
     await waitFor(() => expect(screen.getByRole("region", { name: "Two quick questions" }).textContent).toContain("Question 2 of 2"));
@@ -376,7 +376,7 @@ describe("UXS-10 hand-off interview and the shared lab (JRN-03 step 3, D102)", (
     const withPick = () => core((c) => {
       c.profiles.splice(0);
       for (const s of c.settings.values()) Object.assign(s, { tutor_name: "Jana", tutor_avatar: "avatar.jana" });
-      c.interview = [{ question_id: "goals", card: QUESTION("What would you most like help with?", ["Getting ready for my exams", "Catching up"], true) }];
+      c.interview = [{ question_id: "goals", card: QUESTION("What would you most like help with?", ["Preparing for an exam, such as O level or university entry", "Catching up"], true) }];
     });
     const tutorPatches = (fake: FakeProfileCore) => fake.log.filter((r) => r.method === "PATCH" && r.path.endsWith("/settings"))
       .map((r) => r.body as Record<string, unknown>).filter((b) => "tutor_avatar" in b || "tutor_name" in b);
