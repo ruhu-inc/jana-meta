@@ -152,6 +152,9 @@ ROUTES: dict[str, Rule] = {
     "PATCH /v1/study/concept-maps/{map_id}": Screened("study_request", _concept_edit, NOTE | {"personal_data"}),
     "PATCH /v1/study/aids/{aid_id}/concept-map": Screened("study_request", _concept_edit, NOTE | {"personal_data"}),
     "POST /v1/study/jobs/{job_id}/actions": _IDS,
+    # A learning journey from a saved aid: the body is one action of a closed set ("start", "resume",
+    # "lesson_reviewed"; StudyJourneyAction forbids any other field), so no learner text reaches it.
+    "POST /v1/study/aids/{aid_id}/journey": _IDS,
     # The server prepares the saved passage; the body contains only its index,
     # offset, digest and explicit consent, never client-supplied narration text.
     "POST /v1/study/aids/{aid_id}/neural-speech": _IDS,
