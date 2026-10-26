@@ -84,7 +84,7 @@
   key_points:
   - id: kp_rise_over_run
     text:
-      en: The gradient is the change in y divided by the change in x between two points.
+      en: Pick two points on the line; the rise between them (up the y-axis) over the run (along the x-axis) is the gradient.
     follow_up:
       en: From two points on a line, which change goes on top when you work out the gradient?
   - id: kp_negative

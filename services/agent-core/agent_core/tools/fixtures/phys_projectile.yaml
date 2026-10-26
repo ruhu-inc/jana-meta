@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: phys_projectile
-version: 1
+version: 2
 valid_args:
 - motion: vertical
   speed: 20
@@ -13,9 +13,20 @@ valid_args:
   constants:
   - {symbol: g, source: pack, value: '9.8', unit: m/s^2}
   points: 11
+- motion: angled
+  speed: 20
+  angle: 30
+  g: 10
+  g_source: pack
 invalid_args:
 - motion: diagonal
   speed: 20
+- motion: angled
+  speed: 20
+- motion: horizontal
+  speed: 20
+  height: 5
+  angle: 30
 - motion: vertical
   speed: 20
   g: 10

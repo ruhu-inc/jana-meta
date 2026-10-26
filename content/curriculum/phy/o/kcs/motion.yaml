@@ -179,7 +179,7 @@
       en: Which feature of the line on a velocity-time graph tells you how quickly the velocity changes?
   - id: kp_two_points
     text:
-      en: The gradient is the change in velocity divided by the change in time between two points on the line.
+      en: Read two points off the line; the velocity gained between them over the time between them is the gradient.
     follow_up:
       en: What do you work out from two points on the line to find that gradient?
   difficulty_prior: 0.2
