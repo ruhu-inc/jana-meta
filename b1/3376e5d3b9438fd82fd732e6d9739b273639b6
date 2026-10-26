@@ -1,0 +1,41 @@
+packages/ui/src/board/PhotoRegions.tsx
+  s_09726b09e7edac::t_2fba82cee3c5dd 1-64
+packages/client-core/src/voice.ts
+  s_09726b09e7edac::t_7361e7d63a7310 11-12
+packages/ui/src/board/Pen.tsx
+  s_09726b09e7edac::t_d17cd8b2c14823 14
+packages/client-core/src/pointer.ts
+  s_09726b09e7edac::t_7361e7d63a7310 8-9,19-22,44,49-50
+packages/client-core/src/store.ts
+  s_09726b09e7edac::t_7361e7d63a7310 165-166
+packages/ui/src/composer/PhotoCapture.tsx
+  s_09726b09e7edac::t_cfef8071dbf2a8 217,220,248-250,272
+packages/i18n/locales/en.json
+  s_09726b09e7edac::t_094d4f664f59de 1356-1359
+packages/ui/test/photo-regions.test.tsx
+  s_09726b09e7edac::t_f183b6f458b146 1-92,94-101
+  s_09726b09e7edac::t_3101ead3418548 93
+packages/ui/src/board/WorkingEntry.tsx
+  s_09726b09e7edac::t_094d4f664f59de 10-12,57-58,64
+packages/client-core/src/reducer.ts
+  s_09726b09e7edac::t_7361e7d63a7310 199-200
+packages/ui/src/board/Board.tsx
+  s_09726b09e7edac::t_cfef8071dbf2a8 14
+  s_09726b09e7edac::t_94500e88b747ea 30,308-314,371
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b13376e5d3b9438fd82fd732e6d9739b273639b6",
+  "prompts": {},
+  "sessions": {
+    "s_09726b09e7edac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e5862a0-b0c4-4426-9881-98ae596ead81",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
