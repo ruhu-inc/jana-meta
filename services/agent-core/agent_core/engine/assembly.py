@@ -186,6 +186,9 @@ def self_contained(schema: dict[str, Any], documents: Mapping[str, dict[str, Any
     result: dict[str, Any] = rewrite(schema, base)
     if extra:
         result["$defs"] = {**result.get("$defs", {}), **extra}
+    # The copy is its own document: without the contract's `$id`, its local references resolve within it, even where a
+    # validator built on the contract registry (which holds the original document) checks it.
+    result.pop("$id", None)
     return result
 
 

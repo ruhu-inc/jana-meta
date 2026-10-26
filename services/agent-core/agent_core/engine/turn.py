@@ -174,6 +174,12 @@ SKETCH_FIELDS = frozenset({"sketch", "sketch_wanted"})
 SKETCH_HINT = ("Only when a drawing would help and no catalogue visual fits, set sketch_wanted to a short description "
                "of it (what to draw, in words); the app draws it separately. Never draw in the reply.")
 KC_ID = re.compile(r"^kc\.(mth|phy|chm|bio|acc)\.(o|a)\.[a-z0-9_]+\.[a-z0-9_]+$")
+
+
+def _rebased(checker: Draft202012Validator, schema: dict[str, Any]) -> Draft202012Validator:
+    """The checker for another shape of its contract: the same registry and formats, with references resolved from
+    the new schema (a self-contained decoding schema's `#/$defs/...` are its own, not the registry document's)."""
+    return cast(Draft202012Validator, checker.evolve(schema=schema, _resolver=None))
 REPEATED_MARKER = "[repeated text removed]"
 AUX_STOPS = {"timeout": "timeout", "schema_invalid": "schema_invalid"}  # an auxiliary fallback's delegation stop
 CHECK_ID = re.compile(r"chk_[A-Za-z0-9_]{3,64}")
@@ -2038,7 +2044,7 @@ class Engine(Coordination, Offers):
         if output is None or output[0] != "tutor-turn":
             return None
         schema = offer_schema(output[1])
-        return (output[0], schema, cast(Draft202012Validator, output[2].evolve(schema=offer_schema(output[2].schema))))
+        return (output[0], schema, _rebased(output[2], offer_schema(output[2].schema)))
 
     def sketch_guard(self, text: str) -> bool:
         """A sketch's label or caption passes the output guard (PRV-18, VSL-43); a failing check refuses it."""
@@ -3223,7 +3229,7 @@ class Engine(Coordination, Offers):
         check_schema = validator(schema_name)
         if schema is not self.deps.bundled_schemas[schema_name]:
             tolerant = self._output_schema(schema_name, tolerant=True)
-            check_schema = cast(Draft202012Validator, check_schema.evolve(schema=tolerant))
+            check_schema = _rebased(check_schema, tolerant)
         if text_only and schema_name == "agents/tutor-turn":
             # The engine already wrote and checked these student lines. Acknowledging them or answering a method
             # question needs no second copy on the board, card or drawing. Narrow the decoder as well as the
@@ -3238,7 +3244,7 @@ class Engine(Coordination, Offers):
                     "card": {"type": "null"},
                 },
             }
-            check_schema = cast(Draft202012Validator, check_schema.evolve(schema=schema))
+            check_schema = _rebased(check_schema, schema)
         output = (schema_name.split("/")[-1], schema, check_schema)
         self._call_output = output  # an online candidate's prepare step may offer `sketch_wanted` (VSL-43)
         if tools and not tools_off:
