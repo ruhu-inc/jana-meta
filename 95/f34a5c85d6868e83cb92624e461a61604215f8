@@ -1,0 +1,29 @@
+services/agent-core/agent_core/engine/assembly.py
+  s_1b50c8256925d5::t_bbf7a93df12627 189-191
+services/agent-core/agent_core/engine/turn.py
+  s_207b3a26495062::t_d251a44c093c0f 177-182,2047,3232,3247
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "95f34a5c85d6868e83cb92624e461a61604215f8",
+  "prompts": {},
+  "sessions": {
+    "s_1b50c8256925d5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "61753e47-e99f-48c3-992c-d35781c227eb",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    },
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
