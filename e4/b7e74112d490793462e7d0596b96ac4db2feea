@@ -1,0 +1,120 @@
+packages/contracts-ts/src/generated/index.ts
+  s_63b211029247d0::t_6a2b7c40a7060a 4,728-1001
+packages/contracts-ts/src/generated/client.ts
+  s_63b211029247d0::t_6a2b7c40a7060a 4,391-542
+packages/renderers/src/conceptmap/ConceptMapSvg.tsx
+  s_63b211029247d0::t_3366aed4128f66 28-29,51-55,205-206,215
+packages/ui/src/learn/StudyConceptMap.tsx
+  s_63b211029247d0::t_43c4711d39bda2 1-195
+packages/client-core/test/study-workspace.test.ts
+  s_63b211029247d0::t_ae6f9b359c44f9 554-576
+packages/contracts-ts/src/generated/api/commands.ts
+  s_63b211029247d0::t_665a188294ad9a 2
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_63b211029247d0::t_6a2b7c40a7060a 347-361,416-430
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_63b211029247d0::t_665a188294ad9a 2
+services/agent-core/agent_core/store/migration_v17.py
+  s_63b211029247d0::t_f154d2189a4285 1-11
+services/agent-core/agent_core/store/retention.py
+  s_63b211029247d0::t_f154d2189a4285 352-353
+contracts/api/commands.schema.json
+  s_63b211029247d0::t_8c406b3b19f326 12427-12438,12441-12455,12457,12460-12472,12477-12490,12493-12508,12511-12515
+  s_63b211029247d0::t_665a188294ad9a 12439-12440,12456,12458-12459,12473-12476,12491-12492,12509-12510
+services/cloud-gateway/cloud_gateway/contracts/schemas/study/workspace.schema.json
+  s_63b211029247d0::t_6a2b7c40a7060a 2,694-695,708-709,830-831,854-855,919-920,1125-1127,1167-1171,1203-1207,1244-1248,1280-1320,2087-2089,2124-2128,2160-2164,2201-2205,2237-2277,3437-4012
+services/cloud-gateway/cloud_gateway/contracts/cloud/gateway.py
+  s_63b211029247d0::t_6a2b7c40a7060a 245-250,252-254,473-491,558-565,585
+packages/ui/test/study-workspace.test.tsx
+  s_63b211029247d0::t_ce69c57c41cb36 12,26
+  s_63b211029247d0::t_e1dc379048a177 512
+packages/i18n/locales/en.json
+  s_63b211029247d0::t_f775357c90b4d5 2303,2311-2352
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_63b211029247d0::t_6a2b7c40a7060a 3091-3102,3105-3119,3121,3124-3137,3142-3154,3157-3172,3175-3179
+  s_63b211029247d0::t_665a188294ad9a 2,3103-3104,3120,3122-3123,3138-3141,3155-3156,3173-3174
+packages/ui/src/learn/StudyGenerate.tsx
+  s_63b211029247d0::t_9ba6887821b5a1 10,13,55-56
+services/agent-core/agent_core/contracts/study/workspace.py
+  s_63b211029247d0::t_6a2b7c40a7060a 2,283-285,291-302,821-1032,1073,1172
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_63b211029247d0::t_bcc25aeb19e42c 15,185-200,275,410-412
+  s_63b211029247d0::t_543989a54097c3 36,38-39
+packages/ui/test/study-concept-map.test.tsx
+  s_63b211029247d0::t_2d6fc906ec9a03 87
+  s_63b211029247d0::t_ad8bb14e2a29a1 1-86,88-90
+services/cloud-gateway/cloud_gateway/study.py
+  s_63b211029247d0::t_a2af2679a8bf38 473,648,657-659,687-692,736-746,1161-1170
+  s_63b211029247d0::t_5bb4c03e8eb83f 1816-1891,2170-2173
+  s_63b211029247d0::t_4abd6550c6b070 1171,2174-2176
+services/agent-core/agent_core/engine/study.py
+  s_63b211029247d0::t_2f090a806f8362 25,1254-1255,1264,1271,1280-1282,1313-1315,2032-2033,2121,2213-2216,2278
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_63b211029247d0::t_6a2b7c40a7060a 3099-3110,3113-3127,3129,3132-3145,3150-3162,3165-3180,3183-3187
+  s_63b211029247d0::t_665a188294ad9a 2,3111-3112,3128,3130-3131,3146-3149,3163-3164,3181-3182
+services/agent-core/agent_core/engine/study_concepts.py
+  s_63b211029247d0::t_2fe46d20638a86 1-267
+services/agent-core/tests/test_a1_input_routes.py
+  s_63b211029247d0::t_4719f773d39656 81-86,89,111-115
+contracts/study/workspace.schema.json
+  s_63b211029247d0::t_8c406b3b19f326 693-694,707-708,830-831,854-855,919-920,1125-1127,1167-1171,1203-1207,1244-1248,1280-1320,2089-2091,2126-2130,2162-2166,2203-2207,2239-2279,3439-4022
+services/agent-core/agent_core/net/study.py
+  s_63b211029247d0::t_7867865f22cd0c 217-230
+services/agent-core/agent_core/store/generated/schema.py
+  s_63b211029247d0::t_4719f773d39656 2,6,8
+packages/contracts-ts/src/generated/study/workspace.ts
+  s_63b211029247d0::t_6a2b7c40a7060a 2,101,107-116,171-175,206-210,500,516-568,877,913-947,1211-1318
+services/agent-core/agent_core/store/sqlite.py
+  s_63b211029247d0::t_f154d2189a4285 33,92
+packages/contracts-ts/src/generated/cloud/gateway.ts
+  s_63b211029247d0::t_6a2b7c40a7060a 39,96-101,404,506-540,699
+contracts/data/schema.sql
+  s_63b211029247d0::t_4719f773d39656 645-650
+services/agent-core/agent_core/contracts/api/commands.py
+  s_63b211029247d0::t_665a188294ad9a 2
+services/cloud-gateway/tests/test_study_concept_map.py
+  s_63b211029247d0::t_d747c67d2b6e19 87-89
+  s_63b211029247d0::t_fe6793f4dc5974 104-137
+  s_63b211029247d0::t_844ac2a7853db9 1-86,90-103
+packages/ui/src/learn/ConceptMap.tsx
+  s_63b211029247d0::t_3366aed4128f66 28,61-64
+packages/contracts-ts/src/generated/validators.d.ts
+  s_63b211029247d0::t_6a2b7c40a7060a 875-889
+services/agent-core/agent_core/contracts/schemas/study/workspace.schema.json
+  s_63b211029247d0::t_6a2b7c40a7060a 2,694-695,708-709,830-831,854-855,919-920,1125-1127,1167-1171,1203-1207,1244-1248,1280-1320,2087-2089,2124-2128,2160-2164,2201-2205,2237-2277,3437-4012
+services/agent-core/agent_core/api/study.py
+  s_63b211029247d0::t_7c29afc8f82c16 20,646-730
+  s_63b211029247d0::t_8f56e204fd65f3 731
+services/agent-core/tests/test_study_concept_map.py
+  s_63b211029247d0::t_031985eee82501 1-115,117-133,137-191,193-199,201,203-204,206,210-218,220-221,223-232
+  s_63b211029247d0::t_d1b7bff27e9036 233
+  s_63b211029247d0::t_7a4a96bc573c1d 200
+  s_63b211029247d0::t_877b3f84d298d0 116
+  s_63b211029247d0::t_820fd1ef4c0e53 134-136,192,202,205,207-209,219,222
+services/agent-core/agent_core/contracts/cloud/gateway.py
+  s_63b211029247d0::t_6a2b7c40a7060a 245-250,252-254,473-491,558-565,585
+services/agent-core/agent_core/api/screening.py
+  s_63b211029247d0::t_7867865f22cd0c 71-81,150-153
+packages/client-core/src/study-workspace.ts
+  s_63b211029247d0::t_54e90f4d2a966b 38-40,50,342-386
+packages/contracts-ts/src/generated/client-validators.js
+  s_63b211029247d0::t_4bc2fd85e9b6e8 10
+packages/contracts-ts/src/generated/validators.js
+  s_63b211029247d0::t_527e41ee9866b0 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e4b7e74112d490793462e7d0596b96ac4db2feea",
+  "prompts": {},
+  "sessions": {
+    "s_63b211029247d0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eeaba4ba-62ef-4835-9cd8-1624a66fa8c2",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
