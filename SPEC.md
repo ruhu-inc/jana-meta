@@ -28,8 +28,11 @@ turn), JM-D7 (separate hosting project), JM-D8 (nothing with a non-commercial li
 JM-D1 rests on the Meta Model API Terms of Service (dev.meta.ai/legal/terms-of-service, checked 2026-10-26): "You and
 your End Users must be at least 18 years of age to use the Services and Integrated Products, and you will not create
 Integrated Products targeted at individuals under the age of 18." A parent signing in for a child, or a shared
-parent-and-child account, does not change who the end user is, so it is out of scope for this entry (owner asked,
-2026-10-26). Under-18 learners stay on Jana's own stack.
+parent-and-child account, does not change who the end user is, so it is out of scope for this entry. The rule covers
+every Model API service (Spark, SAM, Voice Transcribe); only Glimmer's open weights fall outside it. Owner decision,
+2026-10-26: the entry stays 18+, and school-age learners, with parent and guardian visibility, use Jana on its own
+stack, which keeps its guardian consent, parent summary and alerts. The under-18 sign-up message may point to Jana
+for schools once it has a public link.
 
 | # | Decision |
 |---|---|
