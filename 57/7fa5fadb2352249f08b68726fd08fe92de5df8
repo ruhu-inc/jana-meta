@@ -1,0 +1,28 @@
+services/agent-core/agent_core/tools/unroll.py
+  s_7a67105a55286a::t_bb4e23dea17bf0 1-75,78,80-81,83-108
+  s_7a67105a55286a::t_63093316a90fa2 76-77,79
+  s_7a67105a55286a::t_552cfbe8832a3e 82
+SPEC.md
+  s_7a67105a55286a::t_d4bf80f2464b5e 385-388
+services/agent-core/agent_core/tools/spec.py
+  s_7a67105a55286a::t_f8c1890e4b5411 12-13,130-131,133
+services/agent-core/tests/test_tool_schema_recursion.py
+  s_7a67105a55286a::t_3aab0956a544a2 1-11,13-65,67-68,71-72,74-77,84-127
+  s_7a67105a55286a::t_18cd038a34b5ee 12,66,69-70,73,78-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "577fa5fadb2352249f08b68726fd08fe92de5df8",
+  "prompts": {},
+  "sessions": {
+    "s_7a67105a55286a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b2eb89a6-12d2-4aca-be02-4e017f622e2a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
