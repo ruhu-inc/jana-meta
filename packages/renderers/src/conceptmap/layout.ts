@@ -1,7 +1,8 @@
 // The concept map's layered layout (UXS-22 map view): a pure, deterministic function of the nodes and edges, so the
 // same map always draws the same way and a test can check it. No graph library.
 //
-// 1. Layers by longest path: a skill sits one column right of the furthest skill it builds on (foundations left).
+// 1. Layers by longest path: a skill sits one column right of the furthest skill it builds on (foundations left);
+//    a `late` source (a linked skill of another subject) sits just left of the first skill built on it.
 //    A cycle (never in a pack, but defended against) is broken at the edge that closes it, in id order.
 // 2. An edge spanning several columns gets a dummy point in each column it crosses, so it is routed between boxes.
 // 3. Crossing reduction: barycentre sweeps left-to-right and right-to-left from the syllabus order (the node `order`
@@ -13,6 +14,9 @@ export interface LayoutNode {
   id: string;
   /** The initial order inside a column (the syllabus code); ties fall back to the id. */
   order: string;
+  /** Placed as late as it can be: just left of the first skill built on it (a linked skill of another subject, so
+   * its links stay short). Only for a node nothing comes before. */
+  late?: boolean;
   width?: number;
   height?: number;
 }
@@ -68,7 +72,7 @@ function compare(a: string, b: string): number {
 }
 
 /** Longest-path layers, and the edges kept: an edge closing a cycle (found in id order) is left out. */
-function layering(ids: string[], edges: LayoutEdge[]): { layer: Map<string, number>; kept: LayoutEdge[] } {
+function layering(ids: string[], edges: LayoutEdge[], late: Set<string>): { layer: Map<string, number>; kept: LayoutEdge[] } {
   const out = new Map<string, LayoutEdge[]>();
   for (const e of edges) out.set(e.from, [...(out.get(e.from) ?? []), e]);
   const state = new Map<string, 1 | 2>();
@@ -111,6 +115,11 @@ function layering(ids: string[], edges: LayoutEdge[]): { layer: Map<string, numb
       if (indegree.get(to) === 0) ready.push(to);
     }
   }
+  for (const id of ids) {
+    if (!late.has(id) || kept.some((e) => e.to === id)) continue;
+    const next = (after.get(id) ?? []).map((to) => layer.get(to)!);
+    if (next.length > 0) layer.set(id, Math.max(0, Math.min(...next) - 1));
+  }
   return { layer, kept };
 }
 
@@ -142,7 +151,7 @@ export function layout(nodes: readonly LayoutNode[], edges: readonly LayoutEdge[
     .map((e) => ({ from: e.from, to: e.to }))
     .sort((a, b) => compare(a.from, b.from) || compare(a.to, b.to))
     .filter((e, i, all) => i === 0 || e.from !== all[i - 1]!.from || e.to !== all[i - 1]!.to);
-  const { layer, kept } = layering(ids, sortedEdges);
+  const { layer, kept } = layering(ids, sortedEdges, new Set(nodes.filter((n) => n.late === true).map((n) => n.id)));
   const layers = ids.length === 0 ? 0 : Math.max(...ids.map((id) => layer.get(id)!)) + 1;
 
   // Slots per column, with a dummy for each column a long edge crosses.

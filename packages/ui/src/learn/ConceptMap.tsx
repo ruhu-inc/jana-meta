@@ -46,9 +46,14 @@ export type ConceptMapRenderer = ComponentType<{
   gap?: readonly string[];
   pointed?: string | null;
   reducedMotion: boolean;
+  zoom?: number;
   onActivate: (id: string) => void;
   onFocusNode: (id: string) => void;
 }>;
+
+/** The map's sizes: small for an overview, large for reading every box. */
+const ZOOMS = { small: 0.6, medium: 0.8, large: 1 } as const;
+type Zoom = keyof typeof ZOOMS;
 
 const RendererContext = createContext<ConceptMapRenderer | null>(null);
 export const ConceptMapRendererProvider = RendererContext.Provider;
@@ -306,6 +311,7 @@ function Ready({ map, view, mode, setMode, active, setActive, open, setOpen, pic
   const t = useT();
   const drawing = useDrawing(map, t);
   const Drawing = useContext(RendererContext);
+  const [zoom, setZoom] = useState<Zoom>("medium");
   const node = open === null ? null : map.nodes.find((n) => n.kc_id === open) ?? null;
   const opened = openQuestions(map);
   const gap = view.gap;
@@ -319,12 +325,8 @@ function Ready({ map, view, mode, setMode, active, setActive, open, setOpen, pic
     scroller.current?.querySelector<SVGGElement>(`[data-kc-node="${CSS.escape(active ?? "")}"]`)?.focus();
   };
   return (
-    <div className={`grid grid-cols-1 items-start gap-6 ${node !== null ? "lg:grid-cols-[minmax(0,1fr)_22rem]" : ""}`} data-concept-ready>
-      <div className="flex min-w-0 flex-col gap-6">
-        <section aria-labelledby="concept-next" className="flex flex-col gap-3">
-          <h2 id="concept-next" className="text-heading text-ink">{t("concept.next.title")}</h2>
-          <NextList map={map} onPick={pick} />
-        </section>
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]" data-concept-ready>
+      <div className="flex min-w-0 flex-col gap-4">
         {gap !== null && (
           <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-line-strong bg-canvas p-3" data-gap-banner={gap.path.join(" ")}>
             <span className="text-ui text-ink">{t("concept.gap.banner", { from: byId.get(gap.path[0] ?? "")?.statement ?? "", to: byId.get(gap.path[gap.path.length - 1] ?? "")?.statement ?? "" })}</span>
@@ -333,34 +335,46 @@ function Ready({ map, view, mode, setMode, active, setActive, open, setOpen, pic
         )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Legend />
-          {Drawing !== null && <SegmentedControl label={t("concept.view")} value={mode} onChange={setMode} options={[{ value: "map", label: t("concept.view.map") }, { value: "table", label: t("concept.view.table") }]} />}
+          {Drawing !== null && (
+            <span className="flex flex-wrap items-center gap-3">
+              {mode === "map" && <SegmentedControl label={t("concept.zoom")} value={zoom} onChange={setZoom} options={(["small", "medium", "large"] as const).map((z) => ({ value: z, label: t(`concept.zoom.${z}`) }))} />}
+              <SegmentedControl label={t("concept.view")} value={mode} onChange={setMode} options={[{ value: "map", label: t("concept.view.map") }, { value: "table", label: t("concept.view.table") }]} />
+            </span>
+          )}
         </div>
         {mode === "map" && Drawing !== null ? (
-          <div ref={scroller} className="max-h-[70vh] overflow-auto rounded-card border border-line bg-canvas" data-concept-scroller>
+          <div ref={scroller} className="max-h-[78vh] overflow-auto rounded-card border border-line bg-canvas" data-concept-scroller>
             <Drawing nodes={drawing.nodes} edges={drawing.edges} label={t("concept.map_label", { count: map.nodes.length })} t={t}
-              active={active} gap={gap?.path ?? []} pointed={pointed} reducedMotion={reducedMotion} onActivate={(kc) => setOpen(kc)} onFocusNode={setActive} />
+              active={active} gap={gap?.path ?? []} pointed={pointed} reducedMotion={reducedMotion} zoom={ZOOMS[zoom]} onActivate={(kc) => setOpen(kc)} onFocusNode={setActive} />
           </div>
         ) : (
           <MapTable map={map} onPick={pick} />
         )}
-        <section aria-labelledby="concept-open" className="flex flex-col gap-3" data-open-questions={opened.length}>
-          <h2 id="concept-open" className="text-heading text-ink">{t("concept.open.title")}</h2>
-          {opened.length === 0 ? <p className="text-ui text-muted">{t("concept.open.none")}</p> : (
-            <ul className="flex flex-col gap-2">
-              {opened.map((q) => (
-                <li key={q.question_id} className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-dashed border-line-strong p-3" data-open-question={q.question_id}>
-                  <span className="flex min-w-0 flex-1 basis-60 flex-col gap-1">
-                    <span className="text-ui text-ink">{q.text}</span>
-                    <span className="text-meta text-faint">{t("concept.open.label", { how: t(`concept.question.input.${q.input}`) })}</span>
-                  </span>
-                  {actions.onAskQuestion !== undefined && q.text !== null && <SuggestionChip icon="tutor" onClick={() => actions.onAskQuestion?.(q.text!)}>{t("concept.ask_jana")}</SuggestionChip>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
       </div>
-      {node !== null && <NodeSheet node={node} map={map} actions={actions} onClose={close} onGap={showGap} onPick={pick} />}
+      {node !== null ? <NodeSheet node={node} map={map} actions={actions} onClose={close} onGap={showGap} onPick={pick} /> : (
+        <div className="flex flex-col gap-6" data-concept-side>
+          <section aria-labelledby="concept-next" className="flex flex-col gap-3">
+            <h2 id="concept-next" className="text-heading text-ink">{t("concept.next.title")}</h2>
+            <NextList map={map} onPick={pick} />
+          </section>
+          <section aria-labelledby="concept-open" className="flex flex-col gap-3" data-open-questions={opened.length}>
+            <h2 id="concept-open" className="text-heading text-ink">{t("concept.open.title")}</h2>
+            {opened.length === 0 ? <p className="text-ui text-muted">{t("concept.open.none")}</p> : (
+              <ul className="flex flex-col gap-2">
+                {opened.map((q) => (
+                  <li key={q.question_id} className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-dashed border-line-strong p-3" data-open-question={q.question_id}>
+                    <span className="flex min-w-0 flex-1 basis-60 flex-col gap-1">
+                      <span className="text-ui text-ink">{q.text}</span>
+                      <span className="text-meta text-faint">{t("concept.open.label", { how: t(`concept.question.input.${q.input}`) })}</span>
+                    </span>
+                    {actions.onAskQuestion !== undefined && q.text !== null && <SuggestionChip icon="tutor" onClick={() => actions.onAskQuestion?.(q.text!)}>{t("concept.ask_jana")}</SuggestionChip>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }

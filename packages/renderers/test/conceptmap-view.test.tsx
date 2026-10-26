@@ -29,8 +29,7 @@ describe("concept map drawing", () => {
     const box = vt.slice(0, vt.indexOf("</g>"));
     expect(box).toContain('tabindex="0"');
     expect(box).toContain("Explaining it back</text>");
-    expect(box).toContain("Asked 3 times · 1 mistake</text>");
-    expect(box).toContain("Next 1</text>");
+    expect(box).toContain("Next 1 · Asked 3 times · 1 mistake</text>");
     expect(box).toContain("may come from an earlier skill (link not yet reviewed)");
     expect(html).toContain("Maths · Not started</text>");
     expect(html).not.toContain("transition");

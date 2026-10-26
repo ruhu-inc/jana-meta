@@ -113,12 +113,13 @@ export function moveFrom(layout: Layout, edges: readonly DrawEdge[], at: string,
   return null;
 }
 
-/** The layout of a drawing: linked boxes first in a column, then syllabus order. */
+/** The layout of a drawing: linked boxes beside the skill they explain and first in their column, then syllabus
+ * order. */
 export function layoutOf(nodes: readonly DrawNode[], edges: readonly DrawEdge[]): Layout {
-  return place(nodes.map((n) => ({ id: n.id, order: `${n.linked ? "0" : "1"}${n.code}` })), edges);
+  return place(nodes.map((n) => ({ id: n.id, order: `${n.linked ? "0" : "1"}${n.code}`, late: n.linked })), edges);
 }
 
-export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, gap = [], pointed = null, reducedMotion, onActivate, onFocusNode }: {
+export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, gap = [], pointed = null, reducedMotion, zoom = 1, onActivate, onFocusNode }: {
   nodes: readonly DrawNode[];
   edges: readonly DrawEdge[];
   /** Placed already (the same function of nodes and edges); laid out here when absent. */
@@ -131,6 +132,8 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
   gap?: readonly string[];
   pointed?: string | null;
   reducedMotion: boolean;
+  /** Drawn size against the layout's (1: one layout unit per CSS pixel). */
+  zoom?: number;
   onActivate: (id: string) => void;
   onFocusNode: (id: string) => void;
 }): ReactElement {
@@ -164,7 +167,7 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
   };
   const fade = reducedMotion ? undefined : { transition: "opacity 160ms ease-out" };
   return (
-    <svg ref={svg} viewBox={`0 0 ${layout.width} ${layout.height}`} width={layout.width} height={layout.height} role="group" aria-label={label}
+    <svg ref={svg} viewBox={`0 0 ${layout.width} ${layout.height}`} width={Math.round(layout.width * zoom)} height={Math.round(layout.height * zoom)} role="group" aria-label={label}
       data-concept-map="" data-gap={lighting ? gap.join(" ") : undefined} style={{ maxWidth: "none" }}>
       <g aria-hidden="true" data-edges="">
         {layout.edges.map((routed) => {
@@ -193,13 +196,15 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
         const inner = placed.width - 16;
         const title = wrap(n.title, inner);
         const head = n.linked && n.subject !== undefined ? `${n.subject} · ${n.stateWord}` : `${n.code} · ${n.stateWord}`;
-        const badges = [n.asked > 0 ? t("concept.badge.asked", { count: n.asked }) : "", n.mistakes > 0 ? t("concept.badge.mistakes", { count: n.mistakes }) : ""].filter(Boolean).join(" · ");
+        const badges = [n.next > 0 ? t("concept.next_badge", { place: n.next }) : "", n.asked > 0 ? t("concept.badge.asked", { count: n.asked }) : "",
+          n.mistakes > 0 ? t("concept.badge.mistakes", { count: n.mistakes }) : ""].filter(Boolean).join(" · ");
         const into = edges.filter((e) => e.to === n.id && e.kind === "root_gap");
         const names = [
           n.title, n.stateWord,
           ...(n.linked && n.subject !== undefined ? [t("concept.linked_from", { subject: n.subject })] : []),
-          ...(badges !== "" ? [badges] : []),
           ...(n.next > 0 ? [t("concept.next_place", { place: n.next })] : []),
+          ...(n.asked > 0 ? [t("concept.badge.asked", { count: n.asked })] : []),
+          ...(n.mistakes > 0 ? [t("concept.badge.mistakes", { count: n.mistakes })] : []),
           ...into.map((e) => t(e.reviewed === true ? "concept.root_gap_named" : "concept.root_gap_unreviewed_named", { name: e.name ?? "" })),
           ...(on ? [t("concept.on_gap_path")] : []),
           ...(pointed === n.id ? [t("visual.part.pointed")] : []),
@@ -214,9 +219,8 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
               {...(n.linked ? { strokeDasharray: "5 3" } : {})} />
             <rect className="concept-focus" x={-4} y={-4} width={placed.width + 8} height={placed.height + 8} rx={13} fill="none" stroke={INK} strokeWidth={2} opacity={0} />
             <text x={8} y={16} fontSize={11} fontWeight={600} fill={n.linked ? MUTED : ink}>{head}</text>
-            {n.next > 0 && <text x={placed.width - 8} y={16} fontSize={11} fontWeight={600} textAnchor="end" fill={ink} data-next={n.next}>{t("concept.next_badge", { place: n.next })}</text>}
             {title.map((line, i) => <text key={i} x={8} y={33 + i * 15} fontSize={12} fill={n.linked ? INK : ink}>{line}</text>)}
-            {badges !== "" && <text x={8} y={placed.height - 8} fontSize={11} fontWeight={600} fill={n.linked ? INK : ink} data-badges="">{badges}</text>}
+            {badges !== "" && <text x={8} y={placed.height - 8} fontSize={11} fontWeight={600} fill={n.linked ? INK : ink} data-badges="" {...(n.next > 0 ? { "data-next": n.next } : {})}>{badges}</text>}
           </g>
         );
       })}

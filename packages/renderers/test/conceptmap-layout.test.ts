@@ -12,7 +12,7 @@ interface Backbone { nodes: { id: string; code: string; linked: boolean }[]; edg
 
 function backbone(subject: string): { nodes: LayoutNode[]; edges: LayoutEdge[] } {
   const raw = JSON.parse(fs.readFileSync(path.join(FIXTURES, "concept-map", `${subject}.json`), "utf8")) as Backbone;
-  return { nodes: raw.nodes.map((n) => ({ id: n.id, order: n.code })), edges: raw.edges.map((e) => ({ from: e.from, to: e.to })) };
+  return { nodes: raw.nodes.map((n) => ({ id: n.id, order: n.code, late: n.linked })), edges: raw.edges.map((e) => ({ from: e.from, to: e.to })) };
 }
 
 function shuffled<T>(items: readonly T[], seed: number): T[] {
@@ -62,6 +62,11 @@ describe("concept map layout", () => {
       const naive = layout(nodes, edges, { sweeps: 0 });
       expect(first.crossings).toBeLessThan(naive.crossings * 0.75);
       expect(first.layers).toBeGreaterThanOrEqual(8);
+      // A linked skill of another subject that the map's skills build on sits just left of the first skill its root gap reaches.
+      for (const n of nodes.filter((x) => x.late === true && !edges.some((e) => e.to === x.id))) {
+        const reach = edges.filter((e) => e.from === n.id).map((e) => at.get(e.to)!.layer);
+        expect(at.get(n.id)!.layer).toBe(Math.max(0, Math.min(...reach) - 1));
+      }
     });
   }
 
