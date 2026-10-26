@@ -87,6 +87,8 @@ class MisconceptionRecord:
     kc_ids: tuple[str, ...]
     pack_id: str
     version: str
+    root_kc_id: str | None = None  # the earlier skill this misconception really comes from (pack `root_gap`)
+    root_idea: str | None = None  # that skill as a short phrase: "This is really about {root_idea}."
 
 
 @dataclass(frozen=True)
@@ -249,9 +251,12 @@ class KnowledgeIndex:
             mc_id = str(found["id"])
             if mc_id not in self.misconceptions:
                 kinds = tuple(sorted({str(s.get("kind", "")) for s in found.get("signatures", []) if s.get("kind")}))
+                gap = found.get("root_gap") if isinstance(found.get("root_gap"), dict) else {}
+                idea = gap.get("idea") or {}
                 self.misconceptions[mc_id] = MisconceptionRecord(
                     mc_id, str(found.get("student_name", "")), kinds, tuple(str(k) for k in found.get("kc_ids", [])),
-                    pack_id, version,
+                    pack_id, version, str(gap["kc_id"]) if gap.get("kc_id") else None,
+                    str(idea.get("en", "")).strip() or None if isinstance(idea, dict) else None,
                 )  # fmt: skip
 
     def _entry(self, kind: str, record_id: str, title: str, text: str) -> None:

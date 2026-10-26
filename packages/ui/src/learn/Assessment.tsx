@@ -12,6 +12,8 @@ export interface AssessmentActions {
   onStart: (start: AssessmentStart) => void;
   onOpen: (id: string) => void;
   onAnswer: (parts: PartAnswer[] | null) => void;
+  /** Explain it back: the learner's explanation of the check's idea (typed here; a transcript once voice is on). */
+  onExplain?: (text: string) => void;
   onStop: () => void;
   onResume: () => void;
   onRefresh: () => void;
@@ -44,12 +46,35 @@ function AssessmentQuestion({ assessment, view, actions }: { assessment: Assessm
   </section>;
 }
 
+/** Explain it back: all three answers were right; the learner explains the idea before it counts as Secure. A miss
+ * brings one follow-up question; the key points themselves are never shown. */
+function ExplainBack({ assessment, view, onExplain }: { assessment: Assessment; view: AssessmentView; onExplain: (text: string) => void }) {
+  const t = useT(), heading = useRef<HTMLHeadingElement>(null);
+  const [text, setText] = useState("");
+  const explain = assessment.explain;
+  useEffect(() => heading.current?.focus(), [explain?.attempts]);
+  if (explain === undefined) return null;
+  const field = `${assessment.assessment_id}-explain`;
+  return <section className="flex flex-col gap-4 rounded-card border border-line bg-canvas p-6" data-explain-back data-outcome={explain.outcome}>
+    <h2 ref={heading} tabIndex={-1} className="text-heading font-regular text-ink">{t("assessment.explain.title")}</h2>
+    <p className="text-body text-ink">{t("assessment.explain.prompt", { topic: explain.statement })}</p>
+    {explain.follow_up !== null && <Callout tone="hint" heading={t("assessment.explain.follow_up")}><PackText text={explain.follow_up} /></Callout>}
+    {explain.outcome === "unavailable" && <Notice tone="warn" message={t("assessment.explain.unavailable")} />}
+    <fieldset disabled={view.acting || view.uncertain} className="flex min-w-0 flex-col gap-3">
+      <label htmlFor={field} className="text-label text-ink">{t("assessment.explain.label")}</label>
+      <textarea id={field} className={FIELD_LOOK} rows={4} maxLength={1200} value={text} aria-describedby={`${field}-hint`} onChange={(e) => setText(e.target.value)} />
+      <p id={`${field}-hint`} className="text-meta text-muted">{t("assessment.explain.hint")}</p>
+      <div><Button tone="primary" disabled={text.trim() === ""} onClick={() => { onExplain(text.trim()); setText(""); }}>{t("assessment.explain.check")}</Button></div>
+    </fieldset>
+  </section>;
+}
+
 function Outcome({ assessment, names }: { assessment: Assessment; names: AssessmentNames }) {
   const t = useT();
   if (assessment.kind === "mastery_check") return <Callout tone={assessment.state === "completed" ? "verified" : "hint"}
     heading={t(assessment.state === "completed" ? "assessment.passed" : assessment.state === "stopped" ? "assessment.stopped" : "assessment.not_yet", {
       topic: names.kc(assessment.kc_id ?? ""), day: assessment.retry_at === null ? t("assessment.later") : formatDate(assessment.retry_at),
-    })} />;
+    })}>{assessment.explain?.outcome === "not_yet" ? <p>{t("assessment.explain.not_yet")}</p> : undefined}</Callout>;
   const strong = assessment.outcome_topics.filter((x) => x.status === "mastered" || x.status === "ready_to_check");
   const build = assessment.outcome_topics.filter((x) => !strong.includes(x));
   return <div className="grid gap-5 sm:grid-cols-2">
@@ -109,6 +134,7 @@ export function AssessmentContent({ view, subjects, names, actions, plan }: {
         {!diagnostic && view.saved && current.last_mark != null && <Callout tone={current.last_mark.verdict === "correct" ? "verified" : "look"} heading={t(current.last_mark.verdict === "correct" ? "practice.checked" : `check.verdict.${current.last_mark.verdict}`)}>
           <p>{t("check.marks_awarded", { awarded: current.last_mark.marks_awarded, total: current.last_mark.marks_total })}</p>
         </Callout>}
+        {current.state === "explaining" && actions.onExplain !== undefined && <ExplainBack key={current.assessment_id} assessment={current} view={view} onExplain={actions.onExplain} />}
         {current.state === "waiting" && <>
           <Notice message={current.available_at === null ? t("assessment.waiting_bank") : t("assessment.waiting", { day: formatDate(current.available_at) })} />
           <Button disabled={view.acting || view.uncertain} onClick={actions.onRefresh}>{t("assessment.check_available")}</Button>
@@ -140,7 +166,7 @@ export function AssessmentPlace({ controller, ...props }: { controller: Assessme
     return () => clearTimeout(timer);
   }, [controller, view.current]);
   return <AssessmentContent {...props} view={view} actions={{ onStart: (body) => void controller.start(body), onOpen: (id) => void controller.open(id),
-    onAnswer: (parts) => void controller.answer(parts), onStop: () => void controller.action("stop"), onResume: () => void controller.action("resume"),
+    onAnswer: (parts) => void controller.answer(parts), onExplain: (text) => void controller.explain(text), onStop: () => void controller.action("stop"), onResume: () => void controller.action("resume"),
     onRefresh: () => { if (view.current === null) void controller.load(); else void controller.open(view.current.assessment_id, false); },
     onRetry: () => void controller.retry(), onList: () => controller.back(), onClose: props.onClose }} />;
 }

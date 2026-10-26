@@ -183,6 +183,14 @@ def create_app(core: CoreService, secret: LaunchSecret, port: Callable[[], int |
 
         return await mutating(request, run)
 
+    @app.post("/v1/sessions/{session_id}/visuals/{visual_id}/prediction")
+    async def sim_prediction(session_id: str, visual_id: str, request: Request) -> Response:
+        async def run(body: Any) -> tuple[int, Any]:
+            core.sim_prediction(session_id, visual_id, body)
+            return 204, None  # VSL-47: the tutor's turn arrives on the session's stream
+
+        return await mutating(request, run)
+
     @app.post("/v1/cards/{request_id}/answer")
     async def answer_card(request_id: str, request: Request) -> Response:
         async def run(body: Any) -> tuple[int, Any]:

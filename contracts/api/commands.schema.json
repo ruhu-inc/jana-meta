@@ -5556,6 +5556,17 @@
       "type": "integer",
       "minimum": 1
      }
+    },
+    "visual": {
+     "anyOf": [
+      {
+       "$ref": "https://jana.dev/contracts/visuals/visual-spec#/$defs/resolved"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "The worked example's figure, resolved and checked at build time; absent or null when it has none."
     }
    },
    "required": [
@@ -8874,6 +8885,50 @@
    "required": [
     "step_id"
    ]
+  },
+  "SimPrediction": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "Predict, observe, explain (VSL-47) in a tutoring session: the learner's prediction, committed before the simulation ran, or their explanation of what it showed. The engine decides from the scenario whether the prediction matched the result; the client never says so.",
+   "required": [
+    "client_event_id",
+    "event",
+    "scenario_id",
+    "choice",
+    "text"
+   ],
+   "properties": {
+    "client_event_id": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "event": {
+     "enum": [
+      "committed",
+      "explained"
+     ]
+    },
+    "scenario_id": {
+     "type": "string",
+     "pattern": "^poe\\.[a-z]{3}\\.[a-z0-9_]+\\.v[0-9]+$",
+     "maxLength": 96
+    },
+    "choice": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[a-z][a-z0-9_]{0,31}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "type": "string",
+     "maxLength": 500
+    }
+   }
   }
  },
  "x-endpoints": [
@@ -9877,6 +9932,23 @@
    "errors": [
     "validation_failed",
     "not_found"
+   ],
+   "stage": "S2",
+   "owner": "API-27"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/assessments/{assessment_id}/explain",
+   "request": "https://jana.dev/contracts/learning/student-records#/$defs/ExplainBack",
+   "response": "https://jana.dev/contracts/learning/student-records#/$defs/AssessmentState",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "validation_failed",
+    "not_found",
+    "worker_unavailable"
    ],
    "stage": "S2",
    "owner": "API-27"
@@ -11078,6 +11150,25 @@
    ],
    "stage": "S2",
    "owner": "LRN-20"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/sessions/{session_id}/visuals/{visual_id}/prediction",
+   "request": "#/$defs/SimPrediction",
+   "response": null,
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "unauthorized",
+    "profile_token_expired",
+    "not_found",
+    "validation_failed",
+    "turn_active"
+   ],
+   "stage": "S2",
+   "owner": "VSL-47"
   },
   {
    "method": "GET",

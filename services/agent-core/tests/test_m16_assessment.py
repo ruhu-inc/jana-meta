@@ -69,6 +69,11 @@ class Clock:
 
 @pytest.fixture
 def desk(tmp_path: Path):
+    yield from make_desk(tmp_path)
+
+
+def make_desk(tmp_path: Path):
+    """The synthetic desk and its clock; the connection closes when the generator is closed."""
     clock = Clock()
     conn, _ = open_database(tmp_path / "learner.db", "learner")
     bank = [item(n) for n in range(1, 45)] + [item(50, probe=True)]

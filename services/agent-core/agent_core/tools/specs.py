@@ -104,11 +104,11 @@ DESCRIPTIONS: dict[str, str] = {
         "unchanged failing call; remove a short circuit when told. Batch independent calls."
     ),
     "phys_projectile": (
-        "Works out vertical or horizontal projectile motion. Use when you need time of flight, maximum height, range "
-        "or trajectory points; not for one suvat equation (use math_solve instead). Parameters: motion, speed, "
-        "direction, height, g with its source or constants, points. Returns exact times, heights, range, landing "
-        "velocity and points, up positive. Limits: 500 points, 5 s. Never repeat an unchanged failing call. Batch "
-        "independent calls."
+        "Works out vertical, horizontal or angled projectile motion. Use when you need time of flight, maximum height, "
+        "range or trajectory points; not for one suvat equation (use math_solve instead). Parameters: motion, speed, "
+        "angle (angled: degrees above the horizontal), direction, height, g with its source or constants, points. "
+        "Returns exact times, heights, range, landing velocity and points, up positive. Limits: 500 points, 5 s. "
+        "Never repeat an unchanged failing call. Batch independent calls."
     ),
     "math_differentiate": (
         "Differentiates exactly, explicitly, implicitly or parametrically. Use when you need a derivative, a gradient, "
@@ -659,6 +659,7 @@ VERSIONS: dict[str, int] = {
     "math_evaluate": 2,
     "math_check_step": 3,
     "chem_acid_base": 2,  # `ka`: a weak acid's pH (VER-32)
+    "phys_projectile": 2,  # angled launches (VER-17)
     "math_differentiate": 2,  # implicit and parametric (VER-30)
     "math_simplify": 2,  # partial fractions, series, complex forms (VER-30)
     "math_integrate": 2,  # volumes, trapezium rule, substitution, parts (VER-30)

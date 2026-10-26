@@ -8,7 +8,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, test } from "vitest";
 import { CLIENT_KEYS } from "../src/generated/keys.js";
-import { circuitModel, comparePrediction, observeScenario, SCENARIOS, SIM_SETUPS, sig, titrationModel, type ResolvedSpec, type Scenario, type SimEvent } from "../src/index.js";
+import { circuitModel, comparePrediction, observeScenario, projectileModel, SCENARIOS, SIM_SETUPS, sig, titrationModel, type ResolvedSpec, type Scenario, type SimEvent } from "../src/index.js";
 import type { SimModel, Values } from "../src/sims/models.js";
 import { fixtures, rendererOf, ROOT, t } from "./helpers.js";
 
@@ -52,6 +52,7 @@ function button(container: HTMLElement, key: string): HTMLButtonElement {
 function modelOf(s: Scenario, start: Values): SimModel<unknown> {
   if (SIM_SETUPS[s.kind] !== undefined) return SIM_SETUPS[s.kind]!(predictFixture(s.kind).spec).model;
   if (s.kind === "circuit_sim") return circuitModel(Object.keys(start).filter((k) => /^R\d$/.test(k)).sort()) as SimModel<unknown>;
+  if (s.kind === "projectile_sim") return projectileModel((predictFixture(s.kind).spec.computed as { g: number }).g) as SimModel<unknown>;
   return titrationModel(CLIENT_KEYS.sim_titration_rate_cm3_s) as SimModel<unknown>;
 }
 
@@ -64,6 +65,7 @@ function startOf(s: Scenario): Values {
     const rs = p.resistors as { id: string; resistance: number }[];
     return { emf: p.emf as number, arrangement: p.arrangement as string, switch: p.switch_closed !== false, ...Object.fromEntries(rs.map((r) => [r.id, r.resistance])) };
   }
+  if (s.kind === "projectile_sim") return { mode: p.mode as string, speed: p.speed as number, angle: p.angle as number, height: p.height as number };
   const acid = p.acid as { concentration: number };
   const base = p.base as { concentration: number };
   return { volume: 0, tap: false, indicator: p.indicator as string, acid_concentration: acid.concentration, base_concentration: base.concentration, acid_volume: p.acid_volume as number };
@@ -155,6 +157,51 @@ describe("VSL-47 comparison", () => {
     expect(done.container.querySelector("[data-sim-choice=double]")?.textContent).toBe("50.0 cm³");
     expect(done.container.querySelector("[data-sim-common-guess]")?.textContent).toBe(t("sim.predict.common_guess"));
     await done.unmount();
+  });
+
+  test("projectile range against launch angle: 60° after 30° lands the same distance away", async () => {
+    const f = predictFixture("projectile_sim");
+    const scenario = SCENARIOS.find((s) => s.kind === "projectile_sim")!;
+    expect(scenario.id).toBe("poe.phy.projectile_angle_30_60.v1");
+    expect(scenario.choices.find((c) => c.correct)?.id).toBe("same");
+    expect(scenario.choices.find((c) => c.common_guess)?.id).toBe("further");
+    // The question asks before anything runs, and says nothing of the result.
+    const question = EN["poe.projectile_angle.question"]!;
+    expect(question).not.toMatch(/same distance|45°|furthest|land together/);
+    const events: SimEvent[] = [];
+    const { container, unmount } = await mount(f.spec, true, events);
+    expect(container.querySelector("[data-sim-locked]")).not.toBeNull();
+    expect(container.querySelectorAll("input[type=range]")).toHaveLength(0);
+    expect(container.querySelector("[data-sim-question]")?.textContent).toBe(t("poe.projectile_angle.question", { speed: "20 m/s", angle: "30°", height: "0 m" }));
+    await type(container.querySelector("textarea")!, "Steeper goes higher, so it goes further.");
+    await act(async () => container.querySelector<HTMLInputElement>("input[value=further]")!.click());
+    await act(async () => button(container, "sim.predict.commit").click());
+    // The run sets 60°, with every other control as it was, locked.
+    const angle = container.querySelector<HTMLInputElement>(`#${CSS.escape(`${f.spec.visual_id}-angle`)}`)!;
+    expect([angle.value, angle.disabled, angle.getAttribute("aria-valuetext")]).toEqual(["60", true, "60°"]);
+    expect(container.querySelector<HTMLInputElement>(`#${CSS.escape(`${f.spec.visual_id}-speed`)}`)!.value).toBe("20");
+    // The result is set beside the prediction: both land 35.3 m away; the 60° flight lasts longer.
+    expect(container.querySelector("[data-sim-predicted]")?.textContent).toContain("Steeper goes higher, so it goes further.");
+    expect(container.querySelector("[data-sim-choice=further]")?.textContent).toBe(t("poe.projectile_angle.choice.further"));
+    const happened = container.querySelector("[data-sim-happened]")!;
+    expect(happened.getAttribute("data-sim-happened")).toBe("true");
+    expect(happened.querySelector("p")?.textContent).toBe(t("poe.projectile_angle.outcome", { after: "35.3 m", time_before: "2.04 s", time_after: "3.53 s" }));
+    expect(container.querySelector("[data-sim-common-guess]")?.textContent).toBe(t("sim.predict.common_guess"));
+    expect(events.find((e) => e.type === "sim.prediction_committed")).toMatchObject({ scenario_id: scenario.id, choice: "further", correct: false, common_guess: true,
+      misconception_id: "mc.phy.o.steeper_launch_goes_further" });
+    // The explanation: both flights drawn as paths, the 30° one dashed, each end labelled with its range.
+    const why = [...container.querySelectorAll("textarea")].find((x) => x.id.endsWith("-why"))!;
+    await type(why, "It went higher but slower across.");
+    await act(async () => button(container, "sim.predict.explain").click());
+    const chart = container.querySelector("[data-sim-chart=runs]")!;
+    expect(chart.querySelector("svg")?.getAttribute("aria-label")).toBe(t("sim.predict.chart", { name: t("sim.projectile.range"), before: "35.3", after: "35.3", unit: "m" }));
+    expect(chart.querySelector("[data-sim-run=before]")?.getAttribute("stroke-dasharray")).toBe("6 5");
+    for (const end of ["before", "after"]) expect(chart.querySelector(`[data-sim-end=${end}] text`)?.textContent).toContain("35.3 m");
+    const peak = (run: string) => Math.min(...chart.querySelector(`[data-sim-run=${run}]`)!.getAttribute("points")!.split(" ").map((xy) => Number(xy.split(",")[1])));
+    expect(peak("after"), "the 60° flight rises higher (a smaller SVG y)").toBeLessThan(peak("before"));
+    await unmount();
+    // A correct choice is marked so, and is not the usual guess.
+    expect(comparePrediction(scenario, { text: "x", choice: "same" })).toEqual({ correct: true, common_guess: false });
   });
 
   test("vsl47_explained_in_the_sims_own_picture", async () => {

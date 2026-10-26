@@ -48,7 +48,7 @@ from agent_core.assets.visuals import render as render_visual
 from agent_core.config import Settings
 from agent_core.contracts import errors as contract_errors
 from agent_core.contracts import validator
-from agent_core.engine import lean, lessons, live_flows, offers, prompt_inputs, signatures, team, turn_scope
+from agent_core.engine import figures, lean, lessons, live_flows, offers, prompt_inputs, signatures, team, turn_scope
 from agent_core.engine import slice as flows
 from agent_core.engine.annotations import term_moves
 from agent_core.engine.answer_policy import paced_rung, policy_template_with_skill
@@ -102,6 +102,7 @@ from agent_core.engine.pedagogy import (
 )
 from agent_core.engine.pointing import first_unheard, verbalise_keeping_markers
 from agent_core.engine.pointing_back import resolve_ref
+from agent_core.engine.predictions import Predictions
 from agent_core.engine.roster import speaking
 from agent_core.engine.safety import (
     ROUTES,
@@ -288,7 +289,7 @@ class TurnIds:
     client_message_id: str | None = None
 
 
-class Engine(Coordination, Offers):
+class Engine(Coordination, Offers, Predictions):
     def __init__(
         self,
         deps: EngineDeps,
@@ -403,6 +404,8 @@ class Engine(Coordination, Offers):
         self.guided: GuidedFlow | None = None
         self.misconception_flows: dict[str, MisconceptionFlow] = {}
         self.misconception_seen: dict[str, int] = {}
+        self.root_gaps_offered: set[str] = set()  # misconceptions whose root gap was offered this session
+        self.sim_predictions: dict[str, dict[str, str]] = {}  # visual id -> the prediction's scenario and verdict
         self.answer_misconception: str | None = None  # the misconception matched on this turn's answer
         self.misconception_evidence: Callable[[str], int] | None = None
         # ASM-23, CUR-36: takes the open profile's waiting re-mark count (and marks it told); bound by the app.
@@ -700,7 +703,9 @@ class Engine(Coordination, Offers):
         asked = self._input_source == "student_text" and wants_solution(statement) and not turn.input_injected
         if asked or self.state.mode == "solution":
             return await self._solution(turn)
-        return await self._coach_turn(turn, intent_note="opening: restate the goal and ask for an attempt")
+        figure = figures.opening_note(self)  # a checked figure fits this topic: the Coach draws it (VSL-12 checks it)
+        opening = "opening: restate the goal and ask for an attempt"
+        return await self._coach_turn(turn, intent_note=f"{opening}; {figure}" if figure else opening)
 
     async def _clarified(self, turn: _Turn, text: str) -> TurnResult:
         """The student's answer to the clarifying question (AGT-19): it completes the question, which is planned now;
@@ -715,9 +720,10 @@ class Engine(Coordination, Offers):
         return await self._plan_and_open(turn, statement)
 
     async def _start_practice(self, turn: _Turn, item: dict[str, Any], part_id: str, diagnose: bool = True,
-                              note: str = PRACTICE_NOTE, completed_mastery: bool = False) -> TurnResult:  # fmt: skip
+                              note: str = PRACTICE_NOTE, completed_mastery: bool = False,
+                              figure: dict[str, Any] | None = None) -> TurnResult:  # fmt: skip
         """A pack item as the open problem. `diagnose` is False for a lesson's quick check, whose flow calls only the
-        Checker and the Coach (PED-01, AGT-22)."""
+        Checker and the Coach (PED-01, AGT-22). `figure` is a lesson step's own figure, shown in place of the item's."""
         part = next(p for p in item["parts"] if p["id"] == part_id)
         statement = " ".join([str(item.get("stem", "")), str(part["prompt"])]).strip()
         self._new_problem(turn)
@@ -747,6 +753,8 @@ class Engine(Coordination, Offers):
             }
         if self.deps.stage >= "S2" and diagnose:  # a bank item: the Diagnoser only, no Solver (AGT-15)
             self.diagnosis = await team.diagnose(self, turn, statement, attempts=1) or self.diagnosis
+        shown = figures.show(self, turn, figure or item)  # the checked figure, before any model speaks
+        note = f"{note}; {shown}" if shown else note
         if self.state.mode == "solution":
             return await self._solution(turn)
         return await self._coach_turn(
@@ -926,8 +934,8 @@ class Engine(Coordination, Offers):
                 notes = [note, live_flows.misconception_step(self, turn, verdict, matched, recorded=True)]
                 if verdict == "incorrect" and live_flows.stuck(self):
                     notes.append(STUCK_NOTE)
-                elif verdict == "incorrect":  # the hint and detour offers (LRN-20, LRN-23)
-                    notes.append(offers.after_wrong(self, turn, rung_before))
+                elif verdict == "incorrect":  # the hint and detour offers (LRN-20, LRN-23), or the root gap
+                    notes.append(offers.after_wrong(self, turn, rung_before, matched))
                 if verdict == "correct":  # a detour item done: the next one, or back to the problem (LRN-23)
                     notes.append(offers.after_correct(self, turn))
                 note = "; ".join(n for n in notes if n)
@@ -983,8 +991,8 @@ class Engine(Coordination, Offers):
             notes.append(live_flows.raise_rung(self, turn))
         if verdict == "incorrect" and live_flows.stuck(self):
             notes.append(STUCK_NOTE)
-        elif verdict == "incorrect":  # the hint and detour offers (LRN-20, LRN-23)
-            notes.append(offers.after_wrong(self, turn, rung_before))
+        elif verdict == "incorrect":  # the hint and detour offers (LRN-20, LRN-23), or the root gap
+            notes.append(offers.after_wrong(self, turn, rung_before, matched))
         return notes
 
     def _intake(self, turn: _Turn, text: str, source: str = "student_text", model: tuple[str, float] | None = None,
@@ -2403,7 +2411,7 @@ class Engine(Coordination, Offers):
         code = VISUAL_SUBJECT_CODES.get(self.state.subject, self.state.subject)
         sources = self.deps.visual_sources(code) if self.deps.visual_sources is not None else {}
         return VisualContext(self.state.subject, self.state.level, stage=self.deps.stage,
-                             check_values=dict(self.state.check_values),
+                             check_values=dict(self.state.check_values), knowns=figures.knowns(self),
                              pack_values=dict(sources.get("pack_values", {})),
                              diagrams=dict(sources.get("diagrams", {})),
                              presets=dict(sources.get("presets", {})), conventions=dict(sources.get("conventions", {})),
@@ -2474,26 +2482,27 @@ class Engine(Coordination, Offers):
         }
         turn.trace.gates.append(record)
         if result.resolved is not None:
-            part = self.events.start_part("visual")
-            self.events.emit(
-                {
-                    "type": "visual.spec",
-                    "part_id": part,
-                    "visual_id": result.resolved["visual_id"],
-                    "spec": result.resolved,
-                }
-            )
-            self.events.end_part(part)
-            self._persist(turn, part, "visual", result.resolved)
-            parts = [p["id"] for p in result.resolved.get("parts", []) if p.get("focusable", True)]
-            shown = {"visual_id": result.resolved["visual_id"], "parts": parts, "kind": result.resolved["type"]}
-            others = [v for v in self.state.shown_visuals if v["visual_id"] != shown["visual_id"]]
-            self.state.shown_visuals = [*others, shown][-self.deps.settings.pointer_visuals_kept :]
+            self._emit_visual(turn, result.resolved)
         else:
             part = self.events.start_part("text")
             self.events.text(part, TEXT_ONLY)
             self.events.end_part(part)
             self._persist(turn, part, "text", TEXT_ONLY)
+
+    def _emit_visual(self, turn: _Turn, resolved: dict[str, Any]) -> None:
+        """A resolved spec on screen: the `visual.spec` part, and its focusable parts among the visuals the tutor may
+        point at (VSL-45)."""
+        part = self.events.start_part("visual")
+        self.events.emit({"type": "visual.spec", "part_id": part, "visual_id": resolved["visual_id"], "spec": resolved})
+        self.events.end_part(part)
+        self._persist(turn, part, "visual", resolved)
+        parts = [p["id"] for p in resolved.get("parts", []) if p.get("focusable", True)]
+        shown = {"visual_id": resolved["visual_id"], "parts": parts, "kind": resolved["type"]}
+        predict = (resolved.get("params") or {}).get("predict")
+        if isinstance(predict, str):  # a predict-first simulation: its scenario, for the student's prediction (VSL-47)
+            shown["predict"] = predict
+        others = [v for v in self.state.shown_visuals if v["visual_id"] != shown["visual_id"]]
+        self.state.shown_visuals = [*others, shown][-self.deps.settings.pointer_visuals_kept :]
 
     # --- manipulable visuals (VSL-42) ----------------------------------------------------------------------------
 

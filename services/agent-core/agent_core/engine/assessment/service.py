@@ -20,6 +20,7 @@ from agent_core.engine.assessment.adaptive import probe_problems, select_diagnos
 from agent_core.engine.assessment.criteria import JudgeCriterion
 from agent_core.engine.assessment.errors import Refused
 from agent_core.engine.assessment.evidence import install
+from agent_core.engine.assessment.explain import ExplainCommands, ExplainJudge, explain_view, run_state
 from agent_core.engine.assessment.items import pin_item, present, ready, response, validate_answer, worked_answer
 from agent_core.engine.assessment.mocks import MockCommands
 from agent_core.engine.assessment.past_papers import PastPaperCommands
@@ -72,7 +73,7 @@ def millis(value: str) -> int:
     return int(datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp() * 1000)
 
 
-class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeCommands):
+class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeCommands, ExplainCommands):
     def __init__(
         self,
         learner: Learner,
@@ -83,11 +84,13 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
         monotonic_ms: Callable[[], int] = lambda: time.monotonic_ns() // 1_000_000,
         run_tool: RunTool | None = None,
         judge_method: JudgeCriterion | None = None,
+        explain_judge: ExplainJudge | None = None,
         recover: bool = False,
     ) -> None:
         self.learner, self.content, self.settings = learner, content, settings
         self.clock_ms, self.monotonic_ms, self.run_tool = clock_ms, monotonic_ms, run_tool
         self.judge_method = judge_method
+        self.explain_judge = explain_judge  # explain it back before mastery; None keeps the check as it was
         install(learner, settings)
         self.store = AssessmentStore(learner.conn)
         self.running: dict[str, int] = {}
@@ -118,7 +121,7 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
                     "INSERT INTO assessment_runs (assessment_id, kind, state, body, updated_at) VALUES"
                     " (?, ?, ?, ?, ?) ON CONFLICT(assessment_id) DO UPDATE SET state=excluded.state,"
                     " body=excluded.body, updated_at=excluded.updated_at",
-                    (state["id"], state["kind"], state["state"], dump(state), now),
+                    (state["id"], state["kind"], run_state(state), dump(state), now),
                 )
 
         self.learner.record_batch(list(events), extra=save)
@@ -337,7 +340,7 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
             raise Refused("invalid_kc")
         for state in self.store.all():
             if state["kind"] == kind and state["subject"] == subject:
-                if state["state"] in ("in_progress", "waiting", "stopped"):
+                if state["state"] in ("in_progress", "waiting", "stopped", "explaining"):
                     return self.assessment(state["id"])
                 if state.get("kc_id") == kc_id and state.get("retry_at") and self.clock_ms() < state["retry_at"]:
                     raise Refused("retry_not_due")
@@ -454,6 +457,7 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
             "outcome_topics": self._outcome_topics(state),
             "answered_items": [dict(a) for a in state["answered"]],
             **({"last_mark": state.get("last_mark")} if state["kind"] == "mastery_check" else {}),
+            **({"explain": explain_view(state, self.content)} if state.get("explain") else {}),
         }
 
     def _outcome_topics(self, state: Mapping[str, Any]) -> list[dict[str, str]]:
@@ -654,6 +658,7 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
             events: list[NewEvent] = []
             extra: Callable[[], None] | None = None
             aid = None
+            explaining = False
             if not_learned:
                 observation = {
                     "y": 0,
@@ -698,6 +703,8 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
                 }
                 count = len(state["answered"]) + 1
                 done = count == self.settings.mastery_check_items
+                # Explain it back: the last item passed on a KC with key points waits for the learner's explanation.
+                explaining = passed and done and self.explains(state["kc_id"])
                 events.append(
                     self._event(
                         "mastery_check",
@@ -706,7 +713,11 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
                             "item_index": count,
                             "attempt_id": aid,
                             "item_result": "pass" if passed else "fail",
-                            "check_state": "failed" if not passed else "passed" if done else "in_progress",
+                            "check_state": "failed"
+                            if not passed
+                            else "passed"
+                            if done and not explaining
+                            else "in_progress",
                         },
                         state["id"],
                     )
@@ -717,11 +728,13 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
                     )
             state["answered"].append({"item_id": item_id, "attempt_id": aid, "answered_at": iso(self.clock_ms())})
             state["current_id"] = None
+            if explaining:
+                self.begin_explaining(state)
 
             # Append evidence before selecting, in the same transaction; selection sees updated priors.
             def advance() -> None:
                 extra()
-                if state["state"] != "failed":
+                if state["state"] not in ("failed", "explaining"):
                     following = self._advance(state)
                     # Events cannot be nested into Learner.record_batch; append/fold under its existing transaction.
                     for event in following:
@@ -739,7 +752,7 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
                 self.learner.conn.execute(
                     "INSERT INTO assessment_runs VALUES (?, ?, ?, ?, ?) ON CONFLICT(assessment_id)"
                     " DO UPDATE SET state=excluded.state, body=excluded.body, updated_at=excluded.updated_at",
-                    (state["id"], state["kind"], state["state"], dump(state), self.clock_ms()),
+                    (state["id"], state["kind"], run_state(state), dump(state), self.clock_ms()),
                 )
 
             self.learner.record_batch(events, extra=lambda conn, stored: advance())
@@ -1061,7 +1074,7 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
         active = {
             (s["subject"], s["kind"])
             for s in self.store.all()
-            if s["kind"] == "mastery_check" and s["state"] in ("in_progress", "waiting", "stopped")
+            if s["kind"] == "mastery_check" and s["state"] in ("in_progress", "waiting", "stopped", "explaining")
         }
         for (kc,) in self.learner.conn.execute(
             "SELECT kc_id FROM kc_mastery WHERE status='ready_to_check' ORDER BY kc_id"

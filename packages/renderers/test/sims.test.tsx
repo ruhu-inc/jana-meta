@@ -104,15 +104,48 @@ describe("VSL-31", () => {
     }
     expect(points).toBeGreaterThanOrEqual(30);
   });
+
+  test("an angled launch matches phys_projectile: 30° and 60° land together, 45° goes furthest", () => {
+    const projectile = projectileModel(FIDELITY.g);
+    // The tool's own angled samples are in the fidelity table (generated against phys_projectile).
+    const angled = FIDELITY.projectile_sim.filter((row) => row.params.mode === "angled");
+    expect(angled.map((row) => row.params.angle)).toEqual(expect.arrayContaining([30, 45, 60]));
+    const tool = (angle: number) => angled.find((row) => row.params.angle === angle && row.params.speed === 20 && row.params.height === 0)!.readouts;
+    expect(tool(30)["out.range"]).toBe(tool(60)["out.range"]);
+    const landed = (angle: number, speed = 20) => {
+      const values: Values = { mode: "angled", speed, angle, height: 0 };
+      return projectile.read(runToEnd(projectile, values, DT), values);
+    };
+    for (const angle of [30, 45, 60]) {
+      const read = landed(angle);
+      for (const id of ["out.time", "out.range", "out.max_height"]) expect(sig(read[id]!, SF), `${angle}° ${id}`).toBe(sig(Number(tool(angle)[id]), SF));
+      // Where it lands: the ball's own position at the end of the flight is the range, at ground level.
+      expect(read["out.x"]!).toBeCloseTo(read["out.range"]!, 9);
+      expect(read["out.y"]!).toBeCloseTo(0, 9);
+    }
+    // Complementary angles land together at every speed; the slider's 45° goes furthest, and the steeper flight is
+    // higher and longer.
+    for (const speed of [5, 12, 20, 40]) {
+      for (const angle of [5, 15, 30, 40]) expect(landed(angle, speed)["out.range"]!).toBeCloseTo(landed(90 - angle, speed)["out.range"]!, 9);
+      const ranges = Array.from({ length: 17 }, (_, i) => 5 + 5 * i).map((angle) => [angle, landed(angle, speed)["out.range"]!] as const);
+      expect(ranges.reduce((a, b) => (b[1] > a[1] ? b : a))[0], `${speed} m/s`).toBe(45);
+    }
+    expect(landed(60)["out.max_height"]!).toBeGreaterThan(landed(30)["out.max_height"]!);
+    expect(landed(60)["out.time"]!).toBeGreaterThan(landed(30)["out.time"]!);
+    // The other launches are unchanged by the angle: it applies to an angled launch only.
+    const horizontal: Values = { mode: "horizontal", speed: 12, angle: 60, height: 20 };
+    expect(projectile.read(runToEnd(projectile, horizontal, DT), horizontal)["out.range"]!).toBeCloseTo(projectile.read(runToEnd(projectile, { ...horizontal, angle: 10 }, DT), { ...horizontal, angle: 10 })["out.range"]!, 12);
+    expect(projectile.params.find((p) => p.id === "angle")).toMatchObject({ labelKey: "sim.projectile.angle", unit: "°", min: 5, max: 85, step: 5, default: 45, when: { mode: "angled" } });
+  });
 });
 
-async function mount(spec: ResolvedSpec, reducedMotion: boolean, events: SimEvent[] = []) {
+async function mount(spec: ResolvedSpec, reducedMotion: boolean, events: SimEvent[] = [], focus: string[] = [], spotlight = false) {
   const R = rendererOf(spec.type);
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
   await act(async () => {
-    root.render(<R.Component spec={spec} step={0} labels="shown" focus={[]} size={{ width: 480, height: 320 }} reducedMotion={reducedMotion} onPartActivate={() => undefined} t={t} onSimEvent={(e) => events.push(e)} visible />);
+    root.render(<R.Component spec={spec} step={0} labels="shown" focus={focus} spotlight={spotlight} size={{ width: 480, height: 320 }} reducedMotion={reducedMotion} onPartActivate={() => undefined} t={t} onSimEvent={(e) => events.push(e)} visible />);
   });
   return { container, unmount: () => act(async () => root.unmount()).then(() => container.remove()) };
 }
@@ -181,6 +214,48 @@ describe("VSL-32", () => {
     const first = live.textContent;
     await act(async () => speed.dispatchEvent(new KeyboardEvent("keydown", { key: "PageDown", bubbles: true })));
     expect(live.textContent, "a second change within the interval is not announced again").toBe(first);
+    await unmount();
+  });
+});
+
+describe("VSL-30 pointing", () => {
+  test("the tutor's pointing rings a readout or a control, and the spotlight dims the rest", async () => {
+    const axe = (await import("axe-core")).default;
+    const projectile = fixtures().find((f) => f.id === "projectile-sim")!;
+    const { container, unmount } = await mount(projectile.spec, true, [], ["out.range"]);
+    const range = container.querySelector<HTMLElement>("dd[data-part='out.range']")!;
+    expect(range.getAttribute("data-pointed")).toBe("true");
+    expect(range.className).toContain("outline-highlight-line");
+    expect(range.textContent, "a screen reader hears it was pointed out").toContain(t("visual.part.pointed"));
+    expect(container.querySelectorAll("[data-pointed]")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-dimmed]"), "no spotlight: nothing dimmed").toHaveLength(0);
+    expect((await axe.run(container, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
+    await unmount();
+    // A control, under the spotlight: it keeps its ring and full opacity, the other controls and readouts are dimmed.
+    const lit = await mount(projectile.spec, true, [], ["ctrl.speed"], true);
+    const speed = lit.container.querySelector(`input[data-part='ctrl.speed']`)!.closest("label")!;
+    expect(speed.getAttribute("data-pointed")).toBe("true");
+    expect(speed.style.opacity).toBe("");
+    expect(speed.textContent).toContain(t("visual.part.pointed"));
+    const dimmed = [...lit.container.querySelectorAll<HTMLElement>("[data-dimmed]")];
+    expect(dimmed.length).toBeGreaterThan(2);
+    for (const d of dimmed) expect(Number(d.style.opacity)).toBe(CLIENT_KEYS.board_spotlight_dim_opacity);
+    expect(lit.container.querySelector("dd[data-part='out.range']")?.getAttribute("data-dimmed")).toBe("true");
+    await lit.unmount();
+  });
+
+  test("the launch angle is a control only for an angled launch", async () => {
+    const projectile = fixtures().find((f) => f.id === "projectile-sim")!;
+    const { container, unmount } = await mount(projectile.spec, true);
+    const angleOf = () => container.querySelector<HTMLInputElement>(`#${CSS.escape(`${projectile.spec.visual_id}-angle`)}`);
+    expect(angleOf(), "a horizontal launch has no angle").toBeNull();
+    const mode = container.querySelector<HTMLSelectElement>("select")!;
+    await act(async () => {
+      mode.value = "angled";
+      mode.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect([angleOf()?.value, angleOf()?.getAttribute("aria-valuetext")]).toEqual(["45", "45°"]);
+    expect(container.querySelector(`label[for="${angleOf()!.id}"]`)?.textContent).toContain(`${t("sim.projectile.angle")} (°)`);
     await unmount();
   });
 });

@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/content/content-pack.schema.json sha256 96ae867697f55837959a248e3aae9840866465aa72a0689d63e32a4cfdc80b94; do not edit",
+ "$comment": "GENERATED from contracts/content/content-pack.schema.json sha256 b603e5b108d47645f0de956cd2139e8b6416e3f904e104d648115bce65c24e70; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/content/content-pack",
  "title": "Content pack",
@@ -991,6 +991,32 @@
       "maxLength": 60
      }
     },
+    "key_points": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 4,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "text",
+       "follow_up"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^kp_[a-z0-9_]{1,30}$"
+       },
+       "text": {
+        "$ref": "#/$defs/LocalisedText"
+       },
+       "follow_up": {
+        "$ref": "#/$defs/LocalisedText"
+       }
+      }
+     }
+    },
     "difficulty_prior": {
      "type": "number",
      "minimum": -4,
@@ -1107,6 +1133,21 @@
     },
     "resolved": {
      "$ref": "https://jana.dev/contracts/visuals/visual-spec#/$defs/resolved"
+    },
+    "ref": {
+     "$ref": "#/$defs/DiagramId"
+    },
+    "numbers_from": {
+     "type": "array",
+     "maxItems": 20,
+     "uniqueItems": true,
+     "items": {
+      "$ref": "#/$defs/CheckId"
+     }
+    },
+    "caption": {
+     "type": "string",
+     "maxLength": 200
     }
    },
    "oneOf": [
@@ -2532,6 +2573,9 @@
       "$ref": "#/$defs/DiagramId"
      }
     },
+    "visual": {
+     "$ref": "#/$defs/VisualRef"
+    },
     "context_tags": {
      "type": "array",
      "items": {
@@ -3273,6 +3317,22 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/ItemId"
+     }
+    },
+    "root_gap": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kc_id",
+      "idea"
+     ],
+     "properties": {
+      "kc_id": {
+       "$ref": "#/$defs/KcId"
+      },
+      "idea": {
+       "$ref": "#/$defs/LocalisedText"
+      }
      }
     },
     "severity": {

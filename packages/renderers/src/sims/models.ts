@@ -17,6 +17,13 @@ export interface SimParam {
   step?: number;
   choices?: readonly { value: string; labelKey: string }[];
   default: number | string | boolean;
+  /** Shown only while each named control has the given value (a launch angle only for an angled launch). */
+  when?: Readonly<Record<string, string>>;
+}
+
+/** Whether a control applies at the current values (its `when`, if any, holds). */
+export function applies(p: SimParam, values: Values): boolean {
+  return Object.entries(p.when ?? {}).every(([id, v]) => values[id] === v);
 }
 
 export interface SimReadout {
@@ -84,6 +91,11 @@ export function sig(v: number, sf: number): string {
   return sign + (point < sf ? `${kept.slice(0, point)}.${kept.slice(point)}` : kept);
 }
 
+/** A value with its unit; degrees sit against the number (30°), every other unit after a space (20 m/s). */
+export function withUnit(value: string | number, unit: string): string {
+  return unit === "°" ? `${value}°` : `${value} ${unit}`.trim();
+}
+
 /** A readout's value as displayed: `sf` significant figures, a large value as a whole number (1380, not 1.38e+3),
  * and trailing zeros dropped where the readout says so. */
 export function shownReadout(v: number, r: SimReadout): string {
@@ -94,7 +106,7 @@ export function shownReadout(v: number, r: SimReadout): string {
   return out === "-0" ? "0" : out;
 }
 
-// --- projectile_sim (phys_projectile, VER-17: horizontal and vertical launches at O level) -------------------------
+// --- projectile_sim (phys_projectile, VER-17: horizontal, vertical and angled launches at O level) -----------------
 
 export interface ProjectileState {
   t: number;
@@ -104,9 +116,10 @@ export interface ProjectileState {
 function launch(p: Values, g: number): { ux: number; uy: number; h: number; tFlight: number } {
   const speed = num(p, "speed");
   const h = num(p, "height");
-  const vertical = p.mode === "vertical";
-  const ux = vertical ? 0 : speed;
-  const uy = vertical ? speed : 0;
+  // An angled launch is at `angle` degrees above the horizontal: ux = u cos θ, uy = u sin θ, as phys_projectile.
+  const theta = p.mode === "angled" ? (num(p, "angle") * Math.PI) / 180 : p.mode === "vertical" ? Math.PI / 2 : 0;
+  const ux = p.mode === "vertical" ? 0 : speed * Math.cos(theta);
+  const uy = p.mode === "horizontal" ? 0 : speed * Math.sin(theta);
   const tFlight = (uy + Math.sqrt(uy * uy + 2 * g * h)) / g;
   return { ux, uy, h, tFlight };
 }
@@ -115,8 +128,9 @@ export function projectile(g: number): SimModel<ProjectileState> {
   return {
     kind: "projectile_sim",
     params: [
-      { id: "mode", labelKey: "sim.projectile.mode", unit: "", kind: "choice", choices: [{ value: "horizontal", labelKey: "sim.projectile.mode.horizontal" }, { value: "vertical", labelKey: "sim.projectile.mode.vertical" }], default: "horizontal" },
+      { id: "mode", labelKey: "sim.projectile.mode", unit: "", kind: "choice", choices: [{ value: "horizontal", labelKey: "sim.projectile.mode.horizontal" }, { value: "vertical", labelKey: "sim.projectile.mode.vertical" }, { value: "angled", labelKey: "sim.projectile.mode.angled" }], default: "horizontal" },
       { id: "speed", labelKey: "sim.projectile.speed", unit: "m/s", kind: "range", min: 1, max: 40, step: 1, default: 12 },
+      { id: "angle", labelKey: "sim.projectile.angle", unit: "°", kind: "range", min: 5, max: 85, step: 5, default: 45, when: { mode: "angled" } },
       { id: "height", labelKey: "sim.projectile.height", unit: "m", kind: "range", min: 0, max: 100, step: 1, default: 20 },
     ],
     readouts: [

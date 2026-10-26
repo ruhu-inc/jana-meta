@@ -256,7 +256,7 @@ export function StepLessonContent({ view, lesson, actions, supported = false }: 
             {question.step?.text != null && <div className="text-muted"><PackText text={supported && action === "try_first" ? t("journey.apply_example") : question.step.text} /></div>}
             {question.step?.visual != null && "visual_type" in question.step.visual && typeof question.step.visual.visual_type === "string" && (
               <div className="rounded-card border border-line bg-canvas p-4">
-                <Rendered keys={[`visual:${question.step.visual.visual_type}`, "visual:*"]} data={question.step.visual.params} lifecycle="complete" partId={`lesson-visual-${question.block}`} />
+                <Rendered keys={[`visual:${question.step.visual.resolved?.type ?? question.step.visual.visual_type}`, "visual:*"]} data={question.step.visual.resolved ?? question.step.visual.params} lifecycle="complete" partId={`lesson-visual-${question.block}`} />
               </div>
             )}
             <h1 id="lesson-question" ref={heading} tabIndex={-1} className="text-title text-ink"><PackInline text={item.stem} /></h1>

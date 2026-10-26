@@ -8,11 +8,14 @@
 // student's own prediction is in (choices follow the writing, never before), the run's result is set beside the
 // prediction, which can no longer change, and after the student's one line the explanation is drawn in the
 // simulation's own picture. Readouts stay off until "Show readings" is ticked, so a number never gives the answer away.
+//
+// The tutor points at a control (`ctrl.<id>`) or a readout (`out.<id>`) as at any other part (VSL-19, UXS-57): the
+// named one wears the pointed ring and says so to a screen reader, and under the spotlight the others are dimmed.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactElement } from "react";
 import type { VisualProps } from "../contract.js";
 import { CLIENT_KEYS } from "../generated/keys.js";
 import { keyOnly } from "../kit.js";
-import { literal, shownReadout, sig, type SimModel, type SimParam, type Values } from "./models.js";
+import { applies, literal, shownReadout, sig, withUnit, type SimModel, type SimParam, type Values } from "./models.js";
 import { ComparePanel, LockedStage, PredictPanel, type Phase } from "./PredictFlow.js";
 import { compare, observe, scenarioArgs, type Prediction, type Scenario } from "./predict.js";
 import { runOn, runToEnd } from "./run.js";
@@ -43,6 +46,16 @@ export interface SimViewProps<S> {
 }
 
 const BUTTON = "rounded-control border border-line px-3 py-1 text-ui";
+const POINTED = "rounded-control outline-dashed outline-2 outline-offset-2 outline-highlight-line";
+
+/** The tutor's pointing at one control or readout: the pointed ring, or the spotlight's dimming of the others. */
+function pointing(props: VisualProps, id: string): { pointed: boolean; attrs: Record<string, unknown> } {
+  const focus = props.focus ?? [];
+  const pointed = focus.includes(id);
+  if (pointed) return { pointed, attrs: { "data-pointed": "true" } };
+  if (props.spotlight === true && focus.length > 0) return { pointed, attrs: { "data-dimmed": "true", style: { opacity: CLIENT_KEYS.board_spotlight_dim_opacity } } };
+  return { pointed, attrs: {} };
+}
 
 export function SimView<S>({ model, props, start, locked, animated, draw, scenario = null }: SimViewProps<S>): ReactElement {
   const t = literal(props.t ?? keyOnly);
@@ -192,23 +205,26 @@ export function SimView<S>({ model, props, start, locked, animated, draw, scenar
       {!predicting && (
         <>
           <div className="mt-3 grid gap-2">
-            {model.params.map((p) => {
+            {model.params.filter((p) => applies(p, values)).map((p) => {
               const id = `${props.spec.visual_id}-${p.id}`;
               const value = values[p.id];
               const disabled = locked.includes(p.id);
               const part = parts.has(`ctrl.${p.id}`) ? { "data-part": `ctrl.${p.id}` } : {};
+              const { pointed, attrs } = pointing(props, `ctrl.${p.id}`);
+              const ring = pointed ? ` ${POINTED}` : "";
+              const said = pointed ? <span className="sr-only">{`, ${t("visual.part.pointed")}`}</span> : null;
               if (p.kind === "toggle") {
                 return (
-                  <label key={p.id} htmlFor={id} className="flex min-h-11 items-center gap-2 text-ui">
+                  <label key={p.id} htmlFor={id} className={`flex min-h-11 items-center gap-2 text-ui${ring}`} {...attrs}>
                     <input id={id} type="checkbox" checked={value === true} disabled={disabled} onChange={(e) => change(p, e.currentTarget.checked)} {...part} />
-                    {t(p.labelKey)}
+                    {t(p.labelKey)}{said}
                   </label>
                 );
               }
               if (p.kind === "choice") {
                 return (
-                  <label key={p.id} htmlFor={id} className="flex min-h-11 items-center gap-2 text-ui">
-                    {t(p.labelKey)}
+                  <label key={p.id} htmlFor={id} className={`flex min-h-11 items-center gap-2 text-ui${ring}`} {...attrs}>
+                    {t(p.labelKey)}{said}
                     <select id={id} className="min-h-11 rounded-control border border-line-strong bg-canvas px-2" value={String(value)} disabled={disabled} onChange={(e) => change(p, e.currentTarget.value)} {...part}>
                       {(p.choices ?? []).map((c) => <option key={c.value} value={c.value}>{t(c.labelKey)}</option>)}
                     </select>
@@ -216,11 +232,11 @@ export function SimView<S>({ model, props, start, locked, animated, draw, scenar
                 );
               }
               return (
-                <label key={p.id} htmlFor={id} className="grid grid-cols-[10rem_1fr_6rem] items-center gap-2 text-ui">
-                  <span>{`${t(p.labelKey)}${p.unit ? ` (${p.unit})` : ""}`}</span>
+                <label key={p.id} htmlFor={id} className={`grid grid-cols-[10rem_1fr_6rem] items-center gap-2 text-ui${ring}`} {...attrs}>
+                  <span>{`${t(p.labelKey)}${p.unit ? ` (${p.unit})` : ""}`}{said}</span>
                   <input id={id} type="range" className="min-h-11" min={p.min} max={p.max} step={p.step} value={Number(value)} disabled={disabled}
-                    aria-valuetext={`${String(value)} ${p.unit}`.trim()} onChange={(e) => change(p, e.currentTarget.value)} onKeyDown={onRangeKey(p)} {...part} />
-                  <output htmlFor={id} className="tabular-nums">{`${String(value)} ${p.unit}`.trim()}</output>
+                    aria-valuetext={withUnit(String(value), p.unit)} onChange={(e) => change(p, e.currentTarget.value)} onKeyDown={onRangeKey(p)} {...part} />
+                  <output htmlFor={id} className="tabular-nums">{withUnit(String(value), p.unit)}</output>
                 </label>
               );
             })}
@@ -233,12 +249,18 @@ export function SimView<S>({ model, props, start, locked, animated, draw, scenar
           )}
           {showReadings && (
             <dl className="mt-3 grid grid-cols-2 gap-x-4 text-ui">
-              {model.readouts.map((r) => (
-                <div key={r.id} className="contents">
-                  <dt className="text-muted">{t(r.labelKey)} <span className="text-meta">{t("sim.significant_figures", { count: r.sf })}</span></dt>
-                  <dd className="tabular-nums" {...(parts.has(r.id) ? { "data-part": r.id, tabIndex: 0 } : {})}>{`${shownReadout(readings[r.id] ?? NaN, r)} ${r.unit}`.trim()}</dd>
-                </div>
-              ))}
+              {model.readouts.map((r) => {
+                const { pointed, attrs } = pointing(props, r.id);
+                return (
+                  <div key={r.id} className="contents">
+                    <dt className="text-muted" {...(pointed ? {} : attrs)}>{t(r.labelKey)} <span className="text-meta">{t("sim.significant_figures", { count: r.sf })}</span></dt>
+                    <dd className={`tabular-nums${pointed ? ` ${POINTED}` : ""}`} {...attrs} {...(parts.has(r.id) ? { "data-part": r.id, tabIndex: 0 } : {})}>
+                      {withUnit(shownReadout(readings[r.id] ?? NaN, r), r.unit)}
+                      {pointed && <span className="sr-only">{`, ${t("visual.part.pointed")}`}</span>}
+                    </dd>
+                  </div>
+                );
+              })}
             </dl>
           )}
           <p className="sr-only" aria-live="polite" data-sim-live="true">{announced}</p>

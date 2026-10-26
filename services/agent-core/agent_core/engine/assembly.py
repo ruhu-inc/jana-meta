@@ -815,6 +815,7 @@ class AppRuntime:
                 self.settings,
                 run_tool=self._lesson_tool,
                 judge_method=self._assessment_judge,
+                explain_judge=self._explanation_judge,
                 recover=True,
             )
         else:
@@ -902,6 +903,19 @@ class AppRuntime:
         if fallback or not judged or judged[0]["status"] != "judged":
             return None
         return bool(judged[0]["pass"])
+
+    async def _explanation_judge(self, criteria: Sequence[tuple[str, str]], text: str) -> list[dict[str, Any]] | None:
+        """Explain it back: the Checker's judge on the learner's own explanation of a KC, one criterion per key point,
+        on whichever runtime the router has (local or online); the input guard and redaction run first. None when no
+        judge answered or the text may not reach a model, so the explanation is not counted (never a pass)."""
+        if self._assessment_desk is not None and self._assessment_desk.mock_active():
+            return None
+        words = judge_text(self.settings, [text])
+        if not words:
+            return None
+        auxiliary = Auxiliaries.load(self._router(), self.settings, self.content_root, self.hardware_class() or "mid")
+        judged, fallback = await auxiliary.judge(criteria, words)
+        return None if fallback else judged
 
     def _router(self) -> Router:
         if self._router_data is None:

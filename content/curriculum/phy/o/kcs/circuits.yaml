@@ -36,6 +36,17 @@
   - voltmeter
   - voltage
   - total resistance
+  key_points:
+  - id: kp_same_current
+    text:
+      en: The current is the same at every point in a series circuit.
+    follow_up:
+      en: Would an ammeter read a different current anywhere in a series circuit? Why?
+  - id: kp_pd_shared
+    text:
+      en: 'The supply p.d. is shared between the components: their p.d.s add up to the supply p.d.'
+    follow_up:
+      en: How are the p.d.s across the separate components related to the battery's p.d.?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -80,6 +91,22 @@
   - voltage
   - heating element
   - series
+  key_points:
+  - id: kp_full_pd
+    text:
+      en: Each parallel branch has the full supply p.d. across it.
+    follow_up:
+      en: What p.d. is across each branch when they are connected in parallel to the battery?
+  - id: kp_currents_add
+    text:
+      en: The branch currents add up to the current from the supply.
+    follow_up:
+      en: How does the current leaving the battery compare with the currents in the branches?
+  - id: kp_resistance_falls
+    text:
+      en: Adding another branch lowers the total resistance, so more current flows.
+    follow_up:
+      en: What happens to the total resistance when you connect one more resistor in parallel, and why?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active

@@ -26,13 +26,13 @@ function scene(props: VisualProps): { start: Values; locked: string[] } {
 // --- projectile_sim -------------------------------------------------------------------------------------------------
 
 function ProjectileSim(props: VisualProps): ReactElement {
-  const p = props.spec.params as { mode: "horizontal" | "vertical"; speed: number; height?: number };
+  const p = props.spec.params as { mode: "horizontal" | "vertical" | "angled"; speed: number; angle?: number; height?: number };
   const g = (props.spec.computed as { g?: number }).g ?? NaN;
   const model = projectile(g);
-  const start: Values = { mode: p.mode, speed: p.speed, height: p.height ?? (p.mode === "horizontal" ? 20 : 0) };
+  const start: Values = { mode: p.mode, speed: p.speed, angle: p.angle ?? 45, height: p.height ?? (p.mode === "horizontal" ? 20 : 0) };
   const t = props.t ?? keyOnly;
   return (
-    <SimView model={model} props={props} start={start} locked={scene(props).locked} animated draw={(state, values) => {
+    <SimView model={model} props={props} start={start} locked={scene(props).locked} animated scenario={scenarioOf("projectile_sim", props.spec.params)} draw={(state, values) => {
       const r = model.read(state, values);
       const table = model.table(values);
       const xmax = Math.max(10, must(r["out.range"]) * 1.1);

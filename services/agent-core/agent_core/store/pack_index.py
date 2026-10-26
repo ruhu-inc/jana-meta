@@ -92,7 +92,9 @@ class PackIndex:
     mastery_models: dict[str, str] = field(default_factory=dict)
 
     def visual_sources(self, subject_code: str) -> dict[str, Any]:
-        return self.visuals.get(subject_code, {"diagrams": {}, "presets": {}, "conventions": {}, "pack_values": {}})
+        return self.visuals.get(
+            subject_code, {"diagrams": {}, "presets": {}, "conventions": {}, "pack_values": {}, "figures": {}}
+        )
 
     # --- building -------------------------------------------------------------------------------------------------
 
@@ -188,13 +190,25 @@ class PackIndex:
     def _add_visuals(self, manifest: Mapping[str, Any], tables: Mapping[str, list[dict[str, Any]]]) -> None:
         pack_id = str(manifest.get("pack_id"))
         found = self.visuals.setdefault(
-            str(manifest.get("subject")), {"diagrams": {}, "presets": {}, "conventions": {}, "pack_values": {}}
+            str(manifest.get("subject")),
+            {"diagrams": {}, "presets": {}, "conventions": {}, "pack_values": {}, "figures": {}},
         )
         for record in tables.get("diagrams", []):
             if "svg" in record:  # a drawable library entry (a bare reference has nothing to draw)
                 found["diagrams"].setdefault(str(record["id"]), dict(record))
         for record in tables.get("visual_presets", []):
             found["presets"].setdefault(str(record["id"]), {**record, "pack_id": pack_id})
+        # A worked example's checked figure is the pattern for that KC's figures (kind, params and parts), which the
+        # Coach is shown so a new problem on the KC can be drawn with its own numbers (VSL-12 still checks them).
+        for record in tables.get("worked_examples", []):
+            resolved = (record.get("visual") or {}).get("resolved")
+            if not isinstance(resolved, dict):
+                continue
+            parts = [str(p["id"]) for p in resolved.get("parts", []) if p.get("focusable", True)]
+            pattern = {"source": str(record["id"]), "type": str(resolved["type"]),
+                       "params": resolved.get("params", {}), "parts": parts}  # fmt: skip
+            for kc_id in record.get("kc_ids", []):
+                found["figures"].setdefault(str(kc_id), pattern)
         for record in tables.get("conventions", []):
             key, value = str(record["key"]), str(record["value"])
             found["conventions"].setdefault(key, value)

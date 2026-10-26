@@ -99,6 +99,9 @@ export function ExampleBoard({ example }: { example: WorkedExampleView }) {
         <h3 className="text-label text-faint">{t("lesson.example.problem")}</h3>
         <PackText text={example.problem} />
       </div>
+      {example.visual != null && (
+        <Rendered keys={[`visual:${example.visual.type}`, "visual:*"]} data={example.visual} lifecycle="complete" partId={`example-visual-${example.worked_example_id}`} />
+      )}
       <ol className="flex flex-col gap-1" aria-label={t("lesson.block.worked_example")}>
         {example.steps.map((step, i) => {
           if (example.faded_steps.includes(step.n) && !shown.includes(step.n)) {
@@ -130,9 +133,10 @@ export function ExampleBoard({ example }: { example: WorkedExampleView }) {
 function Visual({ visual, index }: { visual: NonNullable<Extract<LessonBlock, { type: "idea" }>["visual"]>; index: number }) {
   const t = useT();
   if ("visual_type" in visual && typeof visual.visual_type === "string") {
+    // The pack build resolved and checked the figure; a record built before that shows its words fallback.
     return (
       <div className="rounded-card border border-line bg-canvas p-4">
-        <Rendered keys={[`visual:${visual.visual_type}`, "visual:*"]} data={visual.params} lifecycle="complete" partId={`lesson-visual-${index}`} />
+        <Rendered keys={[`visual:${visual.resolved?.type ?? visual.visual_type}`, "visual:*"]} data={visual.resolved ?? visual.params} lifecycle="complete" partId={`lesson-visual-${index}`} />
       </div>
     );
   }

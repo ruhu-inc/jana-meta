@@ -60,6 +60,26 @@ exam_style:
   calculator: false
 context_tags:
 - none
+visual:
+  visual_type: circuit
+  ref: dgm.phy.circuit_series_two_lamps.v1
+  params:
+    components:
+    - id: B
+      type: battery
+      value: 3 V
+    - id: A1
+      type: ammeter
+    - id: L1
+      type: lamp
+      value: 6 Ω
+    - id: L2
+      type: lamp
+      value: 2 Ω
+    - id: V1
+      type: voltmeter
+    show:
+    - conventional_current_arrows
 provenance:
   origin: original
   licence: LicenseRef-Own

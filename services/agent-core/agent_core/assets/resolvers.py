@@ -745,6 +745,8 @@ def projectile_sim(spec: dict[str, Any], s: Session) -> Computed:
     }
     if params["mode"] == "vertical":
         args["direction"] = "up"
+    if params["mode"] == "angled":
+        args["angle"] = params["angle"]  # degrees above the horizontal
     if params.get("height") is not None:
         args["height"] = params["height"]
     value = s.run("phys_projectile", args)
@@ -754,10 +756,11 @@ def projectile_sim(spec: dict[str, Any], s: Session) -> Computed:
         "out.max_height": shown(value["max_height"]),
     }
     s.labels.update(readouts)
-    parts = [{"id": f"ctrl.{p}", "role": "control", "label": p} for p in ("mode", "speed", "height")]
+    controls = ("mode", "speed", "angle", "height") if params["mode"] == "angled" else ("mode", "speed", "height")
+    parts = [{"id": f"ctrl.{p}", "role": "control", "label": p} for p in controls]
     parts += [{"id": k, "role": "readout", "label": k.split(".")[1].replace("_", " ")} for k in readouts]
     alt = {
-        "mode": params["mode"],
+        "mode": f"angled ({params['angle']} degrees)" if params["mode"] == "angled" else params["mode"],
         "speed": params["speed"],
         "height": params.get("height", 0),
         "range": readouts["out.range"],

@@ -1,0 +1,62 @@
+id: les.phy.o.motion.launching_at_an_angle
+node_id: cur.phy.o.motion_forces_and_energy.motion
+kc_ids:
+- kc.phy.o.motion.free_fall
+title: Launching at an angle
+estimated_minutes: 8
+blocks:
+- type: step
+  text:
+    en: A ball thrown straight up slows down as it rises. Try this before any formula.
+  item_id: itm.phy.o.motion.0139
+  action: try_first
+  why:
+    en: Gravity takes 10 m/s off the upward speed every second, so 12 m/s lasts 12 ÷ 10 seconds.
+  names:
+    en: 'Going up, the vertical speed falls by g each second: the time to the top is u ÷ g.'
+- type: step
+  text:
+    en: Two balls leave level ground at 20 m/s, one at 30° and one at 60°. Predict in the simulation which lands further, then watch it run.
+  visual:
+    visual_type: projectile_sim
+    params:
+      mode: angled
+      speed: 20
+      angle: 30
+      height: 0
+      predict: poe.phy.projectile_angle_30_60.v1
+  item_id: itm.phy.o.motion.0371
+  action: predict
+  why:
+    en: The steeper ball stays up longer but moves forward more slowly. The two effects balance, so both land the same distance away.
+  names:
+    en: 'Angles that add up to 90° give the same range on level ground, and 45° goes furthest.'
+- type: step
+  text:
+    en: Now find how high a ball thrown straight up rises.
+  item_id: itm.phy.o.motion.0147
+  action: calculate
+  why:
+    en: At the top the vertical speed is zero, so use v² = u² − 2gh with v = 0.
+- type: check
+  item_ids:
+  - itm.phy.o.motion.0143
+  - itm.phy.o.motion.0148
+  - itm.phy.o.motion.0144
+version: 0.1.0
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-opus-5-5
+  sources: []
+review:
+  status: published
+  reviewers: []
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

@@ -13,7 +13,11 @@ export function assessment(kind: AssessmentStart["kind"] = "diagnostic", count =
     available_at: null, retry_at: null, outcome_topics: [{ topic_id: `cur.${code}.o.synthetic`, status: "learning" }],
     answered_items: Array.from({ length: count }, (_, n) => ({ item_id: `itm.${code}.o.synthetic.000${n + 1}`, attempt_id: `attempt${n}`, answered_at: "2026-10-17T10:00:00Z" })) };
 }
-export function assessmentCore() {
+/** The explanation a check waits for once its items passed (explain it back), as the core reports it. */
+export const EXPLAINING = { statement: "Calculate acceleration from a change in velocity and the time it takes", follow_up: null, attempts: 0, outcome: "awaiting" } as const;
+export const FOLLOW_UP = "Which two velocities do you need, and what do you do with them before you use the time?";
+/** `explains`: a passed mastery check waits for an explanation; one naming "change in velocity" passes. */
+export function assessmentCore({ explains = false }: { explains?: boolean } = {}) {
   const core = new FakeProfileCore();
   const rows = new Map<string, Assessment[]>();
   const writes: { path: string; body: Record<string, unknown>; key: string | null }[] = [];
@@ -42,8 +46,16 @@ export function assessmentCore() {
           if (errors("learning/student-records#/$defs/AssessmentAnswer", body).length) throw new Error("invalid answer fixture");
           current = assessment(previous.kind, previous.answered_count + 1, previous.subject);
           if (current.answered_count === 2) current = { ...current, state: previous.kind === "diagnostic" ? "completed" : "waiting", current_item: null, available_at: previous.kind === "diagnostic" ? null : "2026-10-20T10:00:00Z" };
-          if (previous.kind === "mastery_check" && current.answered_count === 3) current = { ...current, state: "completed", current_item: null, outcome_topics: previous.outcome_topics.map((t) => ({ ...t, status: "mastered" })) };
+          if (previous.kind === "mastery_check" && current.answered_count === 3) current = explains
+            ? { ...current, state: "explaining", current_item: null, explain: { ...EXPLAINING } }
+            : { ...current, state: "completed", current_item: null, outcome_topics: previous.outcome_topics.map((t) => ({ ...t, status: "mastered" })) };
           if (previous.kind === "mastery_check") current.last_mark = { verdict: "correct", marks_awarded: 1, marks_total: 1 };
+        } else if (path.endsWith("/explain")) {
+          if (errors("learning/student-records#/$defs/ExplainBack", body).length) throw new Error("invalid explanation fixture");
+          const attempts = (previous.explain?.attempts ?? 0) + 1;
+          current = String(body.text).includes("change in velocity")
+            ? { ...previous, state: "completed", explain: { ...EXPLAINING, attempts, outcome: "passed" }, outcome_topics: previous.outcome_topics.map((t) => ({ ...t, status: "mastered" })) }
+            : { ...previous, explain: { ...EXPLAINING, attempts, outcome: "follow_up", follow_up: FOLLOW_UP } };
         } else current = { ...previous, state: path.endsWith("/stop") ? "stopped" : "in_progress" };
         list.splice(list.indexOf(previous), 1, current);
       }

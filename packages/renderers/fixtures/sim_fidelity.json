@@ -761,6 +761,62 @@
         "out.time": "3.61083"
       },
       "tool": "phys_projectile"
+    },
+    {
+      "params": {
+        "angle": 30,
+        "height": 0,
+        "mode": "angled",
+        "speed": 20
+      },
+      "readouts": {
+        "out.max_height": "5.10204",
+        "out.range": "35.348",
+        "out.time": "2.04082"
+      },
+      "tool": "phys_projectile"
+    },
+    {
+      "params": {
+        "angle": 60,
+        "height": 0,
+        "mode": "angled",
+        "speed": 20
+      },
+      "readouts": {
+        "out.max_height": "15.3061",
+        "out.range": "35.348",
+        "out.time": "3.5348"
+      },
+      "tool": "phys_projectile"
+    },
+    {
+      "params": {
+        "angle": 45,
+        "height": 0,
+        "mode": "angled",
+        "speed": 20
+      },
+      "readouts": {
+        "out.max_height": "10.2041",
+        "out.range": "40.8163",
+        "out.time": "2.88615"
+      },
+      "tool": "phys_projectile"
+    },
+    {
+      "params": {
+        "angle": 40,
+        "height": 10,
+        "mode": "angled",
+        "speed": 15
+      },
+      "readouts": {
+        "out.max_height": "14.7431",
+        "out.range": "31.2368",
+        "out.time": "2.71845"
+      },
+      "tool": "phys_projectile"
     }
   ],
   "rates_sim": [

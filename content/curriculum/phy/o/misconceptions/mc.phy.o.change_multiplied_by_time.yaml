@@ -17,6 +17,10 @@ probe_item_ids:
 - itm.phy.o.motion.0304
 - itm.phy.o.motion.0305
 severity: medium
+root_gap:
+  kc_id: kc.mth.o.number.rates
+  idea:
+    en: working out a rate
 version: 0.1.0
 provenance:
   origin: original

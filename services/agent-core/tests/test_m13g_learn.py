@@ -30,6 +30,7 @@ from test_m10a_profiles import Api, student
 
 SETTINGS = Settings(worker_pool_size=1, worker_respawn_backoff_s=(0.0,), api_command_burst_per_s=1000)
 LESSON = "les.phy.o.motion.speed_and_acceleration"
+ANGLE_LESSON = "les.phy.o.motion.launching_at_an_angle"
 SPEED = "kc.phy.o.motion.average_speed"
 CHANGE = "kc.phy.o.motion.acceleration_from_change"
 SOURCES: dict[str, dict[str, list[dict[str, Any]]]] = {}
@@ -275,8 +276,10 @@ def test_subject_map_sections_tiles_and_states(tmp_path: Path) -> None:
             (tile,) = [t for t in section["topics"] if t["node_id"] == "cur.phy.o.motion_forces_and_energy.motion"]
             assert {k["state"] for k in tile["kcs"]} == {"not_started"}
             assert [k["code"] for k in tile["kcs"]] == sorted(k["code"] for k in tile["kcs"])
-            assert [les["lesson_id"] for les in tile["lessons"]] == [LESSON]
-            assert set(tile["lessons"][0]["kc_ids"]) == {SPEED, CHANGE}
+            # The motion tile's lessons in id order: launching at an angle (free fall), then speed and acceleration.
+            assert [les["lesson_id"] for les in tile["lessons"]] == [ANGLE_LESSON, LESSON]
+            (speed,) = [les for les in tile["lessons"] if les["lesson_id"] == LESSON]
+            assert set(speed["kc_ids"]) == {SPEED, CHANGE}
 
             mastery(r, SPEED, "mastered")
             mastery(r, CHANGE, "moved_on")

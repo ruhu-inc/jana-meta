@@ -14,6 +14,19 @@ blocks:
     en: In a series circuit there is only one path. The same current passes through every component. The potential differences across the components add up to the supply, and so do the resistances. In a parallel circuit, each branch has the full supply potential difference across it. The branch currents add up to the current from the supply. The combined resistance is less than the smallest branch resistance, because each new branch gives the charge another way through.
 - type: worked_example
   worked_example_id: wex.phy.o.circuits.0001
+- type: visual
+  visual:
+    visual_type: circuit_sim
+    params:
+      emf: 6
+      resistors:
+      - id: R1
+        resistance: 10
+      - id: R2
+        resistance: 10
+      arrangement: series
+      predict: poe.phy.circuit_series_to_parallel.v1
+  caption: Predict first, then run it. What happens to the current from the cell when the two resistors are put side by side?
 - type: guided_step
   item_id: itm.phy.o.circuits.0001
 - type: quick_check

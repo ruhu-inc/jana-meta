@@ -3,6 +3,7 @@
 // is sent again with the same idempotency key when the stream is back (UIA-07); the banner shows only after the
 // outage threshold or during a resync.
 import type { ContentBlock, SessionCreated, SessionList, TurnAccepted, CancelResult, CreateSession, UpdateSession } from "@jana/contracts-ts";
+import type { api_commands } from "@jana/contracts-ts/client";
 import { SessionJournal } from "./journal.js";
 import { CLIENT_KEYS } from "./generated/keys.js";
 import { assertConfirmed, type CapturedQuestion } from "./capture.js";
@@ -307,6 +308,15 @@ export class SessionController {
   async answerManipulation(visualId: string, stepId: string, values: { part_id: string; value: string }[]): Promise<{ status: string; check_id: string | null }> {
     const key = clientId();
     return this.commands.post<{ status: string; check_id: string | null }>(`/v1/visuals/${visualId}/answer`, { client_answer_id: key, step_id: stepId, values }, key);
+  }
+
+  /** Predict before you see (VSL-47): the learner's prediction for a predict-first simulation in this session, sent
+   * once it is locked in (or their explanation of what it showed). The core decides whether it matched; the tutor's
+   * reply, pointing at the result, arrives on the stream. A simulation shown outside a session sends nothing. */
+  async simPrediction(visualId: string, event: api_commands.SimPrediction["event"], scenarioId: string, choice: string | null, text: string): Promise<void> {
+    const key = clientId();
+    const body: api_commands.SimPrediction = { client_event_id: key, event, scenario_id: scenarioId, choice, text: text.slice(0, 500) };
+    await this.commands.post<unknown>(`/v1/sessions/${encodeURIComponent(this.sessionId)}/visuals/${encodeURIComponent(visualId)}/prediction`, body, key);
   }
 
   /** Answer an open card (API-14): the client answer id makes a repeat harmless. Confirming the card that names

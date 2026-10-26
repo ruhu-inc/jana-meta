@@ -182,6 +182,8 @@ ROUTES: dict[str, Rule] = {
     ),
     "POST /v1/practice/sets/{identity}/answers": Screened("practice_answer", field_text("answer"), ANSWER),
     "POST /v1/assessments/{identity}/answers": Screened("assessment_answer", field_text("answer"), ANSWER),
+    # Explain it back: the learner's own explanation of a KC (typed, or the transcript of what they said).
+    "POST /v1/assessments/{identity}/explain": Screened("explain_back", field_text("text"), ANSWER),
     "PUT /v1/mocks/{identity}/answers/{question_id}": Screened("mock_answer", field_text("answer"), ANSWER),
     "POST /v1/lessons/{lesson_id}/checks": Screened("lesson_check", field_text("answer"), ANSWER),
     "PATCH /v1/sessions/{session_id}": Screened(
@@ -191,6 +193,8 @@ ROUTES: dict[str, Rule] = {
     # a value set on a manipulable visual becomes the student's board line, read by the Coach later (VSL-42)
     "POST /v1/visuals/{visual_id}/practice": _IDS,
     "POST /v1/visuals/{visual_id}/answer": Screened("manipulation_answer", field_text("values"), ANSWER),
+    # VSL-47: a prediction or its explanation becomes a tutor turn, whose intake screens the words (Engine._intake).
+    "POST /v1/sessions/{session_id}/visuals/{visual_id}/prediction": Turn("the engine's intake screens it as a turn"),
     # the student's own words for a goal (UXS-10 interview): kept in the profile like a note (STU-11)
     "POST /v1/interview/{question_id}/answer": Screened("interview_goal", field_text("answer"), NOTE),
     # no student-written text

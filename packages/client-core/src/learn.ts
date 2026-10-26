@@ -104,6 +104,8 @@ export interface WorkedExampleView {
   final_answer: { latex: string; check_id: string };
   /** Step numbers shown as blanks for this student (LRN-17). */
   faded_steps: number[];
+  /** The worked example's figure, resolved and checked when the pack was built; absent or null when it has none. */
+  visual?: api_commands.WorkedExampleView["visual"];
 }
 
 export type CheckBlockType = "prior_knowledge" | "guided_step" | "quick_check" | "exit_check";
@@ -241,7 +243,8 @@ const isVisual = (v: unknown) => isObject(v) && (isString(v.diagram_id) || (isSt
 const isItem = (i: unknown) => errors("api/commands#/$defs/PracticeItem", i).length === 0;
 const isExample = (w: unknown) =>
   isObject(w) && isString(w.worked_example_id) && isString(w.problem) && listOf(w.steps, (s) => isObject(s) && isCount(s.n) && isString(s.latex) && isString(s.reason) && (s.check_id === null || isString(s.check_id))) &&
-  isObject(w.final_answer) && isString(w.final_answer.latex) && isString(w.final_answer.check_id) && listOf(w.faded_steps, isCount);
+  isObject(w.final_answer) && isString(w.final_answer.latex) && isString(w.final_answer.check_id) && listOf(w.faded_steps, isCount) &&
+  (w.visual === undefined || w.visual === null || errors("visuals/visual-spec#/$defs/resolved", w.visual).length === 0);
 
 function blockProblem(b: unknown): boolean {
   if (!isObject(b) || !isString(b.type)) return false;

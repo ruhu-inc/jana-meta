@@ -1,4 +1,6 @@
-"""Projectiles at O level: vertical and horizontal projection (VER-17), with g from the stated constants (VER-12).
+"""Projectiles at O level: vertical, horizontal and angled projection (VER-17), with g from the stated constants
+(VER-12). An angled launch is at `angle` degrees above the horizontal; its components are exact for any rational
+angle (30° and 60° give surds), so two launches that land together compare exactly.
 
 Up is positive and the origin is the ground directly below the launch point, recorded in every result. Times,
 heights, range and the landing velocity are exact (surds where they arise) with 6 significant figure decimals; the
@@ -68,6 +70,14 @@ def phys_projectile(args: dict[str, Any], context: CallContext) -> tuple[Any, Ex
         if speed > 0 and "direction" not in args:
             raise WorkerError(Code.DOMAIN_ERROR, "a vertical launch needs a direction: up or down")
         ux, uy = sp.Integer(0), (speed if args.get("direction", "up") == "up" else -speed)
+    elif motion == "angled":
+        if "direction" in args:
+            raise WorkerError(Code.DOMAIN_ERROR, "direction is for vertical motion; an angled launch has its angle")
+        degrees = sp.nsimplify(number(args["angle"], "angle"), rational=True)
+        if not 0 < degrees < 90:
+            raise WorkerError(Code.DOMAIN_ERROR, "an angled launch is between 0 and 90 degrees above the horizontal")
+        theta = degrees * sp.pi / 180
+        ux, uy = sp.nsimplify(speed * sp.cos(theta)), sp.nsimplify(speed * sp.sin(theta))
     else:
         if "direction" in args:
             raise WorkerError(Code.DOMAIN_ERROR, "direction is for vertical motion; a horizontal launch has none")
@@ -95,7 +105,9 @@ def phys_projectile(args: dict[str, Any], context: CallContext) -> tuple[Any, Ex
         "origin": "ground below the launch point",
         "units": {"time": "s", "distance": "m", "speed": "m/s", "angle": "degrees"},
         "g": exact(g),
-        "launch": {"speed": exact(speed), "height": exact(height), "vx": exact(ux), "vy": exact(uy)},
+        "launch": {"speed": exact(speed), "height": exact(height), "vx": exact(ux), "vy": exact(uy),
+                   **({"angle": exact(sp.nsimplify(number(args["angle"], "angle"), rational=True))}
+                      if motion == "angled" else {})},
         "time_of_flight": exact(landing),
         "time_to_max_height": exact(rise),
         "max_height": exact(top),

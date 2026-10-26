@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/commands.schema.json sha256 9a55662dec578560d2bc5b2d3e658da073ab18663efe7f6e4a9c55a6f5bb0cea; do not edit",
+ "$comment": "GENERATED from contracts/api/commands.schema.json sha256 744127f15c174401229f705c10887364a499b30a75da5ffeb754d7322fea1443; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/commands",
  "title": "Command bodies",
@@ -5557,6 +5557,16 @@
       "type": "integer",
       "minimum": 1
      }
+    },
+    "visual": {
+     "anyOf": [
+      {
+       "$ref": "https://jana.dev/contracts/visuals/visual-spec#/$defs/resolved"
+      },
+      {
+       "type": "null"
+      }
+     ]
     }
    },
    "required": [
@@ -8875,6 +8885,49 @@
    "required": [
     "step_id"
    ]
+  },
+  "SimPrediction": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "client_event_id",
+    "event",
+    "scenario_id",
+    "choice",
+    "text"
+   ],
+   "properties": {
+    "client_event_id": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "event": {
+     "enum": [
+      "committed",
+      "explained"
+     ]
+    },
+    "scenario_id": {
+     "type": "string",
+     "pattern": "^poe\\.[a-z]{3}\\.[a-z0-9_]+\\.v[0-9]+$",
+     "maxLength": 96
+    },
+    "choice": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[a-z][a-z0-9_]{0,31}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "type": "string",
+     "maxLength": 500
+    }
+   }
   }
  }
 }

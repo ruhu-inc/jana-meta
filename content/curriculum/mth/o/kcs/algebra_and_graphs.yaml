@@ -145,6 +145,17 @@
   - formulae
   - rearrange
   - expression
+  key_points:
+  - id: kp_inverse_both_sides
+    text:
+      en: Undo each operation on the letter with its inverse, doing the same to both sides.
+    follow_up:
+      en: If the letter has been multiplied by 3, what do you do to both sides to get it on its own?
+  - id: kp_reverse_order
+    text:
+      en: Undo the operations in the reverse of the order they were done to the letter.
+    follow_up:
+      en: In y = 3x + 2, which operation do you undo first to make x the subject, and why that one?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active

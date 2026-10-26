@@ -990,6 +990,33 @@
       "maxLength": 60
      }
     },
+    "key_points": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 4,
+     "description": "What a learner's own explanation of this KC must get across before it is marked mastered; each with one follow-up question that probes the point without stating it.",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "text",
+       "follow_up"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^kp_[a-z0-9_]{1,30}$"
+       },
+       "text": {
+        "$ref": "#/$defs/LocalisedText"
+       },
+       "follow_up": {
+        "$ref": "#/$defs/LocalisedText"
+       }
+      }
+     }
+    },
     "difficulty_prior": {
      "type": "number",
      "minimum": -4,
@@ -1106,6 +1133,23 @@
     },
     "resolved": {
      "$ref": "https://jana.dev/contracts/visuals/visual-spec#/$defs/resolved"
+    },
+    "ref": {
+     "$ref": "#/$defs/DiagramId",
+     "description": "A template preset of this pack (VSL-29) whose params come first; `params` override them field by field."
+    },
+    "numbers_from": {
+     "type": "array",
+     "maxItems": 20,
+     "uniqueItems": true,
+     "items": {
+      "$ref": "#/$defs/CheckId"
+     },
+     "description": "The record's own build checks that computed the figure's numbers (VSL-12): every claim number traces to one of them or to a preset."
+    },
+    "caption": {
+     "type": "string",
+     "maxLength": 200
     }
    },
    "oneOf": [
@@ -2531,6 +2575,10 @@
       "$ref": "#/$defs/DiagramId"
      }
     },
+    "visual": {
+     "$ref": "#/$defs/VisualRef",
+     "description": "A figure shown with the question: a catalogue kind resolved at build time with the item's own checks, never one that shows the answer."
+    },
     "context_tags": {
      "type": "array",
      "items": {
@@ -3272,6 +3320,24 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/ItemId"
+     }
+    },
+    "root_gap": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kc_id",
+      "idea"
+     ],
+     "description": "The earlier skill this misconception really comes from (a KC of any installed pack): the learner is told in one line and the next practice goes there.",
+     "properties": {
+      "kc_id": {
+       "$ref": "#/$defs/KcId"
+      },
+      "idea": {
+       "$ref": "#/$defs/LocalisedText",
+       "description": "A short noun phrase naming the skill, as in 'This is really about {idea}.'"
+      }
      }
     },
     "severity": {

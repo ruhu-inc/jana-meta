@@ -36,6 +36,7 @@ from pack_builder import (
     curriculum,
     diagrams,
     drafting,
+    figures,
     follow_through,
     licence,
     mocks,
@@ -208,6 +209,7 @@ def categorised_problems(
     shape += curriculum.map_problems(tables["curriculum_nodes"], tables["kcs"],
                                      settings.curriculum_topic_weight_tolerance)  # fmt: skip
     shape += curriculum.prerequisite_problems(tables["kcs"], pack)
+    shape += curriculum.root_gap_problems(tables["misconceptions"], tables["kcs"], pack)
     shape += curriculum.mapping_problems(tables["curriculum_nodes"], tables["kcs"])
     shape += versioning.migration_problems(tables, str(pack["version"]))
     shape += curriculum.kc_problems(tables["kcs"], tables["items"], tables["worked_examples"],
@@ -271,6 +273,8 @@ def categorised_problems(
     shape, lint, source.passed = library_problems(source, settings)
     grouped["validate"] += shape
     grouped["lint"] += lint
+    found, source.passed["figures"] = figures.figure_problems(source, verifier)  # checked visuals on records
+    grouped["verify"] += found
     grouped["qa"] += qa.qa_problems(tables, source.library, pack, source.directory, settings)
     grouped["scan"] += scan.scan_problems({**tables, **source.library}, scan.lists_for(source.directory))
     return grouped, verifier
@@ -317,6 +321,7 @@ def build(
     if problems:
         raise BuildError(problems)
     held_back = carry_library(source, source.passed)
+    figures.carry(source.tables, source.passed.get("figures", {}))
     tables = dict(source.tables)
     passages = derive(tables)
     if "search_fts" in packs.TABLES:

@@ -15,6 +15,10 @@ probe_item_ids:
 - itm.phy.o.motion.0063
 - itm.phy.o.motion.0064
 severity: medium
+root_gap:
+  kc_id: kc.mth.o.coordinate_geometry.gradient
+  idea:
+    en: the gradient of a straight line
 version: 0.1.0
 provenance:
   origin: original

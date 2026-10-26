@@ -16,6 +16,10 @@ probe_item_ids:
 - itm.phy.o.motion.0123
 - itm.phy.o.motion.0124
 severity: medium
+root_gap:
+  kc_id: kc.mth.o.algebra_and_graphs.change_subject
+  idea:
+    en: rearranging equations
 version: 0.1.1
 provenance:
   origin: original

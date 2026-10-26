@@ -17,6 +17,10 @@ probe_item_ids:
 - itm.phy.o.electrical_quantities.0047
 - itm.phy.o.electrical_quantities.0049
 severity: medium
+root_gap:
+  kc_id: kc.mth.o.algebra_and_graphs.change_subject
+  idea:
+    en: rearranging equations
 version: 0.1.0
 provenance:
   origin: original

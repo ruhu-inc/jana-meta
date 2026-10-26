@@ -1,0 +1,311 @@
+{
+  "component": "VisualViewer",
+  "context": {
+    "theme": "light"
+  },
+  "id": "visual-viewer.canonical.projectile-sim-predict",
+  "payload": {
+    "alt": {
+      "locale": "en",
+      "steps": [],
+      "summary": "A projectile simulation, angled (30 degrees) launch at 20 metres per second from 0 metres. It runs after you predict, so the result is not given here."
+    },
+    "computed": {
+      "alt": {
+        "height": 0,
+        "mode": "angled (30 degrees)",
+        "range": "35.3",
+        "speed": 20,
+        "time": "100/49"
+      },
+      "check_ids": [
+        "chk_build_fx_projectile_sim_predict_1"
+      ],
+      "g": 9.8,
+      "labels": {
+        "out.max_height": "250/49",
+        "out.range": "35.3",
+        "out.time": "100/49"
+      },
+      "parts": [
+        {
+          "id": "ctrl.mode",
+          "label": "mode",
+          "role": "control"
+        },
+        {
+          "id": "ctrl.speed",
+          "label": "speed",
+          "role": "control"
+        },
+        {
+          "id": "ctrl.angle",
+          "label": "angle",
+          "role": "control"
+        },
+        {
+          "id": "ctrl.height",
+          "label": "height",
+          "role": "control"
+        },
+        {
+          "id": "out.time",
+          "label": "time",
+          "role": "readout"
+        },
+        {
+          "id": "out.range",
+          "label": "range",
+          "role": "readout"
+        },
+        {
+          "id": "out.max_height",
+          "label": "max height",
+          "role": "readout"
+        }
+      ],
+      "path": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.883699,
+          0.497449
+        ],
+        [
+          1.7674,
+          0.969388
+        ],
+        [
+          2.6511,
+          1.41582
+        ],
+        [
+          3.5348,
+          1.83673
+        ],
+        [
+          4.4185,
+          2.23214
+        ],
+        [
+          5.3022,
+          2.60204
+        ],
+        [
+          6.1859,
+          2.94643
+        ],
+        [
+          7.0696,
+          3.26531
+        ],
+        [
+          7.95329,
+          3.55867
+        ],
+        [
+          8.83699,
+          3.82653
+        ],
+        [
+          9.72069,
+          4.06888
+        ],
+        [
+          10.6044,
+          4.28571
+        ],
+        [
+          11.4881,
+          4.47704
+        ],
+        [
+          12.3718,
+          4.64286
+        ],
+        [
+          13.2555,
+          4.78316
+        ],
+        [
+          14.1392,
+          4.89796
+        ],
+        [
+          15.0229,
+          4.98724
+        ],
+        [
+          15.9066,
+          5.05102
+        ],
+        [
+          16.7903,
+          5.08929
+        ],
+        [
+          17.674,
+          5.10204
+        ],
+        [
+          18.5577,
+          5.08929
+        ],
+        [
+          19.4414,
+          5.05102
+        ],
+        [
+          20.3251,
+          4.98724
+        ],
+        [
+          21.2088,
+          4.89796
+        ],
+        [
+          22.0925,
+          4.78316
+        ],
+        [
+          22.9762,
+          4.64286
+        ],
+        [
+          23.8599,
+          4.47704
+        ],
+        [
+          24.7436,
+          4.28571
+        ],
+        [
+          25.6273,
+          4.06888
+        ],
+        [
+          26.511,
+          3.82653
+        ],
+        [
+          27.3947,
+          3.55867
+        ],
+        [
+          28.2784,
+          3.26531
+        ],
+        [
+          29.1621,
+          2.94643
+        ],
+        [
+          30.0458,
+          2.60204
+        ],
+        [
+          30.9295,
+          2.23214
+        ],
+        [
+          31.8132,
+          1.83673
+        ],
+        [
+          32.6969,
+          1.41582
+        ],
+        [
+          33.5806,
+          0.969388
+        ],
+        [
+          34.4643,
+          0.497449
+        ],
+        [
+          35.348,
+          0.0
+        ]
+      ]
+    },
+    "fallback_reason": null,
+    "labels": "shown",
+    "numbers_from": [
+      "chk_build_fx_projectile_sim_predict_1"
+    ],
+    "params": {
+      "angle": 30,
+      "height": 0,
+      "locked": [
+        "mode",
+        "speed",
+        "angle",
+        "height"
+      ],
+      "mode": "angled",
+      "predict": "poe.phy.projectile_angle_30_60.v1",
+      "speed": 20
+    },
+    "parts": [
+      {
+        "focusable": true,
+        "id": "ctrl.mode",
+        "name": "mode",
+        "role": "control"
+      },
+      {
+        "focusable": true,
+        "id": "ctrl.speed",
+        "name": "speed",
+        "role": "control"
+      },
+      {
+        "focusable": true,
+        "id": "ctrl.angle",
+        "name": "angle",
+        "role": "control"
+      },
+      {
+        "focusable": true,
+        "id": "ctrl.height",
+        "name": "height",
+        "role": "control"
+      },
+      {
+        "focusable": true,
+        "id": "out.time",
+        "name": "time",
+        "role": "readout"
+      },
+      {
+        "focusable": true,
+        "id": "out.range",
+        "name": "range",
+        "role": "readout"
+      },
+      {
+        "focusable": true,
+        "id": "out.max_height",
+        "name": "max height",
+        "role": "readout"
+      }
+    ],
+    "repairs": [],
+    "resolution_hash": "sha256:a70b18e48512e34923b3c6406bb1249ff4ad3afdb3bafbc32638c18b8a02c532",
+    "spec_version": 1,
+    "status": "ok",
+    "steps": [],
+    "type": "projectile_sim",
+    "visual_id": "vis_7BR45J393K60BH4ZMDTXKTV36R"
+  },
+  "payloadContract": "https://jana.dev/contracts/visuals/visual-spec#/$defs/resolved",
+  "placements": [
+    "conversation"
+  ],
+  "state": "canonical",
+  "title": "Visual: projectile sim predict (shown labels)",
+  "variant": "projectile-sim-predict"
+}

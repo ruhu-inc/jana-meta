@@ -5,7 +5,7 @@
 // never throws. Step changes from the board, from `visual.step` and from the student all go through `moveVisual`, so
 // the visual and the board stay in step. The visual renders when it scrolls into view; simulations pause off screen.
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactElement, type ReactNode } from "react";
-import { CLIENT_KEYS, moveVisual, type VisualRec } from "@jana/client-core";
+import { CLIENT_KEYS, moveVisual, type SessionController, type VisualRec } from "@jana/client-core";
 import { errors } from "@jana/contracts-ts/client";
 import { useT } from "../i18n.js";
 import { Button, Disclosure, ErrorState, FIELD_LOOK } from "../primitives/index.js";
@@ -105,6 +105,18 @@ function useOnScreen(ref: { current: HTMLElement | null }): boolean {
   return visible;
 }
 
+/** Predict before you see (VSL-47): in a tutoring session, the learner's locked-in prediction and their explanation
+ * of the result go to the core, which answers with a tutor turn pointing at the result. Other sim events stay local. */
+function toSession(session: SessionController | null, visualId: string, e: { type: string; [k: string]: unknown }): void {
+  if (session === null || typeof e.scenario_id !== "string") return;
+  const text = (key: string) => (typeof e[key] === "string" ? (e[key] as string) : "");
+  if (e.type === "sim.prediction_committed") {
+    void session.simPrediction(visualId, "committed", e.scenario_id, typeof e.choice === "string" ? e.choice : null, text("prediction")).catch(() => undefined);
+  } else if (e.type === "sim.explained") {
+    void session.simPrediction(visualId, "explained", e.scenario_id, null, text("explanation")).catch(() => undefined);
+  }
+}
+
 export function VisualViewer({ spec, hooks }: { spec: VisualSpec; hooks: VisualHooks }): ReactElement {
   const t = useT();
   const settings = useVisualSettings();
@@ -169,7 +181,7 @@ export function VisualViewer({ spec, hooks }: { spec: VisualSpec; hooks: VisualH
       {shownOnce || seen ? (
         tableData === null ? (
           <hooks.View spec={spec} step={step} labels={labels} focus={focus} spotlight={focusRec?.spotlight === true && told.length > 0} reducedMotion={settings.reducedMotion} textScale={settings.textScale}
-            visible={seen} t={t} onPartActivate={(id) => setPart(id)} onSimEvent={(e) => settings.onSimEvent?.(e)} />
+            visible={seen} t={t} onPartActivate={(id) => setPart(id)} onSimEvent={(e) => { settings.onSimEvent?.(e); if (!readOnly) toSession(session, spec.visual_id, e); }} />
         ) : (
           <table className="w-full text-ui" data-visual-table="true">
             <thead><tr>{tableData.columns.map((c) => <th key={c} scope="col" className="text-start">{t(c)}</th>)}</tr></thead>

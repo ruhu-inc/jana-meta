@@ -1782,6 +1782,18 @@
     "origin": "synthesised"
   },
   {
+    "file": "api/commands/SimPrediction/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/SimPrediction",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/SimPrediction/valid/minimal.json",
+    "contract": "api/commands#/$defs/SimPrediction",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "api/commands/Snapshot/invalid/unknown_property.json",
     "contract": "api/commands#/$defs/Snapshot",
     "expect": "invalid",
@@ -3158,6 +3170,18 @@
   {
     "file": "learning/student-records/CreateSavedQuestion/valid/minimal.json",
     "contract": "learning/student-records#/$defs/CreateSavedQuestion",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "learning/student-records/ExplainBack/invalid/unknown_property.json",
+    "contract": "learning/student-records#/$defs/ExplainBack",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "learning/student-records/ExplainBack/valid/minimal.json",
+    "contract": "learning/student-records#/$defs/ExplainBack",
     "expect": "valid",
     "origin": "synthesised"
   },
