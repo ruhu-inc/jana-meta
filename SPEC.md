@@ -16,7 +16,7 @@ Work landed on `main` today, from this session and from parallel sessions merged
 
 | W | State | Remaining |
 |---|---|---|
-| W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, the Google stack still registered (§8.1), streaming the Coach to cut time to first words (§12) |
+| W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, the Google stack still registered (§8.1), turn latency (§12: speculative Solver done, ~4 s off a new question) |
 | W2 Vision | **Done**: SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed (parallel session); the diagram drill (§5.2, 2026-10-26) | Read time of a diagram (~15–20 s) |
 | W3 Glimmer | Downloaded and verified (with the DFlash draft); measured (§7) | Launcher and router entries, the lean offline path, power-cut switch timing and recovery |
 | W4 Speech | Not started | §6, re-baselined by §12 |
@@ -372,6 +372,18 @@ before the release gates finish (API-10). Not pursued without the owner's go-ahe
 (15 of 21 first Coach replies failing the schema, each costing a second call) did not recur in four turns that evening.
 The time is in the number of sequential Spark calls and Spark's reasoning before its first token.
 
+**Speculative Solver** (done 2026-10-26, owner's choice over streaming): on a new question served online, the Solver
+starts beside the Diagnoser with the teaching skill of the pack index's best-matching KC (the Diagnoser's first
+candidate; no model call). Its plan is used when the diagnosis gives the same teaching skill; otherwise it is dropped
+and the Solver runs with the diagnosis as before, so a wrong guess costs one Solver call (~$0.005) and no time. It is
+dropped when the diagnosis ends the turn without a plan (a clarifying question, a definition, the topic chooser, a
+Stop), and never runs on local models (one call at a time) or with `speculative_solver` off (`config/keys.py`).
+Offline check over 3,203 pack items: the guess picks the item's own teaching skill for 97% of maths and 90% of
+physics items. Live: two new questions took 15.2 and 15.3 s (the same calls in sequence: 18.4 and ~19.1 s); both used
+the guess. The critical path is now the input guard (~3 s, before anything) → the Solver's tool call and plan
+(~9–11 s) → the Coach (1.5–3 s). Next candidates: start the guess beside the input guard (its text goes to the same
+place; nothing is shown before the guard passes), and the Solver's two sequential calls.
+
 | Step | Target |
 |---|---|
 | End of speech → final transcript (Voice Transcribe) | ≤ 0.7 s |
@@ -431,7 +443,7 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
 | Day | Work |
 |---|---|
 | Oct 26 | Done: W1 (Spark live, latency halved), W5 sign-up and copy, W6 #1/#4/#6, input guard on Spark, Glimmer downloaded and measured |
-| Oct 27 | Stream the Coach and cut calls on simple turns (§12); diagram drill done Oct 26 (§5.2) |
+| Oct 27 | Turn latency (§12): speculative Solver done Oct 26; the input guard and the Solver's two calls next; diagram drill done Oct 26 (§5.2) |
 | Oct 28 – Nov 1 | W7 research agent (§18): Responses client and fakes, the gateway job, synthesis and verification, device import and UI, Kokoro podcast |
 | Oct 31 – Nov 1 | W4 voice online (reduced: Voice Transcribe in, Magpie or Kokoro out); W3 lean offline path (pack hints instant, Glimmer for free-form questions) |
 | Nov 2–3 | Polish, safety checks, eval run, record the video; owner signs off the §9 scope |
