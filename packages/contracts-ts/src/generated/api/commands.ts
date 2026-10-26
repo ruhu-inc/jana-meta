@@ -164,7 +164,7 @@ export type InputCapturedQuestionPropertiesSource =
  * This interface was referenced by `CommandBodies`'s JSON-Schema
  * via the `definition` "input_captured_question__properties_purpose".
  */
-export type InputCapturedQuestionPropertiesPurpose = "question" | "working" | "answer";
+export type InputCapturedQuestionPropertiesPurpose = "question" | "working" | "answer" | "sketch";
 /**
  * @maxItems 200
  *
@@ -1930,7 +1930,7 @@ export interface CapturedQuestion {
     | "handwriting_photo"
     | "ink"
     | "voice";
-  purpose: "question" | "working" | "answer";
+  purpose: "question" | "working" | "answer" | "sketch";
   locale: "en" | "fr" | "pt" | "ar";
   status:
     | "drafting"
@@ -1998,6 +1998,8 @@ export interface InputCapturedQuestionRegion {
   struck_through?: boolean;
   language: "en" | "fr" | "pt" | "ar" | "und";
   direction: "ltr" | "rtl";
+  outline?: null | InputCapturedQuestionRegionOutlineItem[];
+  sketch_element?: null | InputCapturedQuestionRegionSketchElementAnyOf2;
 }
 export interface InputCapturedQuestionRegionTableAnyOf2 {
   template: "journal" | "t_account" | "trial_balance" | "generic";
@@ -2020,6 +2022,24 @@ export interface InputCapturedQuestionRegionBboxAnyOf2 {
 export interface InputCapturedQuestionRegionLowConfidenceSpansItem {
   start: number;
   end: number;
+}
+export interface InputCapturedQuestionRegionOutlineItem {
+  x: number;
+  y: number;
+}
+export interface InputCapturedQuestionRegionSketchElementAnyOf2 {
+  kind: "arrow" | "line_segment" | "axis" | "point" | "label" | "object";
+  label: string | null;
+  from: null | InputCapturedQuestionRegionSketchElementAnyOf2FromAnyOf2;
+  to: null | InputCapturedQuestionRegionSketchElementAnyOf2ToAnyOf2;
+}
+export interface InputCapturedQuestionRegionSketchElementAnyOf2FromAnyOf2 {
+  x: number;
+  y: number;
+}
+export interface InputCapturedQuestionRegionSketchElementAnyOf2ToAnyOf2 {
+  x: number;
+  y: number;
 }
 export interface InputCapturedQuestionQuestionsItem {
   label: string;
@@ -3661,6 +3681,10 @@ export interface ApiEventsEvBoardHighlight {
   step_ids: string[];
   ttl_ms: number | null;
   spotlight?: boolean;
+  /**
+   * @maxItems 20
+   */
+  photo_regions?: string[];
 }
 /**
  * This interface was referenced by `CommandBodies`'s JSON-Schema
@@ -4506,7 +4530,7 @@ export interface InputCapturedQuestion {
     | "handwriting_photo"
     | "ink"
     | "voice";
-  purpose: "question" | "working" | "answer";
+  purpose: "question" | "working" | "answer" | "sketch";
   locale: "en" | "fr" | "pt" | "ar";
   status:
     | "drafting"

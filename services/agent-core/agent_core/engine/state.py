@@ -173,6 +173,11 @@ class SessionState:
     manipulation: dict[str, Any] | None = None
     # What the student has selected or hovers (UXS-58): `stp_….t2-t4` or `<visual_id>:<part_id>`, so "this" means it.
     selection: str | None = None
+    # Board lines read from the student's own photo (JM-D10): step id -> `cap_<id>:rgn_<n>`, the region SAM outlined,
+    # so pointing at the line also shows it on the photo. Kept only for steps still on the board.
+    photo_lines: dict[str, str] = field(default_factory=dict)
+    # Parts of the student's photographed sketch the engine compared (JM-D10): `cap_<id>:rgn_<n>`, pointable too.
+    photo_marks: list[str] = field(default_factory=list)
 
     # --- provenance (AGT-10, H1) -------------------------------------------------------------------------------
 

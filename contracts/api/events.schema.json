@@ -1432,6 +1432,15 @@
     },
     "spotlight": {
      "type": "boolean"
+    },
+    "photo_regions": {
+     "description": "The same places on the student's own photo (JM-D10): capture region ids as cap_<id>:rgn_<n>.",
+     "type": "array",
+     "maxItems": 20,
+     "items": {
+      "type": "string",
+      "pattern": "^cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3}$"
+     }
     }
    },
    "required": [
@@ -2186,7 +2195,7 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 128,
-        "pattern": "^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*)$"
+        "pattern": "^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3})$"
        },
        "action": {
         "enum": [

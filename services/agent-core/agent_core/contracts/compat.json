@@ -120,6 +120,7 @@
    ],
    "board.highlight": [
     "board_id",
+    "photo_regions",
     "spotlight",
     "step_ids",
     "ttl_ms",

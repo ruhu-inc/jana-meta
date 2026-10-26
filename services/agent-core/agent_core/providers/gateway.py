@@ -36,6 +36,7 @@ from agent_core.providers.openai_compat import assemble_stream, parse_reply, req
 FEATURE = "cloud_tier"
 PAYLOAD = "cloud_prompt"
 CHAT = "/v1/chat/completions"
+SEGMENT = "/v1/vision/segment"  # SAM 3.1 masks for a screened photo (JM-D10)
 log = logging.getLogger(__name__)
 
 
@@ -173,6 +174,36 @@ class GatewayProvider:
         if not isinstance(reply.body, dict) or "choices" not in reply.body:
             raise ProviderError("bad_response", "the reply is not a chat completion")
         return parse_reply(reply.body, model, effort, self._cost(model), int((time.monotonic() - started) * 1000))
+
+    async def segment(self, body: dict[str, Any], timeout_s: float = 20.0) -> dict[str, Any]:
+        """SAM 3.1 masks for a photo the local privacy pass already screened (JM-D10): the gateway's
+        `/v1/vision/segment`, with the same feature, payload class, pseudonym and credential as a cloud read. `body`
+        is the route's request (the image, its size, and object prompts or one concept); the reply is its objects."""
+        if self.redactor.findings({k: v for k, v in body.items() if k != "image"}):
+            raise ProviderError("content_filter", "the redaction check blocked the request before it left (MDL-25)")
+        headers = {"x-session-pseudonym": self.pseudonym, "x-jana-role": "vision"}
+        if self.token is not None:
+            try:
+                headers["authorization"] = f"Bearer {await self.token()}"
+            except CredentialRefused as refused:
+                raise ProviderError("auth", str(refused)) from None
+            except EgressRefused as refused:
+                raise self._refused(refused) from None
+            except NetError as error:
+                raise self._network(error) from None
+        try:
+            reply: Response = await self.client.send(FEATURE, "POST", f"https://{self.host()}{SEGMENT}", PAYLOAD,
+                                                     body=body, headers=headers, profile_id=self.profile_id,
+                                                     timeout_s=timeout_s, announce=False)  # fmt: skip
+        except EgressRefused as refused:
+            raise self._refused(refused) from None
+        except NetError as error:
+            raise self._network(error) from None
+        if reply.status >= 400:
+            raise self._failure(reply)
+        if not isinstance(reply.body, dict) or not isinstance(reply.body.get("objects"), list):
+            raise ProviderError("bad_response", "the reply is not a segmentation")
+        return reply.body
 
     async def stream(
         self, model: str, messages: list[Message], tools: list[ToolSchema], **settings: Any

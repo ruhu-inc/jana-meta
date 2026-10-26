@@ -53,6 +53,8 @@ def edit_distance(left: str, right: str) -> int:
     return distance
 
 
+# Photos of the student's own handwriting: printed-text OCR cannot vouch for them (SPEC §17, W2), see `handwriting`.
+HANDWRITTEN = ("working", "sketch")
 PHOTO_SOURCES = {"photo_file", "photo_paste", "photo_drop", "webcam", "device_camera", "handwriting_photo"}
 
 
@@ -363,6 +365,8 @@ class CaptureDesk:
             record["refusal"] = {"reason": prepared["refusal"]}
             self.raw.pop(cap, None)
             return self.put(record)
+        if record["purpose"] in HANDWRITTEN:
+            prepared = handwriting(prepared)
         self.prepared[cap] = prepared
         record["quality"]["checks"] = prepared["checks"]
         record["status"] = "quality_failed" if any(c["outcome"] != "pass" for c in prepared["checks"]) else "drafting"
@@ -418,7 +422,7 @@ class CaptureDesk:
         outcomes = [c["outcome"] for c in record["quality"]["checks"]]
         if "blocking" in outcomes or ("advisory" in outcomes and not body.get("override_quality")):
             raise ApiError("capture_not_ready", "retake the photo or accept advisory quality warnings")
-        if body.get("send_to_cloud") and (not prepared["privacy_available"] or record["purpose"] == "working"):
+        if body.get("send_to_cloud") and not prepared["privacy_available"]:
             raise ApiError("photo_reading_unavailable", "this photo can only be read locally")
         record["quality"]["overridden"] = bool(body.get("override_quality"))
         record["status"] = "reading"
@@ -500,6 +504,8 @@ class CaptureDesk:
                         "region_id": f"rgn_{i}",
                         "kind": "working_line"
                         if record["purpose"] == "working"
+                        else "diagram"
+                        if record["purpose"] == "sketch"
                         else line.get("kind")
                         or (
                             "working_line"
@@ -522,6 +528,8 @@ class CaptureDesk:
                         "latex": line.get("latex"),
                         "table": line.get("table"),
                         "bbox": bbox,
+                        "outline": line.get("outline") if bbox is not None else None,
+                        "sketch_element": line.get("sketch_element") if record["purpose"] == "sketch" else None,
                     }
                 )
             text = "\n".join(r["text"] for r in regions)[:8000]
@@ -565,13 +573,14 @@ class CaptureDesk:
                         or box["y"] + box["h"] > 1
                     ):
                         region["bbox"] = None
+                        region["outline"] = None
             if any(r["language"] not in ("en", "und") for r in regions):
                 record.update(status="refused", refusal={"reason": "unsupported_language"})
                 self.delete_images(record)
                 record["attachments"] = []
                 self.put(record)
                 return
-            if record["purpose"] != "working" and not re.search(
+            if record["purpose"] not in HANDWRITTEN and not re.search(
                 r"[?=+*/^]|\b(find|solve|calculate|explain|describe|state|show|evaluate|simplify|balance|prepare|what|which|how|why|determine|prove|journal|debit|credit)\b",
                 text,
                 re.I,
@@ -588,8 +597,9 @@ class CaptureDesk:
                 record["attachments"] = []
                 for region in regions:
                     region["bbox"] = None
+                    region["outline"] = None
             # Separate diagram crops use only the already-screened derivative.
-            if prepared["privacy_available"] and not personal_found:
+            if prepared["privacy_available"] and not personal_found and record["purpose"] != "sketch":
                 for region in regions:
                     if region["kind"] != "diagram" or not region.get("bbox") or len(record["attachments"]) >= 40:
                         continue
@@ -683,7 +693,7 @@ class CaptureDesk:
             # Numbered questions require a choice; no automatic first-question submission.
             questions: list[dict[str, Any]] = []
             current: dict[str, Any] | None = None
-            for region in regions if record["purpose"] != "working" else []:
+            for region in regions if record["purpose"] not in HANDWRITTEN else []:
                 match = (
                     re.match(r"^(\d{1,3})", region["number_label"])
                     if region.get("number_label")
@@ -780,7 +790,9 @@ class CaptureDesk:
         record = self.get(cap)
         if record["session_id"] != sid or record["status"] != "confirmed" or not record["confirmation"]["confirmed"]:
             raise ApiError("capture_not_ready")
-        if (record["purpose"] == "working") != (body["intent"] == "board_line"):
+        if (record["purpose"] == "working") != (body["intent"] == "board_line") or (
+            (record["purpose"] == "sketch") != (body["intent"] == "check_my_working")
+        ):
             raise ApiError("validation_failed", "capture purpose does not match the turn")
         return {**body, "content": [{"type": "text", "text": record["text"]}]}
 
@@ -805,6 +817,21 @@ class CaptureDesk:
         record["status"] = "cancelled"
         self.put(record, record_trace=not terminal)
         self.conn().execute("DELETE FROM captures WHERE capture_id=?", (cap,))
+
+
+def handwriting(prepared: dict[str, Any]) -> dict[str, Any]:
+    """The local privacy pass for a photo of the student's own working or sketch (SPEC §5, §17 W2).
+
+    The pass vouches for a photo by reading its printed text on the device; handwriting defeats that reader, so a
+    photo of working would never count as screened. For these photos the pass counts when it ran in full: the
+    person and face screen found nobody, and every line the device could read was checked and any personal detail
+    in it masked. Lines it could not read are still read back to the student and redacted before use, and a read that
+    finds a personal detail deletes the image (`_read`). Without OCR at all nothing changes. No text found is not a
+    blocking quality failure for handwriting: the reader decides whether anything is legible."""
+    if prepared.get("refusal") or prepared.get("ocr_model_version") is None or "checks" not in prepared:
+        return prepared
+    checks = [{**check, "outcome": "pass"} if check["check"] == "no_text" else check for check in prepared["checks"]]
+    return {**prepared, "privacy_available": True, "checks": checks}
 
 
 def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> CaptureDesk:

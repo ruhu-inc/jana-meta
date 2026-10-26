@@ -36,6 +36,19 @@ def publish(engine: Any, turn: Any, steps: list[BoardStep], opened: Any = None,
     engine._persist(turn, part, "board", events)
 
 
+def highlight_on_photo(engine: Any, turn: Any, step: BoardStep) -> bool:
+    """The first wrong line, lit on the board and, when it was read from the student's photo, on the photo too
+    (JM-D10): one `board.highlight` naming the photo region beside the step. False (nothing emitted) otherwise."""
+    region = engine.state.photo_lines.get(step.step_id)
+    if region is None:
+        return False  # typed working: the Coach's own board ops say what to light
+    event = {"type": "board.highlight", "board_id": engine.state.board.board_id, "step_ids": [step.step_id],
+             "ttl_ms": None, "photo_regions": [region]}  # fmt: skip
+    part = emit_part(engine.events, "board", [event])
+    engine._persist(turn, part, "board", [event])
+    return True
+
+
 async def apply(engine: Any, turn: Any, submitted: list[tuple[str, str]], source: str = "student_text") -> Any:
     state = engine.state
     existing = {step.step_id: step for step in state.board.steps}
@@ -133,4 +146,6 @@ async def apply(engine: Any, turn: Any, submitted: list[tuple[str, str]], source
     note = "working checked: explain the statuses and ask one question; never give a corrected line"
     if first is not None:
         note += f"; first wrong student line is {first + 1}"
+        if highlight_on_photo(engine, turn, own[first]):
+            note += " (it is outlined on the student's own photo: ask about that line)"
     return await engine._coach_turn(turn, intent_note=note)
