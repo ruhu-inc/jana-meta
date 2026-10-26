@@ -114,6 +114,9 @@ def _bodies(session: str) -> dict[str, tuple[str, dict[str, Any]]]:
         "POST /v1/assessments/{identity}/answers": (
             "/v1/assessments/asm_x/answers", {"client_answer_id": cli(), "item_id": item, "action": "answer",
                                               "answer": _answer(DISTRESS)}),
+        "POST /v1/assessments/{identity}/explain": (
+            "/v1/assessments/asm_x/explain", {"client_explain_id": cli(), "text": DISTRESS, "modality": "typed"}),
+        "POST /v1/visuals/{visual_id}/answer": ("/v1/visuals/vis_x/answer", {"values": {"v": DISTRESS}}),
         "PUT /v1/mocks/{identity}/answers/{question_id}": (
             "/v1/mocks/exm_x/answers/q1", {"answer": _answer(DISTRESS), "flagged": False}),
         "POST /v1/lessons/{lesson_id}/checks": (
