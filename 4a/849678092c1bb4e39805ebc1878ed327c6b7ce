@@ -1,0 +1,19 @@
+SPEC.md
+  s_f965fb2a5dbe36::t_cd06276846c39b 322-339
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4a849678092c1bb4e39805ebc1878ed327c6b7ce",
+  "prompts": {},
+  "sessions": {
+    "s_f965fb2a5dbe36": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7abaddee-199c-4c11-b84a-cc7e10f23e21",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
