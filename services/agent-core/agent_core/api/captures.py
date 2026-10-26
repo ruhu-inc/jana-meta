@@ -681,11 +681,17 @@ class CaptureDesk:
                     low_chars += max(0, span["end"] - max(covered_until, span["start"]))
                     covered_until = max(covered_until, span["end"])
             transcription_chars = sum(len(region["text"]) for region in regions)
-            unreadable = (
-                not regions
-                or any(r["confidence"] < self.core.settings.vision_confirm_threshold for r in regions)
-                or low_chars > transcription_chars * 0.3
-            )
+            threshold = self.core.settings.vision_confirm_threshold
+            if record["purpose"] == "sketch":
+                # A sketch's unsure parts are labelled and never judged (`sketch_photo`); it is unreadable only when
+                # no part was read with confidence.
+                unreadable = not any(r["confidence"] >= threshold for r in regions)
+            else:
+                unreadable = (
+                    not regions
+                    or any(r["confidence"] < threshold for r in regions)
+                    or low_chars > transcription_chars * 0.3
+                )
             record.update(
                 text=text,
                 regions=regions,

@@ -204,6 +204,10 @@ class PhotoReader:
                     for end in ("from", "to"):
                         if isinstance(element.get(end), dict):
                             element[end] = {k: min(float(v), 1000) / 1000 for k, v in element[end].items()}
+                    # What the student confirms is the engine's plain description of each part ("arrow labelled F"),
+                    # never the reader's own prose about the drawing.
+                    region["text"] = sketch_part(element)
+                    region["diagram_description"] = None
         outlined = reread = 0
         outlining = None
         if content and left and outbound is not None:
@@ -265,6 +269,13 @@ class PhotoReader:
 
 def _data_url(photo: SafePhoto) -> str:
     return "data:image/jpeg;base64," + base64.b64encode(photo.jpeg).decode("ascii")
+
+
+def sketch_part(element: dict[str, Any]) -> str:
+    """A read sketch element in a few words, as the student confirms it: "arrow labelled F", "axis", "[?]"."""
+    kind = str(element.get("kind") or "part").replace("_", " ")
+    label = str(element.get("label") or "").strip()
+    return f"{kind} labelled {label}" if label else kind
 
 
 def _unit_box(bbox: dict[str, Any]) -> dict[str, float]:

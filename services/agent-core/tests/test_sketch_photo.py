@@ -201,3 +201,15 @@ def test_the_sketch_turn_lights_the_wrong_arrow_and_asks_about_it(tmp_path: Path
     assert any(UNREAD_ONE in t for t in texts)  # the unread arrow is labelled in the engine's own words
     assert f"{CAP}:rgn_3" in context and "friction" in context
     assert f"{CAP}:rgn_3" in marks  # and the Coach's spoken cue may point at it
+
+
+def test_an_unlabelled_arrow_is_unread_not_an_invented_force() -> None:
+    result = checked(FREE_BODY, [arrow(1, "W", 270), arrow(2, None, 120)])
+    assert outcomes(result)["rgn_2"] == "unread" and not any(f.outcome == "extra" for f in result.findings)
+
+
+def test_what_the_student_confirms_is_a_plain_description_of_each_part() -> None:
+    from agent_core.engine.vision import sketch_part
+
+    assert sketch_part({"kind": "arrow", "label": "F"}) == "arrow labelled F"
+    assert sketch_part({"kind": "line_segment", "label": None}) == "line segment"

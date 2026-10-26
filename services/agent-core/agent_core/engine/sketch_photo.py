@@ -76,7 +76,7 @@ def _word(text: str | None) -> str:
 
 def _readable(region: dict[str, Any]) -> bool:
     element = region.get("sketch_element") or {}
-    label = str(element.get("label") or region.get("text") or "")
+    label = str(element.get("label") or "")  # the label as read; the region's text is the engine's description
     return float(region.get("confidence", 0)) >= CONFIDENT and "[?]" not in label
 
 
@@ -145,7 +145,10 @@ async def check_free_body(params: dict[str, Any], regions: list[dict[str, Any]])
         if not _readable(region) or angle is None:
             findings.append(Finding(region["region_id"], "unread"))
             continue
-        key = _label_key(element.get("label") or region.get("text"), forces)
+        if not str(element.get("label") or "").strip():
+            findings.append(Finding(region["region_id"], "unread"))  # an unlabelled arrow names no force: never guessed
+            continue
+        key = _label_key(element.get("label"), forces)
         force = by_key.get(key) if key else None
         if force is None:
             findings.append(Finding(region["region_id"], "extra", None, element.get("label") or None))
@@ -220,7 +223,7 @@ def check_motion_graph(params: dict[str, Any], regions: list[dict[str, Any]]) ->
             findings.append(Finding(region["region_id"], "unread"))
             continue
         vertical = _turn(angle, 90) <= 30
-        label = _word(element.get("label") or region.get("text"))
+        label = _word(element.get("label"))
         if not label:
             findings.append(Finding(region["region_id"], "unread", None, "the y-axis" if vertical else "the x-axis"))
             continue
