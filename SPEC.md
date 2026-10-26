@@ -300,6 +300,15 @@ no history). Licence: Apache-2.0 for code; content packs under the owner's licen
 Levers if slow: one Spark call for Coach+Solver on simple turns; the conceptual path for definitions; skip the crop
 re-read.
 
+**Measured 2026-10-26** (Muse Spark 1.3 through the gateway, browser demo host, typed questions): a full guided turn
+took **21–25 s** ("Solve 7x − 3 = 18", the car-acceleration question). Per call: Diagnoser ~5 s (≈700 reasoning
+tokens at low), Solver tool call 1–4 s, Solver plan **7–14 s** (1,400–3,600 reasoning tokens at high, sometimes a
+second round), Coach ~4 s; Coach alone at `minimal` 3.8 s median versus 6.0 s at `low`. The 4 s voice target needs
+the levers above, plus Solver effort below `high` and running the Diagnoser and Solver less often, before voice work
+(W4) can meet §12. Day-1 checks: tools 10/10, streaming usage, image input pass; bare-prompt Coach JSON failed only
+the schema's conditional rules (if/then is not enforced by constrained decoding), which the engine's own prompt and
+retry handle.
+
 ## 13. Workstreams and plan
 
 Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter lands; W5 and W6 any time):
