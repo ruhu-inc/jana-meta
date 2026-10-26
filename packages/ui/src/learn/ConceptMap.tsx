@@ -154,7 +154,7 @@ function NodeSheet({ node, map, actions, onClose, onGap, onPick }: { node: Conce
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [node.kc_id]);
   const byId = new Map(map.nodes.map((n) => [n.kc_id, n]));
-  const before = map.edges.filter((e) => e.to === node.kc_id && e.kind === "prerequisite").map((e) => ({ e, n: byId.get(e.from) })).filter((x) => x.n !== undefined);
+  const before = map.edges.filter((e) => e.to === node.kc_id && e.kind === "prerequisite").flatMap((e) => { const n = byId.get(e.from); return n === undefined ? [] : [{ e, n }]; });
   const after = map.edges.filter((e) => e.from === node.kc_id && e.kind === "prerequisite").map((e) => byId.get(e.to)).filter((n): n is ConceptNode => n !== undefined);
   const asked = map.questions.filter((q) => q.kc_id === node.kc_id);
   const mistakes = map.mistakes.filter((m) => m.kc_id === node.kc_id);
@@ -182,8 +182,8 @@ function NodeSheet({ node, map, actions, onClose, onGap, onPick }: { node: Conce
           <h3 className="text-label text-faint">{t("concept.sheet.builds_on")}</h3>
           <ul className="flex flex-col">
             {before.map(({ e, n }) => (
-              <li key={n!.kc_id}><button type="button" className="text-start text-ui text-ink underline-offset-2 hover:underline" onClick={() => onPick(n!.kc_id)}>
-                {t(e.strength === "helpful" ? "concept.sheet.helpful" : "concept.sheet.required", { skill: n!.statement, state: stateWord(t, n!.state) })}
+              <li key={n.kc_id}><button type="button" className="text-start text-ui text-ink underline-offset-2 hover:underline" onClick={() => onPick(n.kc_id)}>
+                {t(e.strength === "helpful" ? "concept.sheet.helpful" : "concept.sheet.required", { skill: n.statement, state: stateWord(t, n.state) })}
               </button></li>
             ))}
           </ul>
@@ -372,7 +372,7 @@ function Ready({ map, view, mode, setMode, active, setActive, open, setOpen, pic
                       <span className="text-ui text-ink">{q.text}</span>
                       <span className="text-meta text-faint">{t("concept.open.label", { how: t(`concept.question.input.${q.input}`) })}</span>
                     </span>
-                    {actions.onAskQuestion !== undefined && q.text !== null && <SuggestionChip icon="tutor" onClick={() => actions.onAskQuestion?.(q.text!)}>{t("concept.ask_jana")}</SuggestionChip>}
+                    {actions.onAskQuestion !== undefined && q.text !== null && <SuggestionChip icon="tutor" onClick={() => actions.onAskQuestion?.(q.text ?? "")}>{t("concept.ask_jana")}</SuggestionChip>}
                   </li>
                 ))}
               </ul>

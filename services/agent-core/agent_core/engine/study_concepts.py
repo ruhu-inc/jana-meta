@@ -30,8 +30,10 @@ DRAFT_CONCEPTS_MAX = 24
 DRAFT_RELATIONS_MAX = 48
 PACK_CONCEPTS_MAX = 40
 SYMMETRIC = ("related_to", "contrasts_with")
-STOP = frozenset("a an and are as at be by for from in into is it its of on or that the this to with how what when "
-                 "which use using find calculate describe state recall explain identify".split())
+STOP = frozenset(
+    "a an and are as at be by for from in into is it its of on or that the this to with how what when "
+    "which use using find calculate describe state recall explain identify".split()
+)
 
 
 class ConceptEditError(ValueError):
@@ -92,7 +94,7 @@ def draft_claims(draft: Mapping[str, Any]) -> list[dict[str, Any]]:
     return [c["summary"] for c in draft["concepts"]] + [r["claim"] for r in draft["relations"]]
 
 
-# --- anchoring to the curated backbone ----------------------------------------------------------------------------------
+# --- anchoring to the curated backbone --------------------------------------------------------------------------------
 
 
 def _active_kcs(content: Any) -> list[dict[str, Any]]:
@@ -131,17 +133,27 @@ def anchor(content: Any, name: str, text: str = "") -> dict[str, Any] | None:
     return None
 
 
-# --- the stored map ------------------------------------------------------------------------------------------------------
+# --- the stored map ---------------------------------------------------------------------------------------------------
 
 
 def document_map(draft: Mapping[str, Any], content: Any) -> dict[str, Any]:
     """The `StudyConceptMap` of a verified document draft: every concept and relation from the document, with its
     citation, each concept anchored where the backbone has it."""
-    concepts = [{"concept_id": c["concept_id"], "name": c["name"], "summary": c["summary"], "note": None,
-                 "origin": "document", "anchor": anchor(content, c["name"], c["summary"]["text"])}
-                for c in draft["concepts"]]  # fmt: skip
-    relations = [{"from": r["from"], "to": r["to"], "type": r["type"], "claim": r["claim"], "origin": "document"}
-                 for r in draft["relations"]]  # fmt: skip
+    concepts = [
+        {
+            "concept_id": c["concept_id"],
+            "name": c["name"],
+            "summary": c["summary"],
+            "note": None,
+            "origin": "document",
+            "anchor": anchor(content, c["name"], c["summary"]["text"]),
+        }
+        for c in draft["concepts"]
+    ]
+    relations = [
+        {"from": r["from"], "to": r["to"], "type": r["type"], "claim": r["claim"], "origin": "document"}
+        for r in draft["relations"]
+    ]
     return {"concepts": concepts, "relations": relations, "edited": False}
 
 
@@ -169,14 +181,24 @@ def pack_map(content: Any, topic: str) -> tuple[str, dict[str, Any]] | None:
         statement = str(kcs[kc_id]["statement"])
         # The skill's own statement names it (cut at a word to fit); the note keeps it whole.
         name = statement if len(statement) <= 80 else statement[:79].rsplit(" ", 1)[0] + "\u2026"
-        concepts.append({"concept_id": ids[kc_id], "name": name, "summary": None, "note": statement[:400],
-                         "origin": "pack", "anchor": {"kc_id": kc_id, "statement": statement[:400], "how": "topic"}})
+        concepts.append(
+            {
+                "concept_id": ids[kc_id],
+                "name": name,
+                "summary": None,
+                "note": statement[:400],
+                "origin": "pack",
+                "anchor": {"kc_id": kc_id, "statement": statement[:400], "how": "topic"},
+            }
+        )
     relations = []
     for kc_id in chosen:
         for need in kcs[kc_id].get("prerequisites") or []:
             n = str(need["kc_id"]) if isinstance(need, dict) else str(need)
             if n in ids:
-                relations.append({"from": ids[n], "to": ids[kc_id], "type": "builds_on", "claim": None, "origin": "pack"})
+                relations.append(
+                    {"from": ids[n], "to": ids[kc_id], "type": "builds_on", "claim": None, "origin": "pack"}
+                )
     return node_id, {"concepts": concepts, "relations": relations[:RELATIONS_MAX], "edited": False}
 
 
@@ -184,14 +206,26 @@ def model_map(draft: Mapping[str, Any], content: Any) -> dict[str, Any]:
     """A no-source topic map from Muse Spark's `ConceptTopicDraft`: plain notes, no citations, each concept anchored
     to the backbone where it matches."""
     ids = {c["concept_id"]: f"s{i + 1}" for i, c in enumerate(draft["concepts"])}
-    concepts = [{"concept_id": ids[c["concept_id"]], "name": c["name"], "summary": None, "note": c["note"],
-                 "origin": "model", "anchor": anchor(content, c["name"], c["note"])} for c in draft["concepts"]]  # fmt: skip
-    relations = [{"from": ids[r["from"]], "to": ids[r["to"]], "type": r["type"], "claim": None, "origin": "model"}
-                 for r in draft["relations"] if r["from"] in ids and r["to"] in ids and r["from"] != r["to"]]  # fmt: skip
+    concepts = [
+        {
+            "concept_id": ids[c["concept_id"]],
+            "name": c["name"],
+            "summary": None,
+            "note": c["note"],
+            "origin": "model",
+            "anchor": anchor(content, c["name"], c["note"]),
+        }
+        for c in draft["concepts"]
+    ]
+    relations = [
+        {"from": ids[r["from"]], "to": ids[r["to"]], "type": r["type"], "claim": None, "origin": "model"}
+        for r in draft["relations"]
+        if r["from"] in ids and r["to"] in ids and r["from"] != r["to"]
+    ]
     return {"concepts": concepts, "relations": relations, "edited": False}
 
 
-# --- the learner's edits ------------------------------------------------------------------------------------------------
+# --- the learner's edits ----------------------------------------------------------------------------------------------
 
 
 def _next_id(concepts: Sequence[Mapping[str, Any]], prefix: str) -> str:
@@ -229,18 +263,26 @@ def apply_edits(current: Mapping[str, Any], ops: Sequence[Mapping[str, Any]], co
             merged_id = _next_id(concepts, "m")
             first_cited = next((p for p in parts if p.get("summary")), parts[0])
             origins = {p["origin"] for p in parts}
-            merged = {"concept_id": merged_id, "name": op["name"].strip()[:80], "summary": first_cited.get("summary"),
-                      "note": next((p["note"] for p in parts if p.get("note")), None),
-                      "origin": origins.pop() if len(origins) == 1 else "learner",
-                      "anchor": next((p["anchor"] for p in parts if p.get("anchor")), None),
-                      "merged_from": sorted({*op["concept_ids"], *(m for p in parts for m in p.get("merged_from", []))})[:24]}  # fmt: skip
+            merged = {
+                "concept_id": merged_id,
+                "name": op["name"].strip()[:80],
+                "summary": first_cited.get("summary"),
+                "note": next((p["note"] for p in parts if p.get("note")), None),
+                "origin": origins.pop() if len(origins) == 1 else "learner",
+                "anchor": next((p["anchor"] for p in parts if p.get("anchor")), None),
+                "merged_from": sorted({*op["concept_ids"], *(m for p in parts for m in p.get("merged_from", []))})[:24],
+            }
             gone = set(op["concept_ids"])
             at = min(i for i, c in enumerate(concepts) if c["concept_id"] in gone)
             concepts = [c for c in concepts if c["concept_id"] not in gone]
             concepts.insert(at, merged)
             kept, seen = [], set()
             for r in relations:
-                r = {**r, "from": merged_id if r["from"] in gone else r["from"], "to": merged_id if r["to"] in gone else r["to"]}
+                r = {
+                    **r,
+                    "from": merged_id if r["from"] in gone else r["from"],
+                    "to": merged_id if r["to"] in gone else r["to"],
+                }
                 ident = (r["from"], r["to"], r["type"])
                 if r["from"] != r["to"] and ident not in seen:
                     seen.add(ident)
@@ -249,12 +291,21 @@ def apply_edits(current: Mapping[str, Any], ops: Sequence[Mapping[str, Any]], co
         elif kind == "add":
             new_id = _next_id(concepts, "u")
             name = op["name"].strip()[:80]
-            concepts.append({"concept_id": new_id, "name": name, "summary": None, "note": None, "origin": "learner",
-                             "anchor": anchor(content, name)})
+            concepts.append(
+                {
+                    "concept_id": new_id,
+                    "name": name,
+                    "summary": None,
+                    "note": None,
+                    "origin": "learner",
+                    "anchor": anchor(content, name),
+                }
+            )
             if op.get("link_to"):
                 find(op["link_to"])
-                relations.append({"from": new_id, "to": op["link_to"], "type": "related_to", "claim": None,
-                                  "origin": "learner"})
+                relations.append(
+                    {"from": new_id, "to": op["link_to"], "type": "related_to", "claim": None, "origin": "learner"}
+                )
         else:
             raise ConceptEditError(f"unknown edit {kind}")
         if len(concepts) > CONCEPTS_MAX or len(relations) > RELATIONS_MAX:

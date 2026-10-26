@@ -266,10 +266,9 @@ export interface ConceptMapMode {
  * topic actions on the subject map). */
 function conceptActions(view: MapView, actions: MapActions, concept: ConceptMapMode): ConceptActions {
   const topicOf = (node: ConceptNode) => view.map?.sections.flatMap((s) => s.topics).find((tp) => tp.kcs.some((k) => k.kc_id === node.kc_id));
-  const kcOf = (topic: MapTopic, node: ConceptNode) => topic.kcs.find((k) => k.kc_id === node.kc_id)!;
   const out: ConceptActions = {};
   if (actions.onAsk !== undefined) out.onAskKc = (node) => { const tp = topicOf(node); if (tp !== undefined) actions.onAsk?.(tp); };
-  if (actions.onJourney !== undefined) out.onPractiseKc = (node) => { const tp = topicOf(node); if (tp !== undefined) actions.onJourney?.(tp, kcOf(tp, node)); };
+  if (actions.onJourney !== undefined) out.onPractiseKc = (node) => { const tp = topicOf(node), kc = tp?.kcs.find((k) => k.kc_id === node.kc_id); if (tp !== undefined && kc !== undefined) actions.onJourney?.(tp, kc); };
   else if (actions.onPractise !== undefined) out.onPractiseKc = (node) => { const tp = topicOf(node); if (tp !== undefined) actions.onPractise?.(tp); };
   if (concept.onAskQuestion !== undefined) out.onAskQuestion = concept.onAskQuestion;
   return out;

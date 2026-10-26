@@ -55,7 +55,9 @@ def explaining_kcs(conn: sqlite3.Connection) -> set[str]:
         bodies = [json.loads(body) for (body,) in rows]
     except (sqlite3.OperationalError, json.JSONDecodeError):
         return set()
-    return {str(b["kc_id"]) for b in bodies if isinstance(b, dict) and b.get("state") == "explaining" and b.get("kc_id")}
+    return {
+        str(b["kc_id"]) for b in bodies if isinstance(b, dict) and b.get("state") == "explaining" and b.get("kc_id")
+    }
 
 
 def p_mastery(conn: sqlite3.Connection) -> dict[str, float]:
@@ -69,12 +71,18 @@ def _node(content: PackIndex, kc: Mapping[str, Any], state: str, *, linked: bool
     node_id = str(kc["node_id"])
     topic = content.nodes.get(node_id) or {}
     subject, level = str(kc["id"]).split(".")[1:3]
-    return {"kc_id": str(kc["id"]), "code": str(kc["code"]), "statement": str(kc["statement"]),
-            "subject_id": f"cur.{subject}.{level}",
-            "topic_id": node_id, "topic_title": str(topic.get("title") or ""),
-            "exam_weight": round(float(kc.get("exam_weight") or 0.0), 3),
-            "state": state, "band": "learning" if state == "explaining" else BANDS[state],
-            "linked": linked}  # fmt: skip
+    return {
+        "kc_id": str(kc["id"]),
+        "code": str(kc["code"]),
+        "statement": str(kc["statement"]),
+        "subject_id": f"cur.{subject}.{level}",
+        "topic_id": node_id,
+        "topic_title": str(topic.get("title") or ""),
+        "exam_weight": round(float(kc.get("exam_weight") or 0.0), 3),
+        "state": state,
+        "band": "learning" if state == "explaining" else BANDS[state],
+        "linked": linked,
+    }
 
 
 def backbone(content: PackIndex, conn: sqlite3.Connection, subject_id: str) -> dict[str, Any] | None:
@@ -85,10 +93,18 @@ def backbone(content: PackIndex, conn: sqlite3.Connection, subject_id: str) -> d
         return None
     subject, level = parts
     pack = content.subject_packs.get(subject_id)
-    reply: dict[str, Any] = {"subject_id": subject_id, "subject": subject, "level": level,
-                             "status": "ready" if pack is not None else "not_installed",
-                             "pack": {"pack_id": pack.pack_id, "version": pack.version} if pack else None,
-                             "nodes": [], "edges": [], "next": [], "questions": [], "mistakes": []}  # fmt: skip
+    reply: dict[str, Any] = {
+        "subject_id": subject_id,
+        "subject": subject,
+        "level": level,
+        "status": "ready" if pack is not None else "not_installed",
+        "pack": {"pack_id": pack.pack_id, "version": pack.version} if pack else None,
+        "nodes": [],
+        "edges": [],
+        "next": [],
+        "questions": [],
+        "mistakes": [],
+    }
     if pack is None:
         return reply
     states = kc_states(conn)
@@ -125,9 +141,17 @@ def backbone(content: PackIndex, conn: sqlite3.Connection, subject_id: str) -> d
                 if end not in own:
                     linked[end] = record
             reviewers = (mc.get("review") or {}).get("reviewers") or []
-            edges.append({"from": root, "to": on, "kind": "root_gap", "misconception_id": str(mc["id"]),
-                          "misconception_name": str(mc.get("student_name") or ""), "idea": _english(gap.get("idea")),
-                          "reviewed": bool(reviewers)})  # fmt: skip
+            edges.append(
+                {
+                    "from": root,
+                    "to": on,
+                    "kind": "root_gap",
+                    "misconception_id": str(mc["id"]),
+                    "misconception_name": str(mc.get("student_name") or ""),
+                    "idea": _english(gap.get("idea")),
+                    "reviewed": bool(reviewers),
+                }
+            )
     nodes = [_node(content, own[k], state_of(k), linked=False) for k in sorted(own)]
     nodes += [_node(content, linked[k], state_of(k), linked=True) for k in sorted(linked)]
     reply["nodes"] = nodes
@@ -141,8 +165,9 @@ def backbone(content: PackIndex, conn: sqlite3.Connection, subject_id: str) -> d
     return reply
 
 
-def what_next(kcs: Mapping[str, Mapping[str, Any]], states: Mapping[str, str], p: Mapping[str, float]
-              ) -> list[dict[str, Any]]:  # fmt: skip
+def what_next(
+    kcs: Mapping[str, Mapping[str, Any]], states: Mapping[str, str], p: Mapping[str, float]
+) -> list[dict[str, Any]]:
     """The subject's unmastered KCs ranked for "what next": those whose required prerequisites are all secure first,
     then by the planner's value (exam weight x (1 - P)), then by code. Each with its reason: `foundation` (it needs
     nothing earlier), `ready` (everything it needs is secure) or `needs_first` (the unmet required prerequisites,
@@ -151,17 +176,30 @@ def what_next(kcs: Mapping[str, Mapping[str, Any]], states: Mapping[str, str], p
     for kc_id, kc in kcs.items():
         if states.get(kc_id, "not_started") in SECURE:
             continue
-        needs = [(str(n["kc_id"]) if isinstance(n, dict) else str(n),
-                  str(n.get("strength", "required")) if isinstance(n, dict) else "required")
-                 for n in kc.get("prerequisites") or []]  # fmt: skip
-        unmet = sorted((n for n, strength in needs if strength == "required" and n in kcs
-                        and states.get(n, "not_started") not in SECURE),
-                       key=lambda n: str(kcs[n]["code"]))  # fmt: skip
+        needs = [
+            (
+                str(n["kc_id"]) if isinstance(n, dict) else str(n),
+                str(n.get("strength", "required")) if isinstance(n, dict) else "required",
+            )
+            for n in kc.get("prerequisites") or []
+        ]
+        unmet = sorted(
+            (
+                n
+                for n, strength in needs
+                if strength == "required" and n in kcs and states.get(n, "not_started") not in SECURE
+            ),
+            key=lambda n: str(kcs[n]["code"]),
+        )
         weight = float(kc.get("exam_weight") or 0.0)
         value = weight * (1 - p.get(kc_id, 0.0))
         reason = "needs_first" if unmet else "ready" if needs else "foundation"
-        ranked.append(((bool(unmet), len(unmet), -round(value, 12), str(kc["code"])),
-                       {"kc_id": kc_id, "reason": reason, "weight": weight_band(weight), "needs": unmet[:3]}))
+        ranked.append(
+            (
+                (bool(unmet), len(unmet), -round(value, 12), str(kc["code"])),
+                {"kc_id": kc_id, "reason": reason, "weight": weight_band(weight), "needs": unmet[:3]},
+            )
+        )
     return [entry for _, entry in sorted(ranked, key=lambda r: r[0])[:NEXT_MAX]]
 
 

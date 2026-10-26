@@ -66,8 +66,7 @@ export function pathOn(map: ConceptMap, from: string, to: string): string[] {
   for (const e of map.edges) after.set(e.from, [...(after.get(e.from) ?? []), e.to]);
   const came = new Map<string, string | null>([[from, null]]);
   const queue = [from];
-  while (queue.length > 0) {
-    const at = queue.shift()!;
+  for (let at = queue.shift(); at !== undefined; at = queue.shift()) {
     if (at === to) {
       const path = [at];
       for (let back = came.get(at); back !== null && back !== undefined; back = came.get(back)) path.unshift(back);

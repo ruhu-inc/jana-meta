@@ -19,10 +19,9 @@ from pathlib import Path
 from typing import Any
 
 from agent_core.contracts import errors
-from agent_core.engine import pedagogy
+from agent_core.engine import pedagogy, study_concepts
 from agent_core.engine.events import new_id
 from agent_core.engine.safety import LexiconClassifier, OutputCritic, redact_personal
-from agent_core.engine import study_concepts
 from agent_core.engine.study_topics import material_topics
 from agent_core.learner.fsrs import Card, scheduler_of
 from agent_core.learner.mastery import MasteryParams

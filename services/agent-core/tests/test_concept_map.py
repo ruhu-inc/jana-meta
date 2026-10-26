@@ -35,43 +35,62 @@ def kcs_of(subject: str) -> list[dict[str, Any]]:
 
 
 def session(conn: Any, session_id: str, subject: str | None, *, purged: int | None = None) -> None:
-    conn.execute("INSERT INTO sessions (session_id, mode, subject, started_at, transcript_purged_at)"
-                 " VALUES (?, 'guided', ?, 1000, ?)", (session_id, subject, purged))  # fmt: skip
+    conn.execute(
+        "INSERT INTO sessions (session_id, mode, subject, started_at, transcript_purged_at)"
+        " VALUES (?, 'guided', ?, 1000, ?)",
+        (session_id, subject, purged),
+    )
 
 
 def turn(conn: Any, session_id: str, idx: int, text: str | None, kind: str = "typed", at: int = 2000) -> str:
     student, tutor = f"msg_{session_id}_{idx}", f"trn_{session_id}_{idx}"
-    conn.execute("INSERT INTO turns (turn_id, session_id, idx, speaker, status, student_text, input_kind, started_at)"
-                 " VALUES (?, ?, ?, 'student', 'complete', ?, ?, ?)", (student, session_id, idx, text, kind, at))  # fmt: skip
-    conn.execute("INSERT INTO turns (turn_id, session_id, idx, speaker, status, started_at)"
-                 " VALUES (?, ?, ?, 'tutor', 'complete', ?)", (tutor, session_id, idx + 1, at))  # fmt: skip
+    conn.execute(
+        "INSERT INTO turns (turn_id, session_id, idx, speaker, status, student_text, input_kind, started_at)"
+        " VALUES (?, ?, ?, 'student', 'complete', ?, ?, ?)",
+        (student, session_id, idx, text, kind, at),
+    )
+    conn.execute(
+        "INSERT INTO turns (turn_id, session_id, idx, speaker, status, started_at)"
+        " VALUES (?, ?, ?, 'tutor', 'complete', ?)",
+        (tutor, session_id, idx + 1, at),
+    )
     return tutor
 
 
 def event(conn: Any, kind: str, session_id: str, turn_id: str | None, kc_ids: list[Any]) -> None:
     n = conn.execute("SELECT coalesce(max(seq), 0) + 1 FROM events").fetchone()[0]
-    conn.execute("INSERT INTO events (event_id, profile_id, device_id, origin_seq, hlc, type, schema_version, source,"
-                 " sync_class, occurred_at, recorded_at, session_id, turn_id, kc_ids, payload) VALUES"
-                 " (?, 'pro_test', 'dev_test', ?, ?, ?, '1.0.0', 'engine', 'local', 3000, 3000, ?, ?, ?, '{}')",
-                 (f"evt_{n}", n, f"{n:016d}", kind, session_id, turn_id, json.dumps(kc_ids)))  # fmt: skip
+    conn.execute(
+        "INSERT INTO events (event_id, profile_id, device_id, origin_seq, hlc, type, schema_version, source,"
+        " sync_class, occurred_at, recorded_at, session_id, turn_id, kc_ids, payload) VALUES"
+        " (?, 'pro_test', 'dev_test', ?, ?, ?, '1.0.0', 'engine', 'local', 3000, 3000, ?, ?, ?, '{}')",
+        (f"evt_{n}", n, f"{n:016d}", kind, session_id, turn_id, json.dumps(kc_ids)),
+    )
 
 
 def misconception(conn: Any, mc_id: str, kc_id: str, status: str = "active", count: int = 2) -> None:
-    conn.execute("INSERT INTO learner_misconceptions (misconception_id, kc_id, status, evidence_count, first_seen_at,"
-                 " last_seen_at, last_event_seq) VALUES (?, ?, ?, ?, 10, 20, 0)", (mc_id, kc_id, status, count))  # fmt: skip
+    conn.execute(
+        "INSERT INTO learner_misconceptions (misconception_id, kc_id, status, evidence_count, first_seen_at,"
+        " last_seen_at, last_event_seq) VALUES (?, ?, ?, ?, 10, 20, 0)",
+        (mc_id, kc_id, status, count),
+    )
 
 
 def explaining(conn: Any, kc_id: str) -> None:
     body = {"assessment_id": "asm_x", "kind": "mastery_check", "state": "explaining", "kc_id": kc_id}
-    conn.execute("INSERT INTO assessment_runs (assessment_id, kind, state, body, updated_at)"
-                 " VALUES ('asm_x', 'mastery_check', 'in_progress', ?, 1)", (json.dumps(body),))  # fmt: skip
+    conn.execute(
+        "INSERT INTO assessment_runs (assessment_id, kind, state, body, updated_at)"
+        " VALUES ('asm_x', 'mastery_check', 'in_progress', ?, 1)",
+        (json.dumps(body),),
+    )
 
 
 def fixture(reply: dict[str, Any]) -> dict[str, Any]:
     """What the renderer's layout reads: each node's id, code and whether it is linked, and each edge."""
-    return {"subject_id": reply["subject_id"],
-            "nodes": [{"id": n["kc_id"], "code": n["code"], "linked": n["linked"]} for n in reply["nodes"]],
-            "edges": [{"from": e["from"], "to": e["to"], "kind": e["kind"]} for e in reply["edges"]]}  # fmt: skip
+    return {
+        "subject_id": reply["subject_id"],
+        "nodes": [{"id": n["kc_id"], "code": n["code"], "linked": n["linked"]} for n in reply["nodes"]],
+        "edges": [{"from": e["from"], "to": e["to"], "kind": e["kind"]} for e in reply["edges"]],
+    }
 
 
 def test_backbone_nodes_edges_states_and_root_gaps(tmp_path: Path) -> None:
@@ -83,7 +102,10 @@ def test_backbone_nodes_edges_states_and_root_gaps(tmp_path: Path) -> None:
             c = Client(r)
             for subject in ("phy", "mth"):
                 reply = await c.ok("GET", f"/v1/curriculum/cur.{subject}.o/concept-map", definition="ConceptMap")
-                assert reply["status"] == "ready" and reply["pack"] == {"pack_id": f"pack.{subject}.o", "version": "0.1.0"}
+                assert reply["status"] == "ready" and reply["pack"] == {
+                    "pack_id": f"pack.{subject}.o",
+                    "version": "0.1.0",
+                }
                 own = [n for n in reply["nodes"] if not n["linked"]]
                 assert {n["kc_id"] for n in own} == {k["id"] for k in kcs_of(subject)}
                 prerequisites = sum(len(k.get("prerequisites") or []) for k in kcs_of(subject))
@@ -108,7 +130,8 @@ def test_backbone_nodes_edges_states_and_root_gaps(tmp_path: Path) -> None:
             # The Maths map shows the same links from its side, with the Physics KCs linked.
             maths = await c.ok("GET", "/v1/curriculum/cur.mth.o/concept-map", definition="ConceptMap")
             assert {e["misconception_id"] for e in maths["edges"] if e["kind"] == "root_gap"} == {
-                e["misconception_id"] for e in gaps}
+                e["misconception_id"] for e in gaps
+            }
             assert all(n["kc_id"].startswith("kc.phy.") for n in maths["nodes"] if n["linked"])
 
             conn = r.runtime.learner.conn
@@ -133,8 +156,16 @@ def test_backbone_nodes_edges_states_and_root_gaps(tmp_path: Path) -> None:
 def test_what_next_ranks_ready_high_value_first() -> None:
     kcs = {
         "kc.phy.o.t.a": {"code": "A", "exam_weight": 0.2, "prerequisites": []},
-        "kc.phy.o.t.b": {"code": "B", "exam_weight": 0.9, "prerequisites": [{"kc_id": "kc.phy.o.t.a", "strength": "required"}]},
-        "kc.phy.o.t.c": {"code": "C", "exam_weight": 0.6, "prerequisites": [{"kc_id": "kc.phy.o.t.d", "strength": "helpful"}]},
+        "kc.phy.o.t.b": {
+            "code": "B",
+            "exam_weight": 0.9,
+            "prerequisites": [{"kc_id": "kc.phy.o.t.a", "strength": "required"}],
+        },
+        "kc.phy.o.t.c": {
+            "code": "C",
+            "exam_weight": 0.6,
+            "prerequisites": [{"kc_id": "kc.phy.o.t.d", "strength": "helpful"}],
+        },
         "kc.phy.o.t.d": {"code": "D", "exam_weight": 0.3, "prerequisites": []},
         "kc.phy.o.t.e": {"code": "E", "exam_weight": 1.0, "prerequisites": []},
     }
@@ -142,7 +173,11 @@ def test_what_next_ranks_ready_high_value_first() -> None:
     ranked = what_next(kcs, states, {"kc.phy.o.t.d": 0.9})
     # C is ready (a helpful prerequisite never blocks), A and D need nothing; B waits for A; E is secure.
     assert [(n["kc_id"][-1], n["reason"], n["weight"]) for n in ranked] == [
-        ("c", "ready", "high"), ("a", "foundation", "low"), ("d", "foundation", "medium"), ("b", "needs_first", "high")]
+        ("c", "ready", "high"),
+        ("a", "foundation", "low"),
+        ("d", "foundation", "medium"),
+        ("b", "needs_first", "high"),
+    ]
     assert ranked[-1]["needs"] == ["kc.phy.o.t.a"]
     assert ranked[1]["kc_id"] == "kc.phy.o.t.a", "D's high P puts it below A despite its weight"
     states["kc.phy.o.t.a"] = "needs_review"
@@ -150,8 +185,14 @@ def test_what_next_ranks_ready_high_value_first() -> None:
 
 
 def test_gap_path_is_the_shortest_chain_and_stable() -> None:
-    edges = [{"from": "m", "to": "p"}, {"from": "m", "to": "x"}, {"from": "x", "to": "y"}, {"from": "y", "to": "q"},
-             {"from": "p", "to": "q"}, {"from": "a", "to": "b"}]
+    edges = [
+        {"from": "m", "to": "p"},
+        {"from": "m", "to": "x"},
+        {"from": "x", "to": "y"},
+        {"from": "y", "to": "q"},
+        {"from": "p", "to": "q"},
+        {"from": "a", "to": "b"},
+    ]
     assert gap_path(edges, "m", "q") == ["m", "p", "q"]
     assert gap_path(edges, "m", "m") == ["m"]
     assert gap_path(edges, "q", "m") == [] and gap_path(edges, "m", "b") == []
@@ -187,8 +228,11 @@ def test_questions_and_mistakes_attach_to_the_engines_kcs(tmp_path: Path) -> Non
                 # A photographed question with no KC: an open question of the subject.
                 session(conn, "s4", "physics")
                 turn(conn, "s4", 0, "What does this circuit symbol mean?", at=2400)
-                conn.execute("INSERT INTO captures (capture_id, session_id, record, expires_at) VALUES"
-                             " ('cap_01HZZZZZZZZZZZZZZZZZZZZZZZ', 's4', ?, 99999999)", (json.dumps({"source": "photo_file", "purpose": "question"}),))
+                conn.execute(
+                    "INSERT INTO captures (capture_id, session_id, record, expires_at) VALUES"
+                    " ('cap_01HZZZZZZZZZZZZZZZZZZZZZZZ', 's4', ?, 99999999)",
+                    (json.dumps({"source": "photo_file", "purpose": "question"}),),
+                )
                 # A Maths session with no KC is not on the Physics map; a purged session keeps its count, no words.
                 session(conn, "s5", "mathematics")
                 turn(conn, "s5", 0, "What is a prime?", at=2500)
@@ -215,7 +259,11 @@ def test_questions_and_mistakes_attach_to_the_engines_kcs(tmp_path: Path) -> Non
             # Most seen first, a resolved one last, a disputed one never.
             assert [m["misconception_id"] for m in mistakes] == [SINGLE_POINT, "mc.phy.o.speed_from_distance_only"]
             single = mistakes[0]
-            assert (single["name"], single["times"], single["status"]) == ("Acceleration from a single point", 3, "active")
+            assert (single["name"], single["times"], single["status"]) == (
+                "Acceleration from a single point",
+                3,
+                "active",
+            )
             assert single["root_kc_id"] == GRADIENT and single["reviewed"] is False
             assert single["gap_path"] == [GRADIENT, V_T]
             assert single["idea"] == "the gradient of a straight line"
@@ -237,11 +285,14 @@ def test_the_tutor_points_at_a_skill_in_play_on_the_map() -> None:
     from agent_core.engine.pointing import Targets, resolve
     from agent_core.engine.voice_bridge import CUE_TARGET
 
-    state = SimpleNamespace(board=SimpleNamespace(steps=[]), offers={"req_x": {"kc_id": V_T, "prerequisite_kc_id": GRADIENT}},
-                            detour=None)  # fmt: skip
+    state = SimpleNamespace(
+        board=SimpleNamespace(steps=[]), offers={"req_x": {"kc_id": V_T, "prerequisite_kc_id": GRADIENT}}, detour=None
+    )
     targets = Targets.of(state)
     assert targets.kcs == frozenset({V_T, GRADIENT})
-    spoken = resolve(f'Start from <point at="kc:{GRADIENT}"/> this skill, not <point at="kc:{SPEED}"/> that one.', targets)
+    spoken = resolve(
+        f'Start from <point at="kc:{GRADIENT}"/> this skill, not <point at="kc:{SPEED}"/> that one.', targets
+    )
     assert [c.target for c in spoken.cues] == [f"kc:{GRADIENT}"]
     assert spoken.misses == ("kc_not_in_play",)
     assert CUE_TARGET.fullmatch(f"kc:{GRADIENT}") and not CUE_TARGET.fullmatch(f"kc:{GRADIENT}.x/")

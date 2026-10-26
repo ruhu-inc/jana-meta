@@ -195,7 +195,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
     {topicMap !== null && <StudyConceptMap map={topicMap.concept_map} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editTopicMap(ops); }}
       heading={<div className="flex flex-wrap items-center justify-between gap-2" data-topic-map={topicMap.map_id} data-origin={topicMap.origin}>
         <div className="flex flex-col"><h3 className="text-heading text-ink">{topicMap.topic}</h3><p className="text-meta text-muted">{t(`study.concept.topic_origin.${topicMap.origin}`)}</p></div>
-        <span className="flex gap-2">{openTopic && topicMap.node_id && <Button size="sm" onClick={() => openTopic(topicMap.node_id!)}>{t("study.topic_guide")}</Button>}<Button size="sm" tone="ghost" onClick={() => { void controller.openTopicMap(null); }}>{t("action.close")}</Button></span>
+        <span className="flex gap-2">{openTopic && topicMap.node_id && <Button size="sm" onClick={() => { if (topicMap.node_id) openTopic(topicMap.node_id); }}>{t("study.topic_guide")}</Button>}<Button size="sm" tone="ghost" onClick={() => { void controller.openTopicMap(null); }}>{t("action.close")}</Button></span>
       </div>} />}
   </section>;
   const ready = !accessBlocked && (view.source?.state === "ready" || (view.source?.state === "partial" && readableConfirmed));

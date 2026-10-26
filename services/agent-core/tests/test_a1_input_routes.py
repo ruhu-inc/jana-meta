@@ -112,7 +112,8 @@ def _bodies(session: str) -> dict[str, tuple[str, dict[str, Any]]]:
         "PATCH /v1/study/concept-maps/{map_id}": (
             f"/v1/study/concept-maps/ctm_{'0' * 26}", {"ops": [{"op": "add", "name": DISTRESS}]}),
         "PATCH /v1/study/aids/{aid_id}/concept-map": (
-            f"/v1/study/aids/aid_{'0' * 26}/concept-map", {"ops": [{"op": "rename", "concept_id": "c1", "name": DISTRESS}]}),
+            f"/v1/study/aids/aid_{'0' * 26}/concept-map",
+            {"ops": [{"op": "rename", "concept_id": "c1", "name": DISTRESS}]}),
         "POST /v1/sessions/{session_id}/study/notes": (
             f"/v1/sessions/{session}/study/notes", {"type": "save_note", "text": DISTRESS}),
         "POST /v1/sessions/{session_id}/voice/dictations/{identity}/confirm": (

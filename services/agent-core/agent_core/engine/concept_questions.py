@@ -75,15 +75,20 @@ def questions(conn: sqlite3.Connection, subject_id: str, on_map: set[str]) -> li
     open question), its words while the transcript keeps them, how it was asked and when. A question belongs to the
     subject when its KC is on the subject's map, or, for an open question, when its session was in the subject."""
     subject = SUBJECT_NAMES.get(subject_id.split(".")[1], "")
-    sessions = {str(s): (subj, purged) for s, subj, purged in
-                _rows(conn, "SELECT session_id, subject, transcript_purged_at FROM sessions")}  # fmt: skip
+    sessions = {
+        str(s): (subj, purged)
+        for s, subj, purged in _rows(conn, "SELECT session_id, subject, transcript_purged_at FROM sessions")
+    }
     by_turn: dict[str, list[str]] = {}
     by_session: dict[str, Counter[str]] = {}
     first_seen: dict[str, dict[str, int]] = {}
     marks = ",".join("?" * len(KC_EVENTS))
     for seq, session_id, turn_id, raw in _rows(
-        conn, f"SELECT seq, session_id, turn_id, kc_ids FROM events WHERE erased_at IS NULL AND session_id IS NOT NULL"  # noqa: S608
-              f" AND kc_ids IS NOT NULL AND type IN ({marks}) ORDER BY seq", KC_EVENTS):  # fmt: skip
+        conn,
+        f"SELECT seq, session_id, turn_id, kc_ids FROM events WHERE erased_at IS NULL AND session_id IS NOT NULL"  # noqa: S608
+        f" AND kc_ids IS NOT NULL AND type IN ({marks}) ORDER BY seq",
+        KC_EVENTS,
+    ):
         kcs = _kc_list(raw)
         if turn_id:
             kept = by_turn.setdefault(str(turn_id), [])
@@ -102,10 +107,13 @@ def questions(conn: sqlite3.Connection, subject_id: str, on_map: set[str]) -> li
 
     photos = _photo_sessions(conn)
     out: list[dict[str, Any]] = []
-    asked = _rows(conn, "SELECT s.turn_id, s.session_id, s.idx, s.student_text, s.input_kind, s.started_at, t.turn_id"
-                        " FROM turns s LEFT JOIN turns t ON t.session_id = s.session_id AND t.idx = s.idx + 1"
-                        " AND t.speaker = 'tutor' WHERE s.speaker = 'student' AND s.student_text IS NOT NULL"
-                        " AND s.input_kind IN ('typed', 'voice') ORDER BY s.session_id, s.idx")  # fmt: skip
+    asked = _rows(
+        conn,
+        "SELECT s.turn_id, s.session_id, s.idx, s.student_text, s.input_kind, s.started_at, t.turn_id"
+        " FROM turns s LEFT JOIN turns t ON t.session_id = s.session_id AND t.idx = s.idx + 1"
+        " AND t.speaker = 'tutor' WHERE s.speaker = 'student' AND s.student_text IS NOT NULL"
+        " AND s.input_kind IN ('typed', 'voice') ORDER BY s.session_id, s.idx",
+    )
     opened: set[str] = set()
     for turn_id, session_id, _idx, text, kind, started, tutor_turn in asked:
         session_id = str(session_id)
@@ -121,27 +129,49 @@ def questions(conn: sqlite3.Connection, subject_id: str, on_map: set[str]) -> li
         if kc is None and sessions.get(session_id, (None, None))[0] != subject:
             continue
         how = "spoken" if kind == "voice" else "photo" if first and session_id in photos else "typed"
-        out.append({"question_id": str(turn_id), "session_id": f"ses_{session_id}", "kc_id": kc,
-                    "text": _excerpt(words), "input": how, "asked_at": int(started), "kept": True})  # fmt: skip
+        out.append(
+            {
+                "question_id": str(turn_id),
+                "session_id": f"ses_{session_id}",
+                "kc_id": kc,
+                "text": _excerpt(words),
+                "input": how,
+                "asked_at": int(started),
+                "kept": True,
+            }
+        )
     for session_id, (_subj, purged) in sorted(sessions.items()):
         if purged is None or session_id in opened:
             continue
         kc = session_kc(session_id)
         if kc is not None and kc in on_map:
-            out.append({"question_id": f"ses_{session_id}", "session_id": f"ses_{session_id}", "kc_id": kc,
-                        "text": None, "input": "typed", "asked_at": int(purged), "kept": False})  # fmt: skip
+            out.append(
+                {
+                    "question_id": f"ses_{session_id}",
+                    "session_id": f"ses_{session_id}",
+                    "kc_id": kc,
+                    "text": None,
+                    "input": "typed",
+                    "asked_at": int(purged),
+                    "kept": False,
+                }
+            )
     out.sort(key=lambda q: (-q["asked_at"], q["question_id"]))
     return out[:QUESTIONS_MAX]
 
 
-def mistakes(conn: sqlite3.Connection, content: PackIndex, on_map: set[str],
-             edges: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:  # fmt: skip
+def mistakes(
+    conn: sqlite3.Connection, content: PackIndex, on_map: set[str], edges: Sequence[Mapping[str, Any]]
+) -> list[dict[str, Any]]:
     """The learner's diagnosed mistakes on this map's KCs, most seen first: the misconception's student name, its
     status and evidence count, and its root gap (the earlier skill, whether a teacher reviewed the link, and the gap
     path from it to the KC)."""
     out = []
-    rows = _rows(conn, "SELECT misconception_id, kc_id, status, evidence_count, last_seen_at"
-                       " FROM learner_misconceptions WHERE status != 'disputed'")  # fmt: skip
+    rows = _rows(
+        conn,
+        "SELECT misconception_id, kc_id, status, evidence_count, last_seen_at"
+        " FROM learner_misconceptions WHERE status != 'disputed'",
+    )
     for mc_id, kc_id, status, count, last_seen in rows:
         if str(kc_id) not in on_map:
             continue
@@ -151,11 +181,19 @@ def mistakes(conn: sqlite3.Connection, content: PackIndex, on_map: set[str],
         idea = gap.get("idea")
         reviewers = (record.get("review") or {}).get("reviewers") or []
         path = gap_path(edges, root, str(kc_id)) if root else []
-        out.append({"misconception_id": str(mc_id), "kc_id": str(kc_id),
-                    "name": str(record.get("student_name") or content.misconception_name(str(mc_id)) or ""),
-                    "status": str(status), "times": int(count), "last_seen_at": int(last_seen),
-                    "root_kc_id": root if path else None,
-                    "idea": (str(idea.get("en", "")) if isinstance(idea, Mapping) else str(idea or "")) if path else None,
-                    "reviewed": bool(reviewers) if path else None, "gap_path": path})  # fmt: skip
+        out.append(
+            {
+                "misconception_id": str(mc_id),
+                "kc_id": str(kc_id),
+                "name": str(record.get("student_name") or content.misconception_name(str(mc_id)) or ""),
+                "status": str(status),
+                "times": int(count),
+                "last_seen_at": int(last_seen),
+                "root_kc_id": root if path else None,
+                "idea": (str(idea.get("en", "")) if isinstance(idea, Mapping) else str(idea or "")) if path else None,
+                "reviewed": bool(reviewers) if path else None,
+                "gap_path": path,
+            }
+        )
     out.sort(key=lambda m: (m["status"] == "resolved", -m["times"], -m["last_seen_at"], m["misconception_id"]))
     return out

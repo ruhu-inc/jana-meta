@@ -57,7 +57,7 @@ function ConceptSheet({ concept, map, claim, actions, busy, onEdit, onClose, onP
       {concept.anchor !== null && concept.origin !== "pack" && (
         <div className="flex flex-col items-start gap-2 rounded-control bg-panel p-3" data-anchor={concept.anchor.kc_id}>
           <span className="text-ui text-ink">{t("study.concept.matches", { skill: concept.anchor.statement })}</span>
-          {actions.onOpenSkill !== undefined && <Button size="sm" tone="ghost" onClick={() => actions.onOpenSkill?.(concept.anchor!.kc_id)}>{t("study.concept.open_skill")}</Button>}
+          {actions.onOpenSkill !== undefined && <Button size="sm" tone="ghost" onClick={() => { if (concept.anchor !== null) actions.onOpenSkill?.(concept.anchor.kc_id); }}>{t("study.concept.open_skill")}</Button>}
         </div>
       )}
       {(actions.onAsk || actions.onFlashcards || actions.onQuiz) && (

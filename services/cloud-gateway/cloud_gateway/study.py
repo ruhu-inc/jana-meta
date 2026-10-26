@@ -1876,7 +1876,8 @@ class StudyService:
             if errors(PREFIX + "ConceptTopicDraft", result) or result["request_id"] != body["request_id"]:
                 raise Refused("insufficient_evidence")
             ids = [c["concept_id"] for c in result["concepts"]]
-            if len(set(ids)) != len(ids) or any(r["from"] not in ids or r["to"] not in ids for r in result["relations"]):
+            dangling = any(r["from"] not in ids or r["to"] not in ids for r in result["relations"])
+            if len(set(ids)) != len(ids) or dangling:
                 raise Refused("insufficient_evidence")
             usd = cost_usd(self.gw.config.prices.get(model.id), usage)
             result["usage"] = {"receipt_id": key, "cost_usd": usd, "input_tokens": usage.input_tokens,
@@ -1885,8 +1886,9 @@ class StudyService:
             return result
         except BaseException as error:
             if sent == known:  # unknown upstream usage keeps its reservation
-                self.settle(key, session, cost_usd(self.gw.config.prices.get(model.id), usage), "failed", usage,
-                            outcome="concept_topic", status=error.status if isinstance(error, Refused) else 502)  # fmt: skip
+                status = error.status if isinstance(error, Refused) else 502
+                usd = cost_usd(self.gw.config.prices.get(model.id), usage)
+                self.settle(key, session, usd, "failed", usage, outcome="concept_topic", status=status)
             raise
 
     async def extract(self, request: Request, session: Any) -> dict[str, Any]:

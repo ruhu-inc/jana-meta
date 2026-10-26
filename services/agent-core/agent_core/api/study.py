@@ -692,10 +692,12 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
                     raise StudyError(error.reason) from None
                 node_id, concept_map, origin = None, model_map(draft, content), "model"
             now = core.clock_ms()
-            record = checked("ConceptTopicMap", {"map_id": new_id("ctm"), "topic": topic, "origin": origin,
-                                                 "node_id": node_id, "concept_map": concept_map, "created_at": now})  # fmt: skip
+            record = {"map_id": new_id("ctm"), "topic": topic, "origin": origin, "node_id": node_id,
+                      "concept_map": concept_map, "created_at": now}  # fmt: skip
+            checked("ConceptTopicMap", record)
             with transaction(d.conn):
-                d.conn.execute("INSERT INTO study_concept_maps VALUES (?,?,?,?)", (record["map_id"], json.dumps(record), now, now))
+                d.conn.execute("INSERT INTO study_concept_maps VALUES (?,?,?,?)",
+                               (record["map_id"], json.dumps(record), now, now))  # fmt: skip
             return record
 
         return await command(request, "ConceptTopicRequest", run, atomic_command=False)
@@ -705,8 +707,8 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
         def get(d: StudyDesk) -> Any:
             rows = d.conn.execute("SELECT body FROM study_concept_maps ORDER BY created_at DESC, map_id DESC LIMIT 200")
             maps = [json.loads(b) for (b,) in rows]
-            return checked("ConceptTopicMapList", {"maps": [{k: m[k] for k in ("map_id", "topic", "origin", "created_at")}
-                                                            for m in maps]})  # fmt: skip
+            listed = [{k: m[k] for k in ("map_id", "topic", "origin", "created_at")} for m in maps]
+            return checked("ConceptTopicMapList", {"maps": listed})
 
         return read(request, get)
 

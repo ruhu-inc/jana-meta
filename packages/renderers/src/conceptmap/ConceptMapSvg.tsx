@@ -5,6 +5,7 @@
 // rest; the tutor's pointer rings one box. Keyboard: one box is in the tab order (roving tabindex); arrow keys move
 // up and down a column and left or right along links (to the nearest box in the next column when there is none);
 // Enter or Space opens it. Motion only when reduced motion is off.
+import { must } from "../must.js";
 import { useEffect, useMemo, useRef, type KeyboardEvent, type ReactElement } from "react";
 import type { Translate } from "../contract.js";
 import { INK, LINE, MUTED, PAPER, RING, RING_STROKE, SERIES, STROKE, STRONG, arrowHead } from "../kit.js";
@@ -65,7 +66,7 @@ export function wrap(text: string, width: number, lines = 2): string[] {
   let line = "";
   const words = text.split(/\s+/).filter(Boolean);
   for (let i = 0; i < words.length; i++) {
-    const word = words[i]!;
+    const word = must(words[i]);
     const next = line === "" ? word : `${line} ${word}`;
     if (next.length <= max) {
       line = next;
@@ -184,8 +185,8 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
           const root = e?.kind === "root_gap";
           const stroke = on ? RING : root ? SERIES[2] : e?.strength === "helpful" ? LINE : STRONG;
           const dash = root ? "2 3" : e?.strength === "helpful" ? "6 4" : undefined;
-          const last = routed.points[routed.points.length - 1]!;
-          const before = routed.points[routed.points.length - 2] ?? routed.points[0]!;
+          const last = must(routed.points[routed.points.length - 1]);
+          const before = routed.points[routed.points.length - 2] ?? must(routed.points[0]);
           return (
             <g key={key} data-edge={key} data-kind={e?.kind} data-lit={on ? "true" : undefined} opacity={lighting && !on ? DIM : 1} style={fade}>
               <path d={route(routed.points)} fill="none" stroke={stroke} strokeWidth={on ? RING_STROKE : STROKE} {...(dash !== undefined ? { strokeDasharray: dash } : {})} />
@@ -197,7 +198,7 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
       {layout.nodes.map((placed) => {
         const n = byId.get(placed.id);
         if (n === undefined) return null;
-        const [fill, ink] = LOOK[n.state] ?? LOOK.not_started!;
+        const [fill, ink] = LOOK[n.state] ?? must(LOOK.not_started);
         const on = lit.has(n.id);
         const ring = on || pointed === n.id;
         const inner = placed.width - 16;

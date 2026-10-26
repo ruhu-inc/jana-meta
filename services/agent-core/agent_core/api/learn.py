@@ -1,6 +1,6 @@
 """The subject map and the lesson player over the local API (UXS-22, UXS-23): the map of one subject with each
-KC's mastery state, its concept map (the skill backbone with the learner's states, questions and mistakes), one lesson with its saved position, a quick check marked by the deterministic marker, and
-saving the position.
+KC's mastery state, its concept map (the skill backbone with the learner's states, questions and mistakes), one
+lesson with its saved position, a quick check marked by the deterministic marker, and saving the position.
 
 Every route acts for the profile whose learner database is open (the profile token when profiles exist, API-04); a
 locked device answers `profile_token_expired` before anything is read (`ProfileScope`). The bodies are checked here
