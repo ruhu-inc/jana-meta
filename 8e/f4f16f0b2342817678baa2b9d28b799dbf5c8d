@@ -1,0 +1,21 @@
+contracts/policies/privacy.json
+  s_c8aac60c34196a::t_4648cdd3c35357 30
+scripts/governance/data-inventory.toml
+  s_c8aac60c34196a::t_d480b367fa778c 628-641,645-650
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8ef4f16f0b2342817678baa2b9d28b799dbf5c8d",
+  "prompts": {},
+  "sessions": {
+    "s_c8aac60c34196a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f064582-e300-4e0e-986d-516442dfc836",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
