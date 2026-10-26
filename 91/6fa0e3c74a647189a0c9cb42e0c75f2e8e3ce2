@@ -1,0 +1,29 @@
+packages/ui/gallery/states/question-card.canonical.choose-several.json
+  s_207b3a26495062::t_ee5f642785dfcc 14,18,22,26
+content/agent/templates/engine.en.yaml
+  s_207b3a26495062::t_ee5f642785dfcc 51-54
+packages/ui/src/profiles/ProfilePicker.tsx
+  s_207b3a26495062::t_9baf42b49ca19a 2,24
+apps/desktop/test/first-run.test.tsx
+  s_207b3a26495062::t_ee5f642785dfcc 225,260,262,353,363,379
+packages/ui/src/icons.tsx
+  s_207b3a26495062::t_ee5f642785dfcc 78
+packages/i18n/locales/en.json
+  s_207b3a26495062::t_ee5f642785dfcc 310,321,1367
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "916fa0e3c74a647189a0c9cb42e0c75f2e8e3ce2",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
