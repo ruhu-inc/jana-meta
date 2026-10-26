@@ -471,6 +471,7 @@
        "solver",
        "checker",
        "rule_matcher",
+       "input_guard",
        "title",
        "compaction",
        "judge",

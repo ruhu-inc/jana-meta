@@ -337,15 +337,17 @@ class Router:
 
     async def resolve_slot(self, name: str) -> SlotResolution:
         """A slot set to a model or tier uses it; an unset slot inherits the Coach's local model. A slot that needs a
-        capability (vision) tries the inherited model first and its configured model or tier as the fallback; when
-        none has the capability the feature is off, with its notice."""
+        capability (vision), or that says `inherit: true` and names a model too, tries the inherited model first and
+        its configured model or tier as the fallback (so a computer with no local model still has one); when none
+        has the capability the feature is off, with its notice."""
         entry = self.config.role(name)
         requires = {**SLOT_REQUIRES.get(name, {}), **(entry.get("requires") or {})}
         configured = [Candidate.parse(entry["model"])] if entry.get("model") else []
         if entry.get("tier"):
             configured += sorted(self.config.tiers[entry["tier"]], key=lambda c: c.locality != "local")
         main = await self.main_local_model() if entry.get("inherit", True) else None
-        inherited = [main] if main is not None and (requires or not configured) else []
+        fallback = entry.get("inherit") is True and bool(configured)  # local first, the configured one after it
+        inherited = [main] if main is not None and (requires or not configured or fallback) else []
         order = inherited + configured
         kept, dropped = await self._filter(order, name, requires)
         tier = entry.get("tier") or self.config.role("coach").get("tier", "fast")

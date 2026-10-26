@@ -81,20 +81,27 @@ roles:
     priority: 1
     concurrency: 1
 auxiliary:
+  # The Coach's local model first and Muse Spark after it, so a computer with no local model still screens input,
+  # matches rules, titles and compacts on Spark (subject to consent and connectivity) instead of failing open; a
+  # computer with a local model keeps these on the device.
   rule_matcher:
     inherit: true
+    model: cloud:primary/fast-model
     reasoning: none
     priority: 8
   input_guard:
     inherit: true
+    model: cloud:primary/fast-model
     reasoning: none
     priority: 8
   title:
     inherit: true
+    model: cloud:primary/fast-model
     reasoning: none
     priority: 2
   compaction:
     inherit: true
+    model: cloud:primary/fast-model
     reasoning: none
     priority: 2
   judge:
@@ -177,6 +184,8 @@ cloud:
   - diagnoser
   - solver
   - checker
+  - rule_matcher
+  - input_guard
   - title
   - compaction
   - judge

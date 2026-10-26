@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/agents/router-config.schema.json sha256 bd351c1e3f0c3790007d5a8cfe6e6dafd3ce1bdc997beeafbcee01ee6a4e2107; do not edit",
+ "$comment": "GENERATED from contracts/agents/router-config.schema.json sha256 841df23eb7e443b552ef3f47afe952d8402bb259af87eb94af0144d85f03311f; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/agents/router-config",
  "title": "Router configuration",
@@ -472,6 +472,7 @@
        "solver",
        "checker",
        "rule_matcher",
+       "input_guard",
        "title",
        "compaction",
        "judge",
