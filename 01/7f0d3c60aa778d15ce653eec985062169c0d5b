@@ -1,0 +1,97 @@
+services/agent-core/agent_core/engine/offers.py
+  s_63b211029247d0::t_b90485c8285435 196-202,233
+packages/client-core/test/concept-map.test.ts
+  s_63b211029247d0::t_23495d6586724a 77-86
+packages/ui/src/index.ts
+  s_63b211029247d0::t_e7454f2289a74a 99
+packages/ui/src/learn/link.tsx
+  s_63b211029247d0::t_e7454f2289a74a 28-45
+services/agent-core/tests/test_root_gap.py
+  s_63b211029247d0::t_b90485c8285435 114-117
+packages/client-core/src/pointer.ts
+  s_63b211029247d0::t_856aa51e63af9e 22,45-46,51-52
+packages/i18n/locales/en.json
+  s_63b211029247d0::t_d1e4e5740ba3cb 2076
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_63b211029247d0::t_700097b8cea5f2 246,250,260,346,415
+apps/desktop/src/App.tsx
+  s_63b211029247d0::t_bec28434bb37bf 44,1343
+  s_63b211029247d0::t_997a7b60dd7336 361-362,1220-1221,1335-1340
+services/agent-core/agent_core/api/projection.py
+  s_63b211029247d0::t_b90485c8285435 188,193
+packages/ui/src/transcript/parts.tsx
+  s_63b211029247d0::t_d1e4e5740ba3cb 15
+  s_63b211029247d0::t_e7454f2289a74a 321-340
+services/agent-core/agent_core/engine/voice_bridge.py
+  s_63b211029247d0::t_856aa51e63af9e 30-31,34
+packages/ui/test/root-gap-link.test.tsx
+  s_63b211029247d0::t_aaefe283104e3c 1-66
+packages/contracts-ts/src/generated/compat.ts
+  s_63b211029247d0::t_700097b8cea5f2 5
+packages/contracts-ts/src/generated/validators.d.ts
+  s_63b211029247d0::t_700097b8cea5f2 874
+packages/client-core/src/reducer.ts
+  s_63b211029247d0::t_eb02c16ab9152a 250-251
+packages/client-core/src/concept-map.ts
+  s_63b211029247d0::t_23495d6586724a 89-90,94-97,122-126,142-145
+  s_63b211029247d0::t_d1a74391c9c443 146-147
+packages/ui/src/board/Pen.tsx
+  s_63b211029247d0::t_856aa51e63af9e 15
+packages/contracts-ts/src/generated/client.ts
+  s_63b211029247d0::t_700097b8cea5f2 4,292-527
+services/agent-core/agent_core/contracts/api/events.py
+  s_63b211029247d0::t_700097b8cea5f2 1028-1043,1563
+  s_63b211029247d0::t_856aa51e63af9e 2,760
+packages/client-core/src/voice.ts
+  s_63b211029247d0::t_856aa51e63af9e 11
+packages/contracts-ts/src/generated/api/events.ts
+  s_63b211029247d0::t_700097b8cea5f2 834-844
+  s_63b211029247d0::t_856aa51e63af9e 2
+packages/contracts-ts/src/generated/api/commands.ts
+  s_63b211029247d0::t_700097b8cea5f2 3763-3773
+services/agent-core/agent_core/engine/pointing.py
+  s_63b211029247d0::t_856aa51e63af9e 40-41,69-71,83-87,163-164
+packages/ui/src/learn/SubjectMap.tsx
+  s_63b211029247d0::t_ec3b96736c8d32 17,414-415,423
+packages/contracts-ts/src/generated/index.ts
+  s_63b211029247d0::t_700097b8cea5f2 4,318-986
+contracts/api/events.schema.json
+  s_63b211029247d0::t_700097b8cea5f2 1601-1603,3283-3309
+  s_63b211029247d0::t_856aa51e63af9e 2201
+  s_63b211029247d0::t_78615fea1a8954 3310
+services/agent-core/tests/test_concept_map.py
+  s_63b211029247d0::t_1344f4da7fb25a 230-247
+packages/client-core/test/pointer.test.ts
+  s_63b211029247d0::t_adc5e164a4d08c 251-256
+services/agent-core/agent_core/contracts/api/commands.py
+  s_63b211029247d0::t_856aa51e63af9e 2718
+  s_63b211029247d0::t_700097b8cea5f2 2865-2880,5412
+services/agent-core/agent_core/contracts/compat.json
+  s_63b211029247d0::t_700097b8cea5f2 176
+packages/client-core/src/store.ts
+  s_63b211029247d0::t_eb02c16ab9152a 3,103-104
+services/agent-core/agent_core/contracts/schemas/api/events.schema.json
+  s_63b211029247d0::t_856aa51e63af9e 2,2197
+  s_63b211029247d0::t_700097b8cea5f2 1597-1599,3279-3304
+  s_63b211029247d0::t_29c8910b1f2e6e 3305
+packages/contracts-ts/src/generated/client-validators.js
+  s_63b211029247d0::t_ca46cf444598ca 10
+packages/contracts-ts/src/generated/validators.js
+  s_63b211029247d0::t_eb75ca46eb7336 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "017f0d3c60aa778d15ce653eec985062169c0d5b",
+  "prompts": {},
+  "sessions": {
+    "s_63b211029247d0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eeaba4ba-62ef-4835-9cd8-1624a66fa8c2",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
