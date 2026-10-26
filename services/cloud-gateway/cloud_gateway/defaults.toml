@@ -22,14 +22,16 @@ timeout_s = 120.0
 
 # The Spark effort each requested effort becomes, per alias (SPEC §12): the fast alias serves the Coach, Diagnoser and
 # auxiliary roles, where answers are short and latency matters most; the strong alias serves the Solver and Checker,
-# whose numbers the engine's tools check anyway. Measured 2026-10-26: Coach 6.0 s at low, 3.8 s at minimal.
+# whose numbers the engine's tools check anyway. Measured 2026-10-26: Coach 6.0 s at low, 3.8 s at minimal; the Solver's
+# plan 2-5 s at low (300-700 reasoning tokens) and 0.7-2 s at minimal, with every seeded plan still verified by its
+# tools (`python -m jana_tools.turn_latency`).
 [providers.meta.models.fast-model]
 id = "muse-spark-1.3"
 thinking = { kind = "level", none = "minimal", low = "minimal", medium = "low", high = "medium" }
 
 [providers.meta.models.strong-model]
 id = "muse-spark-1.3"
-thinking = { kind = "level", none = "minimal", low = "minimal", medium = "minimal", high = "low" }
+thinking = { kind = "level", none = "minimal", low = "minimal", medium = "minimal", high = "minimal" }
 
 # Standard mode, per 1M tokens (https://dev.meta.ai/docs/pricing-rate-limits, 2026-10-26). Reasoning tokens are part
 # of the output tokens and billed at the output rate; images are billed as input tokens.
