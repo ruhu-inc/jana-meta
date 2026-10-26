@@ -1,0 +1,28 @@
+SPEC.md
+  s_207b3a26495062::t_1c96de73aaf0bf 323
+  s_09726b09e7edac::t_27586698e3e705 318-322,399-409
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9e6318a56b282905ae51f1882d7d222d16dd85e4",
+  "prompts": {},
+  "sessions": {
+    "s_09726b09e7edac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e5862a0-b0c4-4426-9881-98ae596ead81",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    },
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
