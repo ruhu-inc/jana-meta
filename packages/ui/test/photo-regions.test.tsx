@@ -6,6 +6,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { SessionController, parseTarget, typedCapture, type CapturedQuestion } from "@jana/client-core";
 import { Board } from "../src/board/Board.js";
 import { PhotoRegions, regionPoints } from "../src/board/PhotoRegions.js";
+import { PhotoCapture } from "../src/composer/PhotoCapture.js";
 import { LocaleProvider } from "../src/i18n.js";
 import { StoreProvider } from "../src/store.js";
 import { Fixture, SESSION } from "./harness.js";
@@ -97,5 +98,27 @@ describe("JM-D10 photo regions", () => {
   test("photo_region_cue_targets_parse_exactly", () => {
     expect(parseTarget(`${CAP}:rgn_1`)).toEqual({ kind: "photo_region", capture_id: CAP, region_id: "rgn_1" });
     for (const bad of [`${CAP}:rgn_`, `${CAP}:region_1`, "cap_1:rgn_1", `${CAP}:rgn_1234`]) expect(parseTarget(bad)).toBeNull();
+  });
+});
+
+describe("JM-D10 photo capture of working and sketches", () => {
+  const confirmable = (purpose: "working" | "sketch"): CapturedQuestion => ({ ...workingCapture(), purpose, status: "awaiting_confirmation",
+    confirmation: { confirmed: false, method: "pending", edit_distance: 0, confirmed_at: null } } as CapturedQuestion);
+
+  test("photo_region_outlines_show_while_the_student_confirms_a_sketch", () => {
+    const view = render(<LocaleProvider locale="en"><StoreProvider holder={new Fixture().holder} session={null}>
+      <PhotoCapture sessionId={SESSION} purpose="sketch" previewCapture={confirmable("sketch")} previewImage="data:image/jpeg;base64,AA==" onConfirmed={() => undefined} onTyped={() => undefined} onClose={() => undefined} />
+    </StoreProvider></LocaleProvider>);
+    expect(view.container.textContent).toContain("Is this what you drew?");
+    const outlines = [...view.container.querySelectorAll("polygon[data-photo-region]")].map((p) => p.getAttribute("data-photo-region"));
+    expect(outlines).toEqual([`${CAP}:rgn_0`, `${CAP}:rgn_1`]); // the third line has only a box, drawn as before
+  });
+
+  test("photo_region_working_photos_offer_the_online_reader_after_its_notice", () => {
+    const drafting = { ...confirmable("working"), status: "drafting" } as CapturedQuestion;
+    render(<LocaleProvider locale="en"><StoreProvider holder={new Fixture().holder} session={null}>
+      <PhotoCapture sessionId={SESSION} purpose="working" previewCapture={drafting} onConfirmed={() => undefined} onTyped={() => undefined} onClose={() => undefined} />
+    </StoreProvider></LocaleProvider>);
+    expect(screen.getByRole("checkbox", { name: /Send this photo to the online tutor/ })).toHaveProperty("checked", false);
   });
 });
