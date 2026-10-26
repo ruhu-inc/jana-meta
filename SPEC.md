@@ -358,6 +358,20 @@ visual-answer routes); #2, #3 and #7 open.
 the end of speech with a filler at 1.5 s, and offline: pack hints instant, Glimmer's first words ≤ 8 s. A guided
 typed turn measured 12.8–15 s after the effort change (§4.1).
 
+**Where a turn's time goes** (live traces, 2026-10-26 evening; Spark 1.3 through the gateway, efforts as in §4.1):
+
+| Turn | Total | Calls (each: time, reasoning tokens) |
+|---|---|---|
+| New question | 18.4 s | Diagnoser 5.1 s (543) → Solver 2.3 s tool call + 5.9 s (646) → Coach 2.0 s (209), first token 1.7 s |
+| Step with words and numbers ("add 7 to both sides") | 10.2 s | Checker 2.5 + 3.1 s ∥ Diagnoser 6.1 s (506) → Coach 1.8 s, first token 1.2 s |
+| Step the code checked ("4x = 28") | 7.9 s | Coach 4.9 s, first token 4.2 s |
+
+The Coach's first token is 70–90% of its call (Spark reasons before it writes, ~100–250 tokens even at `minimal`), so
+**streaming the Coach's text would bring first words forward by only 0.3–0.7 s**, and it would have to show text
+before the release gates finish (API-10). Not pursued without the owner's go-ahead. The morning's correction retries
+(15 of 21 first Coach replies failing the schema, each costing a second call) did not recur in four turns that evening.
+The time is in the number of sequential Spark calls and Spark's reasoning before its first token.
+
 | Step | Target |
 |---|---|
 | End of speech → final transcript (Voice Transcribe) | ≤ 0.7 s |
