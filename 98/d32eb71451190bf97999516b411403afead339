@@ -1,0 +1,21 @@
+services/cloud-gateway/cloud_gateway/providers/meta.py
+  s_f965fb2a5dbe36::t_6756a3c42154f2 43-46
+SPEC.md
+  s_f965fb2a5dbe36::t_1bc86257d06a90 397-398
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "98d32eb71451190bf97999516b411403afead339",
+  "prompts": {},
+  "sessions": {
+    "s_f965fb2a5dbe36": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7abaddee-199c-4c11-b84a-cc7e10f23e21",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
