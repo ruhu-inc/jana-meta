@@ -78,6 +78,7 @@ class CallRecord:
     input_tokens: int
     output_tokens: int
     reasoning_tokens: int
+    cached_tokens: int
     effort: str | None
     tools_offered: int
     tool_calls: int
@@ -148,7 +149,8 @@ class InProcessGateway:
         self.clock.calls.append(CallRecord(
             headers.get("x-jana-role", "unspecified"), str(body.get("model")), round(start, 2),
             round(self.clock.now() - start, 2), round(first - start, 2) if first is not None else None, stream,
-            usage.input_tokens, usage.output_tokens, usage.reasoning_tokens, body.get("reasoning_effort"),
+            usage.input_tokens, usage.output_tokens, usage.reasoning_tokens, usage.cached_tokens,
+            body.get("reasoning_effort"),
             len(body.get("tools") or []), tool_calls, body.get("max_tokens") or body.get("max_completion_tokens"),
         ))  # fmt: skip
 
@@ -186,17 +188,29 @@ class InProcessGateway:
         adapter, upstream, _sent = self._resolve(body, headers)
         start, first, usage, last, calls = self.clock.now(), None, Usage(), None, 0
         texts: list[str] = []
-        async for part in adapter.stream(upstream):
-            if part.chunk is not None:
-                if first is None:
-                    first = self.clock.now()
-                last = part.chunk
-                for choice in part.chunk.get("choices") or []:
-                    calls += len((choice.get("delta") or {}).get("tool_calls") or [])
-                    texts.append(str((choice.get("delta") or {}).get("content") or ""))
-                yield part.chunk
-            if part.usage is not None:
-                usage = part.usage
+        try:
+            async for part in adapter.stream(upstream):
+                if part.chunk is not None:
+                    if first is None:
+                        first = self.clock.now()
+                    last = part.chunk
+                    for choice in part.chunk.get("choices") or []:
+                        calls += len((choice.get("delta") or {}).get("tool_calls") or [])
+                        texts.append(str((choice.get("delta") or {}).get("content") or ""))
+                    yield part.chunk
+                if part.usage is not None:
+                    usage = part.usage
+        except Exception as raised:  # as the gateway replies: an error before the first chunk, else an error event
+            from agent_core.net.client import Response
+            from cloud_gateway.app import _upstream
+            from cloud_gateway.errors import device_error
+
+            failure = _upstream(raised)
+            error = device_error(failure.reason, failure.retry_after_s)
+            self.failures.append({"role": headers.get("x-jana-role", "unspecified"), "reason": failure.reason,
+                                  "param": failure.param, "message": failure.message[:300]})  # fmt: skip
+            yield Response(error.status, error.headers(), error.body()) if first is None else error.body()
+            return
         self._record(body, headers, start, first, usage, calls, True)
         if self.keep_replies:
             self.clock.calls[-1].reply = "".join(texts)[:6000]
@@ -393,6 +407,10 @@ async def main_async(args: argparse.Namespace) -> int:
         config.providers["meta"].models[alias] = spec.model_copy(
             update={"thinking": spec.thinking.model_copy(update={asked: effort})}
         )
+    for override in args.model or []:  # an experiment only: `fast-model=muse-spark-1.2`
+        alias, model_id = override.split("=")
+        models = config.providers["meta"].models
+        models[alias] = models[alias].model_copy(update={"id": model_id})
     gateway = InProcessGateway(config, args.max_usd)
     gateway.keep_replies = args.replies
     settings = Settings(worker_pool_size=2, worker_respawn_backoff_s=(0.0,))
@@ -430,6 +448,7 @@ def main() -> int:
     parser.add_argument("--max-usd", type=float, default=1.0)
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--out")
+    parser.add_argument("--model", action="append", help="try another model for an alias: alias=model id")
     parser.add_argument("--replies", action="store_true", help="keep specialists' replies in the report")
     parser.add_argument("--thinking", action="append", help="try another Spark effort: alias.asked=sent")
     return asyncio.run(main_async(parser.parse_args()))
