@@ -1,0 +1,27 @@
+{
+  "journey": {
+    "root_aid_id": "aid_00000000000000000000000000",
+    "sources": [
+      {
+        "source_id": "src_00000000000000000000000000",
+        "revision": 1
+      }
+    ],
+    "title": "x",
+    "lesson_aid_id": "aid_00000000000000000000000000",
+    "cards_aid_id": "aid_00000000000000000000000000",
+    "quiz_aid_id": "aid_00000000000000000000000000",
+    "next_aid_id": "aid_00000000000000000000000000",
+    "phase": "lesson",
+    "cards_reviewed": 0,
+    "cards_total": 0,
+    "cards_due": 0,
+    "questions_answered": 0,
+    "questions_total": 0,
+    "questions_correct": 0,
+    "questions_to_review": 0,
+    "retry_quiz": true,
+    "next_review_at": 0,
+    "review_card_ids": []
+  }
+}

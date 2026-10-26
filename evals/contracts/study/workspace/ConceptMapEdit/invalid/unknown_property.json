@@ -1,0 +1,10 @@
+{
+  "ops": [
+    {
+      "op": "rename",
+      "concept_id": "a0",
+      "name": "x"
+    }
+  ],
+  "__unknown_field__": 1
+}
