@@ -1,0 +1,19 @@
+services/agent-core/tests/test_m5abc_api.py
+  s_c8aac60c34196a::t_d68bd4dc19956b 412-414
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7f285257b84ec3e332fed02299f0281e375ab808",
+  "prompts": {},
+  "sessions": {
+    "s_c8aac60c34196a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f064582-e300-4e0e-986d-516442dfc836",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
