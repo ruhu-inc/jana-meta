@@ -1,0 +1,13 @@
+{
+  "misconception_id": "mc.mth.o.a",
+  "kc_id": "kc.mth.o.a.a",
+  "name": "x",
+  "status": "suspected",
+  "times": 0,
+  "last_seen_at": 0,
+  "root_kc_id": "kc.mth.o.a.a",
+  "idea": "x",
+  "reviewed": true,
+  "gap_path": [],
+  "__unknown_field__": 1
+}

@@ -1,0 +1,25 @@
+{
+  "concept_id": "a0",
+  "name": "x",
+  "summary": {
+    "text": "x",
+    "citations": [
+      {
+        "source_id": "src_00000000000000000000000000",
+        "revision": 1,
+        "chunk_id": "sck_00000000000000000000000000",
+        "start": 0,
+        "end": 1,
+        "quote": "x"
+      }
+    ]
+  },
+  "note": "x",
+  "origin": "document",
+  "anchor": {
+    "kc_id": "kc.mth.o.a.a",
+    "statement": "x",
+    "how": "glossary"
+  },
+  "__unknown_field__": 1
+}

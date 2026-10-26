@@ -426,6 +426,78 @@
     "origin": "synthesised"
   },
   {
+    "file": "api/commands/ConceptEdge/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/ConceptEdge",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/ConceptEdge/valid/minimal.json",
+    "contract": "api/commands#/$defs/ConceptEdge",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/ConceptMap/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/ConceptMap",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/ConceptMap/valid/minimal.json",
+    "contract": "api/commands#/$defs/ConceptMap",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/ConceptMistake/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/ConceptMistake",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/ConceptMistake/valid/minimal.json",
+    "contract": "api/commands#/$defs/ConceptMistake",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/ConceptNext/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/ConceptNext",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/ConceptNext/valid/minimal.json",
+    "contract": "api/commands#/$defs/ConceptNext",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/ConceptNode/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/ConceptNode",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/ConceptNode/valid/minimal.json",
+    "contract": "api/commands#/$defs/ConceptNode",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/ConceptQuestion/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/ConceptQuestion",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/ConceptQuestion/valid/minimal.json",
+    "contract": "api/commands#/$defs/ConceptQuestion",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "api/commands/ConnectivityPatch/invalid/unknown_property.json",
     "contract": "api/commands#/$defs/ConnectivityPatch",
     "expect": "invalid",
@@ -966,6 +1038,18 @@
     "origin": "synthesised"
   },
   {
+    "file": "api/commands/ManipulationOpened/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/ManipulationOpened",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/ManipulationOpened/valid/minimal.json",
+    "contract": "api/commands#/$defs/ManipulationOpened",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "api/commands/ManipulationResult/invalid/unknown_property.json",
     "contract": "api/commands#/$defs/ManipulationResult",
     "expect": "invalid",
@@ -974,6 +1058,18 @@
   {
     "file": "api/commands/ManipulationResult/valid/minimal.json",
     "contract": "api/commands#/$defs/ManipulationResult",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/ManipulationStart/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/ManipulationStart",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/ManipulationStart/valid/minimal.json",
+    "contract": "api/commands#/$defs/ManipulationStart",
     "expect": "valid",
     "origin": "synthesised"
   },
@@ -3048,6 +3144,54 @@
     "origin": "synthesised"
   },
   {
+    "file": "learning/journey/Reply/invalid/unknown_property.json",
+    "contract": "learning/journey#/$defs/Reply",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "learning/journey/Reply/valid/minimal.json",
+    "contract": "learning/journey#/$defs/Reply",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "learning/journey/Start/invalid/unknown_property.json",
+    "contract": "learning/journey#/$defs/Start",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "learning/journey/Start/valid/minimal.json",
+    "contract": "learning/journey#/$defs/Start",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "learning/journey/Step/invalid/unknown_property.json",
+    "contract": "learning/journey#/$defs/Step",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "learning/journey/Step/valid/minimal.json",
+    "contract": "learning/journey#/$defs/Step",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "learning/journey/View/invalid/unknown_property.json",
+    "contract": "learning/journey#/$defs/View",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "learning/journey/View/valid/minimal.json",
+    "contract": "learning/journey#/$defs/View",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "learning/learner-model/invalid/unknown_property.json",
     "contract": "learning/learner-model",
     "expect": "invalid",
@@ -4182,6 +4326,114 @@
     "origin": "synthesised"
   },
   {
+    "file": "study/workspace/ConceptAnchor/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ConceptAnchor",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptAnchor/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptAnchor",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ConceptEditOp/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ConceptEditOp",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptEditOp/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptEditOp",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ConceptMapEdit/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ConceptMapEdit",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptMapEdit/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptMapEdit",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ConceptRelationType/invalid/wrong_type.json",
+    "contract": "study/workspace#/$defs/ConceptRelationType",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptRelationType/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptRelationType",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ConceptTopicDraft/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ConceptTopicDraft",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptTopicDraft/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptTopicDraft",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ConceptTopicMap/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ConceptTopicMap",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptTopicMap/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptTopicMap",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ConceptTopicMapList/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ConceptTopicMapList",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptTopicMapList/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptTopicMapList",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ConceptTopicProcessing/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ConceptTopicProcessing",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptTopicProcessing/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptTopicProcessing",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ConceptTopicRequest/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ConceptTopicRequest",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ConceptTopicRequest/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ConceptTopicRequest",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "study/workspace/Deck/invalid/unknown_property.json",
     "contract": "study/workspace#/$defs/Deck",
     "expect": "invalid",
@@ -4242,6 +4494,30 @@
     "origin": "synthesised"
   },
   {
+    "file": "study/workspace/DraftConcept/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/DraftConcept",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/DraftConcept/valid/minimal.json",
+    "contract": "study/workspace#/$defs/DraftConcept",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/DraftConceptMap/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/DraftConceptMap",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/DraftConceptMap/valid/minimal.json",
+    "contract": "study/workspace#/$defs/DraftConceptMap",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "study/workspace/DraftQuiz/invalid/unknown_property.json",
     "contract": "study/workspace#/$defs/DraftQuiz",
     "expect": "invalid",
@@ -4250,6 +4526,18 @@
   {
     "file": "study/workspace/DraftQuiz/valid/minimal.json",
     "contract": "study/workspace#/$defs/DraftQuiz",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/DraftRelation/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/DraftRelation",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/DraftRelation/valid/minimal.json",
+    "contract": "study/workspace#/$defs/DraftRelation",
     "expect": "valid",
     "origin": "synthesised"
   },
@@ -4530,6 +4818,18 @@
     "origin": "synthesised"
   },
   {
+    "file": "study/workspace/QuizSavedResult/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/QuizSavedResult",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/QuizSavedResult/valid/minimal.json",
+    "contract": "study/workspace#/$defs/QuizSavedResult",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "study/workspace/QuizSkipped/invalid/unknown_property.json",
     "contract": "study/workspace#/$defs/QuizSkipped",
     "expect": "invalid",
@@ -4622,6 +4922,18 @@
   {
     "file": "study/workspace/ReviewId/valid/minimal.json",
     "contract": "study/workspace#/$defs/ReviewId",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/ReviewIntervals/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/ReviewIntervals",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/ReviewIntervals/valid/minimal.json",
+    "contract": "study/workspace#/$defs/ReviewIntervals",
     "expect": "valid",
     "origin": "synthesised"
   },
@@ -4830,6 +5142,30 @@
     "origin": "synthesised"
   },
   {
+    "file": "study/workspace/StudyConcept/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/StudyConcept",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/StudyConcept/valid/minimal.json",
+    "contract": "study/workspace#/$defs/StudyConcept",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/StudyConceptMap/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/StudyConceptMap",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/StudyConceptMap/valid/minimal.json",
+    "contract": "study/workspace#/$defs/StudyConceptMap",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "study/workspace/StudyError/invalid/wrong_type.json",
     "contract": "study/workspace#/$defs/StudyError",
     "expect": "invalid",
@@ -4838,6 +5174,54 @@
   {
     "file": "study/workspace/StudyError/valid/minimal.json",
     "contract": "study/workspace#/$defs/StudyError",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/StudyJourney/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/StudyJourney",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/StudyJourney/valid/minimal.json",
+    "contract": "study/workspace#/$defs/StudyJourney",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/StudyJourneyAction/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/StudyJourneyAction",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/StudyJourneyAction/valid/minimal.json",
+    "contract": "study/workspace#/$defs/StudyJourneyAction",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/StudyJourneyReply/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/StudyJourneyReply",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/StudyJourneyReply/valid/minimal.json",
+    "contract": "study/workspace#/$defs/StudyJourneyReply",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/StudyRelation/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/StudyRelation",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/StudyRelation/valid/minimal.json",
+    "contract": "study/workspace#/$defs/StudyRelation",
     "expect": "valid",
     "origin": "synthesised"
   },

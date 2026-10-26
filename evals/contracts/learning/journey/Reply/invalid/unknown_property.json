@@ -1,0 +1,24 @@
+{
+  "journey": {
+    "goal": {
+      "node_id": "x",
+      "kc_id": "x",
+      "title": "x",
+      "objective": "x",
+      "subject": "x"
+    },
+    "source": {
+      "source_id": "x",
+      "revision": 1
+    },
+    "source_changed": true,
+    "phase": "ready",
+    "evidence": "none",
+    "prior_attempts": 0,
+    "practice_set_id": "x",
+    "lesson_id": "x",
+    "lesson_opened": true,
+    "stage": "starting"
+  },
+  "__unknown_field__": 1
+}
