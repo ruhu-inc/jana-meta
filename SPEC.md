@@ -382,6 +382,10 @@ and the voice and vision clients must also handle.
   `prompt_cache_key`, `json_object`, the `developer` role. Every assistant `tool_calls` message must be followed by
   one `tool` message per call. Reasoning is not carried across turns on Chat Completions, and `reasoning_content`
   comes back empty for external callers.
+- **Recursive tool schemas** are rejected with 400 "Recursive JSON schemas are not currently supported" (`param:
+  parameters`), failing the whole request (found 2026-10-26 with phys_circuit's nested groups). The engine now shows
+  every model a recursive schema unrolled four levels deep (`agent_core/tools/unroll.py`, in `model_definition`); the
+  host and the worker still validate against the worker's own schema.
 - **Usage** arrives on the final stream chunk (empty `choices`) and "an interrupted or cancelled stream may omit
   this", so the §4.3 disconnect fix is required. `cached_tokens` is part of `prompt_tokens`.
 - **Errors**: `{message, type, param, code}`; 401 `invalid_api_key`; 402 when the balance runs out; 429/503 with
