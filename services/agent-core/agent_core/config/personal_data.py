@@ -37,7 +37,9 @@ def normalise(text: str) -> str:
 
 # Patterns over normalised text. `\d` and `\w` are Unicode-aware, so other scripts' digits and letters count.
 CONTACT: dict[str, re.Pattern[str]] = {
-    "email": re.compile(r"[\w.%+-]+@[\w-]+(?:\.[\w-]+)+"),
+    # The domain ends in a label of letters (a real top-level domain), so a versioned reference such as
+    # `pack.mth.o@1.0.8` in a cited passage is never taken for an address.
+    "email": re.compile(r"[\w.%+-]+@[\w-]+(?:\.[\w-]+)*\.[^\W\d_]{2,}(?![\w-])"),
     # International (+country code) or national (a leading 0, the area code optionally in brackets), in groups split
     # by spaces, dots or hyphens, or none: at least eight digits, so a year or a list of numbers is never one.
     "phone": re.compile(

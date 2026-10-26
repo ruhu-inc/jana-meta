@@ -53,3 +53,14 @@ def test_mdl25_redaction_blocks_contact_forms(text: str, kind: str) -> None:
 def test_mdl25_redaction_passes_ordinary_questions(text: str) -> None:
     """Ordinary maths and science questions are not mistaken for personal data."""
     assert _kinds(text) == set()
+
+
+@pytest.mark.parametrize("text", [
+    "<passage source=\"pack.mth.o@1.0.8\">Collect like terms.</passage>",
+    "see pack.phy.o@1.0.8, item 3",
+    "kc.mth.o.linear_equations@2.1",
+])  # fmt: skip
+def test_versioned_pack_references_are_not_email_addresses(text: str) -> None:
+    """A cited passage names its pack as `pack.<subject>.<level>@<version>`; a domain of numbers is no address, so
+    the Coach's prompt with course passages may leave for the cloud tutor (an address still needs a letter TLD)."""
+    assert "email" not in _kinds(text)
