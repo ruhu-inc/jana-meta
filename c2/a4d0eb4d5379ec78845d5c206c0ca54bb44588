@@ -1,0 +1,154 @@
+services/agent-core/tests/test_predict_live.py
+  s_1b50c8256925d5::t_1054fd7c41825e 1-123
+  s_1b50c8256925d5::t_78839f54b84414 124-206
+services/agent-core/agent_core/engine/predictions.py
+  s_1b50c8256925d5::t_f4589bb0f4befb 1-120
+  s_1b50c8256925d5::t_45b179a4e56760 121-122
+packages/ui/test/predict-forward.test.tsx
+  s_1b50c8256925d5::t_20652a2d404d62 1-63
+  s_1b50c8256925d5::t_5e4f307c58ccf6 64-65
+content/curriculum/phy/o/items/itm.phy.o.motion.0371.yaml
+  s_1b50c8256925d5::t_cebfa96def48ad 1-106
+content/curriculum/phy/o/kcs/motion.yaml
+  s_1b50c8256925d5::t_d49f76f6f67e0d 295
+content/curriculum/phy/o/lessons/les.phy.o.circuits.series_and_parallel_circuits.yaml
+  s_1b50c8256925d5::t_6f32e9de717f8f 17-29
+content/curriculum/phy/o/lessons/les.phy.o.motion.launching_at_an_angle.yaml
+  s_1b50c8256925d5::t_3b582fbce0e2c9 1-62
+content/curriculum/phy/o/misconceptions/mc.phy.o.steeper_launch_goes_further.yaml
+  s_1b50c8256925d5::t_2ce2bcbaf0a2b5 1-32
+contracts/api/commands.schema.json
+  s_1b50c8256925d5::t_180338716aa93f 8888-8931,11154-11172
+evals/contracts/api/commands/SimPrediction/invalid/unknown_property.json
+  s_1b50c8256925d5::t_b83b57912b3966 1-8
+evals/contracts/api/commands/SimPrediction/valid/minimal.json
+  s_1b50c8256925d5::t_155868cbc180e8 1-7
+evals/contracts/index.json
+  s_1b50c8256925d5::t_29d822a754ece0 1784-1795
+packages/client-core/src/session.ts
+  s_1b50c8256925d5::t_2096369fd1162c 6,313-321
+packages/contracts-ts/src/generated/api/commands.ts
+  s_1b50c8256925d5::t_ae7d183c3f8756 2,4401-4411
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_1b50c8256925d5::t_d01919241b55dd 2,2236-2254
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_1b50c8256925d5::t_de2971d9100140 239,243,253,339,408
+packages/contracts-ts/src/generated/client-validators.js
+  s_1b50c8256925d5::t_102855a9a41f83 10
+packages/contracts-ts/src/generated/client.ts
+  s_1b50c8256925d5::t_01f6d68350eb42 4,251-520
+packages/contracts-ts/src/generated/index.ts
+  s_1b50c8256925d5::t_ce69bda9948893 4,277-979
+packages/contracts-ts/src/generated/validators.d.ts
+  s_1b50c8256925d5::t_45b01e6f7ca573 867
+packages/contracts-ts/src/generated/validators.js
+  s_1b50c8256925d5::t_401491bba97d67 10
+packages/i18n/locales/en.json
+  s_1b50c8256925d5::t_d9e9c8f3072707 900-901,956-961
+packages/renderers/fixtures/sim_fidelity.json
+  s_1b50c8256925d5::t_4b7d2b3e67841c 764-819
+packages/renderers/fixtures/visuals/projectile-sim-predict.json
+  s_1b50c8256925d5::t_c16c31dc6d08b4 1-375
+packages/renderers/golden/projectile-sim-predict.dark.html
+  s_1b50c8256925d5::t_6aafd380b7e0b3 1-41
+packages/renderers/golden/projectile-sim-predict.large.html
+  s_1b50c8256925d5::t_f4a96d3b1e9294 1-41
+packages/renderers/golden/projectile-sim-predict.light.html
+  s_1b50c8256925d5::t_c3c3eac58835e9 1-41
+packages/renderers/golden/projectile-sim.dark.html
+  s_1b50c8256925d5::t_226bb533ee33ef 16
+packages/renderers/golden/projectile-sim.large.html
+  s_1b50c8256925d5::t_931d8bb1f14183 16
+packages/renderers/golden/projectile-sim.light.html
+  s_1b50c8256925d5::t_dc4b20f1b1c49a 16
+packages/renderers/src/schema.ts
+  s_1b50c8256925d5::t_05566f13187598 4-5,43-46,59-60
+packages/renderers/src/schemas/projectile_sim.schema.json
+  s_1b50c8256925d5::t_d13b8c96c1e51c 4,16-17,25-30,42,46,48-53,56-74
+packages/renderers/src/sims/PredictFlow.tsx
+  s_1b50c8256925d5::t_896491ddb743cf 9,115,231-233,237-238,248-253,272-275
+packages/renderers/src/sims/SimView.tsx
+  s_1b50c8256925d5::t_bdc8ee0b021891 11-13,18,49-58,208,213-215,218,220,226-227,235-236,238-239,252-263
+packages/renderers/src/sims/index.tsx
+  s_1b50c8256925d5::t_d4580d7e8e495e 29,32,35
+packages/renderers/src/sims/models.ts
+  s_1b50c8256925d5::t_215a2afeb1cbca 20-26,94-98,109,119-122,131,133
+packages/renderers/src/sims/predict.ts
+  s_1b50c8256925d5::t_6ed5928e7bd518 7,38-40,82
+packages/renderers/src/sims/scenarios.json
+  s_1b50c8256925d5::t_ef04f514486130 172-184
+packages/renderers/test/predict.test.tsx
+  s_1b50c8256925d5::t_bb8e02b04b7ce3 11,55,68,162-206
+packages/renderers/test/sims.test.tsx
+  s_1b50c8256925d5::t_d563ac623ad14c 107-139,142,148,220-261
+packages/ui/gallery/states/visual-viewer.canonical.projectile-sim-predict.json
+  s_1b50c8256925d5::t_f3017f2333f77f 1-311
+packages/ui/src/visuals/VisualViewer.tsx
+  s_1b50c8256925d5::t_adffdd386e2d09 8,108-119,184
+scripts/jana_tools/visual_fixtures.py
+  s_1b50c8256925d5::t_a5f92fb8cda4da 421-426,1276-1279,1571-1572
+services/agent-core/agent_core/api/app.py
+  s_1b50c8256925d5::t_9b6a632ec481e4 185-192
+services/agent-core/agent_core/api/core.py
+  s_1b50c8256925d5::t_404b4b9acca7fe 1408-1433
+services/agent-core/agent_core/api/screening.py
+  s_1b50c8256925d5::t_2b42677317e11e 196-197
+services/agent-core/agent_core/assets/generated/kind_schemas.py
+  s_1b50c8256925d5::t_d5ca12b3025b88 2,854,860,862-867,871-872,875-878,880-882
+services/agent-core/agent_core/assets/generated/sim_scenarios.py
+  s_1b50c8256925d5::t_50c73ab8df6924 2,178-196
+services/agent-core/agent_core/assets/resolvers.py
+  s_1b50c8256925d5::t_72cce6af920e54 748-749,759-760,763
+services/agent-core/agent_core/assets/visual_text.en.json
+  s_1b50c8256925d5::t_aa15d32f9a790a 348
+services/agent-core/agent_core/contracts/api/commands.py
+  s_1b50c8256925d5::t_aa5602b1f6396d 2,2254-2267
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_1b50c8256925d5::t_d5a68083a84a19 2,2228-2246
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_1b50c8256925d5::t_3274172d2711fc 2,8888-8930
+services/agent-core/agent_core/engine/figures.py
+  s_1b50c8256925d5::t_80007b51a7561d 3-6,37-38,104-105
+services/agent-core/agent_core/engine/lessons.py
+  s_1b50c8256925d5::t_d1423d246b4cc0 22,118-120,129-131
+services/agent-core/agent_core/engine/turn.py
+  s_1b50c8256925d5::t_34ce08b6993537 105,286,402,717-718,720,750,2495-2497
+services/agent-core/agent_core/tools/generated/worker_schemas.py
+  s_1b50c8256925d5::t_de323738538ff1 2,3355,3357-3362,3392-3398
+services/agent-core/agent_core/tools/registry.snapshot.json
+  s_1b50c8256925d5::t_5705a91082998e 153-155
+services/agent-core/agent_core/tools/specs.py
+  s_1b50c8256925d5::t_436ec9e7b73982 107-111,662
+services/agent-core/tests/test_explain_back.py
+  s_1b50c8256925d5::t_2f1a71566b8a18 11,13,23-27
+services/agent-core/tests/test_figures_live.py
+  s_1b50c8256925d5::t_46f17cd7cf910f 78,121-131
+services/agent-core/tests/test_m16_assessment.py
+  s_1b50c8256925d5::t_8b22b3d1cc8e25 72-76
+services/tool-worker/tool_worker/functions/__init__.py
+  s_1b50c8256925d5::t_e5409801a3bda3 56
+services/tool-worker/tool_worker/functions/projectile.py
+  s_1b50c8256925d5::t_b2de0fb0112cc1 1-3,73-80,108-110
+services/tool-worker/tool_worker/golden/fingerprints.json
+  s_1b50c8256925d5::t_89f5c1f2b57851 3101-3102
+services/tool-worker/tool_worker/golden/phys_projectile.yaml
+  s_1b50c8256925d5::t_98946ced05739d 2,10-41
+services/tool-worker/tool_worker/schemas/phys_projectile.json
+  s_1b50c8256925d5::t_916060a5aa0b47 21-22,33-38,110-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c2a4d0eb4d5379ec78845d5c206c0ca54bb44588",
+  "prompts": {},
+  "sessions": {
+    "s_1b50c8256925d5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "61753e47-e99f-48c3-992c-d35781c227eb",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
