@@ -173,7 +173,7 @@ def test_request_uses_the_real_model_id_and_a_header_only_secret(tmp_path: Path)
         sent = h.stubs["meta"].seen[-1]
         assert sent.url == "https://api.meta.ai/v1/chat/completions"
         assert sent.model == "muse-spark-1.3"
-        assert sent.body["reasoning_effort"] == "low" and sent.body["store"] is False
+        assert sent.body["reasoning_effort"] == "minimal" and sent.body["store"] is False  # the fast alias's low
         assert sent.body["safety_identifier"] == device.pseudonym  # the per-session pseudonym, nothing else
         assert sent.headers["authorization"] == f"Bearer {FAKE_KEYS['meta_api_key']}"
         assert FAKE_KEYS["meta_api_key"] not in response.text and FAKE_KEYS["meta_api_key"] not in str(sent.body)
@@ -207,3 +207,17 @@ def test_router_prefers_spark_for_every_role_but_respects_the_online_switch() ->
         assert candidates and all(candidate.locality == "local" for candidate in candidates)
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize(
+    ("alias", "asked", "sent"),
+    [("fast-model", "low", "minimal"), ("fast-model", "high", "medium"), ("strong-model", "high", "low"),
+     ("strong-model", "medium", "minimal")],
+)  # fmt: skip
+def test_each_alias_sets_how_much_spark_reasons_for_a_requested_effort(alias: str, asked: str, sent: str) -> None:
+    spec = load_config().providers["meta"]
+    adapter = MetaAdapter(spec, Secret("synthetic-meta-key"), httpx.AsyncClient())
+    body = {"messages": [], "reasoning_effort": asked}
+    assert adapter._body(ProviderRequest(spec.models[alias], body, "synthetic"), False)["reasoning_effort"] == sent
+    assert body["reasoning_effort"] == asked  # the caller's body is not changed
+    asyncio.run(adapter.aclose())

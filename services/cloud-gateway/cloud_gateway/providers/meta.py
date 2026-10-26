@@ -74,7 +74,15 @@ def _without_reasoning(container: dict[str, Any] | None) -> None:
 
 class MetaAdapter(OpenAICompatAdapter):
     def _body(self, request: ProviderRequest, stream: bool) -> dict[str, Any]:
-        return prepare_body(super()._body(request, stream))
+        body = super()._body(request, stream)
+        # A model alias may set the Spark effort each requested effort becomes (`thinking` in the config): the device
+        # only says low, medium or high, and the alias decides how much Spark reasons for it (SPEC §12 latency).
+        thinking, effort = request.model.thinking, body.get("reasoning_effort")
+        if thinking is not None and thinking.kind == "level" and effort in ("none", "low", "medium", "high"):
+            mapped = thinking.value(effort)
+            if isinstance(mapped, str):
+                body["reasoning_effort"] = mapped
+        return prepare_body(body)
 
     async def complete(self, request: ProviderRequest) -> ProviderReply:
         reply = await super().complete(request)
