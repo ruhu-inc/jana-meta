@@ -4,6 +4,7 @@ delegation order (AGT-15), steering (AGT-17, API-25), side questions (AGT-18, AP
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any, cast
 
 from agent_core.engine import live_flows, team, turn_scope
@@ -35,6 +36,7 @@ class Coordination:
         self.steering = SteeringQueue(deps.settings.steer_queue_max)
         self.diagnosis: team.Diagnosed | None = None
         self.titled = False
+        self.title_pending: asyncio.Task[None] | None = None  # the title role naming the session (`team.new_problem`)
         self.open_cards: dict[str, str] = {}  # request id -> card kind, until answered or cancelled
         self.topic_choices: dict[str, list[str]] = {}  # a topic chooser's request id -> the topics it offered
         self.card_receipts: dict[str, str] = {}  # request id -> the receipt of a card a stop cancelled (TOL-14)

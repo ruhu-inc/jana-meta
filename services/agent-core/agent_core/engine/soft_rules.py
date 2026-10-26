@@ -62,12 +62,51 @@ def signals(state: SessionState, settings: Settings, *, now_ms: int,
 
 
 @dataclass
+class _Ahead:
+    """A judged call started before the Coach turn needs it (`RuleMatcher.prefetch`)."""
+
+    text: str
+    rule_ids: frozenset[str]
+    task: asyncio.Task[tuple[dict[str, tuple[bool, str]] | None, str | None]]
+
+
+@dataclass
 class RuleMatcher:
     book: RuleBook
     settings: Settings
     judge: Judge | None = None
     frequency: Frequency = field(default_factory=Frequency)
     calls: int = 0  # judged calls made, over the matcher's life
+    ahead: _Ahead | None = None
+
+    def prefetch(self, situation: Situation, hardware_class: str = "mid") -> None:
+        """Start the judged call for this situation's candidates now, while the turn's specialists work, so the Coach
+        turn's `match` finds the answers ready (SPEC §12 latency). The call is the one `match` would make: the same
+        candidate questions and student message; `match` uses it only when the student message is the same and every
+        rule it would send was judged, and otherwise judges afresh."""
+        self.cancel_prefetch()
+        _, judged, _ = rulebook.candidates(self.book, situation)
+        sent = judged[: self.settings.rules_judged_max]
+        if not sent or hardware_class == "low" or self.judge is None:
+            return
+        task = asyncio.ensure_future(self._judge(sent, situation.text, hardware_class))
+        self.ahead = _Ahead(situation.text, frozenset(r.id for r in sent), task)
+
+    def cancel_prefetch(self) -> None:
+        if self.ahead is not None:
+            self.ahead.task.cancel()
+            self.ahead = None
+
+    async def _answers(self, sent: list[Rule], text: str,
+                       hardware_class: str) -> tuple[dict[str, tuple[bool, str]] | None, str | None]:  # fmt: skip
+        ahead, self.ahead = self.ahead, None
+        if ahead is not None and sent and ahead.text == text and {r.id for r in sent} <= ahead.rule_ids:
+            answers, fallback = await ahead.task
+            wanted = {r.id for r in sent}
+            return ({k: v for k, v in answers.items() if k in wanted} if answers is not None else None), fallback
+        if ahead is not None:
+            ahead.task.cancel()
+        return await self._judge(sent, text, hardware_class)
 
     async def match(self, situation: Situation, hardware_class: str = "mid") -> Matched:
         settings = self.settings
@@ -75,7 +114,7 @@ class RuleMatcher:
         active, judged, allowed = rulebook.candidates(self.book, situation)
         trace += [{"rule": r, "reason": "code predicate"} for r in sorted(active)]
         sent, overflow = judged[: settings.rules_judged_max], judged[settings.rules_judged_max :]
-        answers, fallback = await self._judge(sent, situation.text, hardware_class)
+        answers, fallback = await self._answers(sent, situation.text, hardware_class)
         for rule in [*sent, *overflow]:
             if answers is not None and rule.id in answers:
                 applies, reason = answers[rule.id]

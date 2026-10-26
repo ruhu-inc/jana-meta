@@ -726,3 +726,27 @@ def test_malformed_hybrid_heads_are_a_handled_header_error(tmp_path: Path, heads
     )
     with pytest.raises(GgufError, match="per-layer"):
         read_header(model)
+
+
+def test_an_empty_optional_string_reads_as_absent_but_an_empty_required_one_fails() -> None:
+    # Muse Spark's tutor turns send `"sketch_wanted": ""`; its JSON schema decoding does not enforce minLength, and the
+    # correction round trip cost a second Coach call on about a third of turns (SPEC §12).
+    from agent_core.router.structured import check
+    from jsonschema import Draft202012Validator
+
+    schema = {"type": "object", "required": ["say"], "additionalProperties": False,
+              "properties": {"say": {"type": "string", "minLength": 1},
+                             "sketch_wanted": {"type": "string", "minLength": 1}}}  # fmt: skip
+    validator = Draft202012Validator(schema)
+    kept = check(json.dumps({"say": "Go on.", "sketch_wanted": ""}), validator)
+    assert not kept.errors and kept.value == {"say": "Go on."}
+    assert check(json.dumps({"say": "Go on.", "sketch_wanted": "a ramp"}), validator).value["sketch_wanted"] == "a ramp"
+    assert check(json.dumps({"say": "", "sketch_wanted": "a ramp"}), validator).errors
+    # The engine's contract validators are a reference to the contract; the reply Spark sent, as it sent it.
+    from agent_core.contracts import validator as contract_validator
+
+    turn = {"board": [], "card": None, "cites": [], "confidence": "high", "expects": "student_answer", "hint_rung": 0,
+            "numbers_from": [], "reveals": "none", "say": "What does the question give you?", "say_spoken": None,
+            "sketch_wanted": "", "visual": []}  # fmt: skip
+    checked = check(json.dumps(turn), contract_validator("agents/tutor-turn"))
+    assert not checked.errors and "sketch_wanted" not in checked.value
