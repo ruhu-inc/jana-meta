@@ -1,8 +1,9 @@
 """Checked figures on the live turn loop: a pack question's figure on screen, and a reason for the Coach to draw one.
 
-- A pack item or lesson step that carries a figure (content `visual`, resolved and checked at pack build) shows it
-  as soon as the problem opens: the engine emits the pre-resolved spec as a `visual` part and records it among the
-  visuals on screen, so the Coach can point at its parts (`vis_<id>:<part>`, VSL-45). No model draws it.
+- A pack item or lesson block that carries a figure (content `visual`, resolved and checked at pack build) shows it
+  as soon as the problem or block opens: the engine emits the pre-resolved spec as a `visual` part and records it
+  among the visuals on screen, so the Coach can point at its parts (`vis_<id>:<part>`, VSL-45). No model draws it.
+  A predict-first simulation (VSL-47) asks for the learner's prediction before anything else.
 - A new problem on a KC whose pack has a checked figure pattern (a worked example's figure) gets one more line in
   the Coach's opening note: draw a figure of that kind with this problem's own numbers. The pattern's numbers are
   masked, so the Coach can copy its shape but never another problem's values, and the givens it may cite are listed
@@ -33,6 +34,8 @@ FIGURE_NOTE = (
     "cite stays off. Then ask about one of its parts ({parts}), pointing at it"
 )
 SHOWN_NOTE = "the question's figure is on screen ({visual_id}, parts {parts}): point at a part when you ask about it"
+PREDICT_NOTE = ("a predict-first simulation is on screen ({visual_id}): ask the student to write their prediction "
+                "in it and lock it in before anything else; never say or hint at what it will show")  # fmt: skip
 
 
 def masked(value: Any, key: str | None = None) -> Any:
@@ -98,5 +101,7 @@ def show(engine: Any, turn: Any, record: Any) -> str:
         return ""
     engine._emit_visual(turn, resolved)
     shown = next((v for v in engine.state.shown_visuals if v["visual_id"] == resolved["visual_id"]), None)
+    if (resolved.get("params") or {}).get("predict"):  # VSL-47: the prediction comes first, then the run
+        return PREDICT_NOTE.format(visual_id=resolved["visual_id"])
     parts = ", ".join(str(p) for p in (shown or {}).get("parts", []) if not str(p).startswith("seg_"))[:200]
     return SHOWN_NOTE.format(visual_id=resolved["visual_id"], parts=parts)

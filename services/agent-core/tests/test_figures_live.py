@@ -75,7 +75,7 @@ def test_the_coachs_figure_note_masks_the_patterns_numbers() -> None:
     note = figures.opening_note(engine)
     assert "motion_graph" in note and '"graph":"velocity_time"' in note and '"id":"slope"' in note
     # Another problem's values never reach the Coach: only the shape, with this problem's givens by id.
-    pattern = json.loads(note[note.index("{"): note.index(". List in its")])
+    pattern = json.loads(note[note.index("{") : note.index(". List in its")])
     assert pattern["points"] == [{"id": "A", "t": "?", "value": "?"}, {"id": "B", "t": "?", "value": "?"}]
     assert not re.search(r"\d", json.dumps(pattern))
     assert "kn_01 = 0" in note and "kn_02 = 20" in note and "kn_03 = 5" in note and "kn_zero = 0" in note
@@ -118,10 +118,17 @@ def _solver() -> list[Any]:
 def _coach_draws(body: dict[str, Any]) -> dict[str, Any]:
     context = "\n".join(str(m["content"]) for m in body["messages"])
     assert "a checked figure fits this topic" in context and "kn_02 = 20" in context
-    graph = {"spec_version": 1, "type": "motion_graph", "numbers_from": ["kn_01", "kn_02", "kn_03"],
-             "params": {"graph": "velocity_time", "points": [{"id": "A", "t": "0", "value": "0"},
-                                                             {"id": "B", "t": "5", "value": "20"}],
-                        "gradient": [{"id": "slope", "from": "A", "to": "B"}], "units": {"t": "s", "value": "m/s"}}}
+    graph = {
+        "spec_version": 1,
+        "type": "motion_graph",
+        "numbers_from": ["kn_01", "kn_02", "kn_03"],
+        "params": {
+            "graph": "velocity_time",
+            "points": [{"id": "A", "t": "0", "value": "0"}, {"id": "B", "t": "5", "value": "20"}],
+            "gradient": [{"id": "slope", "from": "A", "to": "B"}],
+            "units": {"t": "s", "value": "m/s"},
+        },
+    }
     return tutor("Here is the car's velocity-time graph. What does the slope of this line tell you?",
                  visual=[graph], expects="student_answer")  # fmt: skip
 

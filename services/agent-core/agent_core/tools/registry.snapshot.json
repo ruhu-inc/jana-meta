@@ -150,9 +150,9 @@
   "version": 1
  },
  "phys_projectile": {
-  "params_sha256": "4cd0b19be305ba56823041c5a3886c84495a223b435bfb59cef3a6fce1060da1",
-  "params_small_sha256": "2d491a8391337b0fc26431acad00b6844d1b47de29b97cf4de42dbf13bbedcf7",
-  "version": 1
+  "params_sha256": "06b457f8c593a21a51cabdb73f5a4c03eecabd26de230c9ba8946ca04e8c7ab1",
+  "params_small_sha256": "f86d3c5cd48161ba25503b5f38b9b3890a076c0fa72895cf48315754bbe2e494",
+  "version": 2
  },
  "progress_update": {
   "params_sha256": "b863c2c7ea943a7f6b97d5713a90d4aa8abbb101ca2c5a83c45c846b623227fc",

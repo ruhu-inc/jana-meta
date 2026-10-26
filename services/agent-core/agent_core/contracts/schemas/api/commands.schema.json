@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/commands.schema.json sha256 6ea3dfc5a5dd3a8645fe2ff302f2460d181df311a6ba40553270ca0fc4afa944; do not edit",
+ "$comment": "GENERATED from contracts/api/commands.schema.json sha256 744127f15c174401229f705c10887364a499b30a75da5ffeb754d7322fea1443; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/commands",
  "title": "Command bodies",
@@ -8885,6 +8885,49 @@
    "required": [
     "step_id"
    ]
+  },
+  "SimPrediction": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "client_event_id",
+    "event",
+    "scenario_id",
+    "choice",
+    "text"
+   ],
+   "properties": {
+    "client_event_id": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "event": {
+     "enum": [
+      "committed",
+      "explained"
+     ]
+    },
+    "scenario_id": {
+     "type": "string",
+     "pattern": "^poe\\.[a-z]{3}\\.[a-z0-9_]+\\.v[0-9]+$",
+     "maxLength": 96
+    },
+    "choice": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[a-z][a-z0-9_]{0,31}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "type": "string",
+     "maxLength": 500
+    }
+   }
   }
  }
 }

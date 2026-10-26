@@ -1,8 +1,8 @@
 // Client re-validation of renderer-owned params schemas (UIA-20, VSL-15 stage 4 again on the client). A small,
 // interpreted JSON Schema subset, so nothing is compiled at run time (no code generation, no eval): type, enum, const,
 // required, properties, additionalProperties false, items, min/maxItems, uniqueItems, pattern, min/maxLength,
-// minimum, maximum, propertyNames, maxProperties, anyOf and local $ref. The engine applies the full schemas with the
-// same files (VSL-09).
+// minimum, maximum, exclusiveMinimum, exclusiveMaximum, propertyNames, maxProperties, anyOf, allOf, if/then and local
+// $ref. The engine applies the full schemas with the same files (VSL-09).
 export type Schema = Record<string, unknown>;
 
 function typeOf(value: unknown): string {
@@ -40,6 +40,10 @@ export function schemaErrors(schema: Schema, value: unknown, root: Schema = sche
     const ok = (node.anyOf as Schema[]).some((branch) => schemaErrors(branch, value, root, path).length === 0);
     if (!ok) errors.push(`${path}: matches no allowed form`);
   }
+  if (Array.isArray(node.allOf)) for (const branch of node.allOf as Schema[]) errors.push(...schemaErrors(branch, value, root, path));
+  if (typeof node.if === "object" && node.if !== null && typeof node.then === "object" && node.then !== null && schemaErrors(node.if as Schema, value, root, path).length === 0) {
+    errors.push(...schemaErrors(node.then as Schema, value, root, path));
+  }
   if (node.type !== undefined && !typeMatches(node.type, value)) return [...errors, `${path}: should be ${String(node.type)}`];
   if (Array.isArray(node.enum) && !(node.enum as unknown[]).includes(value)) errors.push(`${path}: not an allowed value`);
   if ("const" in node && node.const !== value) errors.push(`${path}: should be ${String(node.const)}`);
@@ -52,6 +56,8 @@ export function schemaErrors(schema: Schema, value: unknown, root: Schema = sche
     if (!Number.isFinite(value)) errors.push(`${path}: not a finite number`);
     if (typeof node.minimum === "number" && value < node.minimum) errors.push(`${path}: below ${node.minimum}`);
     if (typeof node.maximum === "number" && value > node.maximum) errors.push(`${path}: above ${node.maximum}`);
+    if (typeof node.exclusiveMinimum === "number" && value <= node.exclusiveMinimum) errors.push(`${path}: not above ${node.exclusiveMinimum}`);
+    if (typeof node.exclusiveMaximum === "number" && value >= node.exclusiveMaximum) errors.push(`${path}: not below ${node.exclusiveMaximum}`);
   }
   if (Array.isArray(value)) {
     if (typeof node.minItems === "number" && value.length < node.minItems) errors.push(`${path}: too few items`);

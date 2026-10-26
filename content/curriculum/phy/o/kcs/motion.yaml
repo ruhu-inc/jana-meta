@@ -292,6 +292,7 @@
   - mc.phy.o.half_left_out
   - mc.phy.o.half_used_for_velocity
   - mc.phy.o.speed_times_g_for_time
+  - mc.phy.o.steeper_launch_goes_further
   - mc.phy.o.top_speed_not_zero
   - mc.phy.o.whole_flight_time
   skill_ids:

@@ -864,3 +864,4 @@ export declare const v858: ValidateFunction;
 export declare const v859: ValidateFunction;
 export declare const v860: ValidateFunction;
 export declare const v861: ValidateFunction;
+export declare const v862: ValidateFunction;

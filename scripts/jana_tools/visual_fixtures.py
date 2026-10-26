@@ -418,6 +418,12 @@ FIXTURES: list[Fixture] = [
         ),
         modes=("shown",),
     ),
+    Fixture(
+        "projectile-sim-predict",
+        "physics",
+        req("projectile_sim", {"predict": "poe.phy.projectile_angle_30_60.v1"}),
+        modes=("shown",),
+    ),
     # The S3 simulations of the installed O level subjects (VSL-08a, VSL-46), each free and with its predict scenario.
     Fixture(
         "gas-laws-sim",
@@ -1267,6 +1273,10 @@ FIDELITY_POINTS: dict[str, list[dict[str, Any]]] = {
         {"mode": "vertical", "speed": 15, "height": 0},
         {"mode": "vertical", "speed": 20, "height": 10},
         {"mode": "vertical", "speed": 8, "height": 35},
+        {"mode": "angled", "speed": 20, "angle": 30, "height": 0},
+        {"mode": "angled", "speed": 20, "angle": 60, "height": 0},
+        {"mode": "angled", "speed": 20, "angle": 45, "height": 0},
+        {"mode": "angled", "speed": 15, "angle": 40, "height": 10},
     ],
     "circuit_sim": [
         {"emf": 6, "arrangement": "series", "R1": 4, "R2": 2},
@@ -1558,6 +1568,8 @@ def fidelity(conventions: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
         }
         if p["mode"] == "vertical":
             args["direction"] = "up"
+        if p["mode"] == "angled":
+            args["angle"] = p["angle"]
         v = run_check(f"chk_build_fid_projectile_{n}", {"tool": "phys_projectile", "args": args}).value
         rows.append(
             {

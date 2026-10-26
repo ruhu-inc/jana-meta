@@ -193,6 +193,8 @@ ROUTES: dict[str, Rule] = {
     # a value set on a manipulable visual becomes the student's board line, read by the Coach later (VSL-42)
     "POST /v1/visuals/{visual_id}/practice": _IDS,
     "POST /v1/visuals/{visual_id}/answer": Screened("manipulation_answer", field_text("values"), ANSWER),
+    # VSL-47: a prediction or its explanation becomes a tutor turn, whose intake screens the words (Engine._intake).
+    "POST /v1/sessions/{session_id}/visuals/{visual_id}/prediction": Turn("the engine's intake screens it as a turn"),
     # the student's own words for a goal (UXS-10 interview): kept in the profile like a note (STU-11)
     "POST /v1/interview/{question_id}/answer": Screened("interview_goal", field_text("answer"), NOTE),
     # no student-written text

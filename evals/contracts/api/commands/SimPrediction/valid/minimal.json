@@ -1,0 +1,7 @@
+{
+  "client_event_id": "x",
+  "event": "committed",
+  "scenario_id": "poe.aaa.a.v0",
+  "choice": "a",
+  "text": "x"
+}

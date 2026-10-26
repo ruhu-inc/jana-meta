@@ -102,6 +102,7 @@ from agent_core.engine.pedagogy import (
 )
 from agent_core.engine.pointing import first_unheard, verbalise_keeping_markers
 from agent_core.engine.pointing_back import resolve_ref
+from agent_core.engine.predictions import Predictions
 from agent_core.engine.roster import speaking
 from agent_core.engine.safety import (
     ROUTES,
@@ -282,7 +283,7 @@ class TurnIds:
     client_message_id: str | None = None
 
 
-class Engine(Coordination, Offers):
+class Engine(Coordination, Offers, Predictions):
     def __init__(
         self,
         deps: EngineDeps,
@@ -398,6 +399,7 @@ class Engine(Coordination, Offers):
         self.misconception_flows: dict[str, MisconceptionFlow] = {}
         self.misconception_seen: dict[str, int] = {}
         self.root_gaps_offered: set[str] = set()  # misconceptions whose root gap was offered this session
+        self.sim_predictions: dict[str, dict[str, str]] = {}  # visual id -> the prediction's scenario and verdict
         self.answer_misconception: str | None = None  # the misconception matched on this turn's answer
         self.misconception_evidence: Callable[[str], int] | None = None
         # ASM-23, CUR-36: takes the open profile's waiting re-mark count (and marks it told); bound by the app.
@@ -712,9 +714,10 @@ class Engine(Coordination, Offers):
         return await self._plan_and_open(turn, statement)
 
     async def _start_practice(self, turn: _Turn, item: dict[str, Any], part_id: str, diagnose: bool = True,
-                              note: str = PRACTICE_NOTE, completed_mastery: bool = False) -> TurnResult:  # fmt: skip
+                              note: str = PRACTICE_NOTE, completed_mastery: bool = False,
+                              figure: dict[str, Any] | None = None) -> TurnResult:  # fmt: skip
         """A pack item as the open problem. `diagnose` is False for a lesson's quick check, whose flow calls only the
-        Checker and the Coach (PED-01, AGT-22)."""
+        Checker and the Coach (PED-01, AGT-22). `figure` is a lesson step's own figure, shown in place of the item's."""
         part = next(p for p in item["parts"] if p["id"] == part_id)
         statement = " ".join([str(item.get("stem", "")), str(part["prompt"])]).strip()
         self._new_problem(turn)
@@ -744,7 +747,7 @@ class Engine(Coordination, Offers):
             }
         if self.deps.stage >= "S2" and diagnose:  # a bank item: the Diagnoser only, no Solver (AGT-15)
             self.diagnosis = await team.diagnose(self, turn, statement, attempts=1) or self.diagnosis
-        shown = figures.show(self, turn, item)  # the question's own checked figure, before any model speaks
+        shown = figures.show(self, turn, figure or item)  # the checked figure, before any model speaks
         note = f"{note}; {shown}" if shown else note
         if self.state.mode == "solution":
             return await self._solution(turn)
@@ -2489,6 +2492,9 @@ class Engine(Coordination, Offers):
         self._persist(turn, part, "visual", resolved)
         parts = [p["id"] for p in resolved.get("parts", []) if p.get("focusable", True)]
         shown = {"visual_id": resolved["visual_id"], "parts": parts, "kind": resolved["type"]}
+        predict = (resolved.get("params") or {}).get("predict")
+        if isinstance(predict, str):  # a predict-first simulation: its scenario, for the student's prediction (VSL-47)
+            shown["predict"] = predict
         others = [v for v in self.state.shown_visuals if v["visual_id"] != shown["visual_id"]]
         self.state.shown_visuals = [*others, shown][-self.deps.settings.pointer_visuals_kept :]
 

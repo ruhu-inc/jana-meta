@@ -6,7 +6,7 @@
 import { useId, useState, type ReactElement, type ReactNode } from "react";
 import type { Translate } from "../contract.js";
 import { INK, LINE, MUTED, STRONG } from "../kit.js";
-import { shownReadout, sig, type SimModel, type Values } from "./models.js";
+import { shownReadout, sig, withUnit, type SimModel, type Values } from "./models.js";
 import { compare, trace, type Observation, type Prediction, type Scenario } from "./predict.js";
 
 export type Phase = "free" | "predict" | "observe" | "explained";
@@ -112,7 +112,7 @@ export function ComparePanel<S>({ t, model, scenario, prediction, start, seen, a
           <p className="text-ui"><span className="text-muted">{t("sim.predict.your_why")}: </span>{why}</p>
           {scenario.explain.chart === "bars" && <Bars t={t} model={model} readouts={scenario.explain.readouts} seen={seen} />}
           {scenario.explain.chart === "curve" && <Curve t={t} model={model} scenario={scenario} seen={seen} prediction={prediction} dt={dt} />}
-          {scenario.explain.chart === "runs" && <Runs t={t} model={model} x={scenario.explain.x} y={scenario.explain.y} start={start} seen={seen} dt={dt} />}
+          {scenario.explain.chart === "runs" && <Runs t={t} model={model} x={scenario.explain.x} y={scenario.explain.y} mark={scenario.explain.mark} start={start} seen={seen} dt={dt} />}
           {scenario.explain.chart === "overlay" && <Overlay t={t} model={model} mark={scenario.explain.mark} start={start} seen={seen} />}
           <p className="text-ui">{t(`poe.${scenario.key}.explain`, args)}</p>
         </div>
@@ -228,11 +228,14 @@ function polyline(points: [number, number][], X: (v: number) => number, Y: (v: n
   return points.filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b)).map(([a, b]) => `${X(a).toFixed(1)},${Y(b).toFixed(1)}`).join(" ");
 }
 
-/** The run from the starting values (dashed) and the predicted run (solid) over time, each marked where it ended. */
-function Runs<S>({ t, model, x, y, start, seen, dt }: { t: Translate; model: SimModel<S>; x: string; y: string; start: Values; seen: Observation; dt: number }): ReactElement {
+/** The run from the starting values (dashed) and the predicted run (solid), over time or as a path, each marked where
+ * it ended, and labelled there with the `mark` readout when one is named (a flight's range). */
+function Runs<S>({ t, model, x, y, mark, start, seen, dt }: { t: Translate; model: SimModel<S>; x: string; y: string; mark?: string | undefined; start: Values; seen: Observation; dt: number }): ReactElement {
   const clipId = useId();
   const rx = model.readouts.find((r) => r.id === x);
   const ry = model.readouts.find((r) => r.id === y);
+  const rm = mark === undefined ? undefined : model.readouts.find((r) => r.id === mark);
+  const marked = (o: Record<string, number>) => (rm === undefined ? "" : ` ${withUnit(shownReadout(o[rm.id] ?? NaN, rm), rm.unit)}`);
   const before = trace(model, start, x, y, dt);
   const after = trace(model, seen.runValues, x, y, dt);
   const H = 220, L = 44, R = 12, T = 12, B = 34;
@@ -242,10 +245,12 @@ function Runs<S>({ t, model, x, y, start, seen, dt }: { t: Translate; model: Sim
     { id: "before", at: seen.before, dash: "6 5", colour: MUTED },
     { id: "after", at: seen.after, dash: undefined, colour: INK },
   ];
-  const label = t("sim.predict.runs", {
-    y: t(ry?.labelKey ?? y), x: t(rx?.labelKey ?? x), unit: ry?.unit ?? "",
-    before: sig(seen.before[y] ?? NaN, sf), after: sig(seen.after[y] ?? NaN, sf),
-  });
+  const label = rm !== undefined
+    ? t("sim.predict.chart", { name: t(rm.labelKey), before: sig(seen.before[rm.id] ?? NaN, rm.sf), after: sig(seen.after[rm.id] ?? NaN, rm.sf), unit: rm.unit })
+    : t("sim.predict.runs", {
+      y: t(ry?.labelKey ?? y), x: t(rx?.labelKey ?? x), unit: ry?.unit ?? "",
+      before: sig(seen.before[y] ?? NaN, sf), after: sig(seen.after[y] ?? NaN, sf),
+    });
   return (
     <div className="max-w-xl rounded-card border border-line bg-canvas p-2" data-sim-chart="runs">
       <svg viewBox={`0 0 ${CW} ${H}`} className="w-full" role="img" aria-label={label}>
@@ -264,8 +269,10 @@ function Runs<S>({ t, model, x, y, start, seen, dt }: { t: Translate; model: Sim
             <g key={e.id} data-sim-end={e.id}>
               <line x1={X(ex)} x2={X(ex)} y1={Y(ey)} y2={H - B} stroke={e.colour} strokeWidth={1} strokeDasharray={e.dash} />
               <circle cx={X(ex)} cy={Y(ey)} r={4} fill={e.colour} />
-              <text x={X(ex)} y={H - B - 6 - i * 14} textAnchor={X(ex) > CW - 90 ? "end" : "start"} dx={X(ex) > CW - 90 ? -6 : 6} fontSize={12} fill={e.colour} fontWeight={i === 1 ? 600 : 400}>
-                {t(i === 0 ? "sim.predict.before" : "sim.predict.after")}
+              {/* A marked end is labelled in the top corner, clear of paths that come down to where it landed. */}
+              <text x={rm !== undefined ? CW - R : X(ex)} y={rm !== undefined ? T + 12 + i * 16 : H - B - 6 - i * 14} textAnchor={rm !== undefined || X(ex) > CW - 90 ? "end" : "start"}
+                dx={rm !== undefined ? 0 : X(ex) > CW - 90 ? -6 : 6} fontSize={12} fill={e.colour} fontWeight={i === 1 ? 600 : 400}>
+                {`${t(i === 0 ? "sim.predict.before" : "sim.predict.after")}${marked(e.at)}`}
               </text>
             </g>
           );

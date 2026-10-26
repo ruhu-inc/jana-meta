@@ -19,7 +19,7 @@ import contextlib
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from agent_core.engine import turn_scope
+from agent_core.engine import figures, turn_scope
 from agent_core.engine.events import new_id
 from agent_core.engine.input import normalise_input
 from agent_core.engine.state import Problem
@@ -115,7 +115,9 @@ async def _present(engine: Engine, turn: Any, flow: LessonFlow, block: dict[str,
         item = next((engine.lesson_desk.item(i["item_id"]) for i in block.get("items") or []), None)
         if item is not None and item.get("parts"):
             note = f"{where}: ask this check question as it is and wait for the answer; never give its answer"
-            return await engine._start_practice(turn, item, str(item["parts"][0]["id"]), diagnose=False, note=note)
+            figure = block if isinstance(block.get("visual"), dict) and block["visual"].get("resolved") else None
+            return await engine._start_practice(turn, item, str(item["parts"][0]["id"]), diagnose=False, note=note,
+                                                figure=figure)  # fmt: skip
     text = block_text(block)
     state = engine.state
     engine._new_problem(turn)
@@ -124,6 +126,9 @@ async def _present(engine: Engine, turn: Any, flow: LessonFlow, block: dict[str,
     state.problem = Problem(f"lesson:{flow.lesson_id}"[:64], text, f"{flow.lesson_id}#block{index}")
     note = (f"{where}: present this in your own words, briefly, then ask one short question to check the student "
             f"is following: {text[:BLOCK_TEXT_MAX]}")  # fmt: skip
+    shown = figures.show(engine, turn, block)  # an idea's or a visual block's checked figure (a sim asks first)
+    if shown:
+        note = f"{note}; {shown}"
     return await engine._coach_turn(turn, intent_note=note)
 
 

@@ -8,8 +8,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+import pytest
 from agent_core.contracts import errors as contract_errors
-from test_m16_assessment import KC, answer, desk  # noqa: F401  (desk is the shared fixture)
+from test_m16_assessment import KC, answer, make_desk
 
 POINTS = [
     {"id": "kp_combine", "text": {"en": "Adding combines two amounts into one total."},
@@ -17,6 +18,11 @@ POINTS = [
     {"id": "kp_order", "text": {"en": "The order of the numbers does not change the total."},
      "follow_up": {"en": "Does 3 + 5 give the same total as 5 + 3? Why?"}},
 ]  # fmt: skip
+
+
+@pytest.fixture
+def desk(tmp_path: Any) -> Any:
+    yield from make_desk(tmp_path)  # the M16 synthetic desk
 
 
 def run(coro: Any) -> Any:

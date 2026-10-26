@@ -53,7 +53,7 @@ FUNCTIONS: dict[str, Function] = {
         # physics (VER-16, VER-17; M12.b)
         _function("phys_optics", 1, optics.phys_optics),
         _function("phys_circuit", 1, circuits.phys_circuit),
-        _function("phys_projectile", 1, projectile.phys_projectile),
+        _function("phys_projectile", 2, projectile.phys_projectile),  # 2: angled launches
         # M12.a: mathematics checkers of stage S2 (VER-08, VER-09, VER-10, VER-13, VER-14, VER-15)
         _function("math_differentiate", 2, calculus.math_differentiate),  # 2: implicit, parametric (VER-30)
         _function("math_integrate", 2, calculus.math_integrate),  # 2: volumes, trapezium, substitution, parts

@@ -169,6 +169,19 @@
       "observe": "out.product",
       "choices": [{"id": "rises", "common_guess": true}, {"id": "same", "correct": true}, {"id": "falls"}],
       "explain": {"chart": "runs", "x": "out.time", "y": "out.product"}
+    },
+    {
+      "id": "poe.phy.projectile_angle_30_60.v1",
+      "key": "projectile_angle",
+      "kind": "projectile_sim",
+      "subject": "phy",
+      "misconception_id": "mc.phy.o.steeper_launch_goes_further",
+      "kc_ids": ["kc.phy.o.motion.free_fall"],
+      "start": {"mode": "angled", "speed": 20, "angle": 30, "height": 0, "locked": ["mode", "speed", "angle", "height"]},
+      "run": {"set": {"angle": 60}, "until": "done", "before": "end"},
+      "observe": "out.range",
+      "choices": [{"id": "further", "common_guess": true}, {"id": "same", "correct": true}, {"id": "shorter"}],
+      "explain": {"chart": "runs", "x": "out.x", "y": "out.y", "mark": "out.range"}
     }
   ]
 }

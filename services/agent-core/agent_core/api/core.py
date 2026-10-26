@@ -1405,6 +1405,32 @@ class CoreService:
         entry.task = asyncio.get_running_loop().create_task(self._run(entry, engine.idle_offer(decision, ids),
                                                                       entry.engine_state.solved))  # fmt: skip
 
+    def sim_prediction(self, session_id: str, visual_id: str, body: dict[str, Any]) -> None:
+        """VSL-47 in a session: the learner's prediction for a predict-first simulation on screen (or their
+        explanation of its result) becomes a short tutor turn on the session's stream, which points at the result. The
+        engine decides whether the prediction matched; a visual not on screen or not predicting is refused."""
+        from agent_core.engine.predictions import PredictionRefused, scenario_on_screen
+
+        self._guard()
+        asked = require("SimPrediction", body)
+        entry = self.entry(session_id)
+        if entry.session_id in self.voice_engines or (entry.task is not None and not entry.task.done()):
+            raise ApiError("turn_active", "a turn is running in this session", details={"turn_id": entry.active_turn})
+        self.assessment_guard()
+        engine = self._engine(entry)
+        try:
+            scenario_on_screen(engine, visual_id, str(asked["scenario_id"]))
+            if asked["event"] == "explained" and visual_id not in engine.sim_predictions:
+                raise PredictionRefused("not_predicted")
+        except PredictionRefused as error:
+            code = "not_found" if error.reason == "not_found" else "validation_failed"
+            raise ApiError(code, error.reason, details={"reason": error.reason}) from None
+        ids = TurnIds(client_message_id=str(asked["client_event_id"]))
+        entry.active_turn = ids.turn_id
+        entry.task = asyncio.get_running_loop().create_task(
+            self._run(entry, engine.sim_prediction(visual_id, dict(asked), ids), entry.engine_state.solved)
+        )
+
     async def cancel(self, turn_id: str) -> dict[str, Any]:
         entry = next((e for e in self.mine() if e.active_turn == turn_id), None)
         if entry is not None and entry.session_id in self.voice_engines and self.voice_cancel is not None:

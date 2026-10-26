@@ -345,6 +345,7 @@
     "projectile_sim": "A projectile simulation, {mode} launch at {speed} metres per second from {height} metres: range {range} metres, time of flight {time} seconds.",
     "circuit_sim": "A circuit simulation with a {emf} V cell and {count} resistors in {arrangement}; the current is {current} A.",
     "titration_sim": "A titration simulation: {base} added to {volume} cubic centimetres of {acid}; the end point is at {end} cubic centimetres.",
+    "projectile_sim_predict": "A projectile simulation, {mode} launch at {speed} metres per second from {height} metres. It runs after you predict, so the result is not given here.",
     "circuit_sim_predict": "A circuit simulation with a {emf} V cell and {count} resistors in {arrangement}. It runs after you predict, so the result is not given here.",
     "titration_sim_predict": "A titration simulation: {base} will be added to {volume} cubic centimetres of {acid}. It runs after you predict, so the result is not given here.",
     "gas_laws_sim": "A gas laws simulation: a gas in a {container} at {temperature} K and {volume} cubic centimetres, with the {control} as the control; the pressure is {pressure} kPa.",

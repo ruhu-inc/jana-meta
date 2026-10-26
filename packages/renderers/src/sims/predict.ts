@@ -4,7 +4,7 @@
 // simulation's own picture. Every number here comes from the model; the words come from the locale catalogue.
 import data from "./scenarios.json" with { type: "json" };
 import { runToEnd } from "./run.js";
-import { shownReadout, type SimModel, type Values } from "./models.js";
+import { shownReadout, withUnit, type SimModel, type Values } from "./models.js";
 
 export interface ScenarioChoice {
   id: string;
@@ -35,8 +35,9 @@ export interface Scenario {
   explain:
     | { chart: "bars"; readouts: string[] }
     | { chart: "curve"; x: string; y: string; mark: string }
-    // Both runs over time, before dashed and after solid, each with where it ended.
-    | { chart: "runs"; x: string; y: string }
+    // Both runs, before dashed and after solid, each with where it ended; `mark` names the readout each end is
+    // labelled with (a flight's range), when the end's own y says nothing (both land at height 0).
+    | { chart: "runs"; x: string; y: string; mark?: string }
     // The text-mode table's (x, y) rows before and after, with a tracked point (two readouts) marked on each.
     | { chart: "overlay"; mark: [string, string] };
 }
@@ -78,7 +79,7 @@ export function scenarioArgs<S>(model: SimModel<S>, scenario: Scenario, start: V
   for (const [k, v] of Object.entries(start)) {
     if (typeof v !== "number") continue;
     const unit = model.params.find((p) => p.id === k)?.unit ?? "";
-    args[k] = `${v} ${unit}`.trim();
+    args[k] = withUnit(v, unit);
   }
   for (const r of model.readouts) {
     const short = r.id.replace(/^out\./, "");

@@ -1,0 +1,106 @@
+id: itm.phy.o.motion.0371
+version: 0.1.0
+type: mcq
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.motion.free_fall
+stem: Two identical balls are launched from level ground at 20 m/s, one at 30° and one at 60° above the horizontal. Ignore air resistance.
+parts:
+- id: a
+  prompt: Which ball lands further from the launch point?
+  marks: 1
+  answer:
+    kind: mcq
+    diagnostic: false
+    shuffle: false
+    options:
+    - id: A
+      text: The ball launched at 60°
+      correct: false
+      misconception_id: mc.phy.o.steeper_launch_goes_further
+      feedback: The steeper ball stays up longer, but it moves forward more slowly, so the extra time does not carry it further.
+    - id: B
+      text: The ball launched at 30°
+      correct: false
+      feedback: The flatter ball moves forward faster, but it comes down sooner, so it does not get further either.
+    - id: C
+      text: They land the same distance away
+      correct: true
+  show_working: false
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: The range depends on how fast the ball moves forward and how long it stays in the air.
+  - rung: 2
+    name: concept
+    text:
+      en: On level ground the range is u² sin 2θ ÷ g, so it depends on sin 2θ.
+  - rung: 3
+    name: first_step
+    text:
+      en: Work out 2θ for each ball.
+  - rung: 4
+    name: worked_step
+    text:
+      en: Compare sin(2 × 30°) with sin(2 × 60°).
+  - rung: 5
+    name: full_step
+    text:
+      en: 'The answer is: They land the same distance away.'
+  misconception_ids:
+  - mc.phy.o.steeper_launch_goes_further
+solution:
+  steps:
+  - n: 1
+    latex: R = \frac{u^2 \sin 2\theta}{g}
+    reason: The range of a launch from level ground
+  - n: 2
+    latex: \sin(2 \times 30^\circ) = \sin(2 \times 60^\circ)
+    reason: The two angles add up to a right angle
+    check_id: chk_build_phy_k_0371_sin
+  - n: 3
+    latex: R_{30} = R_{60}
+    reason: Same speed and same sin 2θ, so the same range
+    check_id: chk_build_phy_k_0371_r30
+difficulty:
+  prior: 0.4
+  band: core
+estimated_seconds: 60
+exam_style:
+  paper_style: objective
+  total_marks: 1
+  calculator: false
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-opus-5-5
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks:
+  chk_build_phy_k_0371_sin:
+    args:
+      expression: sin(2*30*pi/180) - sin(2*60*pi/180)
+    tool: math_evaluate
+  chk_build_phy_k_0371_r30:
+    args:
+      motion: angled
+      speed: 20
+      angle: 30
+      constants:
+      - symbol: g
+        source: pack
+    tool: phys_projectile
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

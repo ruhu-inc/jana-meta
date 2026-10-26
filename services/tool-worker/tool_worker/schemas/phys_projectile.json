@@ -18,7 +18,8 @@
     "motion": {
       "enum": [
         "vertical",
-        "horizontal"
+        "horizontal",
+        "angled"
       ]
     },
     "speed": {
@@ -28,6 +29,12 @@
       ],
       "minLength": 1,
       "maxLength": 40
+    },
+    "angle": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "exclusiveMaximum": 90,
+      "description": "For an angled launch: degrees above the horizontal."
     },
     "direction": {
       "enum": [
@@ -100,5 +107,28 @@
       "minimum": 2,
       "maximum": 500
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "motion": {
+            "const": "angled"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "angle"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "angle"
+          ]
+        }
+      }
+    }
+  ]
 }
