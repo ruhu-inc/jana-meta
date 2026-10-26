@@ -8,6 +8,7 @@ import contextlib
 import hashlib
 import io
 import json
+import math
 import re
 import time
 from collections.abc import Sequence
@@ -56,6 +57,8 @@ def edit_distance(left: str, right: str) -> int:
 
 # Photos of the student's own handwriting: printed-text OCR cannot vouch for them (SPEC §17, W2), see `handwriting`.
 HANDWRITTEN = ("working", "sketch")
+# Photos read as a drawing's parts, one region each, never as a question: a sketch to check, a diagram to learn.
+DRAWINGS = ("sketch", "diagram")
 PHOTO_SOURCES = {"photo_file", "photo_paste", "photo_drop", "webcam", "device_camera", "handwriting_photo"}
 
 
@@ -509,7 +512,7 @@ class CaptureDesk:
                         "kind": "working_line"
                         if record["purpose"] == "working"
                         else "diagram"
-                        if record["purpose"] == "sketch"
+                        if record["purpose"] in DRAWINGS
                         else line.get("kind")
                         or (
                             "working_line"
@@ -534,6 +537,7 @@ class CaptureDesk:
                         "bbox": bbox,
                         "outline": line.get("outline") if bbox is not None else None,
                         "sketch_element": line.get("sketch_element") if record["purpose"] == "sketch" else None,
+                        "label_box": line.get("label_box") if record["purpose"] == "diagram" and bbox else None,
                     }
                 )
             text = "\n".join(r["text"] for r in regions)[:8000]
@@ -578,13 +582,21 @@ class CaptureDesk:
                     ):
                         region["bbox"] = None
                         region["outline"] = None
+                        region["label_box"] = None
+                label = region.get("label_box")
+                if label is not None and (
+                    label["w"] <= 0 or label["h"] <= 0 or label["x"] + label["w"] > 1 or label["y"] + label["h"] > 1
+                ):
+                    region["label_box"] = None
+            if record["purpose"] == "diagram":
+                ocr_label_boxes(regions, prepared["lines"])
             if any(r["language"] not in ("en", "und") for r in regions):
                 record.update(status="refused", refusal={"reason": "unsupported_language"})
                 self.delete_images(record)
                 record["attachments"] = []
                 self.put(record)
                 return
-            if record["purpose"] not in HANDWRITTEN and not re.search(
+            if record["purpose"] not in (*HANDWRITTEN, *DRAWINGS) and not re.search(
                 r"[?=+*/^]|\b(find|solve|calculate|explain|describe|state|show|evaluate|simplify|balance|prepare|what|which|how|why|determine|prove|journal|debit|credit)\b",
                 text,
                 re.I,
@@ -602,8 +614,9 @@ class CaptureDesk:
                 for region in regions:
                     region["bbox"] = None
                     region["outline"] = None
+                    region["label_box"] = None
             # Separate diagram crops use only the already-screened derivative.
-            if prepared["privacy_available"] and not personal_found and record["purpose"] != "sketch":
+            if prepared["privacy_available"] and not personal_found and record["purpose"] not in DRAWINGS:
                 for region in regions:
                     if region["kind"] != "diagram" or not region.get("bbox") or len(record["attachments"]) >= 40:
                         continue
@@ -682,9 +695,9 @@ class CaptureDesk:
                     covered_until = max(covered_until, span["end"])
             transcription_chars = sum(len(region["text"]) for region in regions)
             threshold = self.core.settings.vision_confirm_threshold
-            if record["purpose"] == "sketch":
-                # A sketch's unsure parts are labelled and never judged (`sketch_photo`); it is unreadable only when
-                # no part was read with confidence.
+            if record["purpose"] in DRAWINGS:
+                # A sketch's unsure parts are labelled and never judged (`sketch_photo`), and a diagram's are left out
+                # of its drill; either is unreadable only when no part was read with confidence.
                 unreadable = not any(r["confidence"] >= threshold for r in regions)
             else:
                 unreadable = (
@@ -703,7 +716,7 @@ class CaptureDesk:
             # Numbered questions require a choice; no automatic first-question submission.
             questions: list[dict[str, Any]] = []
             current: dict[str, Any] | None = None
-            for region in regions if record["purpose"] not in HANDWRITTEN else []:
+            for region in regions if record["purpose"] not in (*HANDWRITTEN, *DRAWINGS) else []:
                 match = (
                     re.match(r"^(\d{1,3})", region["number_label"])
                     if region.get("number_label")
@@ -827,6 +840,8 @@ class CaptureDesk:
         record = self.get(cap)
         if record["session_id"] != sid or record["status"] != "confirmed" or not record["confirmation"]["confirmed"]:
             raise ApiError("capture_not_ready")
+        if record["purpose"] == "diagram":
+            raise ApiError("validation_failed", "a diagram to learn is practised in its drill, not sent as a turn")
         if (record["purpose"] == "working") != (body["intent"] == "board_line") or (
             (record["purpose"] == "sketch") != (body["intent"] == "check_my_working")
         ):
@@ -857,6 +872,43 @@ class CaptureDesk:
         record["status"] = "cancelled"
         self.put(record, record_trace=not terminal)
         self.conn().execute("DELETE FROM captures WHERE capture_id=?", (cap,))
+
+
+def _words(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9]+", text.lower())
+
+
+def ocr_label_boxes(regions: list[dict[str, Any]], lines: Sequence[dict[str, Any]]) -> None:
+    """A diagram part's printed label, placed by the device's own OCR of the photo rather than the reader's estimate
+    (SPEC §5.2): the drill covers the label, and the reader's boxes are often a line off. Each part takes the OCR line
+    whose words contain its name (cut to the name's share of the line when the line holds more), the closest to the
+    reader's box when several do; a part no OCR line names keeps the reader's box."""
+    for region in regions:
+        name = _words(region["text"])
+        if region["kind"] != "diagram" or not name or "[?]" in region["text"]:
+            continue
+        guess = region.get("label_box") or region.get("bbox")
+        found: list[tuple[float, dict[str, float]]] = []
+        for line in lines:
+            box, text = line.get("bbox"), str(line.get("text", ""))
+            words = _words(text)
+            at = next((i for i in range(len(words) - len(name) + 1) if words[i : i + len(name)] == name), None)
+            if box is None or at is None:
+                continue
+            if len(words) > len(name):  # the name's share of the line, by its characters
+                lowered = text.lower()
+                first = re.search(rf"(?<![a-z0-9]){re.escape(name[0])}(?![a-z0-9])", lowered)
+                last = [m for m in re.finditer(rf"(?<![a-z0-9]){re.escape(name[-1])}(?![a-z0-9])", lowered)]
+                if first is None or not last or last[-1].end() <= first.start():
+                    continue
+                start, end = first.start(), last[-1].end()
+                box = {**box, "x": box["x"] + box["w"] * start / len(text), "w": box["w"] * (end - start) / len(text)}
+            centre = (box["x"] + box["w"] / 2, box["y"] + box["h"] / 2)
+            distance = 0.0 if guess is None else math.hypot(centre[0] - guess["x"] - guess["w"] / 2,
+                                                            centre[1] - guess["y"] - guess["h"] / 2)  # fmt: skip
+            found.append((distance, {k: float(box[k]) for k in ("x", "y", "w", "h")}))
+        if found:
+            region["label_box"] = min(found, key=lambda item: item[0])[1]
 
 
 def handwriting(prepared: dict[str, Any]) -> dict[str, Any]:

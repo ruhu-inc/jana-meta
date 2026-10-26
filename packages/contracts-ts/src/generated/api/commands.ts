@@ -164,7 +164,7 @@ export type InputCapturedQuestionPropertiesSource =
  * This interface was referenced by `CommandBodies`'s JSON-Schema
  * via the `definition` "input_captured_question__properties_purpose".
  */
-export type InputCapturedQuestionPropertiesPurpose = "question" | "working" | "answer" | "sketch";
+export type InputCapturedQuestionPropertiesPurpose = "question" | "working" | "answer" | "sketch" | "diagram";
 /**
  * @maxItems 200
  *
@@ -1935,7 +1935,7 @@ export interface CapturedQuestion {
     | "handwriting_photo"
     | "ink"
     | "voice";
-  purpose: "question" | "working" | "answer" | "sketch";
+  purpose: "question" | "working" | "answer" | "sketch" | "diagram";
   locale: "en" | "fr" | "pt" | "ar";
   status:
     | "drafting"
@@ -2005,6 +2005,7 @@ export interface InputCapturedQuestionRegion {
   direction: "ltr" | "rtl";
   outline?: null | InputCapturedQuestionRegionOutlineItem[];
   sketch_element?: null | InputCapturedQuestionRegionSketchElementAnyOf2;
+  label_box?: null | InputCapturedQuestionRegionLabelBoxAnyOf2;
 }
 export interface InputCapturedQuestionRegionTableAnyOf2 {
   template: "journal" | "t_account" | "trial_balance" | "generic";
@@ -2045,6 +2046,12 @@ export interface InputCapturedQuestionRegionSketchElementAnyOf2FromAnyOf2 {
 export interface InputCapturedQuestionRegionSketchElementAnyOf2ToAnyOf2 {
   x: number;
   y: number;
+}
+export interface InputCapturedQuestionRegionLabelBoxAnyOf2 {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 export interface InputCapturedQuestionQuestionsItem {
   label: string;
@@ -4560,7 +4567,7 @@ export interface InputCapturedQuestion {
     | "handwriting_photo"
     | "ink"
     | "voice";
-  purpose: "question" | "working" | "answer" | "sketch";
+  purpose: "question" | "working" | "answer" | "sketch" | "diagram";
   locale: "en" | "fr" | "pt" | "ar";
   status:
     | "drafting"

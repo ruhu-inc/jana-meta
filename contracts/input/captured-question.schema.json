@@ -67,7 +67,8 @@
     "question",
     "working",
     "answer",
-    "sketch"
+    "sketch",
+    "diagram"
    ]
   },
   "locale": {
@@ -811,6 +812,46 @@
            }
           }
          ]
+        }
+       }
+      }
+     ]
+    },
+    "label_box": {
+     "description": "For a photo of a labelled diagram to learn (purpose diagram): where this part's printed label is on the same image as bbox, 0..1, so the drill can hide it; bbox is the part itself. Null when the part has no visible label.",
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+       ],
+       "properties": {
+        "x": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
+        },
+        "y": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
+        },
+        "w": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
+        },
+        "h": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
         }
        }
       }

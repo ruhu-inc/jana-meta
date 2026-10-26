@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/input/captured-question.schema.json sha256 87abbc25ed696fc7dbbe1f07f88ca86150a24cbe06bb87a5efc54d22a6ac2a6c; do not edit",
+ "$comment": "GENERATED from contracts/input/captured-question.schema.json sha256 aa75771afec45904bd7adf84394c4d6d7ac25bd070e0aab54710ab70eaecf532; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/input/captured-question",
  "title": "CapturedQuestion",
@@ -68,7 +68,8 @@
     "question",
     "working",
     "answer",
-    "sketch"
+    "sketch",
+    "diagram"
    ]
   },
   "locale": {
@@ -810,6 +811,45 @@
            }
           }
          ]
+        }
+       }
+      }
+     ]
+    },
+    "label_box": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+       ],
+       "properties": {
+        "x": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
+        },
+        "y": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
+        },
+        "w": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
+        },
+        "h": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
         }
        }
       }

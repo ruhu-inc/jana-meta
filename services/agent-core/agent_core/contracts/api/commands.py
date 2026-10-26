@@ -3316,13 +3316,23 @@ class InputCapturedQuestionRegionSketchElementAnyOf2(BaseModel):
     to: InputCapturedQuestionRegionSketchElementAnyOf2ToAnyOf2 | None
 
 
+class InputCapturedQuestionRegionLabelBoxAnyOf2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    x: Annotated[float, Field(ge=0.0, le=1.0)]
+    y: Annotated[float, Field(ge=0.0, le=1.0)]
+    w: Annotated[float, Field(ge=0.0, le=1.0)]
+    h: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
 type InputCapturedQuestionRegionId = Annotated[
     str, Field(pattern="^rgn_[0-9]{1,3}$", title="InputCapturedQuestionRegionId")
 ]
 
 
 type InputCapturedQuestionPropertiesPurpose = Annotated[
-    Literal["question", "working", "answer", "sketch"],
+    Literal["question", "working", "answer", "sketch", "diagram"],
     Field(title="InputCapturedQuestionPropertiesPurpose"),
 ]
 
@@ -4730,6 +4740,7 @@ class InputCapturedQuestionRegion(BaseModel):
     direction: Literal["ltr", "rtl"]
     outline: Outline | None = None
     sketch_element: InputCapturedQuestionRegionSketchElementAnyOf2 | None = None
+    label_box: InputCapturedQuestionRegionLabelBoxAnyOf2 | None = None
 
 
 class InputCapturedQuestion(BaseModel):
@@ -4753,7 +4764,7 @@ class InputCapturedQuestion(BaseModel):
         "ink",
         "voice",
     ]
-    purpose: Literal["question", "working", "answer", "sketch"]
+    purpose: Literal["question", "working", "answer", "sketch", "diagram"]
     locale: Literal["en", "fr", "pt", "ar"]
     status: Literal[
         "drafting",
