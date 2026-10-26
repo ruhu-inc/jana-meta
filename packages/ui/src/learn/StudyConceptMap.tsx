@@ -54,7 +54,7 @@ function ConceptSheet({ concept, map, claim, actions, busy, onEdit, onClose, onP
       </div>
       <p className="text-meta font-semibold text-muted" data-origin-label>{origin(concept.origin)}</p>
       {concept.summary !== null ? claim(concept.summary) : concept.note !== null && <p className="text-ui text-ink" data-note>{concept.note}</p>}
-      {concept.anchor !== null && (
+      {concept.anchor !== null && concept.origin !== "pack" && (
         <div className="flex flex-col items-start gap-2 rounded-control bg-panel p-3" data-anchor={concept.anchor.kc_id}>
           <span className="text-ui text-ink">{t("study.concept.matches", { skill: concept.anchor.statement })}</span>
           {actions.onOpenSkill !== undefined && <Button size="sm" tone="ghost" onClick={() => actions.onOpenSkill?.(concept.anchor!.kc_id)}>{t("study.concept.open_skill")}</Button>}
@@ -126,7 +126,7 @@ function ConceptTable({ map, onPick }: { map: W.StudyConceptMap; onPick: (id: st
           {map.concepts.map((c) => (
             <tr key={c.concept_id} className="border-b border-line align-top" data-row-concept={c.concept_id}>
               <th scope="row" className="p-2 text-start font-normal"><button type="button" className="text-start text-ink underline-offset-2 hover:underline" onClick={() => onPick(c.concept_id)}>{c.name}</button>
-                {c.anchor !== null && <span className="block text-meta text-faint">{t("study.concept.matches_short")}</span>}</th>
+                {c.anchor !== null && c.origin !== "pack" && <span className="block text-meta text-faint">{t("study.concept.matches_short")}</span>}</th>
               <td className="p-2">{origin(c.origin)}</td>
               <td className="p-2 text-muted">{map.relations.filter((r) => r.from === c.concept_id).map((r) => t(`study.concept.relation.${r.type}`, { from: c.name, to: byId.get(r.to)?.name ?? r.to })).join("; ")}</td>
             </tr>
@@ -154,7 +154,7 @@ export function StudyConceptMap({ map, claim, busy = false, actions = {}, onEdit
   const drawing = useMemo(() => {
     const nodes: ConceptDrawNode[] = map.concepts.map((c) => ({
       id: c.concept_id, code: "", title: c.name, state: c.origin, stateWord: origin(c.origin), linked: c.origin === "model",
-      asked: 0, mistakes: 0, next: 0, ...(c.anchor !== null ? { badge: t("study.concept.matches_short") } : {}),
+      asked: 0, mistakes: 0, next: 0, ...(c.anchor !== null && c.origin !== "pack" ? { badge: t("study.concept.matches_short") } : {}),
     }));
     const edges: ConceptDrawEdge[] = map.relations.map((r) => ({ from: r.from, to: r.to, kind: "prerequisite", strength: DIRECTED.has(r.type) ? "required" : "helpful" }));
     return { nodes, edges };

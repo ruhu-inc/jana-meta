@@ -166,11 +166,10 @@ def pack_map(content: Any, topic: str) -> tuple[str, dict[str, Any]] | None:
     ids = {kc_id: f"k{i + 1}" for i, kc_id in enumerate(chosen)}
     concepts = []
     for kc_id in chosen:
-        kc = kcs[kc_id]
-        terms = [str(t) for t in kc.get("glossary") or []]
-        statement = str(kc["statement"])
-        name = (terms[0][:1].upper() + terms[0][1:]) if terms else statement
-        concepts.append({"concept_id": ids[kc_id], "name": name[:80], "summary": None, "note": statement[:400],
+        statement = str(kcs[kc_id]["statement"])
+        # The skill's own statement names it (cut at a word to fit); the note keeps it whole.
+        name = statement if len(statement) <= 80 else statement[:79].rsplit(" ", 1)[0] + "\u2026"
+        concepts.append({"concept_id": ids[kc_id], "name": name, "summary": None, "note": statement[:400],
                          "origin": "pack", "anchor": {"kc_id": kc_id, "statement": statement[:400], "how": "topic"}})
     relations = []
     for kc_id in chosen:
