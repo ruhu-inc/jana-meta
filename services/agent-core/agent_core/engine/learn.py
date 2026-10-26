@@ -42,6 +42,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
+from agent_core.assets.visuals import resolved_of
 from agent_core.config import Settings
 from agent_core.engine.marking import Converted, Verdict, mark
 from agent_core.engine.signatures import evidence, pack_context, verdict_source
@@ -363,8 +364,8 @@ class LearnDesk:
         return {"worked_example_id": example_id, "problem": str(example["problem"]), "steps": steps,
                 "final_answer": {"latex": str(example["final_answer"]["latex"]),
                                  "check_id": str(example["final_answer"]["check_id"])},
-                "faded_steps": fading.faded(example["kc_ids"], example.get("fading_order") or [],
-                                            self.settings)}  # fmt: skip
+                "faded_steps": fading.faded(example["kc_ids"], example.get("fading_order") or [], self.settings),
+                "visual": resolved_of(example)}  # its figure, resolved and checked at build (or None)  # fmt: skip
 
     def _mistakes(self, ids: Sequence[str]) -> list[dict[str, Any]]:
         out = []

@@ -21,6 +21,24 @@ fading_order:
 - 3
 - 2
 - 1
+visual:
+  visual_type: motion_graph
+  params:
+    graph: velocity_time
+    points:
+    - id: A
+      t: '0'
+      value: '10'
+    - id: B
+      t: '5.0'
+      value: '25'
+    gradient:
+    - id: slope
+      from: A
+      to: B
+    units:
+      t: s
+      value: m/s
 version: 0.1.1
 provenance:
   origin: original

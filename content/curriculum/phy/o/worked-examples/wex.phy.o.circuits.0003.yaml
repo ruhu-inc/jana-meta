@@ -22,6 +22,22 @@ fading_order:
 - 3
 - 2
 - 1
+visual:
+  visual_type: circuit
+  ref: dgm.phy.circuit_parallel_resistors.v1
+  params:
+    components:
+    - id: B
+      type: battery
+      value: 6 V
+    - id: A1
+      type: ammeter
+    - id: R1
+      type: resistor
+      value: 36 Ω
+    - id: R2
+      type: resistor
+      value: 12 Ω
 version: 0.1.0
 provenance:
   origin: original

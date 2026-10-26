@@ -70,6 +70,24 @@ exam_style:
   calculator: true
 context_tags:
 - none
+visual:
+  visual_type: motion_graph
+  params:
+    graph: velocity_time
+    points:
+    - id: A
+      t: '0'
+      value: '10.0'
+    - id: B
+      t: '10'
+      value: '15.0'
+    gradient:
+    - id: slope
+      from: A
+      to: B
+    units:
+      t: s
+      value: m/s
 provenance:
   origin: original
   licence: LicenseRef-Own

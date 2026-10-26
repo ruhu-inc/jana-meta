@@ -16,6 +16,31 @@ final_answer:
 fading_order:
 - 2
 - 1
+visual:
+  visual_type: function_graph
+  params:
+    curves:
+    - id: l
+      expr: -2*x + 14
+      label: line AB
+    x_range:
+    - 0
+    - 6
+    y_range:
+    - 0
+    - 14
+    points:
+    - id: A
+      x: 4
+      y: 6
+      label: A(4, 6)
+    - id: B
+      x: 2
+      y: 10
+      label: B(2, 10)
+    axis_labels:
+      x: x
+      y: y
 version: 0.1.0
 provenance:
   origin: original

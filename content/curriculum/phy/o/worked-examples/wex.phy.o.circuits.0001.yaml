@@ -22,6 +22,24 @@ fading_order:
 - 3
 - 2
 - 1
+visual:
+  visual_type: circuit
+  ref: dgm.phy.circuit_series_two_lamps.v1
+  params:
+    components:
+    - id: B
+      type: battery
+      value: 6 V
+    - id: A1
+      type: ammeter
+    - id: L1
+      type: lamp
+      value: 5 Ω
+    - id: L2
+      type: resistor
+      value: 2 Ω
+    - id: V1
+      type: voltmeter
 version: 0.1.0
 provenance:
   origin: original

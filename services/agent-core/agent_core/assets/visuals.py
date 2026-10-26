@@ -179,6 +179,13 @@ def advertised_kinds(subject: str, level: str, stage: str) -> list[str]:
     )
 
 
+def resolved_of(record: Any) -> dict[str, Any] | None:
+    """A pack record's figure as the pack build resolved and checked it (content `visual.resolved`), or None."""
+    visual = record.get("visual") if isinstance(record, dict) else None
+    resolved = visual.get("resolved") if isinstance(visual, dict) else None
+    return resolved if isinstance(resolved, dict) and resolved.get("visual_id") else None
+
+
 def strip_markup(text: str) -> tuple[str, bool]:
     """Drawing markup in model text is shown as text with the markup removed (VSL-01)."""
     cleaned, n = MARKUP.subn("", text)

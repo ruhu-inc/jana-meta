@@ -10,6 +10,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from typing import Any
 
+from agent_core.assets.visuals import resolved_of
 from agent_core.config import Settings
 from agent_core.contracts import errors
 from agent_core.engine.assessment.diagrams import aliases, diagram, public_ref
@@ -96,7 +97,7 @@ def present(
         "kind": item["type"],
         "stem": item["stem"],
         "parts": parts,
-        "visual": diagram(item, content),
+        "visual": diagram(item, content) or resolved_of(item),  # a labelled diagram, else the question's figure
         **({} if diagnostic else {"marks": sum(int(p["marks"]) for p in item["parts"])}),
         # An imported past paper keeps its own numbering and the pages of its diagrams (ASM-27).
         **({"number_label": str(item["number_label"])} if item.get("number_label") else {}),
@@ -297,4 +298,5 @@ def worked_answer(item: Mapping[str, Any], content: PackIndex) -> dict[str, Any]
         "steps": shown,
         "final_answer": {"latex": final[:4000], "check_id": key_check[:64]},
         "faded_steps": [],
+        "visual": resolved_of(example) or resolved_of(pinned),
     }

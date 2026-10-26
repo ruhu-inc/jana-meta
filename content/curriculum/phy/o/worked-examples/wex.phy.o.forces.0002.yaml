@@ -17,6 +17,26 @@ final_answer:
 fading_order:
 - 2
 - 1
+visual:
+  visual_type: free_body
+  params:
+    object: car
+    surface:
+      kind: horizontal
+    forces:
+    - id: D
+      name: driving force
+      magnitude: 9000 N
+      direction_deg: 0
+    - id: F
+      name: friction
+      magnitude: 1200 N
+      direction_deg: 180
+    - id: A
+      name: air resistance
+      magnitude: 3200 N
+      direction_deg: 180
+    scale: schematic
 version: 0.1.0
 provenance:
   origin: original

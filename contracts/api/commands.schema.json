@@ -5556,6 +5556,17 @@
       "type": "integer",
       "minimum": 1
      }
+    },
+    "visual": {
+     "anyOf": [
+      {
+       "$ref": "https://jana.dev/contracts/visuals/visual-spec#/$defs/resolved"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "description": "The worked example's figure, resolved and checked at build time; absent or null when it has none."
     }
    },
    "required": [

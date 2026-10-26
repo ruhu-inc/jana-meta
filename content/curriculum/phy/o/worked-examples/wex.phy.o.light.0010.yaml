@@ -17,6 +17,11 @@ final_answer:
 fading_order:
 - 2
 - 1
+visual:
+  visual_type: ray_diagram
+  ref: dgm.phy.ray_converging_beyond_2f.v1
+  params:
+    object_height: 2 cm
 version: 0.1.0
 provenance:
   origin: original

@@ -17,6 +17,25 @@ final_answer:
 fading_order:
 - 2
 - 1
+visual:
+  visual_type: function_graph
+  params:
+    curves:
+    - id: f
+      expr: x^2 + 2*x - 3
+      label: y = x² + 2x − 3
+    x_range:
+    - -4
+    - 2
+    y_range:
+    - -5
+    - 5
+    marks:
+    - roots
+    - y_intercept
+    axis_labels:
+      x: x
+      y: y
 version: 0.1.1
 provenance:
   origin: original
