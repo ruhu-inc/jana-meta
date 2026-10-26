@@ -1,0 +1,29 @@
+services/agent-core/agent_core/engine/vision.py
+  s_09726b09e7edac::t_5aa5ef12eddfb7 21,86-87,99-105,108-109,208,210-214,227
+services/agent-core/tests/test_photo_regions.py
+  s_09726b09e7edac::t_f9bea5c4294557 383-427
+services/agent-core/agent_core/engine/turn.py
+  s_09726b09e7edac::t_5aa5ef12eddfb7 473,479-480
+services/agent-core/agent_core/api/captures.py
+  s_09726b09e7edac::t_5d75dab711c586 75,450,719-720,736-758
+  s_09726b09e7edac::t_1c19a7bbde4e55 13
+  s_09726b09e7edac::t_171a1c9062f0ca 735
+  s_09726b09e7edac::t_f5a5dd3e845832 129,143,844-846
+  s_09726b09e7edac::t_f870a44efd2b9c 759
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0da45759c45786e820dc47708f49d4bf46669715",
+  "prompts": {},
+  "sessions": {
+    "s_09726b09e7edac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e5862a0-b0c4-4426-9881-98ae596ead81",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
