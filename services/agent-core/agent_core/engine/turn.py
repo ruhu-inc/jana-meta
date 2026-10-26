@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import contextvars
 import hashlib
 import json
 import re
@@ -171,6 +172,9 @@ SESSION_MODES = ("guided", "solution", "check_working")  # the modes a session r
 TURN_INTENTS = ("ask", "answer", "stuck", "side_question", "board_line", "why")  # what `turn.start` names as given
 # VSL-01, VSL-43 (D106): a drawing in a tutor turn is never allowed; the request for one only from the online tier.
 SKETCH_FIELDS = frozenset({"sketch", "sketch_wanted"})
+# The KCs a speculative Solver call guessed (SPEC §12): set only inside that call's own task, so the Diagnoser running
+# beside it, and every later call, read the KCs in play as usual.
+GUESSED_KCS: contextvars.ContextVar[list[str] | None] = contextvars.ContextVar("guessed_kcs", default=None)
 # The one line an online candidate's prompt gains (VSL-43, D106): a sketch is the engine's own call, never the turn's.
 SKETCH_HINT = ("Only when a drawing would help and no catalogue visual fits, set sketch_wanted to a short description "
                "of it (what to draw, in words); the app draws it separately. Never draw in the reply.")
@@ -365,6 +369,8 @@ class Engine(Coordination, Offers, Predictions):
         # tries), and the tools it offers. A cloud call gets no notes and no `memory_recall` (MEM-13, MDL-25).
         self._call_cloud = False
         self._call_tools: list[ToolSchema] = []
+        # A Solver started beside the Diagnoser on a new question (SPEC §12): the KCs it guessed and its call.
+        self.speculation: tuple[list[str], asyncio.Future[dict[str, Any]]] | None = None
         # The installed packs' search index (CUR-30, MEM-21): bound by the app; an engine without one offers neither
         # knowledge tool and grounds no topic context.
         self.knowledge: KnowledgeTools | None = None
@@ -692,10 +698,78 @@ class Engine(Coordination, Offers, Predictions):
         self._ack(turn, "Let me look at this problem.")
         self._rules_ahead()
         if self.deps.stage >= "S2":  # the Diagnoser, then the Solver (TABLE AGT-15a)
-            chosen = await team.new_problem(self, turn, statement)
-            if chosen is not None:
+            await self._speculate(turn, statement)
+            try:
+                chosen = await team.new_problem(self, turn, statement)
+            except BaseException:
+                self._drop_speculation(turn, "failed")
+                raise
+            if chosen is not None:  # a clarifying question, a definition, the topic chooser or a Stop: no plan
+                self._drop_speculation(turn, "not_planned")
                 return cast(TurnResult, chosen)
         return await self._plan_and_open(turn, statement)
+
+    async def _speculate(self, turn: _Turn, statement: str) -> None:
+        """A Solver started beside the Diagnoser on a new question (SPEC §12): both calls take seconds of reasoning
+        before their first token, and the Solver usually needs the diagnosis only to choose its teaching skill. The
+        guess is the KC the pack index matches best (the Diagnoser's own first candidate, no model call); the plan is
+        used only when the diagnosis leads to the same teaching skill (`_speculated`), else it is dropped and the Solver
+        runs as before. Only when both calls are served online: a local runtime runs one call at a time, so a guess
+        would only delay the Diagnoser. The guessed call sends what the Solver sends anyway (the question)."""
+        self.speculation = None
+        if (not self.deps.settings.speculative_solver or self._lean() or self.knowledge is None
+                or self.state.practice is not None):  # fmt: skip
+            return
+        if not (await self._online_first("diagnoser") and await self._online_first("solver")):
+            return
+        _, kcs, _ = team.candidates(self, statement)
+        if not kcs:
+            return
+        guess, task = kcs[:1], f"<student-message>\n{_escape(statement)}\n</student-message>"
+
+        async def solve() -> dict[str, Any]:
+            GUESSED_KCS.set(guess)  # this task's context only
+            return await self.delegate("solver", task, turn)
+
+        self.speculation = (guess, asyncio.ensure_future(solve()))
+
+    async def _online_first(self, role: str) -> bool:
+        """The role's first candidate is served online (a cloud candidate)."""
+        _, found, _ = await self.deps.router.candidates(role)
+        return bool(found) and getattr(found[0], "locality", "local") == "cloud"
+
+    def _drop_speculation(self, turn: _Turn, outcome: str) -> None:
+        if self.speculation is None:
+            return
+        _, call = self.speculation
+        self.speculation = None
+        call.cancel()  # a call still in flight stops; one already answered is discarded
+        call.add_done_callback(lambda done: done.cancelled() or done.exception())  # never an unretrieved error
+        self._log("info", "engine", "plan.speculative", turn_id=turn.turn_id, outcome=outcome)
+
+    async def _speculated(self, turn: _Turn) -> dict[str, Any] | None:
+        """The speculative Solver's envelope when the diagnosis gives the teaching skill it guessed; else None (the
+        call is dropped and the Solver runs with the diagnosis, as before)."""
+        if self.speculation is None:
+            return None
+        guess, call = self.speculation
+        skills, level = self.deps.assets.skills, self.state.level
+        guessed, wanted = skills.teaching_for(guess, level), self._teaching_skill()
+        if (guessed.name if guessed else None) != (wanted.name if wanted else None):
+            self._drop_speculation(turn, "other_skill")
+            return None
+        self.speculation = None
+        try:
+            envelope = await call
+        except asyncio.CancelledError:
+            if self.cancelled.is_set():
+                raise
+            envelope = None
+        except Exception:  # a failed guess costs only its call: the Solver runs as before
+            envelope = None
+        self._log("info", "engine", "plan.speculative", turn_id=turn.turn_id,
+                  outcome="used" if envelope is not None else "failed")  # fmt: skip
+        return envelope
 
     async def _plan_and_open(self, turn: _Turn, statement: str) -> TurnResult:
         """The knowns panel from the question's parse, then the Solver's verified plan, then the Coach opens the first
@@ -1268,7 +1342,9 @@ class Engine(Coordination, Offers, Predictions):
             givens = {"knowns": self.diagnosis.output.get("knowns"), "unknowns": unknowns}
             task += "\n\nGiven quantities and unknowns:\n" + _escape(json.dumps(givens, ensure_ascii=False))
         for attempt in range(2):
-            envelope = await self.delegate("solver", task, turn)
+            envelope = (await self._speculated(turn) if attempt == 0 else None) or await self.delegate(
+                "solver", task, turn
+            )
             if self.cancelled.is_set():
                 return None
             await self._check_written_steps(envelope, turn)
@@ -3148,6 +3224,9 @@ class Engine(Coordination, Offers, Predictions):
     def _session_kcs(self) -> list[str]:
         """The KCs in play: the current practice item's, else those the Diagnoser found for the open question (SKL-08:
         the teaching skill of the problem's KCs), else those of the topic the session was opened on."""
+        guessed = GUESSED_KCS.get()
+        if guessed is not None:  # a speculative Solver call (`_speculate`)
+            return list(guessed)
         practice = self.state.practice
         kc_ids = list(practice["item"].get("kc_ids", [])) if practice else self._item_kcs()
         if not kc_ids and self.memory is not None:

@@ -258,6 +258,8 @@ class Settings(BaseModel):
     vision_confirm_threshold: float = key(0.6, serves="AGT-02", layers=ENGINEERING, ge=0, le=1)
     title_max_words: int = key(6, serves="AGT-02", layers=ENGINEERING, unit="words", ge=1, le=20)
     diagnoser_attempts: int = key(2, serves="AGT-27", layers=ENGINEERING, unit="attempts", ge=1, le=5)
+    # SPEC §12: on a new question served online, the Solver starts beside the Diagnoser on a guessed teaching skill.
+    speculative_solver: bool = key(True, serves="AGT-15", layers=ENGINEERING)
     topic_chooser_options: int = key(3, serves="AGT-27", layers=ENGINEERING, unit="options", ge=1, le=4)
     # The KCs the Diagnoser is offered for a question, best-matching first (AGT-01, LRN-06).
     diagnoser_kc_candidates: int = key(20, serves="AGT-01", layers=ENGINEERING, unit="KCs", ge=1, le=60)
