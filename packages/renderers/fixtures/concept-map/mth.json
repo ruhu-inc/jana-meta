@@ -1,0 +1,1267 @@
+{
+ "subject_id": "cur.mth.o",
+ "nodes": [
+  {
+   "id": "kc.mth.o.algebra_and_graphs.algebraic_fractions",
+   "code": "MTH-O-02.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.change_subject",
+   "code": "MTH-O-02.02.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.expand_brackets",
+   "code": "MTH-O-02.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.factorise_common",
+   "code": "MTH-O-02.02.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.factorise_quadratic",
+   "code": "MTH-O-02.02.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.forming_equations",
+   "code": "MTH-O-02.05.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.function_notation",
+   "code": "MTH-O-02.12.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.graphical_solutions",
+   "code": "MTH-O-02.10.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.index_laws_algebra",
+   "code": "MTH-O-02.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.linear_equations",
+   "code": "MTH-O-02.05.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.linear_inequalities",
+   "code": "MTH-O-02.06.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.linear_sequences",
+   "code": "MTH-O-02.07.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.quadratic_equations",
+   "code": "MTH-O-02.05.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.quadratic_features",
+   "code": "MTH-O-02.11.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.quadratic_sequences",
+   "code": "MTH-O-02.07.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.simultaneous_equations",
+   "code": "MTH-O-02.05.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.substitution",
+   "code": "MTH-O-02.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.tables_of_values",
+   "code": "MTH-O-02.10.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.travel_graphs",
+   "code": "MTH-O-02.09.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.variation",
+   "code": "MTH-O-02.08.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.calculus.definite_integrals",
+   "code": "MTH-O-10.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.calculus.differentiate_powers",
+   "code": "MTH-O-10.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.calculus.stationary_points",
+   "code": "MTH-O-10.01.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.calculus.tangents_normals",
+   "code": "MTH-O-10.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.axis_intercepts",
+   "code": "MTH-O-03.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.gradient",
+   "code": "MTH-O-03.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.line_equation",
+   "code": "MTH-O-03.05.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.midpoint",
+   "code": "MTH-O-03.04.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.parallel_lines",
+   "code": "MTH-O-03.06.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.perpendicular_lines",
+   "code": "MTH-O-03.07.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.points_on_lines",
+   "code": "MTH-O-03.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.segment_length",
+   "code": "MTH-O-03.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.angle_facts",
+   "code": "MTH-O-04.06.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.bearings",
+   "code": "MTH-O-04.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.circle_theorems_basic",
+   "code": "MTH-O-04.07.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.circle_theorems_cyclic",
+   "code": "MTH-O-04.08.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.constructions",
+   "code": "MTH-O-04.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.map_scales",
+   "code": "MTH-O-04.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.parallel_line_angles",
+   "code": "MTH-O-04.06.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.polygon_angles",
+   "code": "MTH-O-04.06.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.shape_properties",
+   "code": "MTH-O-04.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.similar_area_volume",
+   "code": "MTH-O-04.04.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.similar_lengths",
+   "code": "MTH-O-04.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.symmetry",
+   "code": "MTH-O-04.05.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.geometry.triangle_angles",
+   "code": "MTH-O-04.06.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.mensuration.arcs_sectors",
+   "code": "MTH-O-05.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.mensuration.area_perimeter",
+   "code": "MTH-O-05.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.mensuration.circle_measures",
+   "code": "MTH-O-05.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.mensuration.compound_shapes",
+   "code": "MTH-O-05.05.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.mensuration.metric_units",
+   "code": "MTH-O-05.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.mensuration.prism_volume",
+   "code": "MTH-O-05.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.mensuration.pyramid_cone_sphere",
+   "code": "MTH-O-05.04.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.bounds",
+   "code": "MTH-O-01.10.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.bounds_calc",
+   "code": "MTH-O-01.10.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.compound_growth",
+   "code": "MTH-O-01.17.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.currency_conversion",
+   "code": "MTH-O-01.16.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.direct_proportion",
+   "code": "MTH-O-01.11.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.estimation",
+   "code": "MTH-O-01.09.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.fdp_conversion",
+   "code": "MTH-O-01.04.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.fraction_arithmetic",
+   "code": "MTH-O-01.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.hcf_lcm",
+   "code": "MTH-O-01.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.index_laws_numeric",
+   "code": "MTH-O-01.07.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.order_of_operations",
+   "code": "MTH-O-01.06.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.ordering_quantities",
+   "code": "MTH-O-01.05.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.percentage_change",
+   "code": "MTH-O-01.13.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.powers_and_roots",
+   "code": "MTH-O-01.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.prime_factors",
+   "code": "MTH-O-01.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.rates",
+   "code": "MTH-O-01.12.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.ratio_share",
+   "code": "MTH-O-01.11.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.reverse_percentage",
+   "code": "MTH-O-01.13.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.rounding",
+   "code": "MTH-O-01.14.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.simple_interest",
+   "code": "MTH-O-01.16.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.standard_form_calc",
+   "code": "MTH-O-01.08.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.standard_form_convert",
+   "code": "MTH-O-01.08.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.surds",
+   "code": "MTH-O-01.18.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.time_intervals",
+   "code": "MTH-O-01.15.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.number.venn_counting",
+   "code": "MTH-O-01.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.probability.dependent_events",
+   "code": "MTH-O-08.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.probability.expected_frequency",
+   "code": "MTH-O-08.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.probability.independent_events",
+   "code": "MTH-O-08.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.probability.single_event",
+   "code": "MTH-O-08.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.averages_frequency",
+   "code": "MTH-O-09.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.averages_list",
+   "code": "MTH-O-09.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.cumulative_frequency",
+   "code": "MTH-O-09.06.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.data_types",
+   "code": "MTH-O-09.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.grouped_mean",
+   "code": "MTH-O-09.03.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.histograms",
+   "code": "MTH-O-09.07.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.pie_charts",
+   "code": "MTH-O-09.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.read_tables",
+   "code": "MTH-O-09.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.statistics.scatter_correlation",
+   "code": "MTH-O-09.05.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.transformations_and_vectors.enlargement",
+   "code": "MTH-O-07.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.transformations_and_vectors.transform_points",
+   "code": "MTH-O-07.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.transformations_and_vectors.vector_arithmetic",
+   "code": "MTH-O-07.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.transformations_and_vectors.vector_magnitude",
+   "code": "MTH-O-07.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.trigonometry.cosine_rule",
+   "code": "MTH-O-06.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.trigonometry.elevation_depression",
+   "code": "MTH-O-06.02.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.trigonometry.pythagoras",
+   "code": "MTH-O-06.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.trigonometry.sine_rule",
+   "code": "MTH-O-06.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.trigonometry.three_d",
+   "code": "MTH-O-06.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.trigonometry.triangle_area_sine",
+   "code": "MTH-O-06.03.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.trigonometry.trig_angle",
+   "code": "MTH-O-06.02.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.trigonometry.trig_side",
+   "code": "MTH-O-06.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.density.density_calculation",
+   "code": "PHY-O-01.04.K01",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.electrical_quantities.current_and_charge",
+   "code": "PHY-O-04.02.K02",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.electrical_quantities.resistance",
+   "code": "PHY-O-04.02.K04",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.forces.force_mass_acceleration",
+   "code": "PHY-O-01.05.K02",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.motion.acceleration_from_change",
+   "code": "PHY-O-01.02.K04",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.motion.distance_time_gradient",
+   "code": "PHY-O-01.02.K05",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.motion.solve_with_equation",
+   "code": "PHY-O-01.02.K09",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.motion.velocity_time_gradient",
+   "code": "PHY-O-01.02.K06",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.pressure.liquid_pressure",
+   "code": "PHY-O-01.08.K02",
+   "linked": true
+  },
+  {
+   "id": "kc.phy.o.pressure.pressure_on_surfaces",
+   "code": "PHY-O-01.08.K01",
+   "linked": true
+  }
+ ],
+ "edges": [
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.mth.o.algebra_and_graphs.function_notation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.mth.o.trigonometry.trig_side",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.expand_brackets",
+   "to": "kc.mth.o.algebra_and_graphs.factorise_common",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.expand_brackets",
+   "to": "kc.mth.o.algebra_and_graphs.linear_equations",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.factorise_common",
+   "to": "kc.mth.o.algebra_and_graphs.factorise_quadratic",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.factorise_quadratic",
+   "to": "kc.mth.o.algebra_and_graphs.algebraic_fractions",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.factorise_quadratic",
+   "to": "kc.mth.o.algebra_and_graphs.quadratic_equations",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.index_laws_algebra",
+   "to": "kc.mth.o.calculus.differentiate_powers",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.linear_equations",
+   "to": "kc.mth.o.algebra_and_graphs.change_subject",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.linear_equations",
+   "to": "kc.mth.o.algebra_and_graphs.forming_equations",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.linear_equations",
+   "to": "kc.mth.o.algebra_and_graphs.linear_inequalities",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.linear_equations",
+   "to": "kc.mth.o.algebra_and_graphs.simultaneous_equations",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.linear_equations",
+   "to": "kc.mth.o.algebra_and_graphs.variation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.linear_equations",
+   "to": "kc.mth.o.coordinate_geometry.axis_intercepts",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.linear_sequences",
+   "to": "kc.mth.o.algebra_and_graphs.quadratic_sequences",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.quadratic_equations",
+   "to": "kc.mth.o.algebra_and_graphs.graphical_solutions",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.quadratic_equations",
+   "to": "kc.mth.o.algebra_and_graphs.quadratic_features",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.quadratic_equations",
+   "to": "kc.mth.o.calculus.stationary_points",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.substitution",
+   "to": "kc.mth.o.algebra_and_graphs.expand_brackets",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.substitution",
+   "to": "kc.mth.o.algebra_and_graphs.function_notation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.substitution",
+   "to": "kc.mth.o.algebra_and_graphs.linear_sequences",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.substitution",
+   "to": "kc.mth.o.algebra_and_graphs.tables_of_values",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.substitution",
+   "to": "kc.mth.o.coordinate_geometry.points_on_lines",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.substitution",
+   "to": "kc.mth.o.mensuration.area_perimeter",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.tables_of_values",
+   "to": "kc.mth.o.algebra_and_graphs.graphical_solutions",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.calculus.differentiate_powers",
+   "to": "kc.mth.o.calculus.definite_integrals",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.calculus.differentiate_powers",
+   "to": "kc.mth.o.calculus.stationary_points",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.calculus.differentiate_powers",
+   "to": "kc.mth.o.calculus.tangents_normals",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.mth.o.algebra_and_graphs.travel_graphs",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.mth.o.coordinate_geometry.line_equation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.line_equation",
+   "to": "kc.mth.o.coordinate_geometry.parallel_lines",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.line_equation",
+   "to": "kc.mth.o.coordinate_geometry.perpendicular_lines",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.line_equation",
+   "to": "kc.mth.o.statistics.scatter_correlation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.perpendicular_lines",
+   "to": "kc.mth.o.calculus.tangents_normals",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.points_on_lines",
+   "to": "kc.mth.o.coordinate_geometry.axis_intercepts",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.points_on_lines",
+   "to": "kc.mth.o.coordinate_geometry.gradient",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.points_on_lines",
+   "to": "kc.mth.o.coordinate_geometry.midpoint",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.points_on_lines",
+   "to": "kc.mth.o.transformations_and_vectors.transform_points",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.angle_facts",
+   "to": "kc.mth.o.geometry.bearings",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.angle_facts",
+   "to": "kc.mth.o.geometry.parallel_line_angles",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.angle_facts",
+   "to": "kc.mth.o.geometry.shape_properties",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.angle_facts",
+   "to": "kc.mth.o.geometry.triangle_angles",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.circle_theorems_basic",
+   "to": "kc.mth.o.geometry.circle_theorems_cyclic",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.shape_properties",
+   "to": "kc.mth.o.geometry.constructions",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.shape_properties",
+   "to": "kc.mth.o.geometry.symmetry",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.similar_lengths",
+   "to": "kc.mth.o.geometry.similar_area_volume",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.similar_lengths",
+   "to": "kc.mth.o.transformations_and_vectors.enlargement",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.symmetry",
+   "to": "kc.mth.o.transformations_and_vectors.transform_points",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.triangle_angles",
+   "to": "kc.mth.o.geometry.circle_theorems_basic",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.geometry.triangle_angles",
+   "to": "kc.mth.o.geometry.polygon_angles",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.mensuration.area_perimeter",
+   "to": "kc.mth.o.mensuration.circle_measures",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.mensuration.area_perimeter",
+   "to": "kc.mth.o.mensuration.prism_volume",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.mensuration.area_perimeter",
+   "to": "kc.mth.o.trigonometry.triangle_area_sine",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.mensuration.circle_measures",
+   "to": "kc.mth.o.mensuration.arcs_sectors",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.mensuration.circle_measures",
+   "to": "kc.mth.o.mensuration.compound_shapes",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.mensuration.circle_measures",
+   "to": "kc.mth.o.mensuration.prism_volume",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.mensuration.prism_volume",
+   "to": "kc.mth.o.mensuration.compound_shapes",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.mensuration.prism_volume",
+   "to": "kc.mth.o.mensuration.pyramid_cone_sphere",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.bounds",
+   "to": "kc.mth.o.number.bounds_calc",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.direct_proportion",
+   "to": "kc.mth.o.algebra_and_graphs.variation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.direct_proportion",
+   "to": "kc.mth.o.geometry.map_scales",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.direct_proportion",
+   "to": "kc.mth.o.number.currency_conversion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.direct_proportion",
+   "to": "kc.mth.o.number.rates",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.direct_proportion",
+   "to": "kc.mth.o.statistics.pie_charts",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.fdp_conversion",
+   "to": "kc.mth.o.number.ordering_quantities",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.fdp_conversion",
+   "to": "kc.mth.o.number.percentage_change",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.fdp_conversion",
+   "to": "kc.mth.o.probability.single_event",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.fraction_arithmetic",
+   "to": "kc.mth.o.algebra_and_graphs.algebraic_fractions",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.fraction_arithmetic",
+   "to": "kc.mth.o.number.fdp_conversion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.fraction_arithmetic",
+   "to": "kc.mth.o.number.ratio_share",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.fraction_arithmetic",
+   "to": "kc.mth.o.probability.independent_events",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.hcf_lcm",
+   "to": "kc.mth.o.number.fraction_arithmetic",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.index_laws_numeric",
+   "to": "kc.mth.o.algebra_and_graphs.index_laws_algebra",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.index_laws_numeric",
+   "to": "kc.mth.o.number.compound_growth",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.index_laws_numeric",
+   "to": "kc.mth.o.number.standard_form_convert",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.algebra_and_graphs.substitution",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.geometry.angle_facts",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.mensuration.metric_units",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.number.fdp_conversion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.number.powers_and_roots",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.number.prime_factors",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.number.ratio_share",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.number.rounding",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.number.time_intervals",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.number.venn_counting",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.statistics.averages_list",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.statistics.data_types",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.order_of_operations",
+   "to": "kc.mth.o.transformations_and_vectors.vector_arithmetic",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.percentage_change",
+   "to": "kc.mth.o.number.compound_growth",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.percentage_change",
+   "to": "kc.mth.o.number.reverse_percentage",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.percentage_change",
+   "to": "kc.mth.o.number.simple_interest",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.powers_and_roots",
+   "to": "kc.mth.o.geometry.similar_area_volume",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.powers_and_roots",
+   "to": "kc.mth.o.number.index_laws_numeric",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.powers_and_roots",
+   "to": "kc.mth.o.number.surds",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.powers_and_roots",
+   "to": "kc.mth.o.trigonometry.pythagoras",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.prime_factors",
+   "to": "kc.mth.o.number.hcf_lcm",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.prime_factors",
+   "to": "kc.mth.o.number.surds",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.rates",
+   "to": "kc.mth.o.algebra_and_graphs.travel_graphs",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.ratio_share",
+   "to": "kc.mth.o.geometry.similar_lengths",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.ratio_share",
+   "to": "kc.mth.o.number.direct_proportion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.rounding",
+   "to": "kc.mth.o.number.bounds",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.rounding",
+   "to": "kc.mth.o.number.estimation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.standard_form_convert",
+   "to": "kc.mth.o.mensuration.metric_units",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.number.standard_form_convert",
+   "to": "kc.mth.o.number.standard_form_calc",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.probability.independent_events",
+   "to": "kc.mth.o.probability.dependent_events",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.probability.single_event",
+   "to": "kc.mth.o.probability.expected_frequency",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.probability.single_event",
+   "to": "kc.mth.o.probability.independent_events",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.statistics.averages_frequency",
+   "to": "kc.mth.o.statistics.cumulative_frequency",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.statistics.averages_frequency",
+   "to": "kc.mth.o.statistics.grouped_mean",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.statistics.averages_list",
+   "to": "kc.mth.o.statistics.averages_frequency",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.statistics.data_types",
+   "to": "kc.mth.o.statistics.read_tables",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.statistics.grouped_mean",
+   "to": "kc.mth.o.statistics.histograms",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.statistics.read_tables",
+   "to": "kc.mth.o.statistics.histograms",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.statistics.read_tables",
+   "to": "kc.mth.o.statistics.pie_charts",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.statistics.read_tables",
+   "to": "kc.mth.o.statistics.scatter_correlation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.transformations_and_vectors.transform_points",
+   "to": "kc.mth.o.transformations_and_vectors.enlargement",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.transformations_and_vectors.vector_arithmetic",
+   "to": "kc.mth.o.transformations_and_vectors.vector_magnitude",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.pythagoras",
+   "to": "kc.mth.o.coordinate_geometry.segment_length",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.pythagoras",
+   "to": "kc.mth.o.transformations_and_vectors.vector_magnitude",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.pythagoras",
+   "to": "kc.mth.o.trigonometry.three_d",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.pythagoras",
+   "to": "kc.mth.o.trigonometry.trig_side",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.trig_angle",
+   "to": "kc.mth.o.trigonometry.cosine_rule",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.trig_angle",
+   "to": "kc.mth.o.trigonometry.sine_rule",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.trig_angle",
+   "to": "kc.mth.o.trigonometry.three_d",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.trig_side",
+   "to": "kc.mth.o.trigonometry.elevation_depression",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.trig_side",
+   "to": "kc.mth.o.trigonometry.triangle_area_sine",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.trigonometry.trig_side",
+   "to": "kc.mth.o.trigonometry.trig_angle",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.density.density_calculation",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.current_and_charge",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.forces.force_mass_acceleration",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.motion.solve_with_equation",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.pressure.pressure_on_surfaces",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.distance_time_gradient",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.distance_time_gradient",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.velocity_time_gradient",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.velocity_time_gradient",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.number.rates",
+   "to": "kc.phy.o.motion.acceleration_from_change",
+   "kind": "root_gap"
+  }
+ ]
+}

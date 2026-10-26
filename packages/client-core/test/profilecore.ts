@@ -205,6 +205,8 @@ export class FakeProfileCore {
   /** The subject maps (M13.g, UXS-22) by subject id, and the lessons (UXS-23) by lesson id: each profile reads the same
    * curriculum, with `mapFor` to give one profile its own KC states. */
   readonly maps = new Map<string, unknown>();
+  /** The concept maps (UXS-22 map view) by subject id. */
+  readonly conceptMaps = new Map<string, unknown>();
   mapFor: ((profileId: string, subjectId: string) => unknown) | null = null;
   readonly lessons = new Map<string, Record<string, unknown>>();
   readonly journeys = new Map<string, LearningJourneyView>();
@@ -751,6 +753,10 @@ export class FakeProfileCore {
     // The subject map and the lesson player (the proposed M13.g contract additions): the unlocked profile's own.
     if (path.startsWith("/v1/curriculum/") || path.startsWith("/v1/lessons/")) {
       if (profile === null) return error(401, "profile_token_expired");
+      if (method === "GET" && (m = /^\/v1\/curriculum\/([^/]+)\/concept-map$/.exec(path))) {
+        const found = this.conceptMaps.get(decodeURIComponent(m[1]!));
+        return found === undefined ? error(404, "not_found") : json(200, found);
+      }
       if (method === "GET" && (m = /^\/v1\/curriculum\/([^/]+)\/map$/.exec(path))) {
         const subject = decodeURIComponent(m[1]!);
         const map = this.mapFor?.(profile, subject) ?? this.maps.get(subject);

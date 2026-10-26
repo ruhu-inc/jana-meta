@@ -50,7 +50,8 @@ export { KnowsContent, KnowsPage, KNOWS_SECTIONS, NOT_YET_AVAILABLE, sharingLine
 export { MemoryChip, MemoryChipView, MemoryChips, type UndoState } from "./memory/MemoryChip.js";
 export { KnowsLinkProvider, useOpenKnows } from "./memory/link.js";
 export { MemoryUseLine } from "./transcript/parts.js";
-export { SubjectMap, SubjectMapContent, type LessonInProgress, type MapActions, type SubjectChoice } from "./learn/SubjectMap.js";
+export { SubjectMap, SubjectMapContent, type ConceptMapMode, type LessonInProgress, type MapActions, type SubjectChoice } from "./learn/SubjectMap.js";
+export { ConceptMapContent, ConceptMapRendererProvider, type ConceptActions, type ConceptDrawEdge, type ConceptDrawNode, type ConceptMapRenderer } from "./learn/ConceptMap.js";
 export { FollowUpChips, FollowUpProvider, HelpChips, ReplyFollowUps, type FollowUpHandlers } from "./chips/NextStepChips.js";
 export { Practice, PracticeContent, type PracticeActions, type PracticeDraft } from "./learn/Practice.js";
 export { Feedback, PartInput, answerOf } from "./learn/items.js";

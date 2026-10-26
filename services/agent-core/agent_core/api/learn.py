@@ -1,5 +1,5 @@
 """The subject map and the lesson player over the local API (UXS-22, UXS-23): the map of one subject with each
-KC's mastery state, one lesson with its saved position, a quick check marked by the deterministic marker, and
+KC's mastery state, its concept map (the skill backbone with the learner's states, questions and mistakes), one lesson with its saved position, a quick check marked by the deterministic marker, and
 saving the position.
 
 Every route acts for the profile whose learner database is open (the profile token when profiles exist, API-04); a
@@ -67,6 +67,14 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
     async def subject_map(subject_id: str) -> dict[str, Any]:
         with desk() as opened:
             reply = opened.subject_map(subject_id) if opened is not None else None
+        if reply is None:
+            raise ApiError("not_found", "no such subject")
+        return dict(reply)
+
+    @app.get("/v1/curriculum/{subject_id}/concept-map")
+    async def concept_map(subject_id: str) -> dict[str, Any]:
+        with desk() as opened:
+            reply = opened.concept_map(subject_id) if opened is not None else None
         if reply is None:
             raise ApiError("not_found", "no such subject")
         return dict(reply)

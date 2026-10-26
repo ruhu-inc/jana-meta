@@ -35,18 +35,18 @@ import { objectiveForKc, objectiveForLesson, objectiveForTopic, type LearningObj
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   AskController, StudyWorkspaceController, SessionNotesController, SavedQuestionsController, AssessmentController, CLIENT_KEYS, ExamDateController, HistoryController, KnowsController, LessonController, LOCKED_STATES, MockController, PastPaperController, PlanController, PracticeController, ProfileController, ProgressController, SUBJECT_CODES, SUBJECT_NAMES,
-  SearchController, SessionController, StoreHolder, SubjectMapController, clientId, examLock, groupSessions, installedSubjects, finishSetup, kcSubjectCode, nextBlock,
+  SearchController, SessionController, StoreHolder, SubjectMapController, ConceptMapController, clientId, examLock, groupSessions, installedSubjects, finishSetup, kcSubjectCode, nextBlock,
   parseAssets, parseNotices, readDegraded, readLicence, readProfile, readSetup, readSubjectMap, subjectName, tutorAnswers, tutorSetup, typedCapture, helpTurn, type HelpKind, DailyGoal, goalProgress,
   type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
 } from "@jana/client-core";
 import {
   AskAnswer, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
-  KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
+  ConceptMapRendererProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
   useProfiles, useRecentSessions, useT, type AskContext, type StudyTab, type FramePlace, type LessonInProgress, type LockedPlace, type ReportNames, type SidebarContent, type SubjectChoice,
 } from "@jana/ui";
-import { RENDERERS } from "@jana/renderers";
+import { ConceptMapSvg, RENDERERS } from "@jana/renderers";
 import { errors, type api_commands } from "@jana/contracts-ts/client";
 import thirdPartyNotices from "../../../THIRD_PARTY_NOTICES?raw";
 import assetRegister from "../../../scripts/governance/shipped-assets.toml?raw";
@@ -65,6 +65,7 @@ export interface AppRuntime {
   knows: KnowsController;
   /** The subject map and the lesson player for the open profile (UXS-22, UXS-23). */
   map: SubjectMapController;
+  conceptMap: ConceptMapController;
   lessons: LessonController;
   /** Practice sets for the open profile (UXS-24, API-27). */
   practice: PracticeController;
@@ -114,7 +115,7 @@ export function createRuntime(launch: Launch, fetchImpl?: typeof fetch): AppRunt
   profiles.onClear(clearRenderCaches);
   const knows = new KnowsController(profiles);
   const runtime: AppRuntime = {
-    holder, profiles, knows, map: new SubjectMapController(profiles), lessons: new LessonController(profiles), practice: new PracticeController(profiles), mocks: new MockController(profiles), pastPapers: new PastPaperController(profiles), examDates: new ExamDateController(profiles),
+    holder, profiles, knows, map: new SubjectMapController(profiles), conceptMap: new ConceptMapController(profiles), lessons: new LessonController(profiles), practice: new PracticeController(profiles), mocks: new MockController(profiles), pastPapers: new PastPaperController(profiles), examDates: new ExamDateController(profiles),
     studyWorkspace: new StudyWorkspaceController(profiles, new BrowserLocalSpeech(), new BrowserPodcastAudio()), sessionNotes: new SessionNotesController(profiles), savedQuestions: new SavedQuestionsController(profiles), assessments: new AssessmentController(profiles), plans: new PlanController(profiles), progress: new ProgressController(profiles), history: new HistoryController(profiles), search: new SearchController(profiles), goal: new DailyGoal(profiles), ask: new AskController(profiles), launch,
   };
   return fetchImpl === undefined ? runtime : { ...runtime, fetch: fetchImpl };
@@ -202,7 +203,7 @@ function useProfileSession(runtime: AppRuntime, key: string | null, target: Tuto
       const sessionId = chosen ?? await resumeOnce(runtime, key, target, options);
       if (cancelled || profiles.generation !== generation) return;
       current = new SessionController(profiles.launch, holder, sessionId, options);
-      current.onProgress((kcId) => runtime.map.onProgress(kcId)); // a mastery change re-reads the map (UXS-22)
+      current.onProgress((kcId) => { runtime.map.onProgress(kcId); runtime.conceptMap.onProgress(kcId); }); // a mastery change re-reads the maps (UXS-22)
       current.onAuthLost(() => void profiles.expire()); // the profile could not be opened again (SEC-19)
       const opened = current;
       current.onNewSubject((start) => firstQuestions.current?.start(start)); // the card naming another subject (D94)
@@ -753,6 +754,13 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       setScreen("tutor");
     })();
   } : undefined;
+  // An open question on the concept map (one that matches no skill) is asked again, in the learner's own words, in a
+  // new session of the map's subject.
+  const askOpenQuestion = (subjectId: string, text: string) => {
+    const code = subjectId.split(".")[1];
+    const subject = SUBJECT_NAMES.find((name) => SUBJECT_CODES[name] === code);
+    if (subject !== undefined) firstQuestions.start({ subject, content: [{ type: "text", text }] });
+  };
   const askLesson = answers === true && protectedCheck === undefined ? (context: AskContext) => {
     const lesson = runtime.lessons.getView().lesson;
     if (lesson === null || lesson.lesson_id !== context.lessonId) return;
@@ -1210,6 +1218,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         <SubjectMap key={`${shownSubject}:${mapTopic ?? ""}`}
           {...(mapTopic !== null ? { initialTopic: mapTopic } : {})}
           controller={runtime.map}
+          concept={runtime.conceptMap}
+          {...(answers === true && protectedCheck === undefined ? { onAskQuestion: (text: string) => askOpenQuestion(shownSubject, text) } : {})}
           subjectId={shownSubject}
           subjects={subjects}
           onSubject={setMapSubject}
@@ -1364,12 +1374,15 @@ export function App({ runtime }: { runtime: AppRuntime }) {
   return (
     <LocaleProvider locale="en">
       <RegistryProvider registry={registry}>
+        {/* The concept map's vetted drawing (UXS-22 map view): the UI never imports renderers (ARC-18). */}
+        <ConceptMapRendererProvider value={ConceptMapSvg}>
         <div className="h-screen">
           {/* The connectivity indicator on every screen (UXS-06): in the sidebar's foot once a profile is open. */}
           <AppFrame profiles={runtime.profiles}>
             <UpdateRecovery runtime={runtime}><Shell runtime={runtime} /></UpdateRecovery>
           </AppFrame>
         </div>
+        </ConceptMapRendererProvider>
       </RegistryProvider>
     </LocaleProvider>
   );

@@ -22,6 +22,10 @@ export {
   type LessonBlock, type LessonPlayerView, type LessonView, type MapBand, type MapKc, type MapLesson, type MapSection, type MapStatus, type MapSyllabus, type MapTopic, type MapView,
   type PartAnswer, type PracticeItem, type StepAction, type SubjectMap, type SyllabusPoint, type VisualRef, type WorkedExampleView,
 } from "./learn.js";
+export {
+  ConceptMapController, EMPTY_CONCEPT_MAP, nodeBadges, openQuestions, pathOn, readConceptMap, type ConceptEdge, type ConceptMap, type ConceptMapView, type ConceptMistake,
+  type ConceptNext, type ConceptNode, type ConceptQuestion, type GapHighlight, type NodeBadges,
+} from "./concept-map.js";
 export { hydrate, type CoreSnapshot } from "./hydrate.js";
 export { splitBlocks, type Blocks } from "./blocks.js";
 export { DeltaQueue, coalesce, type Clock, type Envelope } from "./queue.js";
