@@ -1,0 +1,20 @@
+packages/ui/test/photo-regions.test.tsx
+  s_09726b09e7edac::t_d8d6f6414921f0 9,103-123
+  s_09726b09e7edac::t_c8fadfecfdc85b 124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b3f1b112d70a6ab2d7c50574118e2bcc1cabdaaa",
+  "prompts": {},
+  "sessions": {
+    "s_09726b09e7edac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e5862a0-b0c4-4426-9881-98ae596ead81",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
