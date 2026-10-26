@@ -382,6 +382,24 @@ photographed free-body sketch: read and outlined in 13–15 s (more elements), t
 tools 10/10, streaming usage, image input pass; bare-prompt Coach JSON failed only the schema's conditional rules
 (if/then is not enforced by constrained decoding), which the engine's own prompt and retry handle.
 
+**Measured again 2026-10-26, after the latency work** (`uv run python -m jana_tools.turn_latency --repeat 2`: ten
+seeded Maths and Physics turns, eight openings and two follow-up answers, through the shipped engine with the tool
+worker and the installed packs, against the gateway's Meta adapter and ledger in process): **median 8.7 s** over 20
+turns (passes of 9.5 s and 7.9 s; an earlier single pass 7.9 s), openings 9.0 s, follow-ups 4.4–9.9 s, p90 14.6 s;
+20/20 kept the rules (plans verified by tools, every board number checked, nothing withheld shown, no degraded turn).
+Per call (median): input guard 1.25 s, Diagnoser 2.5 s, Solver 1.6 s per call (one tool call, one plan), Coach 2.1 s,
+Checker 1.6 s. A call costs about 0.9 s plus 0.37 s per 100 output tokens; Spark still reasons 100–500 tokens at
+`minimal`, and about one call in 25 is slower than that by 1.5–8 s, which sets the tail. Muse Spark 1.2 was no faster
+(median 11 s). What changed: the Solver at `minimal`; one tool round with the units check, then a named plan phase;
+a plan step on the way to a checked answer is checked at that answer instead of refusing the plan; an empty optional
+`sketch_wanted` no longer costs a Coach retry; the rule matcher's judgement and the session title run alongside the
+specialists; no guard model call for a line of working or a "Solve …" question (its patterns, classifier and redaction
+still run); `phys_circuit`'s self-referring schema, which Spark refused with a 400 on every physics Solver call, is
+unrolled. An opening is still five calls in a row (guard, Diagnoser, Solver tool, Solver plan, Coach), so ≤ 3 s needs
+fewer of them: running the guard alongside the Diagnoser (about 1.2 s; `test_agt02` now requires no other call when
+the guard answers), the Coach alongside the Solver's plan (about 1.5 s; the opening note now depends on the plan), or
+streaming the Coach's `say` to speech before the gates finish.
+
 ## 13. Workstreams and plan
 
 Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter lands; W5 and W6 any time):
