@@ -6,7 +6,7 @@ import {
   Users, Circle, CircleDashed, CircleDot, CircleCheckBig, RotateCcw, Hourglass, BookOpen, GraduationCap, ArrowLeft, ArrowRight, MoveUp,
   MoveDown, MessageSquare, ImagePlus, Mic, LayoutDashboard, PanelLeft, PanelRight, Menu, SquarePen, Ellipsis, Volume2, Flag, Keyboard, Target,
   ScrollText, LifeBuoy, Bug, Share2, Wind, UserPlus, ClipboardList, Timer, Bookmark, SquareCheckBig, EyeOff, Calculator, Pause, Play, FlaskConical,
-  TrendingUp, ChartColumn, Table, Search, Clock3, LibraryBig, Languages, Archive, ChevronsUpDown, GalleryVerticalEnd,
+  TrendingUp, ChartColumn, Table, Search, Clock3, LibraryBig, Languages, Archive, ChevronsUpDown, GalleryVerticalEnd, Shapes,
   type LucideIcon,
 } from "lucide-react";
 import { TOKENS } from "./generated/tokens.js";
@@ -53,6 +53,7 @@ export const ICONS = {
   ask: { glyph: MessageSquare, mirrorInRtl: false },
   // The composer's tools (UXS-15): add a photo (UXS-13) and hold-to-dictate voice (VOC-46).
   photo: { glyph: ImagePlus, mirrorInRtl: false },
+  diagram: { glyph: Shapes, mirrorInRtl: false },
   voice: { glyph: Mic, mirrorInRtl: false },
   // The app frame (UXS-01, UXS-14): Home, the sidebar's collapse, the drawer's menu, New question, the board toggle and
   // the compact tab bar's More.

@@ -209,16 +209,19 @@ export function PhotoCapture({ previewProcessingElapsed = false, previewStage, p
   const confirm = async () => {
     if (commands.current === null || capture === null) return;
     setBusy(true);
-    try { const value = await commands.current.confirm(capture.capture_id, text, selected); if (alive.current) { update(value); onConfirmed(value); onClose(); } }
+    // A diagram's parts are named one per line: each edited line renames its part, when the lines still match them.
+    const lines = text.split("\n").map((line) => line.trim()).filter((line) => line !== "");
+    const named = purpose === "diagram" && lines.length === capture.regions.length ? capture.regions.map((region, i) => ({ ...region, text: lines[i] ?? region.text })) : undefined;
+    try { const value = await commands.current.confirm(capture.capture_id, text, selected, named); if (alive.current) { update(value); onConfirmed(value); onClose(); } }
     catch (err) { if (alive.current) { setError(err instanceof Error ? err.message : "photo_reading_unavailable"); setBusy(false); } }
   };
   const confirming = capture?.status === "awaiting_confirmation";
   const unreadable = capture?.status === "unreadable";
-  return <div role="dialog" aria-modal="false" aria-label={t(purpose === "working" ? "photo.working_action" : purpose === "sketch" ? "photo.sketch_action" : "photo.title")} className="my-2 rounded-card border border-line bg-panel p-3" onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }} onPaste={(event) => {
+  return <div role="dialog" aria-modal="false" aria-label={t(purpose === "working" ? "photo.working_action" : purpose === "sketch" ? "photo.sketch_action" : purpose === "diagram" ? "photo.diagram_action" : "photo.title")} className="my-2 rounded-card border border-line bg-panel p-3" onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }} onPaste={(event) => {
     const incoming = event.clipboardData.files[0]; if (incoming !== undefined && incoming.type.startsWith("image/")) { event.preventDefault(); void choose(incoming, "photo_paste"); }
   }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const incoming = event.dataTransfer.files[0]; if (incoming !== undefined) void choose(incoming, "photo_drop"); }}>
-    <p className="font-semibold">{t(confirming ? purpose === "working" ? "photo.working_title" : purpose === "sketch" ? "photo.sketch_title" : "photo.confirm_title" : purpose === "working" ? "photo.working_action" : purpose === "sketch" ? "photo.sketch_action" : "photo.title")}</p>
-    <p className="text-meta">{t(confirming ? "photo.confirm_instructions" : "photo.instructions")}</p>
+    <p className="font-semibold">{t(confirming ? purpose === "working" ? "photo.working_title" : purpose === "sketch" ? "photo.sketch_title" : purpose === "diagram" ? "photo.diagram_title" : "photo.confirm_title" : purpose === "working" ? "photo.working_action" : purpose === "sketch" ? "photo.sketch_action" : purpose === "diagram" ? "photo.diagram_action" : "photo.title")}</p>
+    <p className="text-meta">{t(purpose === "diagram" ? confirming ? "photo.diagram_confirm_instructions" : "photo.diagram_instructions" : confirming ? "photo.confirm_instructions" : "photo.instructions")}</p>
     {capture?.injection.flagged && <p role="status">{t("photo.injection_removed")}</p>}
     {capture?.status === "confirmed" && <p role="status">{t("photo.confirmed")}</p>}
     {capture?.status === "cancelled" && <p role="status">{t("photo.cancelled")}</p>}

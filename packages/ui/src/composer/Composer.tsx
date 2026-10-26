@@ -14,6 +14,7 @@ import { Button, IconButton, SuggestionChip } from "../primitives/index.js";
 import { ComposerShell } from "../primitives/ComposerShell.js";
 import { useSelect, useSession } from "../store.js";
 import { CaptureDiagrams } from "./CaptureDiagrams.js";
+import { DiagramDrill } from "./DiagramDrill.js";
 import { PhotoCapture } from "./PhotoCapture.js";
 import { QuestionDock } from "./QuestionDock.js";
 import { useDockRequest } from "./requests.js";
@@ -58,14 +59,16 @@ export function Composer({ sessionId, asking = false, onSent, placement = "dock"
   const [sent, setSent] = useState<string | null>(null);
   const completed = useSelect((s) => { const id = sent === null ? null : s.messages[sent]?.turn_id; return id == null ? null : s.turns[id]; });
   useEffect(() => { if (completed?.status === "complete" && !completed.degraded && completed.error === null) { if (submittedText.current !== null && editor.current?.text() === submittedText.current) editor.current.clear(); submittedText.current = null; askNext(false); setSent(null); } }, [completed]);
-  const [photo, setPhoto] = useState<{ file?: Blob; source?: "photo_paste" | "photo_drop"; sessionId: string } | null>(null);
+  const [photo, setPhoto] = useState<{ file?: Blob; source?: "photo_paste" | "photo_drop"; sessionId: string; diagram?: boolean } | null>(null);
+  /** A confirmed photo of a labelled diagram, open in its drill (SPEC §5.2): practised here, never sent as a turn. */
+  const [drill, setDrill] = useState<CapturedQuestion | null>(null);
   const nextQuestion = useRef(false);
   const [newQuestion, setNewQuestion] = useState(false);
   const askNext = (on: boolean) => { nextQuestion.current = on; setNewQuestion(on); };
   const [upNext, setUpNext] = useState<CapturedQuestion[]>([]);
   useEffect(() => {
     let closed = false;
-    setUpNext([]); setPhoto(null); setSent(null); askNext(false);
+    setUpNext([]); setPhoto(null); setDrill(null); setSent(null); askNext(false);
     if (session?.commands !== undefined) void new PhotoCommands(session.commands, sessionId).list().then((result) => { if (!closed) setUpNext(result.captures); }).catch(() => undefined);
     return () => { closed = true; };
   }, [session, sessionId]);
@@ -205,9 +208,14 @@ export function Composer({ sessionId, asking = false, onSent, placement = "dock"
           editor.current?.insert(capture.regions.filter((region) => question.region_ids.includes(region.region_id)).map(captureRegionText).join("\n"));
           setUpNext((queue) => queue.map((item) => item.capture_id === capture.capture_id ? { ...item, questions: item.questions.map((q) => q.label === question.label ? { ...q, selected: true } : q) } : item));
         }}>{question.label}: {capture.regions.find((region) => region.region_id === question.region_ids[0])?.text.slice(0, 80)}</Button>))}</div>}
-        {photo !== null && photo.sessionId === sessionId && <PhotoCapture key={sessionId} purpose={answering ? "answer" : "question"} {...photo} onConfirmed={(capture) => { if (session !== null) { if (sent !== null) session.discardFailed?.(sent); editor.current?.clear(); editor.current?.insert(capture.text); submittedText.current = editor.current?.text() ?? null; setSent(session.sendCapture(capture, answering ? "answer" : "ask")); onSent?.(); setUpNext((queue) => [...queue, capture]); } }} onDiscardSource={() => setPhoto({ sessionId })} onTyped={(text) => editor.current?.insert(text)} onClose={() => setPhoto(null)} />}
+        {drill !== null && drill.session_id === sessionId && <DiagramDrill key={drill.capture_id} sessionId={sessionId} capture={drill} onClose={() => setDrill(null)} />}
+        {photo !== null && photo.sessionId === sessionId && photo.diagram === true && <PhotoCapture key={`${sessionId}:diagram`} sessionId={sessionId} {...(photo.file === undefined ? {} : { file: photo.file })} {...(photo.source === undefined ? {} : { source: photo.source })} purpose="diagram" onConfirmed={(capture) => setDrill(capture)} onDiscardSource={() => setPhoto({ sessionId, diagram: true })} onTyped={() => undefined} onClose={() => setPhoto(null)} />}
+        {photo !== null && photo.sessionId === sessionId && photo.diagram !== true && <PhotoCapture key={sessionId} purpose={answering ? "answer" : "question"} {...photo} onConfirmed={(capture) => { if (session !== null) { if (sent !== null) session.discardFailed?.(sent); editor.current?.clear(); editor.current?.insert(capture.text); submittedText.current = editor.current?.text() ?? null; setSent(session.sendCapture(capture, answering ? "answer" : "ask")); onSent?.(); setUpNext((queue) => [...queue, capture]); } }} onDiscardSource={() => setPhoto({ sessionId })} onTyped={(text) => editor.current?.insert(text)} onClose={() => setPhoto(null)} />}
       </>}
-      attach={<IconButton icon="photo" label={t("photo.title")} tip="above" disabled={!canCapture} onClick={() => setPhoto({ sessionId })} />}
+      attach={<>
+        <IconButton icon="photo" label={t("photo.title")} tip="above" disabled={!canCapture} onClick={() => setPhoto({ sessionId })} />
+        {placement === "dock" && <IconButton icon="diagram" label={t("photo.diagram_action")} tip="above" disabled={!canCapture} onClick={() => { setDrill(null); setPhoto({ sessionId, diagram: true }); }} />}
+      </>}
       keyboard={<IconButton icon="maths" label={t("input.keyboard")} tip="above" aria-expanded={keyboard} disabled={sending || confirming || dictating} onClick={() => setKeyboard((open) => !open)} />}
       voice={<DictationControl look="tool" purpose={answering ? "answer" : "question"} disabled={liveTurn !== null || confirming || sending || photo !== null} onDraft={onDraft} />}
       send={liveTurn !== null ? <IconButton tone="action" tip="above" icon="stop" label={t("action.stop")} onClick={stop} /> :
