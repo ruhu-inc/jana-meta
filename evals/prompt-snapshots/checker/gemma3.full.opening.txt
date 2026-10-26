@@ -25,6 +25,8 @@ You are never shown the Solver's reasons.
 
 ## Output
 Your output goes to the engine, not the student. One verdict as JSON matching the output contract.
+An `incorrect` verdict always names its error category, never `none`; a `correct` verdict has error category `none`
+and no first wrong step.
 
 Batch independent tool calls in one round.
 Solve equations with `math_solve`; never rearrange in your head.
@@ -113,7 +115,7 @@ hint rung: 0 (no hint yet)
   }
  },
  {
-  "description": "Solves equations exactly. Use when you need every solution; not for checking a student's line (use math_check_step instead). Parameters: equations, optional unknowns, domain, interval, constants (with their source), quantities (known numeric values with units only; never unknowns or labels), units (unknown symbol to requested unit), positive_direction. Returns case and solutions with exact and 6 s.f. values. Limits: 5 s. Never repeat an unchanged failing call; give an interval when told there is no exact solution. Batch independent calls.",
+  "description": "Solves equations exactly. Use when you need every solution; not for checking a student's line (use math_check_step instead). Parameters: equations, optional unknowns, domain (complex for complex roots), interval, constants with their source, quantities (known values with units only), units, positive_direction, or method (newton_raphson, iteration with g, sign_change) with start and steps. Returns case and solutions with exact and 6 s.f. values, or the iterates. Limits: 5 s. Never repeat an unchanged failing call; give an interval when told there is no exact solution. Batch independent calls.",
   "name": "math_solve",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -180,8 +182,14 @@ hint rung: 0 (no hint yet)
      "enum": [
       "real",
       "integer",
-      "positive"
+      "positive",
+      "complex"
      ]
+    },
+    "dp": {
+     "maximum": 12,
+     "minimum": 0,
+     "type": "integer"
     },
     "equations": {
      "items": {
@@ -192,6 +200,17 @@ hint rung: 0 (no hint yet)
      "maxItems": 4,
      "minItems": 1,
      "type": "array"
+    },
+    "first_index": {
+     "enum": [
+      0,
+      1
+     ]
+    },
+    "g": {
+     "maxLength": 2000,
+     "minLength": 1,
+     "type": "string"
     },
     "interval": {
      "items": {
@@ -216,6 +235,13 @@ hint rung: 0 (no hint yet)
       10
      ]
     },
+    "method": {
+     "enum": [
+      "newton_raphson",
+      "iteration",
+      "sign_change"
+     ]
+    },
     "positive_direction": {
      "maxLength": 40,
      "minLength": 1,
@@ -233,6 +259,27 @@ hint rung: 0 (no hint yet)
       "type": "string"
      },
      "type": "object"
+    },
+    "start": {
+     "maxLength": 40,
+     "pattern": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?(/\\d+)?$",
+     "type": [
+      "number",
+      "string"
+     ]
+    },
+    "steps": {
+     "maximum": 50,
+     "minimum": 1,
+     "type": "integer"
+    },
+    "tolerance": {
+     "maxLength": 40,
+     "pattern": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?(/\\d+)?$",
+     "type": [
+      "number",
+      "string"
+     ]
     },
     "units": {
      "additionalProperties": {
@@ -273,12 +320,20 @@ hint rung: 0 (no hint yet)
   }
  },
  {
-  "description": "Rewrites an expression in a chosen form. Use when you need the simplest, expanded, factorised or single fraction form; not for equality checks (use math_check_equivalence instead). Parameters: expression, form. Returns status and result. Limits: 5 s. Never repeat an unchanged failing call. Batch independent calls.",
+  "description": "Rewrites an expression in a chosen form. Use when you need the simplest, expanded, factorised or single fraction form, partial fractions, a series (binomial or Maclaurin, with its validity), or a complex number as a + bi or in modulus-argument form; not for equality checks (use math_check_equivalence instead). Parameters: expression, form, order or terms, about, variable. Returns status and result with its working. Limits: 5 s. Never repeat an unchanged failing call. Batch independent calls.",
   "name": "math_simplify",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
    "additionalProperties": false,
    "properties": {
+    "about": {
+     "maxLength": 40,
+     "pattern": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?(/\\d+)?$",
+     "type": [
+      "number",
+      "string"
+     ]
+    },
     "assumptions": {
      "additionalProperties": {
       "items": {
@@ -308,7 +363,11 @@ hint rung: 0 (no hint yet)
       "simplest",
       "expanded",
       "factorised",
-      "single_fraction"
+      "single_fraction",
+      "partial_fractions",
+      "series",
+      "cartesian",
+      "modulus_argument"
      ]
     },
     "level": {
@@ -322,6 +381,20 @@ hint rung: 0 (no hint yet)
       2,
       10
      ]
+    },
+    "order": {
+     "maximum": 10,
+     "minimum": 0,
+     "type": "integer"
+    },
+    "terms": {
+     "maximum": 8,
+     "minimum": 1,
+     "type": "integer"
+    },
+    "variable": {
+     "pattern": "^[A-Za-z][A-Za-z0-9]{0,15}(_[A-Za-z0-9]{1,8})?$",
+     "type": "string"
     },
     "variables": {
      "items": {
@@ -405,7 +478,7 @@ hint rung: 0 (no hint yet)
   }
  },
  {
-  "description": "Checks one line of working against the line before. Use when marking a student's step; not for final answers (use math_check_equivalence instead). Parameters: prev, next, optional givens. Returns verdict and, when invalid, the error category. Limits: 5 s; unknown when undecided. Never repeat an unchanged failing call. Batch independent calls.",
+  "description": "Checks one line of working against the line before. Use when marking a student's step; not for final answers (use math_check_equivalence instead). Parameters: prev, next, optional givens, moves. Returns verdict, the error category when invalid, and with moves the terms carried or cancelled. Limits: 5 s; unknown when undecided. Never repeat an unchanged failing call. Batch independent calls.",
   "name": "math_check_step",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -451,6 +524,9 @@ hint rung: 0 (no hint yet)
       2,
       10
      ]
+    },
+    "moves": {
+     "type": "boolean"
     },
     "next": {
      "maxLength": 2000,
@@ -777,11 +853,36 @@ hint rung: 0 (no hint yet)
   }
  },
  {
-  "description": "Differentiates an expression exactly. Use when you need a derivative, a gradient, tangent or normal, or stationary points with their nature; not for areas (use math_integrate instead). Parameters: expression, optional order, at, stationary_points, interval, student. Returns derivative and the requested extras. Limits: 5 s; unknown when undecided. Never repeat an unchanged failing call. Batch independent calls.",
+  "description": "Differentiates exactly, explicitly, implicitly or parametrically. Use when you need a derivative, a gradient, tangent or normal, or stationary points with their nature; not for areas (use math_integrate instead). Parameters: expression (an equation when mode is implicit, with point), or x_expression and y_expression (mode parametric), optional order, at, stationary_points, interval, student. Returns derivative and the requested extras. Limits: 5 s; unknown when undecided. Never repeat an unchanged failing call. Batch independent calls.",
   "name": "math_differentiate",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
    "additionalProperties": false,
+   "allOf": [
+    {
+     "else": {
+      "required": [
+       "expression"
+      ]
+     },
+     "if": {
+      "properties": {
+       "mode": {
+        "const": "parametric"
+       }
+      },
+      "required": [
+       "mode"
+      ]
+     },
+     "then": {
+      "required": [
+       "x_expression",
+       "y_expression"
+      ]
+     }
+    }
+   ],
    "properties": {
     "assumptions": {
      "additionalProperties": {
@@ -801,7 +902,7 @@ hint rung: 0 (no hint yet)
     },
     "at": {
      "maxLength": 40,
-     "pattern": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?(/\\d+)?$",
+     "pattern": "^([0-9+\\-*/^(). ]|pi|e|sqrt|ln|log|exp)+$",
      "type": [
       "number",
       "string"
@@ -809,6 +910,10 @@ hint rung: 0 (no hint yet)
     },
     "decimal_comma": {
      "type": "boolean"
+    },
+    "dependent": {
+     "pattern": "^[A-Za-z][A-Za-z0-9]{0,15}(_[A-Za-z0-9]{1,8})?$",
+     "type": "string"
     },
     "expression": {
      "maxLength": 2000,
@@ -840,10 +945,34 @@ hint rung: 0 (no hint yet)
       10
      ]
     },
+    "mode": {
+     "enum": [
+      "explicit",
+      "implicit",
+      "parametric"
+     ]
+    },
     "order": {
      "maximum": 3,
      "minimum": 1,
      "type": "integer"
+    },
+    "parameter": {
+     "pattern": "^[A-Za-z][A-Za-z0-9]{0,15}(_[A-Za-z0-9]{1,8})?$",
+     "type": "string"
+    },
+    "point": {
+     "items": {
+      "maxLength": 40,
+      "pattern": "^([0-9+\\-*/^(). ]|pi|e|sqrt|ln|log|exp)+$",
+      "type": [
+       "number",
+       "string"
+      ]
+     },
+     "maxItems": 2,
+     "minItems": 2,
+     "type": "array"
     },
     "stationary_points": {
      "type": "boolean"
@@ -865,20 +994,56 @@ hint rung: 0 (no hint yet)
      "maxItems": 20,
      "type": "array",
      "uniqueItems": true
+    },
+    "x_expression": {
+     "maxLength": 2000,
+     "minLength": 1,
+     "type": "string"
+    },
+    "y_expression": {
+     "maxLength": 2000,
+     "minLength": 1,
+     "type": "string"
     }
    },
-   "required": [
-    "expression"
-   ],
    "type": "object"
   }
  },
  {
-  "description": "Integrates an expression exactly. Use when you need an indefinite or definite integral or the area under a curve; not for derivatives (use math_differentiate instead). Parameters: expression, optional lower, upper, area, student. Returns antiderivative, definite value, area pieces and the student check (missing_constant when + c is left out). Limits: 5 s. Never repeat an unchanged failing call. Batch independent calls.",
+  "description": "Integrates exactly. Use when you need an integral, an area, a volume of revolution, a trapezium estimate with its error, or a stated substitution or parts; not for derivatives (use math_differentiate instead). Parameters: expression, optional lower, upper, area, volume, method and strips, substitution, parts_u, student. Returns antiderivative, definite value, area pieces, volume, estimate or the steps, and the student check. Limits: 5 s. Never repeat an unchanged failing call. Batch independent calls.",
   "name": "math_integrate",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
    "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "required": [
+       "method"
+      ]
+     },
+     "then": {
+      "required": [
+       "strips",
+       "lower",
+       "upper"
+      ]
+     }
+    },
+    {
+     "if": {
+      "required": [
+       "volume"
+      ]
+     },
+     "then": {
+      "required": [
+       "lower",
+       "upper"
+      ]
+     }
+    }
+   ],
    "properties": {
     "area": {
      "type": "boolean"
@@ -925,20 +1090,45 @@ hint rung: 0 (no hint yet)
     },
     "lower": {
      "maxLength": 40,
-     "pattern": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?(/\\d+)?$",
+     "pattern": "^([0-9+\\-*/^(). ]|pi|e|sqrt|ln|log|exp)+$",
      "type": [
       "number",
       "string"
      ]
+    },
+    "method": {
+     "enum": [
+      "trapezium"
+     ]
+    },
+    "parts_u": {
+     "maxLength": 200,
+     "minLength": 1,
+     "type": "string"
+    },
+    "sf": {
+     "maximum": 10,
+     "minimum": 1,
+     "type": "integer"
+    },
+    "strips": {
+     "maximum": 100,
+     "minimum": 1,
+     "type": "integer"
     },
     "student": {
      "maxLength": 2000,
      "minLength": 1,
      "type": "string"
     },
+    "substitution": {
+     "maxLength": 200,
+     "minLength": 3,
+     "type": "string"
+    },
     "upper": {
      "maxLength": 40,
-     "pattern": "^[+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?(/\\d+)?$",
+     "pattern": "^([0-9+\\-*/^(). ]|pi|e|sqrt|ln|log|exp)+$",
      "type": [
       "number",
       "string"
@@ -956,6 +1146,12 @@ hint rung: 0 (no hint yet)
      "maxItems": 20,
      "type": "array",
      "uniqueItems": true
+    },
+    "volume": {
+     "enum": [
+      "x_axis",
+      "y_axis"
+     ]
     }
    },
    "required": [
@@ -1892,21 +2088,63 @@ hint rung: 0 (no hint yet)
   "name": "phys_circuit",
   "parameters": {
    "$defs": {
-    "group": {
+    "group_1": {
      "additionalProperties": false,
      "maxProperties": 1,
      "minProperties": 1,
      "properties": {
       "parallel": {
-       "$ref": "#/$defs/members"
+       "$ref": "#/$defs/members_1"
       },
       "series": {
-       "$ref": "#/$defs/members"
+       "$ref": "#/$defs/members_1"
       }
      },
      "type": "object"
     },
-    "members": {
+    "group_2": {
+     "additionalProperties": false,
+     "maxProperties": 1,
+     "minProperties": 1,
+     "properties": {
+      "parallel": {
+       "$ref": "#/$defs/members_2"
+      },
+      "series": {
+       "$ref": "#/$defs/members_2"
+      }
+     },
+     "type": "object"
+    },
+    "group_3": {
+     "additionalProperties": false,
+     "maxProperties": 1,
+     "minProperties": 1,
+     "properties": {
+      "parallel": {
+       "$ref": "#/$defs/members_3"
+      },
+      "series": {
+       "$ref": "#/$defs/members_3"
+      }
+     },
+     "type": "object"
+    },
+    "group_4": {
+     "additionalProperties": false,
+     "maxProperties": 1,
+     "minProperties": 1,
+     "properties": {
+      "parallel": {
+       "$ref": "#/$defs/members_4"
+      },
+      "series": {
+       "$ref": "#/$defs/members_4"
+      }
+     },
+     "type": "object"
+    },
+    "members_1": {
      "items": {
       "anyOf": [
        {
@@ -1914,7 +2152,52 @@ hint rung: 0 (no hint yet)
         "type": "string"
        },
        {
-        "$ref": "#/$defs/group"
+        "$ref": "#/$defs/group_2"
+       }
+      ]
+     },
+     "maxItems": 20,
+     "minItems": 1,
+     "type": "array"
+    },
+    "members_2": {
+     "items": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Z][A-Za-z0-9]{0,5}$",
+        "type": "string"
+       },
+       {
+        "$ref": "#/$defs/group_3"
+       }
+      ]
+     },
+     "maxItems": 20,
+     "minItems": 1,
+     "type": "array"
+    },
+    "members_3": {
+     "items": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Z][A-Za-z0-9]{0,5}$",
+        "type": "string"
+       },
+       {
+        "$ref": "#/$defs/group_4"
+       }
+      ]
+     },
+     "maxItems": 20,
+     "minItems": 1,
+     "type": "array"
+    },
+    "members_4": {
+     "items": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Z][A-Za-z0-9]{0,5}$",
+        "type": "string"
        }
       ]
      },
@@ -2005,7 +2288,7 @@ hint rung: 0 (no hint yet)
      "type": "array"
     },
     "network": {
-     "$ref": "#/$defs/group"
+     "$ref": "#/$defs/group_1"
     }
    },
    "required": [
@@ -2015,11 +2298,34 @@ hint rung: 0 (no hint yet)
   }
  },
  {
-  "description": "Works out vertical or horizontal projectile motion. Use when you need time of flight, maximum height, range or trajectory points; not for one suvat equation (use math_solve instead). Parameters: motion, speed, direction, height, g with its source or constants, points. Returns exact times, heights, range, landing velocity and points, up positive. Limits: 500 points, 5 s. Never repeat an unchanged failing call. Batch independent calls.",
+  "description": "Works out vertical, horizontal or angled projectile motion. Use when you need time of flight, maximum height, range or trajectory points; not for one suvat equation (use math_solve instead). Parameters: motion, speed, angle (angled: degrees above the horizontal), direction, height, g with its source or constants, points. Returns exact times, heights, range, landing velocity and points, up positive. Limits: 500 points, 5 s. Never repeat an unchanged failing call. Batch independent calls.",
   "name": "phys_projectile",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
    "additionalProperties": false,
+   "allOf": [
+    {
+     "else": {
+      "not": {
+       "required": [
+        "angle"
+       ]
+      }
+     },
+     "if": {
+      "properties": {
+       "motion": {
+        "const": "angled"
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "angle"
+      ]
+     }
+    }
+   ],
    "dependentRequired": {
     "g": [
      "g_source"
@@ -2029,6 +2335,12 @@ hint rung: 0 (no hint yet)
     ]
    },
    "properties": {
+    "angle": {
+     "description": "For an angled launch: degrees above the horizontal.",
+     "exclusiveMaximum": 90,
+     "exclusiveMinimum": 0,
+     "type": "number"
+    },
     "constants": {
      "items": {
       "additionalProperties": false,
@@ -2098,7 +2410,8 @@ hint rung: 0 (no hint yet)
     "motion": {
      "enum": [
       "vertical",
-      "horizontal"
+      "horizontal",
+      "angled"
      ]
     },
     "points": {
@@ -2479,7 +2792,7 @@ hint rung: 0 (no hint yet)
   }
  },
  {
-  "description": "Works out pH, neutralisation and titration curves for strong acids and bases. Use when you need pH or pOH, a titre or concentration, or curve points; not for mole chains (use chem_stoichiometry instead). Parameters: acid, base (formulas), their concentrations and volumes with units, basicity, ph, task, analyte, volume_max, at_volumes, constants (Kw). Returns exact pH values and points with the equivalence point. Limits: 400 points, 5 s; weak acids are unknown. Never repeat an unchanged failing call. Batch independent calls.",
+  "description": "Works out pH, neutralisation and titration curves for strong acids and bases. Use when you need pH or pOH, a titre or concentration, or curve points; not for mole chains (use chem_stoichiometry instead). Parameters: acid, base (formulas), their concentrations and volumes with units, basicity, ph, task, analyte, volume_max, at_volumes, constants (Kw), ka (a weak acid's pH). Returns exact pH values and points with the equivalence point. Limits: 400 points, 5 s; weak bases and weak-acid curves are unknown. Never repeat an unchanged failing call. Batch independent calls.",
   "name": "chem_acid_base",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2607,6 +2920,11 @@ hint rung: 0 (no hint yet)
      "maximum": 4,
      "minimum": 0,
      "type": "integer"
+    },
+    "ka": {
+     "exclusiveMinimum": 0,
+     "maximum": 100,
+     "type": "number"
     },
     "ph": {
      "maximum": 16,
@@ -2832,7 +3150,7 @@ hint rung: 0 (no hint yet)
   }
  },
  {
-  "description": "Checks journal entries, posts and balances the ledger, extracts the trial balance, corrects errors or reconciles the bank. Use when checking double entry; not for statements (use acc_statements instead). Parameters: entries or entries_text, key, chart, recorded, cash_book, bank_statement, student. Returns balance checks, ledger, trial balance, line verdicts, corrections or the reconciliation. Limits: 40 entries, 5 s. Never repeat an unchanged failing call; write lines like 'Dr Bank 500'. Batch independent calls.",
+  "description": "Checks journal entries, posts and balances the ledger, extracts the trial balance, corrects errors, reconciles the bank or builds a control account. Use when checking double entry; not for statements (use acc_statements instead). Parameters: entries or entries_text, key, chart, recorded, cash_book, bank_statement, control_account, student. Returns balance checks, ledger, trial balance, line verdicts, corrections, the reconciliation or the control balance. Limits: 40 entries, 5 s. Never repeat an unchanged failing call; write lines like 'Dr Bank 500'. Batch independent calls.",
   "name": "acc_double_entry",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -3022,6 +3340,99 @@ hint rung: 0 (no hint yet)
      },
      "required": [
       "accounts"
+     ],
+     "type": "object"
+    },
+    "control_account": {
+     "additionalProperties": false,
+     "properties": {
+      "entries": {
+       "items": {
+        "additionalProperties": false,
+        "properties": {
+         "amount": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "item": {
+          "enum": [
+           "contra",
+           "credit_purchases",
+           "credit_sales",
+           "discounts_allowed",
+           "discounts_received",
+           "dishonoured_cheques",
+           "interest_charged",
+           "irrecoverable_debts",
+           "payments",
+           "receipts",
+           "refunds",
+           "returns"
+          ]
+         }
+        },
+        "required": [
+         "item",
+         "amount"
+        ],
+        "type": "object"
+       },
+       "maxItems": 20,
+       "minItems": 1,
+       "type": "array"
+      },
+      "kind": {
+       "enum": [
+        "sales_ledger",
+        "purchases_ledger"
+       ]
+      },
+      "ledger_total": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "opening_credit": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "opening_debit": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "student_balance": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "student_side": {
+       "enum": [
+        "debit",
+        "credit"
+       ]
+      }
+     },
+     "required": [
+      "kind",
+      "entries"
      ],
      "type": "object"
     },
@@ -3292,7 +3703,8 @@ hint rung: 0 (no hint yet)
       "post",
       "mark",
       "correct",
-      "reconcile"
+      "reconcile",
+      "control"
      ]
     }
    },
@@ -3300,11 +3712,112 @@ hint rung: 0 (no hint yet)
   }
  },
  {
-  "description": "Builds a sole trader's income statement and statement of financial position from a trial balance with adjustments. Use when you need or check statements; not for ledgers (use acc_double_entry instead). Parameters: trial_balance (account, role, amount), adjustments, layout, terms, student. Returns traced lines, profit, balanced and the student's first divergent line. Limits: 60 lines, 5 s. Never repeat an unchanged failing call. Batch independent calls.",
+  "description": "Builds a sole trader's statements from a trial balance with adjustments, or with form a partnership appropriation and current accounts, company equity, a manufacturing account or incomplete records. Use when you need or check statements; not for ledgers (use acc_double_entry instead). Parameters: form, trial_balance, adjustments, partnership, company, manufacturing, incomplete_records, student. Returns traced lines, totals and the student's first divergent line. Limits: 60 lines, 5 s. Never repeat an unchanged failing call. Batch independent calls.",
   "name": "acc_statements",
   "parameters": {
    "$schema": "https://json-schema.org/draft/2020-12/schema",
    "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "not": {
+       "required": [
+        "form"
+       ]
+      }
+     },
+     "then": {
+      "required": [
+       "trial_balance"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "form": {
+        "const": "sole_trader"
+       }
+      },
+      "required": [
+       "form"
+      ]
+     },
+     "then": {
+      "required": [
+       "trial_balance"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "form": {
+        "const": "partnership"
+       }
+      },
+      "required": [
+       "form"
+      ]
+     },
+     "then": {
+      "required": [
+       "partnership"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "form": {
+        "const": "limited_company"
+       }
+      },
+      "required": [
+       "form"
+      ]
+     },
+     "then": {
+      "required": [
+       "company"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "form": {
+        "const": "manufacturing"
+       }
+      },
+      "required": [
+       "form"
+      ]
+     },
+     "then": {
+      "required": [
+       "manufacturing"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "form": {
+        "const": "incomplete_records"
+       }
+      },
+      "required": [
+       "form"
+      ]
+     },
+     "then": {
+      "required": [
+       "incomplete_records"
+      ]
+     }
+    }
+   ],
    "properties": {
     "adjustments": {
      "items": {
@@ -3371,16 +3884,711 @@ hint rung: 0 (no hint yet)
      "maxItems": 30,
      "type": "array"
     },
+    "company": {
+     "additionalProperties": false,
+     "properties": {
+      "dividends_paid": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "equity": {
+       "additionalProperties": false,
+       "properties": {
+        "general_reserve": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "retained_earnings": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "revaluation_reserve": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "share_capital": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "share_premium": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        }
+       },
+       "type": "object"
+      },
+      "finance_costs": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "profit_for_the_year": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "profit_from_operations": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "revaluation_surplus": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "share_issues": {
+       "items": {
+        "additionalProperties": false,
+        "properties": {
+         "from_reserve": {
+          "enum": [
+           "share_premium",
+           "revaluation_reserve",
+           "general_reserve",
+           "retained_earnings"
+          ]
+         },
+         "kind": {
+          "enum": [
+           "issue",
+           "rights",
+           "bonus"
+          ]
+         },
+         "nominal_value": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "price": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "shares": {
+          "maximum": 1000000000000,
+          "minimum": 1,
+          "type": "integer"
+         }
+        },
+        "required": [
+         "kind",
+         "shares",
+         "nominal_value"
+        ],
+        "type": "object"
+       },
+       "maxItems": 10,
+       "type": "array"
+      },
+      "tax": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "transfer_to_general_reserve": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      }
+     },
+     "type": "object"
+    },
     "dp": {
      "maximum": 4,
      "minimum": 0,
      "type": "integer"
+    },
+    "form": {
+     "enum": [
+      "sole_trader",
+      "partnership",
+      "limited_company",
+      "manufacturing",
+      "incomplete_records"
+     ]
+    },
+    "incomplete_records": {
+     "additionalProperties": false,
+     "properties": {
+      "affairs": {
+       "additionalProperties": false,
+       "properties": {
+        "capital_introduced": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "closing": {
+         "additionalProperties": false,
+         "properties": {
+          "assets": {
+           "maxLength": 30,
+           "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+           "type": [
+            "integer",
+            "string"
+           ]
+          },
+          "liabilities": {
+           "maxLength": 30,
+           "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+           "type": [
+            "integer",
+            "string"
+           ]
+          }
+         },
+         "required": [
+          "assets",
+          "liabilities"
+         ],
+         "type": "object"
+        },
+        "drawings": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "opening": {
+         "additionalProperties": false,
+         "properties": {
+          "assets": {
+           "maxLength": 30,
+           "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+           "type": [
+            "integer",
+            "string"
+           ]
+          },
+          "liabilities": {
+           "maxLength": 30,
+           "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+           "type": [
+            "integer",
+            "string"
+           ]
+          }
+         },
+         "required": [
+          "assets",
+          "liabilities"
+         ],
+         "type": "object"
+        }
+       },
+       "required": [
+        "opening",
+        "closing"
+       ],
+       "type": "object"
+      },
+      "margin": {
+       "additionalProperties": false,
+       "properties": {
+        "basis": {
+         "enum": [
+          "margin",
+          "mark_up"
+         ]
+        },
+        "closing_inventory": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "opening_inventory": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "percent": {
+         "maxLength": 12,
+         "pattern": "^\\s*\\d+(\\.\\d+)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "purchases": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "revenue": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        }
+       },
+       "required": [
+        "percent",
+        "basis"
+       ],
+       "type": "object"
+      },
+      "purchases": {
+       "additionalProperties": false,
+       "properties": {
+        "cash_purchases": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "closing_payables": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "contra": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "discounts_received": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "opening_payables": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "payments": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "returns_outwards": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        }
+       },
+       "required": [
+        "opening_payables",
+        "closing_payables",
+        "payments"
+       ],
+       "type": "object"
+      },
+      "sales": {
+       "additionalProperties": false,
+       "properties": {
+        "cash_sales": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "closing_receivables": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "contra": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "discounts_allowed": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "irrecoverable_debts": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "opening_receivables": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "receipts": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "returns_inwards": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        }
+       },
+       "required": [
+        "opening_receivables",
+        "closing_receivables",
+        "receipts"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "object"
     },
     "layout": {
      "enum": [
       "capital_and_liabilities",
       "net_assets"
      ]
+    },
+    "manufacturing": {
+     "additionalProperties": false,
+     "properties": {
+      "direct_expenses": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "direct_labour": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "factory_overheads": {
+       "items": {
+        "additionalProperties": false,
+        "properties": {
+         "amount": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+         }
+        },
+        "required": [
+         "name",
+         "amount"
+        ],
+        "type": "object"
+       },
+       "maxItems": 20,
+       "type": "array"
+      },
+      "factory_profit_percent": {
+       "maxLength": 12,
+       "pattern": "^\\s*\\d+(\\.\\d+)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "raw_materials": {
+       "additionalProperties": false,
+       "properties": {
+        "carriage_inwards": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "closing_inventory": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "opening_inventory": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "purchases": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "returns_outwards": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        }
+       },
+       "required": [
+        "purchases",
+        "closing_inventory"
+       ],
+       "type": "object"
+      },
+      "units_produced": {
+       "maximum": 1000000000,
+       "minimum": 1,
+       "type": "integer"
+      },
+      "work_in_progress": {
+       "additionalProperties": false,
+       "properties": {
+        "closing": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        },
+        "opening": {
+         "maxLength": 30,
+         "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+         "type": [
+          "integer",
+          "string"
+         ]
+        }
+       },
+       "required": [
+        "opening",
+        "closing"
+       ],
+       "type": "object"
+      }
+     },
+     "required": [
+      "raw_materials",
+      "direct_labour"
+     ],
+     "type": "object"
+    },
+    "partnership": {
+     "additionalProperties": false,
+     "properties": {
+      "interest_on_capital_percent": {
+       "maxLength": 12,
+       "pattern": "^\\s*\\d+(\\.\\d+)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      },
+      "partners": {
+       "items": {
+        "additionalProperties": false,
+        "properties": {
+         "capital": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "current_account_opening": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "drawings": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,30}$",
+          "type": "string"
+         },
+         "interest_on_capital": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "interest_on_drawings": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         },
+         "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+         },
+         "profit_share": {
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+         },
+         "salary": {
+          "maxLength": 30,
+          "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+          "type": [
+           "integer",
+           "string"
+          ]
+         }
+        },
+        "required": [
+         "id",
+         "profit_share"
+        ],
+        "type": "object"
+       },
+       "maxItems": 6,
+       "minItems": 2,
+       "type": "array"
+      },
+      "profit_for_the_year": {
+       "maxLength": 30,
+       "pattern": "^\\s*[-(]?\\s*([$\u00a3\u20ac\u20a6\u00a5]|[A-Z]{3}\\s*)?\\s*(\\d{1,3}(,\\d{3})+|\\d+)(\\.\\d+)?\\s*\\)?\\s*$",
+       "type": [
+        "integer",
+        "string"
+       ]
+      }
+     },
+     "required": [
+      "profit_for_the_year",
+      "partners"
+     ],
+     "type": "object"
     },
     "period": {
      "maxLength": 60,
@@ -3422,7 +4630,14 @@ hint rung: 0 (no hint yet)
       "statement": {
        "enum": [
         "income_statement",
-        "financial_position"
+        "financial_position",
+        "appropriation_account",
+        "current_accounts",
+        "changes_in_equity",
+        "manufacturing_account",
+        "statement_of_affairs",
+        "control_totals",
+        "trading"
        ]
       }
      },
@@ -3516,9 +4731,6 @@ hint rung: 0 (no hint yet)
      "type": "array"
     }
    },
-   "required": [
-    "trial_balance"
-   ],
    "type": "object"
   }
  },
