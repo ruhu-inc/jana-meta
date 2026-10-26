@@ -179,6 +179,26 @@ def kc_problems(
     return problems
 
 
+def root_gap_problems(misconceptions: list[dict[str, Any]], kcs: list[dict[str, Any]],
+                      pack: Mapping[str, Any]) -> list[str]:  # fmt: skip
+    """A misconception's root gap names an earlier skill: in this pack an active KC that is not the misconception's
+    own; in another pack a soft link, which the engine follows only when that pack is installed (so it needs no
+    declared dependency) and which the repository's tests check against that pack's sources."""
+    here = f"{pack.get('subject')}.{pack.get('level')}"
+    status = {kc["id"]: kc["status"] for kc in kcs}
+    problems = []
+    for record in misconceptions:
+        gap = record.get("root_gap")
+        if not gap:
+            continue
+        target = gap["kc_id"]
+        if target in record["kc_ids"]:
+            problems.append(f"{record['id']}: root gap {target} is one of its own KCs")
+        elif ".".join(target.split(".")[1:3]) == here and status.get(target) != "active":
+            problems.append(f"{record['id']}: root gap {target} is not an active KC of this pack")
+    return problems
+
+
 def prerequisite_problems(kcs: list[dict[str, Any]], pack: Mapping[str, Any]) -> list[str]:
     problems: list[str] = []
     here = f"{pack.get('subject')}.{pack.get('level')}"

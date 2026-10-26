@@ -209,6 +209,7 @@ def categorised_problems(
     shape += curriculum.map_problems(tables["curriculum_nodes"], tables["kcs"],
                                      settings.curriculum_topic_weight_tolerance)  # fmt: skip
     shape += curriculum.prerequisite_problems(tables["kcs"], pack)
+    shape += curriculum.root_gap_problems(tables["misconceptions"], tables["kcs"], pack)
     shape += curriculum.mapping_problems(tables["curriculum_nodes"], tables["kcs"])
     shape += versioning.migration_problems(tables, str(pack["version"]))
     shape += curriculum.kc_problems(tables["kcs"], tables["items"], tables["worked_examples"],

@@ -45,6 +45,11 @@ cards:
   offer_hint: "Yes, give me a hint"
   offer_detour: "Go over an earlier idea first: {idea} (about {minutes} min)"
   offer_not_now: "Not now, I'll keep trying"
+  # A matched misconception the pack links to an earlier skill (its `root_gap`): one line naming what the mistake is
+  # really about, and practice on that skill first, then back to the problem (LRN-23's detour). {idea} is the pack's
+  # short phrase for the skill.
+  root_gap_prompt: "This is really about {idea}."
+  root_gap_practise: "Practise {idea} first"
   # The first-session interview of the hand-off (UXS-10, JRN-03): one question per card, the same while the tutor
   # warms up. The goal labels are stored as the student's goals; {subject} is a subject name.
   interview_goals_prompt: "What would you most like help with? Pick any, or write your own."

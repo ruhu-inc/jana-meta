@@ -12,6 +12,11 @@
   detour's items are done the problem comes back at the same step with its board as it was. Declining is logged and
   the detour is not offered again for that KC in the session.
 
+- The root gap: a wrong answer that matches a misconception the pack links to an earlier skill (its `root_gap`, a
+  KC of any installed pack) gets that detour at once, without waiting for `detour_failures`: the card's prompt is
+  the one line "This is really about {idea}.", and accepting it routes the next practice to that skill, then back.
+  It takes the place of the policy's detour on that answer, and is offered once per misconception in a session.
+
 The detour is one engine-written question card (TOL-20; at most one per wrong answer). Each offer raises the soft rule
 signal its rule reads (`engine.idle_offer_due`, `engine.detour_eligible`, PED-14), so the Coach words the offer and
 never takes it on itself. Every decision is the pure policy's (`agent_core.learner.policies`), logged in the turn trace
@@ -42,6 +47,9 @@ OFFER_NOTE = ("a card under your reply offers {what}; say in one short sentence 
               "not give a hint or start anything yourself")  # fmt: skip
 HINT_OFFER_NOTE = ("the hint offer is the quiet line under your reply (a hint is one tap away when the student wants "
                    "it): do not repeat it, ask whether they want a hint, or give one yourself")  # fmt: skip
+ROOT_GAP_NOTE = ("the card under your reply says this mistake is really about {idea} and offers practice on it "
+                 "first: do not repeat that line or teach {idea} now; say in one short sentence that the student can "
+                 "choose the practice")  # fmt: skip
 HINT_OFFER_CODE = "hint_offer"  # the notice that carries the hint offer (LRN-20, D112)
 DETOUR_NOTE = ("a short detour to an earlier idea the student chose: {idea}. Explain that idea in two or three plain "
                "sentences, then ask the short question on the board; say we will come back to the first problem "
@@ -100,9 +108,10 @@ def _positions(stack: Sequence[Mapping[str, Any]]) -> list[policies.SavedPositio
     return [policies.SavedPosition(str(p["kc_id"]), str(p["problem_ref"]), int(p["step_index"])) for p in stack]
 
 
-def after_wrong(engine: Any, turn: Any, rung_before: int) -> str:
-    """After a wrong answer (S2): the hint offer and the detour offer the policies allow, as one question card. Returns
-    the Coach's note ("" when nothing is offered)."""
+def after_wrong(engine: Any, turn: Any, rung_before: int, misconception: str | None = None) -> str:
+    """After a wrong answer (S2): the hint offer and the detour offer the policies allow, as one question card; a
+    `misconception` the answer matched whose pack links it to an earlier skill offers that skill instead (the root
+    gap). Returns the Coach's note ("" when nothing is offered)."""
     state, s = engine.state, engine.deps.settings
     if engine.deps.stage < "S2" or state.mode in policies.TIMED_MODES or state.mock_running or state.problem is None:
         return ""
@@ -113,7 +122,8 @@ def after_wrong(engine: Any, turn: Any, rung_before: int) -> str:
                                        preference_on=on, has_attempt=attempted, s=s)  # fmt: skip
     turn.trace.policy_decision(hinted.entry())
     hint = bool(hinted.output["offer"]) and state.rung == rung_before  # a hint the engine just showed is not offered
-    detour = _detour(engine, turn)
+    gap = root_gap(engine, misconception)
+    detour = gap if gap is not None else _detour(engine, turn)
     if not hint and detour is None:
         return ""
     return offer_card(engine, turn, hint, detour)
@@ -169,13 +179,17 @@ def pulled(engine: Any) -> None:
 
 
 def detour_card(engine: Any, turn: Any, detour: Mapping[str, Any]) -> str:
-    """The detour offer as one engine-written question card ("Go over an earlier idea first" or "Not now")."""
+    """The detour offer as one engine-written question card ("Go over an earlier idea first" or "Not now"); a root
+    gap's card says in one line what the mistake is really about ("Practise {idea} first" or "Not now")."""
     state = engine.state
     cards = engine.receipt_texts.cards
-    options = [{"label": cards["offer_detour"].format(idea=detour["idea"], minutes=detour["minutes"]),
-                "recommended": True}, {"label": cards["offer_not_now"]}]  # fmt: skip
+    root = bool(detour.get("root_gap"))
+    accept = cards["root_gap_practise" if root else "offer_detour"].format(idea=detour["idea"],
+                                                                          minutes=detour["minutes"])  # fmt: skip
+    options = [{"label": accept, "recommended": True}, {"label": cards["offer_not_now"]}]
+    prompt = cards["root_gap_prompt" if root else "offer_detour_prompt"].format(idea=detour["idea"])
     try:
-        body = question_card(cards["offer_detour_prompt"].format(idea=detour["idea"]), options, False, False)
+        body = question_card(prompt, options, False, False)
     except HandlerError:
         return ""
     request_id = new_id("req")
@@ -186,7 +200,32 @@ def detour_card(engine: Any, turn: Any, detour: Mapping[str, Any]) -> str:
     state.offers[request_id] = {"hint": None, "detour": body["options"][0]["id"], "kc_id": detour["kc_id"],
                                 "prerequisite_kc_id": detour["prerequisite_kc_id"], "idea": detour["idea"]}  # fmt: skip
     engine.flow_signals["engine.detour_eligible"] = True
+    if root:
+        return ROOT_GAP_NOTE.format(idea=detour["idea"])
     return OFFER_NOTE.format(what=f"a short detour to an earlier idea ({detour['idea']})")
+
+
+def root_gap(engine: Any, misconception: str | None) -> dict[str, Any] | None:
+    """The detour to the earlier skill a matched misconception really comes from (its pack `root_gap`), when it can
+    run now: the skill is installed with practice on it, the student has not declined a detour on this problem's KC,
+    the return stack has room, and it was not offered for this misconception already in the session."""
+    knowledge, source, state, s = engine.knowledge, engine.detours, engine.state, engine.deps.settings
+    record = knowledge.index.misconceptions.get(misconception) if knowledge is not None and misconception else None
+    if record is None or not record.root_kc_id or not record.root_idea or source is None:
+        return None
+    offered: set[str] = engine.root_gaps_offered
+    kcs = problem_kcs(engine) or list(record.kc_ids)
+    if record.id in offered or not kcs or kcs[0] in state.detour_declined:
+        return None
+    if len(state.detour_stack) >= s.detour_max_depth or (state.detour or {}).get("kc_id") == record.root_kc_id:
+        return None
+    if source.statement(record.root_kc_id) is None or not source.items(record.root_kc_id, 1):
+        engine._log("info", "engine", "root_gap.unavailable", misconception_id=record.id, kc_id=record.root_kc_id)
+        return None
+    offered.add(record.id)
+    engine._log("info", "engine", "root_gap.offered", misconception_id=record.id, kc_id=record.root_kc_id)
+    return {"kc_id": kcs[0], "prerequisite_kc_id": record.root_kc_id, "minutes": s.detour_minutes,
+            "idea": record.root_idea[:40], "root_gap": True}  # fmt: skip
 
 
 def _detour(engine: Any, turn: Any) -> dict[str, Any] | None:

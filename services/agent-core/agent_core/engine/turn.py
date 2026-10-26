@@ -397,6 +397,7 @@ class Engine(Coordination, Offers):
         self.guided: GuidedFlow | None = None
         self.misconception_flows: dict[str, MisconceptionFlow] = {}
         self.misconception_seen: dict[str, int] = {}
+        self.root_gaps_offered: set[str] = set()  # misconceptions whose root gap was offered this session
         self.answer_misconception: str | None = None  # the misconception matched on this turn's answer
         self.misconception_evidence: Callable[[str], int] | None = None
         # ASM-23, CUR-36: takes the open profile's waiting re-mark count (and marks it told); bound by the app.
@@ -924,8 +925,8 @@ class Engine(Coordination, Offers):
                 notes = [note, live_flows.misconception_step(self, turn, verdict, matched, recorded=True)]
                 if verdict == "incorrect" and live_flows.stuck(self):
                     notes.append(STUCK_NOTE)
-                elif verdict == "incorrect":  # the hint and detour offers (LRN-20, LRN-23)
-                    notes.append(offers.after_wrong(self, turn, rung_before))
+                elif verdict == "incorrect":  # the hint and detour offers (LRN-20, LRN-23), or the root gap
+                    notes.append(offers.after_wrong(self, turn, rung_before, matched))
                 if verdict == "correct":  # a detour item done: the next one, or back to the problem (LRN-23)
                     notes.append(offers.after_correct(self, turn))
                 note = "; ".join(n for n in notes if n)
@@ -981,8 +982,8 @@ class Engine(Coordination, Offers):
             notes.append(live_flows.raise_rung(self, turn))
         if verdict == "incorrect" and live_flows.stuck(self):
             notes.append(STUCK_NOTE)
-        elif verdict == "incorrect":  # the hint and detour offers (LRN-20, LRN-23)
-            notes.append(offers.after_wrong(self, turn, rung_before))
+        elif verdict == "incorrect":  # the hint and detour offers (LRN-20, LRN-23), or the root gap
+            notes.append(offers.after_wrong(self, turn, rung_before, matched))
         return notes
 
     def _intake(self, turn: _Turn, text: str, source: str = "student_text", model: tuple[str, float] | None = None,
