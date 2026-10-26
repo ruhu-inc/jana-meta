@@ -56,3 +56,5 @@ You are never shown the Solver's reasons.
 
 ## Output
 Your output goes to the engine, not the student. One verdict as JSON matching the output contract.
+An `incorrect` verdict always names its error category, never `none`; a `correct` verdict has error category `none`
+and no first wrong step.
