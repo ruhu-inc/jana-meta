@@ -14,6 +14,7 @@
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { syllabusCodes, topicLabel, type ConceptMapController, type ConceptMapView, type ConceptNode, type MapKc, type MapSyllabus, type MapTopic, type MapView, type SubjectMapController } from "@jana/client-core";
 import { ConceptMapContent, type ConceptActions } from "./ConceptMap.js";
+import { useVoicePointer } from "../voice/SpeechTools.js";
 import { ScreenHeader } from "../frame/Frame.js";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
@@ -410,6 +411,8 @@ export function SubjectMap({ controller, subjectId, subjects, onSubject, actions
 }) {
   const view = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView);
   const none = useRef(() => () => undefined).current;
+  // The tutor's spoken pointer at a skill (`kc:` cue), when the map is on screen.
+  const heard = useVoicePointer();
   const conceptView = useSyncExternalStore(concept?.subscribe ?? none, concept?.getView ?? (() => null), concept?.getView ?? (() => null));
   useEffect(() => {
     void controller.load(subjectId);
@@ -417,7 +420,7 @@ export function SubjectMap({ controller, subjectId, subjects, onSubject, actions
   const onOpen = useMemo(() => (concept === undefined ? undefined : () => void concept.load(subjectId)), [concept, subjectId]);
   const mode: ConceptMapMode | undefined = concept === undefined || conceptView === null || onOpen === undefined ? undefined : {
     view: conceptView, onOpen, onRetry: onOpen, onShowGap: (gap) => concept.showGap(gap), onClearGap: () => concept.clearGap(),
-    ...(onAskQuestion !== undefined ? { onAskQuestion } : {}), pointed: pointed ?? null, initial: conceptFirst === true,
+    ...(onAskQuestion !== undefined ? { onAskQuestion } : {}), pointed: pointed ?? (heard?.target.kind === "kc" ? heard.target.kc_id : null), initial: conceptFirst === true,
   };
   return (
     <SubjectMapContent

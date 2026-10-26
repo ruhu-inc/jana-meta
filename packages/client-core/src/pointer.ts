@@ -19,7 +19,7 @@ export interface CaptionWord { w: string; start_ms: number }
 /** One thing on screen a cue addresses, by id only (VSL-19): a board line, a part of a visual, or a region of the
  * student's photo (`photo_region`, JM-D10). */
 export type PointerTarget = { kind: "step"; step_id: string } | { kind: "part"; visual_id: string; part_id: string }
-  | { kind: "photo_region"; capture_id: string; region_id: string };
+  | { kind: "photo_region"; capture_id: string; region_id: string } | { kind: "kc"; kc_id: string };
 
 /** The temporary pointer (the ring of TABLE DSN-10a), and a line being written on in time with the words. */
 export interface PointerView {
@@ -42,10 +42,14 @@ export interface CueRecord { target: string; action: "point" | "write"; word_ms:
 const STEP = /^stp_[0-9A-HJKMNP-TV-Z]{26}$/;
 const PART = /^(vis_[0-9A-HJKMNP-TV-Z]{26}):([A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*)$/;
 const PHOTO_REGION = /^(cap_[0-9A-HJKMNP-TV-Z]{26}):(rgn_[0-9]{1,3})$/;
+// A skill on the concept map (UXS-22 map view).
+const KC_NODE = /^kc:(kc\.(?:mth|phy|chm|bio|acc)\.(?:o|a)\.[a-z0-9_]+\.[a-z0-9_]+)$/;
 
 /** A cue target as an id pair, or null for anything that is not one exact id (never guessed, VSL-45). */
 export function parseTarget(target: string): PointerTarget | null {
   if (STEP.test(target)) return { kind: "step", step_id: target };
+  const kc = KC_NODE.exec(target);
+  if (kc !== null) return { kind: "kc", kc_id: kc[1] ?? "" };
   const photo = PHOTO_REGION.exec(target);
   if (photo !== null) return { kind: "photo_region", capture_id: photo[1] ?? "", region_id: photo[2] ?? "" };
   const part = PART.exec(target);

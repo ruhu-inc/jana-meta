@@ -37,6 +37,8 @@ VISUAL_PART = re.compile(r"(vis_[0-9A-HJKMNP-TV-Z]{26}):([A-Za-z][A-Za-z0-9_]*(?
 PHOTO_REGION = re.compile(r"cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3}")
 PHOTO_LINE = re.compile(r"photo(?:\s+line)?[\s:]+([1-9][0-9]?)", re.I)
 PART_ID = re.compile(r"[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*")
+# A skill on the concept map (UXS-22 map view): `kc:<kc_id>`; the client draws it only when the map is on screen.
+KC_NODE = re.compile(r"kc:(kc\.(?:mth|phy|chm|bio|acc)\.(?:o|a)\.[a-z0-9_]+\.[a-z0-9_]+)")
 MAX_CUES = 50  # `voice.caption` carries at most 50 cues (events contract)
 UNPOINTABLE = ("unchecked", "draft")  # tutor lines whose values are not verified (AGT-10, UXS-64)
 
@@ -64,6 +66,9 @@ class Targets:
     new_steps: frozenset[str] = frozenset()
     # (step_id, cap_<id>:rgn_<n>) for lines read from a photo; a sketch's parts appear as (region, region)
     photo_lines: tuple[tuple[str, str], ...] = ()
+    # Skills in play, which a `kc:` cue may point at on the concept map: an open offer's KC and the earlier skill it
+    # offers (a root gap's), and an open detour's.
+    kcs: frozenset[str] = frozenset()
 
     @classmethod
     def of(cls, state: Any, new_steps: frozenset[str] = frozenset()) -> Targets:
@@ -75,7 +80,11 @@ class Targets:
         on_board = {s[0] for s in steps}
         photo = tuple((k, v) for k, v in getattr(state, "photo_lines", {}).items() if k in on_board)
         marks = tuple((v, v) for v in getattr(state, "photo_marks", ()))  # a sketch's parts: no board line of their own
-        return cls(steps, visuals, new_steps, photo + marks)
+        offered = [v for o in (getattr(state, "offers", None) or {}).values() if isinstance(o, dict)
+                   for v in (o.get("kc_id"), o.get("prerequisite_kc_id"))]  # fmt: skip
+        detour = getattr(state, "detour", None) or {}
+        kcs = frozenset(str(k) for k in [*offered, detour.get("kc_id") if isinstance(detour, dict) else None] if k)
+        return cls(steps, visuals, new_steps, photo + marks, kcs)
 
 
 @dataclass(frozen=True)
@@ -151,6 +160,8 @@ def _resolve(ref: str, targets: Targets) -> tuple[str | None, str | None]:
         if step[1] == "tutor" and step[2] in UNPOINTABLE:
             return None, "step_unchecked"
         return photo.get(step[0], step[0]), None
+    if (node := KC_NODE.fullmatch(ref)) is not None:
+        return (ref, None) if node[1] in targets.kcs else (None, "kc_not_in_play")
     if (pair := VISUAL_PART.fullmatch(ref)) is not None:
         shown = next((v for v in targets.visuals if v.visual_id == pair[1]), None)
         if shown is None:

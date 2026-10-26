@@ -25,3 +25,21 @@ export function useOpenTopic(): ((topicId: string) => void) | null { return useC
 export function topicOfCommand(command: string | undefined): string | null {
   return /^open_topic:(cur\.(?:mth|phy|chm|bio|acc)\.(?:o|a)\.[a-z0-9._]+)$/.exec(command ?? "")?.[1] ?? null;
 }
+
+/** A root-gap card's way to the concept map (UXS-22 map view): the app opens the map of the KC's subject with the gap
+ * path lit; without a provider the card shows no link. */
+export interface GapOnMap {
+  kc_id: string;
+  root_kc_id: string;
+  misconception_id: string;
+}
+
+const GapLink = createContext<((gap: GapOnMap) => void) | null>(null);
+
+export function GapLinkProvider({ open, children }: { open: (gap: GapOnMap) => void; children: ReactNode }) {
+  return <GapLink.Provider value={open}>{children}</GapLink.Provider>;
+}
+
+export function useOpenGap(): ((gap: GapOnMap) => void) | null {
+  return useContext(GapLink);
+}

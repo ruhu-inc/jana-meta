@@ -185,11 +185,12 @@ def apply(state: dict[str, Any], envelope: dict[str, Any]) -> bool:
             visual["focus"] = {"part_ids": event["part_ids"], "ttl_ms": event["ttl_ms"], "ts": ts}
     elif kind == "card.open":
         state["open_requests"] = [r for r in state["open_requests"] if r["request_id"] != event["request_id"]]
+        about = {"about": event["about"]} if event.get("about") else {}
         state["open_requests"].append({"request_id": event["request_id"], "part_id": event["part_id"],
                                        "card": event["card"]})  # fmt: skip
         part = parts.get(event["part_id"])
         if part is not None:
-            part["card"] = {"request_id": event["request_id"], "card": event["card"], "state": "open"}
+            part["card"] = {"request_id": event["request_id"], "card": event["card"], "state": "open", **about}
     elif kind in ("card.answered", "card.cancel"):
         for request in state["open_requests"]:
             if request["request_id"] == event["request_id"]:

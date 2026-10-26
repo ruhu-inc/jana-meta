@@ -248,3 +248,9 @@ describe("cue targets and timing", () => {
     expect(sync.getState().writing?.progress).toBe(1);
   });
 });
+
+test("a_kc_cue_points_at_a_skill_on_the_concept_map", () => {
+  expect(parseTarget("kc:kc.mth.o.coordinate_geometry.gradient")).toEqual({ kind: "kc", kc_id: "kc.mth.o.coordinate_geometry.gradient" });
+  expect(parseTarget("kc:kc.mth.o.gradient")).toBeNull();
+  expect(parseTarget("kc.mth.o.coordinate_geometry.gradient")).toBeNull();
+});

@@ -74,6 +74,16 @@ describe("concept map", () => {
     expect(controller.getView().gap).toBeNull();
   });
 
+  test("a_gap_asked_before_the_map_is_read_lights_once_it_is", async () => {
+    const { core, profiles } = await unlocked();
+    core.conceptMaps.set(SUBJECT, conceptMap());
+    const controller = new ConceptMapController(profiles);
+    controller.showGapOn(SUBJECT, { misconceptionId: "mc.phy.o.vt_gradient_from_one_point", rootKcId: GRADIENT, kcId: VT });
+    expect(controller.getView().gap).toBeNull();
+    await controller.load(SUBJECT);
+    expect(controller.getView().gap?.path).toEqual([GRADIENT, VT]);
+  });
+
   test("malformed_reply_fails_progress_rereads_lock_clears", async () => {
     const { core, profiles } = await unlocked();
     core.conceptMaps.set(SUBJECT, { ...conceptMap(), nodes: "lots" });

@@ -2073,6 +2073,7 @@
   "concept.root_gap.show": "Show the gap path",
   "concept.gap.banner": "Gap path: from {from} to {to}",
   "concept.gap.clear": "Clear the path",
+  "concept.gap.see_on_map": "See it on the map",
   "concept.open.title": "Questions not on the map yet",
   "concept.open.none": "Every question you asked matches a skill on the map.",
   "concept.open.label": "Open question · {how}",

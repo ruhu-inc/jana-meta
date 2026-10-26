@@ -1598,6 +1598,9 @@
     },
     "card": {
      "$ref": "#/$defs/card"
+    },
+    "about": {
+     "$ref": "#/$defs/card_about"
     }
    },
    "required": [
@@ -2195,7 +2198,7 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 128,
-        "pattern": "^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3})$"
+        "pattern": "^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3}|kc:kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+)$"
        },
        "action": {
         "enum": [
@@ -3276,6 +3279,34 @@
     "command",
     "source",
     "practice_set_id"
+   ]
+  },
+  "card_about": {
+   "type": "object",
+   "description": "What an engine-written card is about, so the client can show it elsewhere: a root-gap card names the KC the mistake was on, the earlier skill it comes from and the misconception (the concept map lights the gap path).",
+   "additionalProperties": false,
+   "properties": {
+    "kind": {
+     "const": "root_gap"
+    },
+    "kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "root_kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "misconception_id": {
+     "type": "string",
+     "pattern": "^mc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+$"
+    }
+   },
+   "required": [
+    "kind",
+    "kc_id",
+    "root_kc_id",
+    "misconception_id"
    ]
   }
  }

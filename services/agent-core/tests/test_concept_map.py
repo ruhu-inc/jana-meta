@@ -227,3 +227,21 @@ def test_questions_and_mistakes_attach_to_the_engines_kcs(tmp_path: Path) -> Non
             await stop_core(r)
 
     run(scenario())
+
+
+def test_the_tutor_points_at_a_skill_in_play_on_the_map() -> None:
+    """A `kc:` cue resolves for a skill in play (an open offer's KC and the earlier skill it offers) and is a miss for
+    any other; it passes the voice bridge's cue check."""
+    from types import SimpleNamespace
+
+    from agent_core.engine.pointing import Targets, resolve
+    from agent_core.engine.voice_bridge import CUE_TARGET
+
+    state = SimpleNamespace(board=SimpleNamespace(steps=[]), offers={"req_x": {"kc_id": V_T, "prerequisite_kc_id": GRADIENT}},
+                            detour=None)  # fmt: skip
+    targets = Targets.of(state)
+    assert targets.kcs == frozenset({V_T, GRADIENT})
+    spoken = resolve(f'Start from <point at="kc:{GRADIENT}"/> this skill, not <point at="kc:{SPEED}"/> that one.', targets)
+    assert [c.target for c in spoken.cues] == [f"kc:{GRADIENT}"]
+    assert spoken.misses == ("kc_not_in_play",)
+    assert CUE_TARGET.fullmatch(f"kc:{GRADIENT}") and not CUE_TARGET.fullmatch(f"kc:{GRADIENT}.x/")

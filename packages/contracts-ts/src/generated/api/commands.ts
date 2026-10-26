@@ -3760,6 +3760,17 @@ export interface ApiEventsEvCardOpen {
   part_id: string;
   call_id: string | null;
   card: ApiEventsCard;
+  about?: ApiEventsCardAbout;
+}
+/**
+ * This interface was referenced by `CommandBodies`'s JSON-Schema
+ * via the `definition` "api_events__card_about".
+ */
+export interface ApiEventsCardAbout {
+  kind: "root_gap";
+  kc_id: string;
+  root_kc_id: string;
+  misconception_id: string;
 }
 /**
  * This interface was referenced by `CommandBodies`'s JSON-Schema

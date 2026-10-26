@@ -86,10 +86,15 @@ export function pathOn(map: ConceptMap, from: string, to: string): string[] {
 /** One subject's concept map for the unlocked profile. */
 export class ConceptMapController {
   private view: ConceptMapView = EMPTY_CONCEPT_MAP;
+  /** A gap asked for before its subject's map was read (a root-gap card's "See it on the map"). */
+  private wanted: { subjectId: string; gap: { misconceptionId?: string | null; rootKcId: string; kcId: string } } | null = null;
   private readonly listeners = new Set<Listener>();
 
   constructor(private readonly profiles: ProfileController) {
-    profiles.onClear(() => this.set(EMPTY_CONCEPT_MAP));
+    profiles.onClear(() => {
+      this.wanted = null;
+      this.set(EMPTY_CONCEPT_MAP);
+    });
   }
 
   getView = (): ConceptMapView => this.view;
@@ -114,6 +119,11 @@ export class ConceptMapController {
       const map = readConceptMap(await this.profiles.commands.get<unknown>(`/v1/curriculum/${encodeURIComponent(subjectId)}/concept-map`));
       if (generation !== this.profiles.generation || this.view.subjectId !== subjectId) return;
       this.set({ status: "ready", subjectId, map, gap: this.view.gap });
+      if (this.wanted?.subjectId === subjectId) {
+        const { gap } = this.wanted;
+        this.wanted = null;
+        this.showGap(gap);
+      }
     } catch {
       if (generation === this.profiles.generation && this.view.subjectId === subjectId) this.set({ ...this.view, status: same ? "ready" : "failed" });
     }
@@ -127,6 +137,12 @@ export class ConceptMapController {
     const known = map?.mistakes.find((m) => m.misconception_id === gap.misconceptionId && m.gap_path.length > 0);
     const path = known?.gap_path ?? (map === null ? [] : pathOn(map, gap.rootKcId, gap.kcId));
     this.set({ ...this.view, gap: path.length > 0 ? { path, misconceptionId: gap.misconceptionId ?? null } : null });
+  }
+
+  /** Light a gap on a subject's map once it is read (now, when it is the map shown). */
+  showGapOn(subjectId: string, gap: { misconceptionId?: string | null; rootKcId: string; kcId: string }): void {
+    if (this.view.subjectId === subjectId && this.view.map !== null) this.showGap(gap);
+    else this.wanted = { subjectId, gap };
   }
 
   clearGap(): void {

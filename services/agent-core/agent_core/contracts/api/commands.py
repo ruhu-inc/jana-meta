@@ -2715,7 +2715,7 @@ class ApiEventsEvVoiceCaptionCuesItem(BaseModel):
         Field(
             max_length=128,
             min_length=1,
-            pattern="^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3})$",
+            pattern="^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3}|kc:kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+)$",
         ),
     ]
     action: Literal["point", "write"] | None = None
@@ -2860,6 +2860,22 @@ class ApiEventsEvCardAnswered(BaseModel):
 
 
 type CallId = Annotated[str, Field(max_length=64)]
+
+
+class ApiEventsCardAbout(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["root_gap"]
+    kc_id: Annotated[
+        str,
+        Field(pattern="^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"),
+    ]
+    root_kc_id: Annotated[
+        str,
+        Field(pattern="^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"),
+    ]
+    misconception_id: Annotated[str, Field(pattern="^mc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+$")]
 
 
 type PartId4 = Annotated[str, Field(max_length=64)]
@@ -5393,6 +5409,7 @@ class ApiEventsEvCardOpen(BaseModel):
     part_id: Annotated[str, Field(pattern="^prt_[0-9A-HJKMNP-TV-Z]{26}$")]
     call_id: CallId | None
     card: ApiEventsCard
+    about: ApiEventsCardAbout | None = None
 
 
 class ApiEventsEvVisualSpec(BaseModel):

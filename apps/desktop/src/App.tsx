@@ -41,7 +41,7 @@ import {
 } from "@jana/client-core";
 import {
   AskAnswer, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
-  ConceptMapRendererProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
+  ConceptMapRendererProvider, GapLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
   useProfiles, useRecentSessions, useT, type AskContext, type StudyTab, type FramePlace, type LessonInProgress, type LockedPlace, type ReportNames, type SidebarContent, type SubjectChoice,
@@ -358,6 +358,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   const [online, setOnline] = useState(false);
   const [mapTopic, setMapTopic] = useState<string | null>(null);
   const [mapSubject, setMapSubject] = useState<string | null>(null);
+  // A root-gap card's "See it on the map": Learn opens on the concept map with the gap path lit.
+  const [mapFirst, setMapFirst] = useState(false);
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [tutorTarget, setTutorTarget] = useState<TutorTarget | null>(null);
   // A session the student chose by name: one of the recent sessions, or the new one "New question" started.
@@ -1215,7 +1217,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
           <Button onClick={() => setScreen("settings")}>{t("app.settings")}</Button>
         </main>
       </> : (
-        <SubjectMap key={`${shownSubject}:${mapTopic ?? ""}`}
+        <SubjectMap key={`${shownSubject}:${mapTopic ?? ""}:${mapFirst ? "map" : "tiles"}`}
+          conceptFirst={mapFirst}
           {...(mapTopic !== null ? { initialTopic: mapTopic } : {})}
           controller={runtime.map}
           concept={runtime.conceptMap}
@@ -1329,9 +1332,15 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     : null;
   return (
     <KnowsLinkProvider open={() => setScreen("knows")}>
-      <LessonLinkProvider open={openLesson} openTopic={(topic) => { setMapSubject(topic.split(".").slice(0, 3).join(".")); setMapTopic(topic); setScreen("learn"); }}>
+      <GapLinkProvider open={(gap) => {
+        const subjectId = `cur.${gap.kc_id.split(".").slice(1, 3).join(".")}`;
+        runtime.conceptMap.showGapOn(subjectId, { misconceptionId: gap.misconception_id, rootKcId: gap.root_kc_id, kcId: gap.kc_id });
+        setMapSubject(subjectId); setMapTopic(null); setMapFirst(true); setScreen("learn");
+      }}>
+      <LessonLinkProvider open={openLesson} openTopic={(topic) => { setMapSubject(topic.split(".").slice(0, 3).join(".")); setMapTopic(topic); setMapFirst(false); setScreen("learn"); }}>
         <FasterTutorProvider use={fasterTutor}><TutorLookProvider avatar={tutorAvatarOf(view.settings)} name={tutorNameOf(view.settings)}><SavedQuestionsProvider controller={runtime.savedQuestions} onOpen={() => setScreen("saved-questions")}>{frame}</SavedQuestionsProvider></TutorLookProvider></FasterTutorProvider>
       </LessonLinkProvider>
+      </GapLinkProvider>
     </KnowsLinkProvider>
   );
 }

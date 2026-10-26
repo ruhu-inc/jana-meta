@@ -96,7 +96,7 @@ export {
 export {
   ExamCountdownCard, ExamDatesPanel, MarkingLabel, PastPaperShelf, type ExamDateActions, type PastPaperActions, type PastPaperSubjectOption,
 } from "./mock/PastPapers.js";
-export { LessonLinkProvider, useOpenLesson, lessonOfCommand } from "./learn/link.js";
+export { GapLinkProvider, LessonLinkProvider, useOpenGap, useOpenLesson, lessonOfCommand, type GapOnMap } from "./learn/link.js";
 export { FasterTutorProvider, useFasterTutor } from "./status/faster.js";
 export * from "./learn/Assessment.js";
 export * from "./learn/SavedQuestions.js";

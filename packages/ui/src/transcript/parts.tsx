@@ -12,7 +12,7 @@ import { Button, ErrorState, Loader, Notice, Spinner, chipLook } from "../primit
 import { Registry, type Lifecycle, type RenderProps } from "../registry/registry.js";
 import { familyOf, objectOf, phaseOf, type ToolFamily } from "./tools.js";
 import { useSelect } from "../store.js";
-import { lessonOfCommand, useOpenLesson, topicOfCommand, useOpenTopic } from "../learn/link.js";
+import { lessonOfCommand, useOpenGap, useOpenLesson, topicOfCommand, useOpenTopic } from "../learn/link.js";
 
 /** The tool families whose finished line is a checked value: the step, units, equation and ledger checks. */
 const CHECKED_FAMILIES = new Set<ToolFamily>(["step_check", "units", "chem_balance", "ledger"]);
@@ -318,7 +318,26 @@ function CardPart({ data, onAction }: RenderProps<PartRec>) {
   if (data.card === undefined) return null;
   const requestId = data.card.request_id;
   const state = requestState === "answering" && data.card.state === "open" ? "answering" : data.card.state;
-  return <CardView card={data.card.card} state={state} onAnswer={(answer) => onAction?.("answer", { request_id: requestId, answer })} />;
+  return (
+    <>
+      <CardView card={data.card.card} state={state} onAnswer={(answer) => onAction?.("answer", { request_id: requestId, answer })} />
+      {data.card.about?.kind === "root_gap" && <GapLink about={data.card.about} />}
+    </>
+  );
+}
+
+/** "See it on the map" under a root-gap card: the concept map of the KC's subject with the gap path lit. */
+function GapLink({ about }: { about: { kc_id: string; root_kc_id: string; misconception_id: string } }) {
+  const t = useT();
+  const open = useOpenGap();
+  if (open === null) return null;
+  return (
+    <span className="mt-2 flex" data-gap-link={about.misconception_id}>
+      <Button size="sm" tone="ghost" onClick={() => open({ kc_id: about.kc_id, root_kc_id: about.root_kc_id, misconception_id: about.misconception_id })}>
+        <Icon name="learn" size={16} />{t("concept.gap.see_on_map")}
+      </Button>
+    </span>
+  );
 }
 
 function CardFallback({ data }: { data: unknown }) {
