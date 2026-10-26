@@ -1,0 +1,2300 @@
+{
+ "subject_id": "cur.phy.o",
+ "subject": "physics",
+ "level": "O",
+ "status": "ready",
+ "pack": {
+  "pack_id": "pack.phy.o",
+  "version": "0.1.0"
+ },
+ "nodes": [
+  {
+   "kc_id": "kc.phy.o.atom.atomic_structure",
+   "code": "PHY-O-05.01.K01",
+   "statement": "Find the numbers of protons, neutrons and electrons from nuclide notation",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.nuclear_physics.the_nuclear_model_of_the_atom",
+   "topic_title": "Inside the atom",
+   "exam_weight": 0.414,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.atom.isotopes",
+   "code": "PHY-O-05.01.K02",
+   "statement": "Identify isotopes as nuclides with the same proton number but different nucleon numbers",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.nuclear_physics.the_nuclear_model_of_the_atom",
+   "topic_title": "Inside the atom",
+   "exam_weight": 0.31,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.atom.nuclear_model_evidence",
+   "code": "PHY-O-05.01.K03",
+   "statement": "Explain how the alpha-particle scattering experiment showed a small, dense, positive nucleus",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.nuclear_physics.the_nuclear_model_of_the_atom",
+   "topic_title": "Inside the atom",
+   "exam_weight": 0.276,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.circuits.circuit_components",
+   "code": "PHY-O-04.03.K05",
+   "statement": "Identify circuit symbols and describe how thermistors, light-dependent resistors and diodes behave",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electric_circuits",
+   "topic_title": "Series and parallel circuits",
+   "exam_weight": 0.16,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.circuits.mixed_circuits",
+   "code": "PHY-O-04.03.K03",
+   "statement": "Solve circuits that combine resistors in series and in parallel",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electric_circuits",
+   "topic_title": "Series and parallel circuits",
+   "exam_weight": 0.18,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.circuits.parallel_circuits",
+   "code": "PHY-O-04.03.K02",
+   "statement": "Find the branch currents and the combined resistance of resistors in parallel",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electric_circuits",
+   "topic_title": "Series and parallel circuits",
+   "exam_weight": 0.24,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.circuits.potential_dividers",
+   "code": "PHY-O-04.03.K04",
+   "statement": "Calculate the output of a potential divider and predict the effect of a thermistor or a light-dependent resistor",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electric_circuits",
+   "topic_title": "Series and parallel circuits",
+   "exam_weight": 0.18,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.circuits.series_circuits",
+   "code": "PHY-O-04.03.K01",
+   "statement": "Find the current, the potential differences and the total resistance in a series circuit",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electric_circuits",
+   "topic_title": "Series and parallel circuits",
+   "exam_weight": 0.24,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.density.density_calculation",
+   "code": "PHY-O-01.04.K01",
+   "statement": "Calculate density, mass or volume from the other two in consistent units",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.density",
+   "topic_title": "How much matter fits in a space",
+   "exam_weight": 0.4,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.density.floating_and_sinking",
+   "code": "PHY-O-01.04.K03",
+   "statement": "Predict whether an object floats or sinks in a liquid by comparing densities",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.density",
+   "topic_title": "How much matter fits in a space",
+   "exam_weight": 0.3,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.density.measuring_density",
+   "code": "PHY-O-01.04.K02",
+   "statement": "Determine the volume of an irregular solid by displacement and use it to find the solid's density",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.density",
+   "topic_title": "How much matter fits in a space",
+   "exam_weight": 0.3,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electrical_quantities.current_and_charge",
+   "code": "PHY-O-04.02.K02",
+   "statement": "Use charge = current × time to find the charge, current or time",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electrical_quantities",
+   "topic_title": "Charge, current, voltage and resistance",
+   "exam_weight": 0.197,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electrical_quantities.current_voltage_graphs",
+   "code": "PHY-O-04.02.K06",
+   "statement": "Interpret current-voltage graphs for a fixed resistor, a filament lamp and a diode",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electrical_quantities",
+   "topic_title": "Charge, current, voltage and resistance",
+   "exam_weight": 0.148,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electrical_quantities.electric_charge",
+   "code": "PHY-O-04.02.K01",
+   "statement": "Explain charging by friction as a transfer of electrons and the forces between like and unlike charges",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electrical_quantities",
+   "topic_title": "Charge, current, voltage and resistance",
+   "exam_weight": 0.148,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electrical_quantities.potential_difference",
+   "code": "PHY-O-04.02.K03",
+   "statement": "Relate e.m.f. and potential difference to the energy transferred per unit charge",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electrical_quantities",
+   "topic_title": "Charge, current, voltage and resistance",
+   "exam_weight": 0.164,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electrical_quantities.resistance",
+   "code": "PHY-O-04.02.K04",
+   "statement": "Calculate resistance, current or potential difference with R = V / I",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electrical_quantities",
+   "topic_title": "Charge, current, voltage and resistance",
+   "exam_weight": 0.213,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electrical_quantities.resistance_of_wires",
+   "code": "PHY-O-04.02.K05",
+   "statement": "Predict how the resistance of a wire changes with its length and cross-sectional area",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electrical_quantities",
+   "topic_title": "Charge, current, voltage and resistance",
+   "exam_weight": 0.131,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electromagnetism.electromagnetic_induction",
+   "code": "PHY-O-04.05.K03",
+   "statement": "Explain how a changing magnetic field induces an e.m.f. and state the factors that increase it",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electromagnetic_effects",
+   "topic_title": "Currents and magnets acting together",
+   "exam_weight": 0.196,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electromagnetism.fields_of_currents",
+   "code": "PHY-O-04.05.K01",
+   "statement": "Describe the magnetic field of a straight wire and a solenoid, and how to make an electromagnet stronger",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electromagnetic_effects",
+   "topic_title": "Currents and magnets acting together",
+   "exam_weight": 0.176,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electromagnetism.motor_effect",
+   "code": "PHY-O-04.05.K02",
+   "statement": "Predict the direction of the force on a current-carrying wire in a magnetic field and explain a d.c. motor",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electromagnetic_effects",
+   "topic_title": "Currents and magnets acting together",
+   "exam_weight": 0.196,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electromagnetism.power_transmission",
+   "code": "PHY-O-04.05.K05",
+   "statement": "Use input power = output power for an ideal transformer and explain why power is sent at high voltage",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electromagnetic_effects",
+   "topic_title": "Currents and magnets acting together",
+   "exam_weight": 0.196,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.electromagnetism.transformers",
+   "code": "PHY-O-04.05.K04",
+   "statement": "Use the turns ratio of a transformer to find an output voltage or a number of turns",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.electromagnetic_effects",
+   "topic_title": "Currents and magnets acting together",
+   "exam_weight": 0.235,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.em_spectrum.em_wave_calculations",
+   "code": "PHY-O-03.03.K02",
+   "statement": "Use the speed of light with wave speed = frequency × wavelength for electromagnetic waves",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.electromagnetic_spectrum",
+   "topic_title": "The family of electromagnetic waves",
+   "exam_weight": 0.345,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.em_spectrum.order_and_properties",
+   "code": "PHY-O-03.03.K01",
+   "statement": "Recall the order of the electromagnetic spectrum and the properties all its waves share",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.electromagnetic_spectrum",
+   "topic_title": "The family of electromagnetic waves",
+   "exam_weight": 0.345,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.em_spectrum.uses_and_hazards",
+   "code": "PHY-O-03.03.K03",
+   "statement": "Relate each region of the electromagnetic spectrum to its uses and its hazards",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.electromagnetic_spectrum",
+   "topic_title": "The family of electromagnetic waves",
+   "exam_weight": 0.31,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.energy.efficiency",
+   "code": "PHY-O-01.07.K07",
+   "statement": "Calculate the efficiency of an energy transfer as useful output over total input",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+   "topic_title": "Energy stores, transfers and the rate of doing work",
+   "exam_weight": 0.12,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.energy.energy_conversion",
+   "code": "PHY-O-01.07.K04",
+   "statement": "Use conservation of energy to link potential and kinetic energy for falling, swinging and sliding objects",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+   "topic_title": "Energy stores, transfers and the rate of doing work",
+   "exam_weight": 0.133,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.energy.energy_resources",
+   "code": "PHY-O-01.07.K08",
+   "statement": "Compare energy resources by renewability, reliability, cost and effect on the environment",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+   "topic_title": "Energy stores, transfers and the rate of doing work",
+   "exam_weight": 0.084,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.energy.kinetic_energy",
+   "code": "PHY-O-01.07.K02",
+   "statement": "Calculate kinetic energy from mass and speed, and speed from kinetic energy",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+   "topic_title": "Energy stores, transfers and the rate of doing work",
+   "exam_weight": 0.145,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.energy.potential_energy",
+   "code": "PHY-O-01.07.K03",
+   "statement": "Calculate the change in gravitational potential energy when an object is raised or lowered",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+   "topic_title": "Energy stores, transfers and the rate of doing work",
+   "exam_weight": 0.133,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.energy.power",
+   "code": "PHY-O-01.07.K06",
+   "statement": "Calculate power as the energy transferred or the work done per unit time",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+   "topic_title": "Energy stores, transfers and the rate of doing work",
+   "exam_weight": 0.133,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.energy.stores_and_transfers",
+   "code": "PHY-O-01.07.K01",
+   "statement": "Identify energy stores and transfers and apply conservation of energy to simple systems",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+   "topic_title": "Energy stores, transfers and the rate of doing work",
+   "exam_weight": 0.12,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.energy.work_done",
+   "code": "PHY-O-01.07.K05",
+   "statement": "Calculate work done as force × distance moved in the direction of the force",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+   "topic_title": "Energy stores, transfers and the rate of doing work",
+   "exam_weight": 0.133,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.forces.centre_of_gravity",
+   "code": "PHY-O-01.05.K07",
+   "statement": "Relate the stability of an object to the height of its centre of gravity and the width of its base",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.forces",
+   "topic_title": "Pushes, pulls and their effects",
+   "exam_weight": 0.097,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.forces.circular_motion",
+   "code": "PHY-O-01.05.K05",
+   "statement": "Explain why motion in a circle at constant speed needs a resultant force towards the centre",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.forces",
+   "topic_title": "Pushes, pulls and their effects",
+   "exam_weight": 0.083,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.forces.force_mass_acceleration",
+   "code": "PHY-O-01.05.K02",
+   "statement": "Use resultant force = mass × acceleration to find force, mass or acceleration",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.forces",
+   "topic_title": "Pushes, pulls and their effects",
+   "exam_weight": 0.194,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.forces.friction_and_terminal_velocity",
+   "code": "PHY-O-01.05.K03",
+   "statement": "Explain how friction and air resistance change motion, including how a falling object reaches terminal velocity",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.forces",
+   "topic_title": "Pushes, pulls and their effects",
+   "exam_weight": 0.139,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.forces.moments",
+   "code": "PHY-O-01.05.K06",
+   "statement": "Calculate the moment of a force and apply the principle of moments to an object in balance",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.forces",
+   "topic_title": "Pushes, pulls and their effects",
+   "exam_weight": 0.181,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.forces.resultant_force",
+   "code": "PHY-O-01.05.K01",
+   "statement": "Find the resultant of forces acting along a line and relate it to whether the motion changes",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.forces",
+   "topic_title": "Pushes, pulls and their effects",
+   "exam_weight": 0.167,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.forces.springs",
+   "code": "PHY-O-01.05.K04",
+   "statement": "Use force = spring constant × extension for a spring within its limit of proportionality",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.forces",
+   "topic_title": "Pushes, pulls and their effects",
+   "exam_weight": 0.139,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.heat_transfer.conduction",
+   "code": "PHY-O-02.03.K01",
+   "statement": "Explain conduction through solids and compare good and poor thermal conductors",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.transfer_of_thermal_energy",
+   "topic_title": "How heat moves: conduction, convection and radiation",
+   "exam_weight": 0.333,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.heat_transfer.convection",
+   "code": "PHY-O-02.03.K02",
+   "statement": "Explain convection currents in liquids and gases using changes in density",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.transfer_of_thermal_energy",
+   "topic_title": "How heat moves: conduction, convection and radiation",
+   "exam_weight": 0.333,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.heat_transfer.radiation",
+   "code": "PHY-O-02.03.K03",
+   "statement": "Relate the emission and absorption of infrared radiation to a surface's colour, texture and temperature",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.transfer_of_thermal_energy",
+   "topic_title": "How heat moves: conduction, convection and radiation",
+   "exam_weight": 0.333,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.light.converging_lens",
+   "code": "PHY-O-03.02.K05",
+   "statement": "Determine the position, size and nature of the image formed by a thin converging lens",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.light",
+   "topic_title": "Reflection, refraction and lenses",
+   "exam_weight": 0.22,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.light.plane_mirrors",
+   "code": "PHY-O-03.02.K01",
+   "statement": "Apply the law of reflection and describe the image formed by a plane mirror",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.light",
+   "topic_title": "Reflection, refraction and lenses",
+   "exam_weight": 0.18,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.light.refraction",
+   "code": "PHY-O-03.02.K02",
+   "statement": "Calculate a refractive index or an angle of refraction with refractive index = sin i / sin r",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.light",
+   "topic_title": "Reflection, refraction and lenses",
+   "exam_weight": 0.24,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.light.speed_in_medium",
+   "code": "PHY-O-03.02.K03",
+   "statement": "Relate the refractive index of a material to the speed of light in it",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.light",
+   "topic_title": "Reflection, refraction and lenses",
+   "exam_weight": 0.16,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.light.total_internal_reflection",
+   "code": "PHY-O-03.02.K04",
+   "statement": "Find the critical angle from the refractive index and predict when total internal reflection happens",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.light",
+   "topic_title": "Reflection, refraction and lenses",
+   "exam_weight": 0.2,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.magnetism.magnetic_fields",
+   "code": "PHY-O-04.01.K02",
+   "statement": "Describe the magnetic field around a bar magnet, its direction and where it is strongest",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.simple_magnetism_and_magnetic_fields",
+   "topic_title": "Magnets and the fields around them",
+   "exam_weight": 0.5,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.magnetism.magnets_and_materials",
+   "code": "PHY-O-04.01.K01",
+   "statement": "Describe the forces between magnetic poles and distinguish magnetic, soft and hard magnetic materials",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.simple_magnetism_and_magnetic_fields",
+   "topic_title": "Magnets and the fields around them",
+   "exam_weight": 0.5,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.mass_weight.mass_or_weight",
+   "code": "PHY-O-01.03.K02",
+   "statement": "Distinguish mass from weight and predict how each changes on another planet or moon",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.mass_and_weight",
+   "topic_title": "How mass differs from weight",
+   "exam_weight": 0.4,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.mass_weight.weight_from_mass",
+   "code": "PHY-O-01.03.K01",
+   "statement": "Calculate weight from mass and gravitational field strength, and mass from weight",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.mass_and_weight",
+   "topic_title": "How mass differs from weight",
+   "exam_weight": 0.6,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.measurement.measuring_techniques",
+   "code": "PHY-O-01.01.K04",
+   "statement": "Use rulers, micrometers and repeated timing to measure small lengths and short time intervals",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.measurement",
+   "topic_title": "Measuring and describing physical quantities",
+   "exam_weight": 0.25,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.measurement.resultant_vectors",
+   "code": "PHY-O-01.01.K03",
+   "statement": "Calculate the resultant of two vectors that act along the same line or at right angles",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.measurement",
+   "topic_title": "Measuring and describing physical quantities",
+   "exam_weight": 0.25,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.measurement.scalars_and_vectors",
+   "code": "PHY-O-01.01.K02",
+   "statement": "Distinguish scalar quantities from vector quantities and classify common examples",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.measurement",
+   "topic_title": "Measuring and describing physical quantities",
+   "exam_weight": 0.2,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.measurement.si_prefixes",
+   "code": "PHY-O-01.01.K01",
+   "statement": "Convert quantities between units with prefixes such as milli, micro, kilo and mega",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.measurement",
+   "topic_title": "Measuring and describing physical quantities",
+   "exam_weight": 0.3,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.momentum.conservation_of_momentum",
+   "code": "PHY-O-01.06.K02",
+   "statement": "Apply conservation of momentum to collisions and explosions along a straight line",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.momentum",
+   "topic_title": "Momentum and collisions",
+   "exam_weight": 0.394,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.momentum.impulse",
+   "code": "PHY-O-01.06.K03",
+   "statement": "Relate impulse, force × time, to the change in momentum and find the average force",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.momentum",
+   "topic_title": "Momentum and collisions",
+   "exam_weight": 0.303,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.momentum.momentum_calculation",
+   "code": "PHY-O-01.06.K01",
+   "statement": "Calculate momentum as mass × velocity, giving its direction with a sign",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.momentum",
+   "topic_title": "Momentum and collisions",
+   "exam_weight": 0.303,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.acceleration_from_change",
+   "code": "PHY-O-01.02.K04",
+   "statement": "Calculate acceleration from a change in velocity and the time it takes",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.14,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.average_speed",
+   "code": "PHY-O-01.02.K02",
+   "statement": "Calculate average speed from the total distance and the total time",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.12,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.choose_equation",
+   "code": "PHY-O-01.02.K08",
+   "statement": "Select the equation of uniform acceleration that links the known and unknown quantities",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.1,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.distance_or_displacement",
+   "code": "PHY-O-01.02.K01",
+   "statement": "Distinguish distance from displacement, and speed from velocity",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.08,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.distance_time_gradient",
+   "code": "PHY-O-01.02.K05",
+   "statement": "Interpret the gradient of a distance-time graph as the speed",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.1,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.free_fall",
+   "code": "PHY-O-01.02.K10",
+   "statement": "Apply the equations of uniform acceleration to motion under gravity",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.08,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.solve_with_equation",
+   "code": "PHY-O-01.02.K09",
+   "statement": "Solve for an unknown quantity with an equation of uniform acceleration",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.12,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.speed_unit_conversion",
+   "code": "PHY-O-01.02.K03",
+   "statement": "Convert a speed between kilometres per hour and metres per second",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.06,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.velocity_time_area",
+   "code": "PHY-O-01.02.K07",
+   "statement": "Find the distance travelled from the area under a velocity-time graph",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.1,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+   "code": "PHY-O-01.02.K06",
+   "statement": "Find acceleration from the gradient of a velocity-time graph",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+   "topic_title": "Motion in a straight line",
+   "exam_weight": 0.1,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.oscilloscope.time_base",
+   "code": "PHY-O-04.06.K01",
+   "statement": "Find the period and frequency of a signal from an oscilloscope trace and the time-base setting",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.uses_of_an_oscilloscope",
+   "topic_title": "Reading signals on an oscilloscope",
+   "exam_weight": 0.5,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.oscilloscope.y_gain",
+   "code": "PHY-O-04.06.K02",
+   "statement": "Find the peak voltage of a signal from an oscilloscope trace and the Y-gain setting",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.uses_of_an_oscilloscope",
+   "topic_title": "Reading signals on an oscilloscope",
+   "exam_weight": 0.5,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.particles.gas_pressure_particles",
+   "code": "PHY-O-02.01.K03",
+   "statement": "Explain gas pressure by particle collisions and predict the effect of changing temperature or volume",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.kinetic_particle_model_of_matter",
+   "topic_title": "Particles in solids, liquids and gases",
+   "exam_weight": 0.237,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.particles.pressure_and_volume",
+   "code": "PHY-O-02.01.K04",
+   "statement": "Use pressure × volume = constant for a fixed mass of gas at constant temperature",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.kinetic_particle_model_of_matter",
+   "topic_title": "Particles in solids, liquids and gases",
+   "exam_weight": 0.263,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.particles.states_of_matter",
+   "code": "PHY-O-02.01.K01",
+   "statement": "Describe the arrangement and motion of particles in solids, liquids and gases",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.kinetic_particle_model_of_matter",
+   "topic_title": "Particles in solids, liquids and gases",
+   "exam_weight": 0.263,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.particles.temperature_scales",
+   "code": "PHY-O-02.01.K02",
+   "statement": "Convert temperatures between degrees Celsius and kelvin and relate absolute zero to particle motion",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.kinetic_particle_model_of_matter",
+   "topic_title": "Particles in solids, liquids and gases",
+   "exam_weight": 0.237,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.practical_electricity.electrical_power",
+   "code": "PHY-O-04.04.K01",
+   "statement": "Calculate electrical power with P = IV and P = I²R",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.practical_electricity",
+   "topic_title": "Electricity at home: power, cost and safety",
+   "exam_weight": 0.364,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.practical_electricity.energy_cost",
+   "code": "PHY-O-04.04.K02",
+   "statement": "Calculate electrical energy in joules and kilowatt-hours and the cost of using an appliance",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.practical_electricity",
+   "topic_title": "Electricity at home: power, cost and safety",
+   "exam_weight": 0.333,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.practical_electricity.fuses_and_safety",
+   "code": "PHY-O-04.04.K03",
+   "statement": "Select a suitable fuse rating and explain the roles of the live, neutral and earth wires",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.electricity_and_magnetism.practical_electricity",
+   "topic_title": "Electricity at home: power, cost and safety",
+   "exam_weight": 0.303,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.pressure.gas_and_atmospheric_pressure",
+   "code": "PHY-O-01.08.K03",
+   "statement": "Interpret barometer and manometer readings to find atmospheric and gas pressures",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.pressure",
+   "topic_title": "Force spread over an area",
+   "exam_weight": 0.258,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.pressure.liquid_pressure",
+   "code": "PHY-O-01.08.K02",
+   "statement": "Calculate the change in pressure in a liquid from its depth and density",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.pressure",
+   "topic_title": "Force spread over an area",
+   "exam_weight": 0.355,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.pressure.pressure_on_surfaces",
+   "code": "PHY-O-01.08.K01",
+   "statement": "Calculate pressure as force per unit area and explain the effect of changing the area",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.pressure",
+   "topic_title": "Force spread over an area",
+   "exam_weight": 0.387,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.radioactivity.background_radiation",
+   "code": "PHY-O-05.02.K04",
+   "statement": "Calculate a count rate corrected for background radiation and recall the main background sources",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.nuclear_physics.radioactivity",
+   "topic_title": "Unstable nuclei and their radiation",
+   "exam_weight": 0.151,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.radioactivity.decay_equations",
+   "code": "PHY-O-05.02.K02",
+   "statement": "Find the new proton and nucleon numbers after alpha or beta decay",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.nuclear_physics.radioactivity",
+   "topic_title": "Unstable nuclei and their radiation",
+   "exam_weight": 0.208,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.radioactivity.half_life",
+   "code": "PHY-O-05.02.K03",
+   "statement": "Use half-life to find the activity left, the fraction remaining or the time taken",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.nuclear_physics.radioactivity",
+   "topic_title": "Unstable nuclei and their radiation",
+   "exam_weight": 0.245,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.radioactivity.types_of_radiation",
+   "code": "PHY-O-05.02.K01",
+   "statement": "Compare alpha, beta and gamma radiation by their nature, penetration, ionising effect and deflection",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.nuclear_physics.radioactivity",
+   "topic_title": "Unstable nuclei and their radiation",
+   "exam_weight": 0.226,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.radioactivity.uses_and_safety",
+   "code": "PHY-O-05.02.K05",
+   "statement": "Select a radioactive source for a use from its radiation and half-life, and describe safe handling",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.nuclear_physics.radioactivity",
+   "topic_title": "Unstable nuclei and their radiation",
+   "exam_weight": 0.17,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.solar_system.earth_and_moon",
+   "code": "PHY-O-06.01.K01",
+   "statement": "Explain day and night, the year, the seasons and the Moon's phases from the motions of the Earth and Moon",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.space_physics.earth_and_the_solar_system",
+   "topic_title": "Our planet and its neighbours",
+   "exam_weight": 0.357,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.solar_system.orbital_speed",
+   "code": "PHY-O-06.01.K02",
+   "statement": "Calculate an average orbital speed from the orbit radius and the orbital period",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.space_physics.earth_and_the_solar_system",
+   "topic_title": "Our planet and its neighbours",
+   "exam_weight": 0.357,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.solar_system.planets_and_gravity",
+   "code": "PHY-O-06.01.K03",
+   "statement": "Compare the planets and explain how the Sun's gravity keeps them in orbit",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.space_physics.earth_and_the_solar_system",
+   "topic_title": "Our planet and its neighbours",
+   "exam_weight": 0.286,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.sound.pitch_and_loudness",
+   "code": "PHY-O-03.04.K03",
+   "statement": "Relate pitch to frequency and loudness to amplitude, and recall the range of human hearing",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.sound",
+   "topic_title": "How sound is made and travels",
+   "exam_weight": 0.237,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.sound.sound_waves",
+   "code": "PHY-O-03.04.K01",
+   "statement": "Describe sound as a longitudinal wave of compressions and rarefactions that needs a medium",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.sound",
+   "topic_title": "How sound is made and travels",
+   "exam_weight": 0.237,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.sound.speed_and_echoes",
+   "code": "PHY-O-03.04.K02",
+   "statement": "Calculate the speed of sound or a distance from an echo, allowing for the journey there and back",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.sound",
+   "topic_title": "How sound is made and travels",
+   "exam_weight": 0.316,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.sound.ultrasound",
+   "code": "PHY-O-03.04.K04",
+   "statement": "Explain uses of ultrasound and calculate depths and distances from ultrasound echoes",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.sound",
+   "topic_title": "How sound is made and travels",
+   "exam_weight": 0.211,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.stars.expanding_universe",
+   "code": "PHY-O-06.02.K03",
+   "statement": "Use redshift and recession speed = Hubble constant × distance to describe the expanding Universe",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.space_physics.stars_and_the_universe",
+   "topic_title": "Stars, galaxies and the expanding Universe",
+   "exam_weight": 0.286,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.stars.life_cycle_of_stars",
+   "code": "PHY-O-06.02.K02",
+   "statement": "Describe the life cycle of a star from a nebula to its end, and how it depends on the star's mass",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.space_physics.stars_and_the_universe",
+   "topic_title": "Stars, galaxies and the expanding Universe",
+   "exam_weight": 0.357,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.stars.light_years",
+   "code": "PHY-O-06.02.K01",
+   "statement": "Convert distances between light-years and metres using the speed of light",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.space_physics.stars_and_the_universe",
+   "topic_title": "Stars, galaxies and the expanding Universe",
+   "exam_weight": 0.357,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.thermal_properties.changes_of_state",
+   "code": "PHY-O-02.02.K04",
+   "statement": "Interpret heating and cooling curves and distinguish evaporation from boiling",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.thermal_properties_and_temperature",
+   "topic_title": "Temperature and how materials respond to heating",
+   "exam_weight": 0.22,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.thermal_properties.latent_heat",
+   "code": "PHY-O-02.02.K03",
+   "statement": "Calculate the energy needed to melt or boil a substance using its specific latent heat",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.thermal_properties_and_temperature",
+   "topic_title": "Temperature and how materials respond to heating",
+   "exam_weight": 0.268,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.thermal_properties.specific_heat_capacity",
+   "code": "PHY-O-02.02.K02",
+   "statement": "Use energy = mass × specific heat capacity × temperature change to find any one quantity",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.thermal_properties_and_temperature",
+   "topic_title": "Temperature and how materials respond to heating",
+   "exam_weight": 0.317,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.thermal_properties.thermal_expansion",
+   "code": "PHY-O-02.02.K01",
+   "statement": "Explain the thermal expansion of solids, liquids and gases and its everyday uses and problems",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.thermal_physics.thermal_properties_and_temperature",
+   "topic_title": "Temperature and how materials respond to heating",
+   "exam_weight": 0.195,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.wave_properties.describing_waves",
+   "code": "PHY-O-03.01.K01",
+   "statement": "Identify amplitude, wavelength, frequency and period, and calculate the period from the frequency",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.general_properties_of_waves",
+   "topic_title": "What every wave has in common",
+   "exam_weight": 0.25,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.wave_properties.transverse_and_longitudinal",
+   "code": "PHY-O-03.01.K03",
+   "statement": "Distinguish transverse from longitudinal waves and give examples of each",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.general_properties_of_waves",
+   "topic_title": "What every wave has in common",
+   "exam_weight": 0.2,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.wave_properties.wave_behaviour",
+   "code": "PHY-O-03.01.K04",
+   "statement": "Describe how waves reflect, refract and diffract, and what happens to their speed and wavelength",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.general_properties_of_waves",
+   "topic_title": "What every wave has in common",
+   "exam_weight": 0.225,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.phy.o.wave_properties.wave_equation",
+   "code": "PHY-O-03.01.K02",
+   "statement": "Use wave speed = frequency × wavelength to find any one of the three",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.waves.general_properties_of_waves",
+   "topic_title": "What every wave has in common",
+   "exam_weight": 0.325,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false
+  },
+  {
+   "kc_id": "kc.mth.o.algebra_and_graphs.change_subject",
+   "code": "MTH-O-02.02.K04",
+   "statement": "Rearrange a formula to make a different letter its subject",
+   "subject_id": "cur.mth.o",
+   "topic_id": "cur.mth.o.algebra_and_graphs.algebraic_manipulation",
+   "topic_title": "Expanding and factorising",
+   "exam_weight": 0.052,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": true
+  },
+  {
+   "kc_id": "kc.mth.o.coordinate_geometry.gradient",
+   "code": "MTH-O-03.03.K01",
+   "statement": "Calculate the gradient of a straight line from two points on it",
+   "subject_id": "cur.mth.o",
+   "topic_id": "cur.mth.o.coordinate_geometry.gradient_of_linear_graphs",
+   "topic_title": "Gradient of a straight line",
+   "exam_weight": 0.154,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": true
+  },
+  {
+   "kc_id": "kc.mth.o.number.rates",
+   "code": "MTH-O-01.12.K01",
+   "statement": "Calculate rates such as average speed, density and unit price",
+   "subject_id": "cur.mth.o",
+   "topic_id": "cur.mth.o.number.rates",
+   "topic_title": "Rates and compound measures",
+   "exam_weight": 0.041,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": true
+  }
+ ],
+ "edges": [
+  {
+   "from": "kc.phy.o.atom.atomic_structure",
+   "to": "kc.phy.o.atom.isotopes",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.atom.atomic_structure",
+   "to": "kc.phy.o.atom.nuclear_model_evidence",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.atom.atomic_structure",
+   "to": "kc.phy.o.radioactivity.types_of_radiation",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.atom.isotopes",
+   "to": "kc.phy.o.radioactivity.decay_equations",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.circuits.parallel_circuits",
+   "to": "kc.phy.o.circuits.mixed_circuits",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.circuits.series_circuits",
+   "to": "kc.phy.o.circuits.parallel_circuits",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.circuits.series_circuits",
+   "to": "kc.phy.o.circuits.potential_dividers",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.density.density_calculation",
+   "to": "kc.phy.o.density.floating_and_sinking",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.density.density_calculation",
+   "to": "kc.phy.o.density.measuring_density",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.density.density_calculation",
+   "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.density.floating_and_sinking",
+   "to": "kc.phy.o.heat_transfer.convection",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.current_and_charge",
+   "to": "kc.phy.o.electrical_quantities.potential_difference",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.current_and_charge",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.current_and_charge",
+   "to": "kc.phy.o.electromagnetism.fields_of_currents",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.current_voltage_graphs",
+   "to": "kc.phy.o.circuits.circuit_components",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.electric_charge",
+   "to": "kc.phy.o.electrical_quantities.current_and_charge",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.potential_difference",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.potential_difference",
+   "to": "kc.phy.o.oscilloscope.y_gain",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.resistance",
+   "to": "kc.phy.o.circuits.series_circuits",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.resistance",
+   "to": "kc.phy.o.electrical_quantities.current_voltage_graphs",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.resistance",
+   "to": "kc.phy.o.electrical_quantities.resistance_of_wires",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.resistance",
+   "to": "kc.phy.o.practical_electricity.electrical_power",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electromagnetism.electromagnetic_induction",
+   "to": "kc.phy.o.electromagnetism.transformers",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electromagnetism.fields_of_currents",
+   "to": "kc.phy.o.electromagnetism.electromagnetic_induction",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electromagnetism.fields_of_currents",
+   "to": "kc.phy.o.electromagnetism.motor_effect",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.electromagnetism.transformers",
+   "to": "kc.phy.o.electromagnetism.power_transmission",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.em_spectrum.order_and_properties",
+   "to": "kc.phy.o.em_spectrum.em_wave_calculations",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.em_spectrum.order_and_properties",
+   "to": "kc.phy.o.em_spectrum.uses_and_hazards",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.efficiency",
+   "to": "kc.phy.o.energy.energy_resources",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.energy.kinetic_energy",
+   "to": "kc.phy.o.energy.energy_conversion",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.potential_energy",
+   "to": "kc.phy.o.energy.energy_conversion",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.power",
+   "to": "kc.phy.o.energy.efficiency",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.energy.power",
+   "to": "kc.phy.o.practical_electricity.electrical_power",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.electrical_quantities.potential_difference",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.efficiency",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.energy_resources",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.kinetic_energy",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.potential_energy",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.work_done",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.thermal_properties.specific_heat_capacity",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.energy.work_done",
+   "to": "kc.phy.o.energy.power",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.forces.force_mass_acceleration",
+   "to": "kc.phy.o.forces.circular_motion",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.forces.force_mass_acceleration",
+   "to": "kc.phy.o.forces.friction_and_terminal_velocity",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.forces.force_mass_acceleration",
+   "to": "kc.phy.o.momentum.impulse",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.forces.moments",
+   "to": "kc.phy.o.forces.centre_of_gravity",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.forces.resultant_force",
+   "to": "kc.phy.o.energy.work_done",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.forces.resultant_force",
+   "to": "kc.phy.o.forces.force_mass_acceleration",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.forces.resultant_force",
+   "to": "kc.phy.o.forces.moments",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.heat_transfer.conduction",
+   "to": "kc.phy.o.heat_transfer.convection",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.heat_transfer.conduction",
+   "to": "kc.phy.o.heat_transfer.radiation",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.light.plane_mirrors",
+   "to": "kc.phy.o.light.refraction",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.light.refraction",
+   "to": "kc.phy.o.light.converging_lens",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.light.refraction",
+   "to": "kc.phy.o.light.speed_in_medium",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.light.refraction",
+   "to": "kc.phy.o.light.total_internal_reflection",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.magnetism.magnetic_fields",
+   "to": "kc.phy.o.electromagnetism.fields_of_currents",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.magnetism.magnets_and_materials",
+   "to": "kc.phy.o.magnetism.magnetic_fields",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.energy.potential_energy",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.forces.friction_and_terminal_velocity",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.forces.springs",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.mass_weight.mass_or_weight",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.pressure.pressure_on_surfaces",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.measuring_techniques",
+   "to": "kc.phy.o.density.measuring_density",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.resultant_vectors",
+   "to": "kc.phy.o.forces.resultant_force",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.forces.circular_motion",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.measurement.resultant_vectors",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.momentum.momentum_calculation",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.motion.distance_or_displacement",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.density.density_calculation",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.mass_weight.weight_from_mass",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.measurement.measuring_techniques",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.motion.speed_unit_conversion",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.stars.light_years",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.wave_properties.describing_waves",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.momentum.momentum_calculation",
+   "to": "kc.phy.o.momentum.conservation_of_momentum",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.momentum.momentum_calculation",
+   "to": "kc.phy.o.momentum.impulse",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.acceleration_from_change",
+   "to": "kc.phy.o.forces.force_mass_acceleration",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.acceleration_from_change",
+   "to": "kc.phy.o.motion.choose_equation",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.acceleration_from_change",
+   "to": "kc.phy.o.motion.velocity_time_gradient",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.energy.kinetic_energy",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.motion.acceleration_from_change",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.motion.distance_time_gradient",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.motion.velocity_time_area",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.solar_system.orbital_speed",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.sound.speed_and_echoes",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.wave_properties.wave_equation",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.choose_equation",
+   "to": "kc.phy.o.motion.solve_with_equation",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.distance_or_displacement",
+   "to": "kc.phy.o.motion.acceleration_from_change",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.distance_or_displacement",
+   "to": "kc.phy.o.motion.average_speed",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.solve_with_equation",
+   "to": "kc.phy.o.motion.free_fall",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.oscilloscope.time_base",
+   "to": "kc.phy.o.oscilloscope.y_gain",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.particles.gas_pressure_particles",
+   "to": "kc.phy.o.particles.pressure_and_volume",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.heat_transfer.conduction",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.particles.gas_pressure_particles",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.particles.temperature_scales",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.thermal_properties.latent_heat",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.thermal_properties.thermal_expansion",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.particles.temperature_scales",
+   "to": "kc.phy.o.thermal_properties.specific_heat_capacity",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.practical_electricity.electrical_power",
+   "to": "kc.phy.o.electromagnetism.power_transmission",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.practical_electricity.electrical_power",
+   "to": "kc.phy.o.practical_electricity.energy_cost",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.practical_electricity.electrical_power",
+   "to": "kc.phy.o.practical_electricity.fuses_and_safety",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.pressure.liquid_pressure",
+   "to": "kc.phy.o.pressure.gas_and_atmospheric_pressure",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.pressure.pressure_on_surfaces",
+   "to": "kc.phy.o.particles.gas_pressure_particles",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.pressure.pressure_on_surfaces",
+   "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.half_life",
+   "to": "kc.phy.o.radioactivity.uses_and_safety",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.types_of_radiation",
+   "to": "kc.phy.o.radioactivity.background_radiation",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.types_of_radiation",
+   "to": "kc.phy.o.radioactivity.decay_equations",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.types_of_radiation",
+   "to": "kc.phy.o.radioactivity.half_life",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.types_of_radiation",
+   "to": "kc.phy.o.radioactivity.uses_and_safety",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.solar_system.earth_and_moon",
+   "to": "kc.phy.o.solar_system.orbital_speed",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.solar_system.orbital_speed",
+   "to": "kc.phy.o.solar_system.planets_and_gravity",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.solar_system.planets_and_gravity",
+   "to": "kc.phy.o.stars.life_cycle_of_stars",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.sound.pitch_and_loudness",
+   "to": "kc.phy.o.sound.ultrasound",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.sound.sound_waves",
+   "to": "kc.phy.o.sound.pitch_and_loudness",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.sound.sound_waves",
+   "to": "kc.phy.o.sound.speed_and_echoes",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.sound.speed_and_echoes",
+   "to": "kc.phy.o.sound.ultrasound",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.stars.light_years",
+   "to": "kc.phy.o.stars.expanding_universe",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.thermal_properties.latent_heat",
+   "to": "kc.phy.o.thermal_properties.changes_of_state",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.thermal_properties.specific_heat_capacity",
+   "to": "kc.phy.o.thermal_properties.latent_heat",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.describing_waves",
+   "to": "kc.phy.o.oscilloscope.time_base",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.describing_waves",
+   "to": "kc.phy.o.sound.pitch_and_loudness",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.describing_waves",
+   "to": "kc.phy.o.wave_properties.transverse_and_longitudinal",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.describing_waves",
+   "to": "kc.phy.o.wave_properties.wave_equation",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.transverse_and_longitudinal",
+   "to": "kc.phy.o.em_spectrum.order_and_properties",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.transverse_and_longitudinal",
+   "to": "kc.phy.o.sound.sound_waves",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.wave_behaviour",
+   "to": "kc.phy.o.light.plane_mirrors",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.wave_behaviour",
+   "to": "kc.phy.o.light.refraction",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.wave_equation",
+   "to": "kc.phy.o.em_spectrum.em_wave_calculations",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.wave_equation",
+   "to": "kc.phy.o.wave_properties.wave_behaviour",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.density.density_calculation",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.density_rearranged_wrongly",
+   "misconception_name": "Rearranging density = mass ÷ volume wrongly",
+   "idea": "rearranging equations",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.current_and_charge",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.q_it_upside_down",
+   "misconception_name": "Rearranging Q = It upside down",
+   "idea": "rearranging equations",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.ohm_law_multiplied",
+   "misconception_name": "Multiplying V and I for the resistance",
+   "idea": "rearranging equations",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.ohm_law_upside_down",
+   "misconception_name": "Rearranging R = V/I upside down",
+   "idea": "rearranging equations",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.forces.force_mass_acceleration",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.rearrange_sign_error",
+   "misconception_name": "Sign slip when rearranging",
+   "idea": "rearranging equations",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.motion.solve_with_equation",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.rearrange_sign_error",
+   "misconception_name": "Sign slip when rearranging",
+   "idea": "rearranging equations",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.pressure_rearranged_wrongly",
+   "misconception_name": "Rearranging a pressure formula wrongly",
+   "idea": "rearranging equations",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.pressure.pressure_on_surfaces",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.pressure_rearranged_wrongly",
+   "misconception_name": "Rearranging a pressure formula wrongly",
+   "idea": "rearranging equations",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.distance_time_gradient",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.gradient_axes_swapped",
+   "misconception_name": "Time over distance for the gradient",
+   "idea": "the gradient of a straight line",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.distance_time_gradient",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.gradient_from_one_point",
+   "misconception_name": "Gradient from a single point",
+   "idea": "the gradient of a straight line",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.velocity_time_gradient",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.gradient_axes_swapped",
+   "misconception_name": "Time over distance for the gradient",
+   "idea": "the gradient of a straight line",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.velocity_time_gradient",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.vt_gradient_from_one_point",
+   "misconception_name": "Acceleration from a single point",
+   "idea": "the gradient of a straight line",
+   "reviewed": false
+  },
+  {
+   "from": "kc.mth.o.number.rates",
+   "to": "kc.phy.o.motion.acceleration_from_change",
+   "kind": "root_gap",
+   "misconception_id": "mc.phy.o.change_multiplied_by_time",
+   "misconception_name": "Multiplying by the time",
+   "idea": "working out a rate",
+   "reviewed": false
+  }
+ ],
+ "next": [
+  {
+   "kc_id": "kc.phy.o.mass_weight.weight_from_mass",
+   "reason": "ready",
+   "weight": "high",
+   "needs": []
+  },
+  {
+   "kc_id": "kc.phy.o.magnetism.magnets_and_materials",
+   "reason": "foundation",
+   "weight": "high",
+   "needs": []
+  },
+  {
+   "kc_id": "kc.phy.o.oscilloscope.y_gain",
+   "reason": "ready",
+   "weight": "high",
+   "needs": []
+  },
+  {
+   "kc_id": "kc.phy.o.atom.atomic_structure",
+   "reason": "foundation",
+   "weight": "medium",
+   "needs": []
+  },
+  {
+   "kc_id": "kc.phy.o.density.density_calculation",
+   "reason": "ready",
+   "weight": "medium",
+   "needs": []
+  }
+ ],
+ "questions": [
+  {
+   "question_id": "ses_s6",
+   "session_id": "ses_s6",
+   "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+   "text": null,
+   "input": "typed",
+   "asked_at": 5000,
+   "kept": false
+  },
+  {
+   "question_id": "msg_s4_0",
+   "session_id": "ses_s4",
+   "kc_id": null,
+   "text": "What does this circuit symbol mean?",
+   "input": "photo",
+   "asked_at": 2400,
+   "kept": true
+  },
+  {
+   "question_id": "msg_s1_6",
+   "session_id": "ses_s1",
+   "kc_id": "kc.phy.o.motion.average_speed",
+   "text": "Why is it the change?",
+   "input": "typed",
+   "asked_at": 2300,
+   "kept": true
+  },
+  {
+   "question_id": "msg_s3_0",
+   "session_id": "ses_s3",
+   "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+   "text": "How do I get acceleration from this graph 3?",
+   "input": "spoken",
+   "asked_at": 2003,
+   "kept": true
+  },
+  {
+   "question_id": "msg_s2_0",
+   "session_id": "ses_s2",
+   "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+   "text": "How do I get acceleration from this graph 2?",
+   "input": "typed",
+   "asked_at": 2002,
+   "kept": true
+  },
+  {
+   "question_id": "msg_s1_0",
+   "session_id": "ses_s1",
+   "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+   "text": "How do I get acceleration from this graph 1?",
+   "input": "typed",
+   "asked_at": 2001,
+   "kept": true
+  }
+ ],
+ "mistakes": [
+  {
+   "misconception_id": "mc.phy.o.vt_gradient_from_one_point",
+   "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+   "name": "Acceleration from a single point",
+   "status": "active",
+   "times": 3,
+   "last_seen_at": 20,
+   "root_kc_id": "kc.mth.o.coordinate_geometry.gradient",
+   "idea": "the gradient of a straight line",
+   "reviewed": false,
+   "gap_path": [
+    "kc.mth.o.coordinate_geometry.gradient",
+    "kc.phy.o.motion.velocity_time_gradient"
+   ]
+  },
+  {
+   "misconception_id": "mc.phy.o.speed_from_distance_only",
+   "kc_id": "kc.phy.o.motion.average_speed",
+   "name": "",
+   "status": "resolved",
+   "times": 1,
+   "last_seen_at": 20,
+   "root_kc_id": null,
+   "idea": null,
+   "reviewed": null,
+   "gap_path": []
+  }
+ ]
+}

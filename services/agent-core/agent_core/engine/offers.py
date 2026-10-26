@@ -193,8 +193,13 @@ def detour_card(engine: Any, turn: Any, detour: Mapping[str, Any]) -> str:
     except HandlerError:
         return ""
     request_id = new_id("req")
-    part = emit_part(engine.events, "card", [{"type": "card.open", "request_id": request_id, "part_id": "",
-                                              "call_id": None, "card": body}])  # fmt: skip
+    opened: dict[str, Any] = {"type": "card.open", "request_id": request_id, "part_id": "", "call_id": None,
+                              "card": body}  # fmt: skip
+    if root and detour.get("misconception_id"):
+        # What the card is about, so the concept map can light the gap path from the earlier skill.
+        opened["about"] = {"kind": "root_gap", "kc_id": detour["kc_id"], "root_kc_id": detour["prerequisite_kc_id"],
+                           "misconception_id": detour["misconception_id"]}  # fmt: skip
+    part = emit_part(engine.events, "card", [opened])
     engine._persist(turn, part, "card", body)
     engine.open_cards[request_id] = "offer"
     state.offers[request_id] = {"hint": None, "detour": body["options"][0]["id"], "kc_id": detour["kc_id"],
@@ -225,7 +230,7 @@ def root_gap(engine: Any, misconception: str | None) -> dict[str, Any] | None:
     offered.add(record.id)
     engine._log("info", "engine", "root_gap.offered", misconception_id=record.id, kc_id=record.root_kc_id)
     return {"kc_id": kcs[0], "prerequisite_kc_id": record.root_kc_id, "minutes": s.detour_minutes,
-            "idea": record.root_idea[:40], "root_gap": True}  # fmt: skip
+            "idea": record.root_idea[:40], "root_gap": True, "misconception_id": record.id}  # fmt: skip
 
 
 def _detour(engine: Any, turn: Any) -> dict[str, Any] | None:

@@ -307,6 +307,19 @@ class LearnDesk:
                                           "topics": tiles})  # fmt: skip
         return reply
 
+    def concept_map(self, subject_id: str) -> dict[str, Any] | None:
+        """The `ConceptMap` reply for a subject node id (the map view of UXS-22), or None when the id is not a
+        subject's: the pack's skill backbone with this learner's states, questions and mistakes on it."""
+        from agent_core.engine.concept_map import backbone
+
+        reply = backbone(self.content, self.conn, subject_id)
+        if reply is not None and reply["status"] == "not_installed":
+            code, lvl = subject_id.split(".")[1:]
+            damaged = any(p.get("subject") == code and str(p.get("level")).lower() == lvl and not p.get("signature_ok")
+                          for p in self.listed())  # fmt: skip
+            reply["status"] = "unverified" if damaged else "not_installed"
+        return reply
+
     def _tile(self, node: Mapping[str, Any], kcs: list[dict[str, Any]], states: Mapping[str, str],
               lessons: Sequence[Mapping[str, Any]]) -> dict[str, Any]:  # fmt: skip
         ids = {str(k["id"]) for k in kcs}

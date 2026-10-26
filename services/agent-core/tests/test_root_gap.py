@@ -111,6 +111,10 @@ def test_root_gap_said_in_one_line_and_next_practice_on_the_prerequisite(tmp_pat
     assert card["card"]["prompt"] == "This is really about rearranging equations."
     labels = [o["label"] for o in card["card"]["options"]]
     assert labels == ["Practise rearranging equations first", "Not now, I'll keep trying"]
+    # The card says what it is about, so the concept map can light the gap path from the Maths skill.
+    assert card["about"] == {"kind": "root_gap", "kc_id": item["kc_ids"][0], "root_kc_id": REARRANGING,
+                             "misconception_id": card["about"]["misconception_id"]}
+    assert card["about"]["misconception_id"].startswith("mc.phy.o.")
     assert "this mistake is really about rearranging equations" in notes[1]  # the Coach does not repeat the line
     # The next practice is on the Maths prerequisite; the Ohm's law problem waits on the return stack.
     assert engine.state.detour["kc_id"] == REARRANGING

@@ -247,7 +247,8 @@ function apply(store: Store, sessionId: string, envelope: Envelope): Store {
       const card = event.card as NonNullable<PartRec["card"]>["card"];
       let next: Store = { ...store, requests: put(store.requests, requestId, { request_id: requestId, part_id: partId, card, state: "open" }) };
       const part = next.parts[partId];
-      if (part !== undefined) next = { ...next, parts: put(next.parts, partId, { ...part, card: { request_id: requestId, card, state: "open" } }) };
+      const about = event.about === undefined ? {} : { about: event.about as NonNullable<NonNullable<PartRec["card"]>["about"]> };
+      if (part !== undefined) next = { ...next, parts: put(next.parts, partId, { ...part, card: { request_id: requestId, card, state: "open", ...about } }) };
       return next;
     }
     case "card.answered":

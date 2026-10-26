@@ -349,6 +349,8 @@ RULES: tuple[Rule, ...] = (
         ),
         removed_by="DAT-22 source erasure or DAT-09; tombstones last for the profile",
     ),
+    Rule("study concept maps of typed topics", "learner", ("study_concept_maps",),
+         removed_by="DAT-09 profile deletion; the learner's own maps, no source material"),
     Rule("support sharing confirmations", "learner", ("support_shares",), removed_by="session or profile deletion"),
     Rule("sync cursors", "learner", ("sync_cursors",), removed_by="DAT-19 (multi-device disabled or peer removed)"),
     Rule(

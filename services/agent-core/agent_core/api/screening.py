@@ -68,6 +68,17 @@ def field_text(*keys: str) -> Callable[[Any], list[str]]:
     return read
 
 
+def _concept_edit(body: Any) -> list[str]:
+    """The names the learner gives concepts on a concept map (rename, merge, add)."""
+    ops = body.get("ops") if isinstance(body, Mapping) else None
+    return [t for op in ops or [] if isinstance(op, Mapping) for t in written(op.get("name"))]
+
+
+def _concept_topic(body: Any) -> list[str]:
+    """A typed topic, sent to Muse Spark when no pack topic matches."""
+    return written(body.get("topic")) if isinstance(body, Mapping) else []
+
+
 def _study_request(body: Any) -> list[str]:
     """A study request's prompt, and the Generate focus and kept topics that travel with it (STU-21)."""
     if not isinstance(body, Mapping):
@@ -136,6 +147,10 @@ ROUTES: dict[str, Rule] = {
         "study_request", _study_request, NOTE | {"off_topic", "personal_data"}
     ),
     "POST /v1/study/jobs": Screened("study_request", _study_request, NOTE | {"off_topic", "personal_data"}),
+    # Concept maps (Study): a typed topic may reach Muse Spark; the learner's concept names stay on the map.
+    "POST /v1/study/concept-maps": Screened("study_request", _concept_topic, NOTE | {"off_topic", "personal_data"}),
+    "PATCH /v1/study/concept-maps/{map_id}": Screened("study_request", _concept_edit, NOTE | {"personal_data"}),
+    "PATCH /v1/study/aids/{aid_id}/concept-map": Screened("study_request", _concept_edit, NOTE | {"personal_data"}),
     "POST /v1/study/jobs/{job_id}/actions": _IDS,
     # The server prepares the saved passage; the body contains only its index,
     # offset, digest and explicit consent, never client-supplied narration text.

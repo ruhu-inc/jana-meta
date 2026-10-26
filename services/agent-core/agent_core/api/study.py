@@ -17,6 +17,7 @@ from agent_core.api.core import CURRENT_PROFILE, CoreService
 from agent_core.api.errors import ApiError
 from agent_core.engine.events import new_id
 from agent_core.engine.study import StudyDesk, StudyError, atomic, checked
+from agent_core.engine.study_concepts import ConceptEditError, apply_edits, model_map, pack_map
 from agent_core.engine.study_journey import StudyJourney
 from agent_core.engine.study_topics import matching_topics
 from agent_core.engine.verbaliser import verbalise
@@ -641,6 +642,94 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
     @app.get("/v1/study/aids/{aid_id}")
     async def aid(aid_id: str, request: Request) -> Response:
         return read(request, lambda d: d.aid(aid_id), ("aid", aid_id))
+
+    # --- concept maps: a document's (an aid) and a typed topic's, with the learner's edits ------------------------
+
+    def pack_content() -> Any:
+        return core.study.content() if core.study.content else None
+
+    @app.patch("/v1/study/aids/{aid_id}/concept-map")
+    async def edit_aid_concept_map(aid_id: str, request: Request) -> Response:
+        async def run(d: StudyDesk, body: Any) -> Any:
+            aid = d.aid(aid_id)
+            if aid.get("kind") != "concept_map" or "concept_map" not in aid:
+                raise StudyError("not_found")
+            try:
+                aid["concept_map"] = apply_edits(aid["concept_map"], body["ops"], pack_content())
+            except ConceptEditError:
+                raise StudyError("invalid_study_request") from None
+            checked("Aid", aid)
+            d.conn.execute("UPDATE study_aids SET body=? WHERE aid_id=?", (json.dumps(aid), aid_id))
+            return aid
+
+        return await command(request, "ConceptMapEdit", run, ("aid", aid_id))
+
+    def topic_map(d: StudyDesk, map_id: str) -> dict[str, Any]:
+        row = d.conn.execute("SELECT body FROM study_concept_maps WHERE map_id=?", (map_id,)).fetchone()
+        if row is None:
+            raise StudyError("not_found")
+        found: dict[str, Any] = json.loads(row[0])
+        return found
+
+    @app.post("/v1/study/concept-maps")
+    async def new_topic_map(request: Request) -> Response:
+        async def run(d: StudyDesk, body: Any) -> Any:
+            topic = " ".join(body["topic"].split())
+            content = pack_content()
+            found = pack_map(content, topic)
+            if found is not None:  # the pack's curated skills: no model, no allowance
+                node_id, concept_map, origin = found[0], found[1], "pack"
+            else:
+                if body.get("execution", "prefer_cloud") != "prefer_cloud":
+                    raise StudyError("model_unavailable")
+                if core.study.cloud is None:
+                    raise StudyError("consent_required")
+                from agent_core.net.study import StudyCloudError
+
+                try:
+                    draft = await core.study.cloud.concept_topic(d.conn, new_id("req"), topic)
+                except StudyCloudError as error:
+                    raise StudyError(error.reason) from None
+                node_id, concept_map, origin = None, model_map(draft, content), "model"
+            now = core.clock_ms()
+            record = {"map_id": new_id("ctm"), "topic": topic, "origin": origin, "node_id": node_id,
+                      "concept_map": concept_map, "created_at": now}  # fmt: skip
+            checked("ConceptTopicMap", record)
+            with transaction(d.conn):
+                d.conn.execute("INSERT INTO study_concept_maps VALUES (?,?,?,?)",
+                               (record["map_id"], json.dumps(record), now, now))  # fmt: skip
+            return record
+
+        return await command(request, "ConceptTopicRequest", run, atomic_command=False)
+
+    @app.get("/v1/study/concept-maps")
+    async def topic_maps(request: Request) -> Response:
+        def get(d: StudyDesk) -> Any:
+            rows = d.conn.execute("SELECT body FROM study_concept_maps ORDER BY created_at DESC, map_id DESC LIMIT 200")
+            maps = [json.loads(b) for (b,) in rows]
+            listed = [{k: m[k] for k in ("map_id", "topic", "origin", "created_at")} for m in maps]
+            return checked("ConceptTopicMapList", {"maps": listed})
+
+        return read(request, get)
+
+    @app.get("/v1/study/concept-maps/{map_id}")
+    async def one_topic_map(map_id: str, request: Request) -> Response:
+        return read(request, lambda d: topic_map(d, map_id))
+
+    @app.patch("/v1/study/concept-maps/{map_id}")
+    async def edit_topic_map(map_id: str, request: Request) -> Response:
+        async def run(d: StudyDesk, body: Any) -> Any:
+            record = topic_map(d, map_id)
+            try:
+                record["concept_map"] = apply_edits(record["concept_map"], body["ops"], pack_content())
+            except ConceptEditError:
+                raise StudyError("invalid_study_request") from None
+            checked("ConceptTopicMap", record)
+            d.conn.execute("UPDATE study_concept_maps SET body=?,updated_at=? WHERE map_id=?",
+                           (json.dumps(record), core.clock_ms(), map_id))  # fmt: skip
+            return record
+
+        return await command(request, "ConceptMapEdit", run)
 
     @app.post("/v1/study/aids/{aid_id}/journey")
     async def saved_journey(aid_id: str, request: Request) -> Response:

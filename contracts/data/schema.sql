@@ -642,6 +642,12 @@ CREATE TABLE study_journeys (
   lesson_reviewed_at INTEGER NOT NULL DEFAULT 0,
   updated_at INTEGER NOT NULL
 ) STRICT;
+CREATE TABLE study_concept_maps (
+  map_id TEXT PRIMARY KEY CHECK (map_id GLOB 'ctm_[0-9A-Z]*' AND length(map_id) = 30),
+  body TEXT NOT NULL CHECK (json_valid(body)),
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+) STRICT;
 
 -- @database device
 CREATE TABLE device (

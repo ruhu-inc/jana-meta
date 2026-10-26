@@ -1,6 +1,6 @@
 // The normalised client store (UIA-01): a delta touches one record, so one component re-renders. Components select
 // records by id; no component subscribes to a whole slice. The store holds the unlocked profile's data only.
-import type { Card, ContentBlock, EvStatus, StepError, Usage, VisualsVisualSpecResolved } from "@jana/contracts-ts";
+import type { Card, CardAbout, ContentBlock, EvStatus, StepError, Usage, VisualsVisualSpecResolved } from "@jana/contracts-ts";
 import type { ConnectionState } from "./stream/client.js";
 
 export type { ConnectionState };
@@ -100,7 +100,8 @@ export interface PartRec {
   visual_id?: string;
   /** An online sketch the engine resolved for this part (VSL-43): drawn only from its kept elements. */
   sketch?: Record<string, unknown> & { sketch_id: string; status: "checked" | "not_checked" };
-  card?: { request_id: string; card: Card; state: "open" | "answering" | "answered" | "cancelled"; answer_summary?: string; answered_ts?: number };
+  /** `about`: what an engine-written card is about (a root-gap card's skills and misconception, for the concept map). */
+  card?: { request_id: string; card: Card; state: "open" | "answering" | "answered" | "cancelled"; answer_summary?: string; answered_ts?: number; about?: CardAbout };
   notice?: Record<string, unknown>;
 }
 

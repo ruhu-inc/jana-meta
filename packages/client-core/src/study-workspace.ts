@@ -35,6 +35,9 @@ export interface StudyWorkspaceView {
   followCurrent: boolean;
   topics: W.TopicLinks["items"];
   safetyTemplate?: string | null;
+  /** A typed topic's concept map (no document): the pack's curated skills, or Muse Spark's with no source. */
+  conceptTopic?: W.ConceptTopicMap | null;
+  conceptTopics?: W.ConceptTopicMapList["maps"];
   /** STU-21 My Sets, newest first, with live progress; a private source's sets carry no title until opened. */
   sets: W.StudySet[];
   /** STU-21: the open material's own topics, for the Generate settings. */
@@ -44,7 +47,7 @@ export interface StudyWorkspaceView {
 }
 export const EMPTY_STUDY: StudyWorkspaceView = { status: "idle", sources: [], jobs: [], source: null, chunks: [], aids: [], aid: null, deck: null, quiz: null, result: null, cleanupPending: false, availableRevisions: [], busy: false, error: null, uploadBytes: 0, uploadTotal: 0, selections: [], notes: [], reading: false, spokenClaim: 0, canSpeak: false, followCurrent: true, topics: [], sets: [], materialTopics: [], playhead: null };
 /** The Generate panel's tools (STU-21), in the order the panel shows them. */
-export const GENERATE_TOOLS = ["summary", "quiz", "flashcards", "notes", "audio_overview", "lesson_plan"] as const;
+export const GENERATE_TOOLS = ["summary", "quiz", "flashcards", "notes", "audio_overview", "lesson_plan", "concept_map"] as const;
 export type GenerateTool = (typeof GENERATE_TOOLS)[number];
 /** Kinds that draw on every selected source rather than the open one alone. */
 const MULTI_SOURCE: readonly string[] = ["notes", "summary", "chat", "lesson_plan"];
@@ -334,6 +337,51 @@ export class StudyWorkspaceController {
         this.pendingAid = job.job_id;
         this.patch({ aid: null, deck: null, quiz: null, result: null, quizHelp: null, requestedJobId: job.job_id, jobs: [job, ...this.view.jobs] });
       }
+    });
+  }
+  /** The learner's edits to the open concept map (rename, remove, merge, add): kept with the aid. */
+  async editConceptMap(ops: W.ConceptEditOp[]): Promise<void> {
+    const aid = this.view.aid;
+    if (!aid || aid.kind !== "concept_map" || ops.length === 0) return;
+    await this.action(async (current) => {
+      const edited = valid<W.Aid>("Aid", await this.mutate("PATCH", `/v1/study/aids/${aid.aid_id}/concept-map`, { ops }));
+      if (current() && this.view.aid?.aid_id === aid.aid_id) this.patch({ aid: edited, aids: this.view.aids.map((a) => (a.aid_id === edited.aid_id ? edited : a)) });
+    });
+  }
+  /** A concept's own study actions, through the same cited, consented and budgeted jobs as the Generate panel:
+   * a chat lesson on it, flashcards or a quiz focused on it. */
+  async conceptAction(name: string, action: "ask" | "flashcards" | "quiz", preferCloud = true): Promise<void> {
+    const focus = `Only the concept "${name.slice(0, 80)}" and what the material says about it.`;
+    if (action === "ask") await this.generate("chat", 10, false, preferCloud, `Explain ${name.slice(0, 80)} using my material, step by step.`);
+    else await this.generate(action, action === "quiz" ? 5 : 6, false, preferCloud, undefined, { focus });
+  }
+  /** A concept map of a typed topic with no document: the pack's when it names a pack topic, else Muse Spark's
+   * (no source, labelled so). */
+  async makeTopicMap(topic: string, preferCloud = true): Promise<void> {
+    const asked = topic.trim();
+    if (!asked) return;
+    await this.action(async (current) => {
+      const made = valid<W.ConceptTopicMap>("ConceptTopicMap", await this.mutate("POST", "/v1/study/concept-maps", { topic: asked.slice(0, 120), execution: preferCloud ? "prefer_cloud" : "local" }));
+      if (current()) this.patch({ conceptTopic: made, conceptTopics: [{ map_id: made.map_id, topic: made.topic, origin: made.origin, created_at: made.created_at }, ...(this.view.conceptTopics ?? []).filter((m) => m.map_id !== made.map_id)] });
+    });
+  }
+  async loadTopicMaps(): Promise<void> {
+    const list = valid<W.ConceptTopicMapList>("ConceptTopicMapList", await this.commands().get("/v1/study/concept-maps", this.headers()));
+    this.patch({ conceptTopics: list.maps });
+  }
+  async openTopicMap(id: string | null): Promise<void> {
+    if (id === null) { this.patch({ conceptTopic: null }); return; }
+    await this.action(async (current) => {
+      const found = valid<W.ConceptTopicMap>("ConceptTopicMap", await this.commands().get(`/v1/study/concept-maps/${id}`, this.headers()));
+      if (current()) this.patch({ conceptTopic: found });
+    });
+  }
+  async editTopicMap(ops: W.ConceptEditOp[]): Promise<void> {
+    const open = this.view.conceptTopic;
+    if (!open || ops.length === 0) return;
+    await this.action(async (current) => {
+      const edited = valid<W.ConceptTopicMap>("ConceptTopicMap", await this.mutate("PATCH", `/v1/study/concept-maps/${open.map_id}`, { ops }));
+      if (current() && this.view.conceptTopic?.map_id === open.map_id) this.patch({ conceptTopic: edited });
     });
   }
   /** Ask for source-grounded coaching on a visible quiz item, without ever sending answer keys. */

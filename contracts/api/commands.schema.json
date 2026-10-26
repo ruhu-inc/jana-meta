@@ -8929,6 +8929,416 @@
      "maxLength": 500
     }
    }
+  },
+  "ConceptNode": {
+   "type": "object",
+   "description": "One curated skill on the concept map, with the learner's state (`explaining` while a mastery check waits for the learner's explanation).",
+   "additionalProperties": false,
+   "properties": {
+    "kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "code": {
+     "type": "string",
+     "maxLength": 40
+    },
+    "statement": {
+     "type": "string",
+     "maxLength": 400
+    },
+    "subject_id": {
+     "type": "string",
+     "pattern": "^cur\\.(mth|phy|chm|bio|acc)\\.(o|a)$"
+    },
+    "topic_id": {
+     "type": "string",
+     "maxLength": 96
+    },
+    "topic_title": {
+     "type": "string",
+     "maxLength": 120
+    },
+    "exam_weight": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "state": {
+     "enum": [
+      "not_started",
+      "learning",
+      "ready_to_check",
+      "mastered",
+      "needs_review",
+      "moved_on",
+      "explaining"
+     ]
+    },
+    "band": {
+     "enum": [
+      "not_started",
+      "learning",
+      "secure"
+     ]
+    },
+    "linked": {
+     "type": "boolean",
+     "description": "A KC of another subject that a root-gap link reaches."
+    }
+   },
+   "required": [
+    "kc_id",
+    "code",
+    "statement",
+    "subject_id",
+    "topic_id",
+    "topic_title",
+    "exam_weight",
+    "state",
+    "band",
+    "linked"
+   ]
+  },
+  "ConceptEdge": {
+   "type": "object",
+   "description": "A link from the earlier skill to the one built on it: a pack prerequisite (with its strength) or a misconception's root gap (with the misconception and whether the link was reviewed).",
+   "additionalProperties": false,
+   "properties": {
+    "from": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "to": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "kind": {
+     "enum": [
+      "prerequisite",
+      "root_gap"
+     ]
+    },
+    "strength": {
+     "enum": [
+      "required",
+      "helpful"
+     ]
+    },
+    "misconception_id": {
+     "type": "string",
+     "pattern": "^mc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+$"
+    },
+    "misconception_name": {
+     "type": "string",
+     "maxLength": 120
+    },
+    "idea": {
+     "type": "string",
+     "maxLength": 120
+    },
+    "reviewed": {
+     "type": "boolean",
+     "description": "Whether a reviewer is named on the misconception's record."
+    }
+   },
+   "required": [
+    "from",
+    "to",
+    "kind"
+   ]
+  },
+  "ConceptNext": {
+   "type": "object",
+   "description": "A ranked \"what next\" skill and the parts of its one-line reason.",
+   "additionalProperties": false,
+   "properties": {
+    "kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "reason": {
+     "enum": [
+      "foundation",
+      "ready",
+      "needs_first"
+     ]
+    },
+    "weight": {
+     "enum": [
+      "high",
+      "medium",
+      "low"
+     ]
+    },
+    "needs": {
+     "type": "array",
+     "maxItems": 3,
+     "items": {
+      "type": "string",
+      "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+     }
+    }
+   },
+   "required": [
+    "kc_id",
+    "reason",
+    "weight",
+    "needs"
+   ]
+  },
+  "ConceptQuestion": {
+   "type": "object",
+   "description": "A question the learner asked, on the KC the engine attached it to (null: an open question).",
+   "additionalProperties": false,
+   "properties": {
+    "question_id": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "session_id": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "kc_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 160
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "input": {
+     "enum": [
+      "typed",
+      "spoken",
+      "photo"
+     ]
+    },
+    "asked_at": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "kept": {
+     "type": "boolean",
+     "description": "False once the session's transcript was purged: no words."
+    }
+   },
+   "required": [
+    "question_id",
+    "session_id",
+    "kc_id",
+    "text",
+    "input",
+    "asked_at",
+    "kept"
+   ]
+  },
+  "ConceptMistake": {
+   "type": "object",
+   "description": "A diagnosed mistake on a KC of the map, with its root gap and the gap path to it.",
+   "additionalProperties": false,
+   "properties": {
+    "misconception_id": {
+     "type": "string",
+     "pattern": "^mc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+$"
+    },
+    "kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "name": {
+     "type": "string",
+     "maxLength": 120
+    },
+    "status": {
+     "enum": [
+      "suspected",
+      "active",
+      "resolving",
+      "resolved"
+     ]
+    },
+    "times": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "last_seen_at": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "root_kc_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "idea": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 120
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reviewed": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "gap_path": {
+     "type": "array",
+     "maxItems": 20,
+     "items": {
+      "type": "string",
+      "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+     }
+    }
+   },
+   "required": [
+    "misconception_id",
+    "kc_id",
+    "name",
+    "status",
+    "times",
+    "last_seen_at",
+    "root_kc_id",
+    "idea",
+    "reviewed",
+    "gap_path"
+   ]
+  },
+  "ConceptMap": {
+   "type": "object",
+   "description": "The concept map of one subject (UXS-22 map view): the pack's skill backbone with the learner's states, questions and mistakes on it, and a ranked what next.",
+   "additionalProperties": false,
+   "properties": {
+    "subject_id": {
+     "type": "string",
+     "pattern": "^cur\\.(mth|phy|chm|bio|acc)\\.(o|a)$"
+    },
+    "subject": {
+     "enum": [
+      "mathematics",
+      "physics",
+      "chemistry",
+      "biology",
+      "accounting"
+     ]
+    },
+    "level": {
+     "enum": [
+      "O",
+      "A"
+     ]
+    },
+    "status": {
+     "enum": [
+      "ready",
+      "not_installed",
+      "unverified"
+     ]
+    },
+    "pack": {
+     "anyOf": [
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "pack_id": {
+         "type": "string",
+         "maxLength": 96
+        },
+        "version": {
+         "type": "string",
+         "maxLength": 32
+        }
+       },
+       "required": [
+        "pack_id",
+        "version"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "nodes": {
+     "type": "array",
+     "maxItems": 400,
+     "items": {
+      "$ref": "#/$defs/ConceptNode"
+     }
+    },
+    "edges": {
+     "type": "array",
+     "maxItems": 1200,
+     "items": {
+      "$ref": "#/$defs/ConceptEdge"
+     }
+    },
+    "next": {
+     "type": "array",
+     "maxItems": 5,
+     "items": {
+      "$ref": "#/$defs/ConceptNext"
+     }
+    },
+    "questions": {
+     "type": "array",
+     "maxItems": 200,
+     "items": {
+      "$ref": "#/$defs/ConceptQuestion"
+     }
+    },
+    "mistakes": {
+     "type": "array",
+     "maxItems": 200,
+     "items": {
+      "$ref": "#/$defs/ConceptMistake"
+     }
+    }
+   },
+   "required": [
+    "subject_id",
+    "subject",
+    "level",
+    "status",
+    "pack",
+    "nodes",
+    "edges",
+    "next",
+    "questions",
+    "mistakes"
+   ]
   }
  },
  "x-endpoints": [
@@ -10215,6 +10625,22 @@
    "path": "/v1/curriculum/{subject_id}/map",
    "request": null,
    "response": "#/$defs/SubjectMap",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "profile_token_expired"
+   ],
+   "stage": "S2",
+   "owner": "UXS-22"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/curriculum/{subject_id}/concept-map",
+   "request": null,
+   "response": "#/$defs/ConceptMap",
    "auth": [
     "launch",
     "profile"
@@ -11984,6 +12410,95 @@
    "path": "/v1/study/aids/{aid_id}/journey",
    "request": "https://jana.dev/contracts/study/workspace#/$defs/StudyJourneyAction",
    "response": "https://jana.dev/contracts/study/workspace#/$defs/StudyJourneyReply",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "validation_failed",
+    "request_conflict",
+    "feature_disabled",
+    "tutor_locked"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/study/aids/{aid_id}/concept-map",
+   "request": "https://jana.dev/contracts/study/workspace#/$defs/ConceptMapEdit",
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/Aid",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "validation_failed",
+    "request_conflict",
+    "feature_disabled",
+    "tutor_locked"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/study/concept-maps",
+   "request": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicRequest",
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicMap",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "validation_failed",
+    "request_conflict",
+    "feature_disabled",
+    "tutor_locked"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/study/concept-maps",
+   "request": null,
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicMapList",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "feature_disabled"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/study/concept-maps/{map_id}",
+   "request": null,
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicMap",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "feature_disabled"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/study/concept-maps/{map_id}",
+   "request": "https://jana.dev/contracts/study/workspace#/$defs/ConceptMapEdit",
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicMap",
    "auth": [
     "launch",
     "profile"

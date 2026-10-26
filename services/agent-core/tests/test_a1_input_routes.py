@@ -78,10 +78,15 @@ def test_screened_routes_pass_the_one_wrapper(tmp_path: Path) -> None:
     for key, rule in screening.ROUTES.items():
         if isinstance(rule, screening.Screened):
             source = inspect.getsource(routes[key].endpoint)
-            if key in {"POST /v1/study/jobs", "POST /v1/study/quizzes/{quiz_id}/items/{item_id}/help"}:
+            study_commands = {"POST /v1/study/jobs": "JobCreate",
+                              "POST /v1/study/quizzes/{quiz_id}/items/{item_id}/help": "JobCreate",
+                              "POST /v1/study/concept-maps": "ConceptTopicRequest",
+                              "PATCH /v1/study/concept-maps/{map_id}": "ConceptMapEdit",
+                              "PATCH /v1/study/aids/{aid_id}/concept-map": "ConceptMapEdit"}  # fmt: skip
+            if key in study_commands:
                 from agent_core.api import study
 
-                assert 'command(request, "JobCreate"' in source
+                assert f'command(request, "{study_commands[key]}"' in source
                 wrapper = inspect.getsource(study)
                 assert "screening.screen(core, route_key(request), request.path_params, body)" in wrapper
             else:
@@ -103,6 +108,12 @@ def _bodies(session: str) -> dict[str, tuple[str, dict[str, Any]]]:
         "POST /v1/study/jobs": (
             "/v1/study/jobs", {"kind": "chat", "execution": "local",
                                "sources": [{"source_id": "src_" + "0" * 26, "revision": 1}], "prompt": DISTRESS}),
+        "POST /v1/study/concept-maps": ("/v1/study/concept-maps", {"topic": DISTRESS, "execution": "local"}),
+        "PATCH /v1/study/concept-maps/{map_id}": (
+            f"/v1/study/concept-maps/ctm_{'0' * 26}", {"ops": [{"op": "add", "name": DISTRESS}]}),
+        "PATCH /v1/study/aids/{aid_id}/concept-map": (
+            f"/v1/study/aids/aid_{'0' * 26}/concept-map",
+            {"ops": [{"op": "rename", "concept_id": "c1", "name": DISTRESS}]}),
         "POST /v1/sessions/{session_id}/study/notes": (
             f"/v1/sessions/{session}/study/notes", {"type": "save_note", "text": DISTRESS}),
         "POST /v1/sessions/{session_id}/voice/dictations/{identity}/confirm": (

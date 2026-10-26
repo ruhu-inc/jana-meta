@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/events.schema.json sha256 53cd34b3b08bcaded49e0e2d2b451e0f5b33ada86bb4a3b372e06698d1aaf1c4; do not edit",
+ "$comment": "GENERATED from contracts/api/events.schema.json sha256 ed5c44fc1abed085dd72b3fb7175c7fa6e7a8ac9d7c13b12678c79226c9eb973; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/events",
  "title": "Event envelope",
@@ -1594,6 +1594,9 @@
     },
     "card": {
      "$ref": "#/$defs/card"
+    },
+    "about": {
+     "$ref": "#/$defs/card_about"
     }
    },
    "required": [
@@ -2191,7 +2194,7 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 128,
-        "pattern": "^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3})$"
+        "pattern": "^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3}|kc:kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+)$"
        },
        "action": {
         "enum": [
@@ -3272,6 +3275,33 @@
     "command",
     "source",
     "practice_set_id"
+   ]
+  },
+  "card_about": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "kind": {
+     "const": "root_gap"
+    },
+    "kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "root_kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "misconception_id": {
+     "type": "string",
+     "pattern": "^mc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+$"
+    }
+   },
+   "required": [
+    "kind",
+    "kc_id",
+    "root_kc_id",
+    "misconception_id"
    ]
   }
  }

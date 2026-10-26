@@ -36,7 +36,7 @@ export type StudyWorkspaceJobId = string;
  * via the `definition` "study_workspace__AidKind".
  */
 export type StudyWorkspaceAidKind =
-  "notes" | "summary" | "chat" | "flashcards" | "quiz" | "audio_overview" | "lesson_plan" | "chapters";
+  "notes" | "summary" | "chat" | "flashcards" | "quiz" | "audio_overview" | "lesson_plan" | "chapters" | "concept_map";
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
  * via the `definition` "study_workspace__ChunkId".
@@ -93,6 +93,12 @@ export type StudyWorkspaceQuizKey = StudyWorkspace__QuizKey;
  * via the `definition` "study_workspace__CheckId".
  */
 export type StudyWorkspaceCheckId = string;
+/**
+ * This interface was referenced by `CloudGateway`'s JSON-Schema
+ * via the `definition` "study_workspace__ConceptRelationType".
+ */
+export type StudyWorkspaceConceptRelationType =
+  "builds_on" | "part_of" | "causes" | "example_of" | "related_to" | "contrasts_with";
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
  * via the `definition` "study_workspace__Time".
@@ -395,6 +401,7 @@ export interface StudyProcessingResponse1 {
    * @maxItems 60
    */
   chapters?: StudyWorkspaceChapter[];
+  concept_map?: StudyWorkspaceDraftConceptMap;
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -495,6 +502,41 @@ export interface StudyWorkspaceChapter {
    * @maxItems 3
    */
   summary: StudyWorkspaceClaim[];
+}
+/**
+ * This interface was referenced by `CloudGateway`'s JSON-Schema
+ * via the `definition` "study_workspace__DraftConceptMap".
+ */
+export interface StudyWorkspaceDraftConceptMap {
+  /**
+   * @minItems 1
+   * @maxItems 24
+   */
+  concepts: StudyWorkspaceDraftConcept[];
+  /**
+   * @minItems 0
+   * @maxItems 48
+   */
+  relations: StudyWorkspaceDraftRelation[];
+}
+/**
+ * This interface was referenced by `CloudGateway`'s JSON-Schema
+ * via the `definition` "study_workspace__DraftConcept".
+ */
+export interface StudyWorkspaceDraftConcept {
+  concept_id: string;
+  name: string;
+  summary: StudyWorkspaceClaim;
+}
+/**
+ * This interface was referenced by `CloudGateway`'s JSON-Schema
+ * via the `definition` "study_workspace__DraftRelation".
+ */
+export interface StudyWorkspaceDraftRelation {
+  from: string;
+  to: string;
+  type: StudyWorkspaceConceptRelationType;
+  claim: StudyWorkspaceClaim;
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -654,6 +696,7 @@ export interface StudyWorkspace__ProcessingResponse {
    * @maxItems 60
    */
   chapters?: StudyWorkspaceChapter[];
+  concept_map?: StudyWorkspaceDraftConceptMap;
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema

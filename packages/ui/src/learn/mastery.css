@@ -28,3 +28,9 @@
     repeating-linear-gradient(45deg, var(--mastery-pattern-ink) 0 var(--mastery-pattern-width), transparent var(--mastery-pattern-width) var(--mastery-pattern-gap)),
     repeating-linear-gradient(-45deg, var(--mastery-pattern-ink) 0 var(--mastery-pattern-width), transparent var(--mastery-pattern-width) var(--mastery-pattern-gap));
 }
+
+/* The concept map's boxes (UXS-22 map view): the keyboard focus ring is drawn on the box itself, never only by
+   colour change; the tutor's pointer and a lit gap path ring the box in the renderer. */
+[data-kc-node]:focus-visible .concept-focus {
+  opacity: 1;
+}

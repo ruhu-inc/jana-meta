@@ -1,0 +1,1247 @@
+{
+ "subject_id": "cur.phy.o",
+ "nodes": [
+  {
+   "id": "kc.phy.o.atom.atomic_structure",
+   "code": "PHY-O-05.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.atom.isotopes",
+   "code": "PHY-O-05.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.atom.nuclear_model_evidence",
+   "code": "PHY-O-05.01.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.circuits.circuit_components",
+   "code": "PHY-O-04.03.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.circuits.mixed_circuits",
+   "code": "PHY-O-04.03.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.circuits.parallel_circuits",
+   "code": "PHY-O-04.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.circuits.potential_dividers",
+   "code": "PHY-O-04.03.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.circuits.series_circuits",
+   "code": "PHY-O-04.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.density.density_calculation",
+   "code": "PHY-O-01.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.density.floating_and_sinking",
+   "code": "PHY-O-01.04.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.density.measuring_density",
+   "code": "PHY-O-01.04.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electrical_quantities.current_and_charge",
+   "code": "PHY-O-04.02.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electrical_quantities.current_voltage_graphs",
+   "code": "PHY-O-04.02.K06",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electrical_quantities.electric_charge",
+   "code": "PHY-O-04.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electrical_quantities.potential_difference",
+   "code": "PHY-O-04.02.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electrical_quantities.resistance",
+   "code": "PHY-O-04.02.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electrical_quantities.resistance_of_wires",
+   "code": "PHY-O-04.02.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electromagnetism.electromagnetic_induction",
+   "code": "PHY-O-04.05.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electromagnetism.fields_of_currents",
+   "code": "PHY-O-04.05.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electromagnetism.motor_effect",
+   "code": "PHY-O-04.05.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electromagnetism.power_transmission",
+   "code": "PHY-O-04.05.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.electromagnetism.transformers",
+   "code": "PHY-O-04.05.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.em_spectrum.em_wave_calculations",
+   "code": "PHY-O-03.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.em_spectrum.order_and_properties",
+   "code": "PHY-O-03.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.em_spectrum.uses_and_hazards",
+   "code": "PHY-O-03.03.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.energy.efficiency",
+   "code": "PHY-O-01.07.K07",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.energy.energy_conversion",
+   "code": "PHY-O-01.07.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.energy.energy_resources",
+   "code": "PHY-O-01.07.K08",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.energy.kinetic_energy",
+   "code": "PHY-O-01.07.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.energy.potential_energy",
+   "code": "PHY-O-01.07.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.energy.power",
+   "code": "PHY-O-01.07.K06",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.energy.stores_and_transfers",
+   "code": "PHY-O-01.07.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.energy.work_done",
+   "code": "PHY-O-01.07.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.forces.centre_of_gravity",
+   "code": "PHY-O-01.05.K07",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.forces.circular_motion",
+   "code": "PHY-O-01.05.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.forces.force_mass_acceleration",
+   "code": "PHY-O-01.05.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.forces.friction_and_terminal_velocity",
+   "code": "PHY-O-01.05.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.forces.moments",
+   "code": "PHY-O-01.05.K06",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.forces.resultant_force",
+   "code": "PHY-O-01.05.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.forces.springs",
+   "code": "PHY-O-01.05.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.heat_transfer.conduction",
+   "code": "PHY-O-02.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.heat_transfer.convection",
+   "code": "PHY-O-02.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.heat_transfer.radiation",
+   "code": "PHY-O-02.03.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.light.converging_lens",
+   "code": "PHY-O-03.02.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.light.plane_mirrors",
+   "code": "PHY-O-03.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.light.refraction",
+   "code": "PHY-O-03.02.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.light.speed_in_medium",
+   "code": "PHY-O-03.02.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.light.total_internal_reflection",
+   "code": "PHY-O-03.02.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.magnetism.magnetic_fields",
+   "code": "PHY-O-04.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.magnetism.magnets_and_materials",
+   "code": "PHY-O-04.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.mass_weight.mass_or_weight",
+   "code": "PHY-O-01.03.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.mass_weight.weight_from_mass",
+   "code": "PHY-O-01.03.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.measurement.measuring_techniques",
+   "code": "PHY-O-01.01.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.measurement.resultant_vectors",
+   "code": "PHY-O-01.01.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.measurement.scalars_and_vectors",
+   "code": "PHY-O-01.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.measurement.si_prefixes",
+   "code": "PHY-O-01.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.momentum.conservation_of_momentum",
+   "code": "PHY-O-01.06.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.momentum.impulse",
+   "code": "PHY-O-01.06.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.momentum.momentum_calculation",
+   "code": "PHY-O-01.06.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.acceleration_from_change",
+   "code": "PHY-O-01.02.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.average_speed",
+   "code": "PHY-O-01.02.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.choose_equation",
+   "code": "PHY-O-01.02.K08",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.distance_or_displacement",
+   "code": "PHY-O-01.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.distance_time_gradient",
+   "code": "PHY-O-01.02.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.free_fall",
+   "code": "PHY-O-01.02.K10",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.solve_with_equation",
+   "code": "PHY-O-01.02.K09",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.speed_unit_conversion",
+   "code": "PHY-O-01.02.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.velocity_time_area",
+   "code": "PHY-O-01.02.K07",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.motion.velocity_time_gradient",
+   "code": "PHY-O-01.02.K06",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.oscilloscope.time_base",
+   "code": "PHY-O-04.06.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.oscilloscope.y_gain",
+   "code": "PHY-O-04.06.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.particles.gas_pressure_particles",
+   "code": "PHY-O-02.01.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.particles.pressure_and_volume",
+   "code": "PHY-O-02.01.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.particles.states_of_matter",
+   "code": "PHY-O-02.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.particles.temperature_scales",
+   "code": "PHY-O-02.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.practical_electricity.electrical_power",
+   "code": "PHY-O-04.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.practical_electricity.energy_cost",
+   "code": "PHY-O-04.04.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.practical_electricity.fuses_and_safety",
+   "code": "PHY-O-04.04.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.pressure.gas_and_atmospheric_pressure",
+   "code": "PHY-O-01.08.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.pressure.liquid_pressure",
+   "code": "PHY-O-01.08.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.pressure.pressure_on_surfaces",
+   "code": "PHY-O-01.08.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.radioactivity.background_radiation",
+   "code": "PHY-O-05.02.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.radioactivity.decay_equations",
+   "code": "PHY-O-05.02.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.radioactivity.half_life",
+   "code": "PHY-O-05.02.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.radioactivity.types_of_radiation",
+   "code": "PHY-O-05.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.radioactivity.uses_and_safety",
+   "code": "PHY-O-05.02.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.solar_system.earth_and_moon",
+   "code": "PHY-O-06.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.solar_system.orbital_speed",
+   "code": "PHY-O-06.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.solar_system.planets_and_gravity",
+   "code": "PHY-O-06.01.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.sound.pitch_and_loudness",
+   "code": "PHY-O-03.04.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.sound.sound_waves",
+   "code": "PHY-O-03.04.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.sound.speed_and_echoes",
+   "code": "PHY-O-03.04.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.sound.ultrasound",
+   "code": "PHY-O-03.04.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.stars.expanding_universe",
+   "code": "PHY-O-06.02.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.stars.life_cycle_of_stars",
+   "code": "PHY-O-06.02.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.stars.light_years",
+   "code": "PHY-O-06.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.thermal_properties.changes_of_state",
+   "code": "PHY-O-02.02.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.thermal_properties.latent_heat",
+   "code": "PHY-O-02.02.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.thermal_properties.specific_heat_capacity",
+   "code": "PHY-O-02.02.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.thermal_properties.thermal_expansion",
+   "code": "PHY-O-02.02.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.wave_properties.describing_waves",
+   "code": "PHY-O-03.01.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.wave_properties.transverse_and_longitudinal",
+   "code": "PHY-O-03.01.K03",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.wave_properties.wave_behaviour",
+   "code": "PHY-O-03.01.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.wave_properties.wave_equation",
+   "code": "PHY-O-03.01.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.mth.o.algebra_and_graphs.change_subject",
+   "code": "MTH-O-02.02.K04",
+   "linked": true
+  },
+  {
+   "id": "kc.mth.o.coordinate_geometry.gradient",
+   "code": "MTH-O-03.03.K01",
+   "linked": true
+  },
+  {
+   "id": "kc.mth.o.number.rates",
+   "code": "MTH-O-01.12.K01",
+   "linked": true
+  }
+ ],
+ "edges": [
+  {
+   "from": "kc.phy.o.atom.atomic_structure",
+   "to": "kc.phy.o.atom.isotopes",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.atom.atomic_structure",
+   "to": "kc.phy.o.atom.nuclear_model_evidence",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.atom.atomic_structure",
+   "to": "kc.phy.o.radioactivity.types_of_radiation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.atom.isotopes",
+   "to": "kc.phy.o.radioactivity.decay_equations",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.circuits.parallel_circuits",
+   "to": "kc.phy.o.circuits.mixed_circuits",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.circuits.series_circuits",
+   "to": "kc.phy.o.circuits.parallel_circuits",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.circuits.series_circuits",
+   "to": "kc.phy.o.circuits.potential_dividers",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.density.density_calculation",
+   "to": "kc.phy.o.density.floating_and_sinking",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.density.density_calculation",
+   "to": "kc.phy.o.density.measuring_density",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.density.density_calculation",
+   "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.density.floating_and_sinking",
+   "to": "kc.phy.o.heat_transfer.convection",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.current_and_charge",
+   "to": "kc.phy.o.electrical_quantities.potential_difference",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.current_and_charge",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.current_and_charge",
+   "to": "kc.phy.o.electromagnetism.fields_of_currents",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.current_voltage_graphs",
+   "to": "kc.phy.o.circuits.circuit_components",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.electric_charge",
+   "to": "kc.phy.o.electrical_quantities.current_and_charge",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.potential_difference",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.potential_difference",
+   "to": "kc.phy.o.oscilloscope.y_gain",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.resistance",
+   "to": "kc.phy.o.circuits.series_circuits",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.resistance",
+   "to": "kc.phy.o.electrical_quantities.current_voltage_graphs",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.resistance",
+   "to": "kc.phy.o.electrical_quantities.resistance_of_wires",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electrical_quantities.resistance",
+   "to": "kc.phy.o.practical_electricity.electrical_power",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electromagnetism.electromagnetic_induction",
+   "to": "kc.phy.o.electromagnetism.transformers",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electromagnetism.fields_of_currents",
+   "to": "kc.phy.o.electromagnetism.electromagnetic_induction",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electromagnetism.fields_of_currents",
+   "to": "kc.phy.o.electromagnetism.motor_effect",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.electromagnetism.transformers",
+   "to": "kc.phy.o.electromagnetism.power_transmission",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.em_spectrum.order_and_properties",
+   "to": "kc.phy.o.em_spectrum.em_wave_calculations",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.em_spectrum.order_and_properties",
+   "to": "kc.phy.o.em_spectrum.uses_and_hazards",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.efficiency",
+   "to": "kc.phy.o.energy.energy_resources",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.kinetic_energy",
+   "to": "kc.phy.o.energy.energy_conversion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.potential_energy",
+   "to": "kc.phy.o.energy.energy_conversion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.power",
+   "to": "kc.phy.o.energy.efficiency",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.power",
+   "to": "kc.phy.o.practical_electricity.electrical_power",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.electrical_quantities.potential_difference",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.efficiency",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.energy_resources",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.kinetic_energy",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.potential_energy",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.energy.work_done",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.stores_and_transfers",
+   "to": "kc.phy.o.thermal_properties.specific_heat_capacity",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.energy.work_done",
+   "to": "kc.phy.o.energy.power",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.forces.force_mass_acceleration",
+   "to": "kc.phy.o.forces.circular_motion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.forces.force_mass_acceleration",
+   "to": "kc.phy.o.forces.friction_and_terminal_velocity",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.forces.force_mass_acceleration",
+   "to": "kc.phy.o.momentum.impulse",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.forces.moments",
+   "to": "kc.phy.o.forces.centre_of_gravity",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.forces.resultant_force",
+   "to": "kc.phy.o.energy.work_done",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.forces.resultant_force",
+   "to": "kc.phy.o.forces.force_mass_acceleration",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.forces.resultant_force",
+   "to": "kc.phy.o.forces.moments",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.heat_transfer.conduction",
+   "to": "kc.phy.o.heat_transfer.convection",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.heat_transfer.conduction",
+   "to": "kc.phy.o.heat_transfer.radiation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.light.plane_mirrors",
+   "to": "kc.phy.o.light.refraction",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.light.refraction",
+   "to": "kc.phy.o.light.converging_lens",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.light.refraction",
+   "to": "kc.phy.o.light.speed_in_medium",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.light.refraction",
+   "to": "kc.phy.o.light.total_internal_reflection",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.magnetism.magnetic_fields",
+   "to": "kc.phy.o.electromagnetism.fields_of_currents",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.magnetism.magnets_and_materials",
+   "to": "kc.phy.o.magnetism.magnetic_fields",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.energy.potential_energy",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.forces.friction_and_terminal_velocity",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.forces.springs",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.mass_weight.mass_or_weight",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.mass_weight.weight_from_mass",
+   "to": "kc.phy.o.pressure.pressure_on_surfaces",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.measuring_techniques",
+   "to": "kc.phy.o.density.measuring_density",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.resultant_vectors",
+   "to": "kc.phy.o.forces.resultant_force",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.forces.circular_motion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.measurement.resultant_vectors",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.momentum.momentum_calculation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.motion.distance_or_displacement",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.density.density_calculation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.mass_weight.weight_from_mass",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.measurement.measuring_techniques",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.motion.speed_unit_conversion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.stars.light_years",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.measurement.si_prefixes",
+   "to": "kc.phy.o.wave_properties.describing_waves",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.momentum.momentum_calculation",
+   "to": "kc.phy.o.momentum.conservation_of_momentum",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.momentum.momentum_calculation",
+   "to": "kc.phy.o.momentum.impulse",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.acceleration_from_change",
+   "to": "kc.phy.o.forces.force_mass_acceleration",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.acceleration_from_change",
+   "to": "kc.phy.o.motion.choose_equation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.acceleration_from_change",
+   "to": "kc.phy.o.motion.velocity_time_gradient",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.energy.kinetic_energy",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.motion.acceleration_from_change",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.motion.distance_time_gradient",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.motion.velocity_time_area",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.solar_system.orbital_speed",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.sound.speed_and_echoes",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.average_speed",
+   "to": "kc.phy.o.wave_properties.wave_equation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.choose_equation",
+   "to": "kc.phy.o.motion.solve_with_equation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.distance_or_displacement",
+   "to": "kc.phy.o.motion.acceleration_from_change",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.distance_or_displacement",
+   "to": "kc.phy.o.motion.average_speed",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.solve_with_equation",
+   "to": "kc.phy.o.motion.free_fall",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.oscilloscope.time_base",
+   "to": "kc.phy.o.oscilloscope.y_gain",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.particles.gas_pressure_particles",
+   "to": "kc.phy.o.particles.pressure_and_volume",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.heat_transfer.conduction",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.particles.gas_pressure_particles",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.particles.temperature_scales",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.thermal_properties.latent_heat",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.particles.states_of_matter",
+   "to": "kc.phy.o.thermal_properties.thermal_expansion",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.particles.temperature_scales",
+   "to": "kc.phy.o.thermal_properties.specific_heat_capacity",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.practical_electricity.electrical_power",
+   "to": "kc.phy.o.electromagnetism.power_transmission",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.practical_electricity.electrical_power",
+   "to": "kc.phy.o.practical_electricity.energy_cost",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.practical_electricity.electrical_power",
+   "to": "kc.phy.o.practical_electricity.fuses_and_safety",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.pressure.liquid_pressure",
+   "to": "kc.phy.o.pressure.gas_and_atmospheric_pressure",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.pressure.pressure_on_surfaces",
+   "to": "kc.phy.o.particles.gas_pressure_particles",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.pressure.pressure_on_surfaces",
+   "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.half_life",
+   "to": "kc.phy.o.radioactivity.uses_and_safety",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.types_of_radiation",
+   "to": "kc.phy.o.radioactivity.background_radiation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.types_of_radiation",
+   "to": "kc.phy.o.radioactivity.decay_equations",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.types_of_radiation",
+   "to": "kc.phy.o.radioactivity.half_life",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.radioactivity.types_of_radiation",
+   "to": "kc.phy.o.radioactivity.uses_and_safety",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.solar_system.earth_and_moon",
+   "to": "kc.phy.o.solar_system.orbital_speed",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.solar_system.orbital_speed",
+   "to": "kc.phy.o.solar_system.planets_and_gravity",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.solar_system.planets_and_gravity",
+   "to": "kc.phy.o.stars.life_cycle_of_stars",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.sound.pitch_and_loudness",
+   "to": "kc.phy.o.sound.ultrasound",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.sound.sound_waves",
+   "to": "kc.phy.o.sound.pitch_and_loudness",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.sound.sound_waves",
+   "to": "kc.phy.o.sound.speed_and_echoes",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.sound.speed_and_echoes",
+   "to": "kc.phy.o.sound.ultrasound",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.stars.light_years",
+   "to": "kc.phy.o.stars.expanding_universe",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.thermal_properties.latent_heat",
+   "to": "kc.phy.o.thermal_properties.changes_of_state",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.thermal_properties.specific_heat_capacity",
+   "to": "kc.phy.o.thermal_properties.latent_heat",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.describing_waves",
+   "to": "kc.phy.o.oscilloscope.time_base",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.describing_waves",
+   "to": "kc.phy.o.sound.pitch_and_loudness",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.describing_waves",
+   "to": "kc.phy.o.wave_properties.transverse_and_longitudinal",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.describing_waves",
+   "to": "kc.phy.o.wave_properties.wave_equation",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.transverse_and_longitudinal",
+   "to": "kc.phy.o.em_spectrum.order_and_properties",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.transverse_and_longitudinal",
+   "to": "kc.phy.o.sound.sound_waves",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.wave_behaviour",
+   "to": "kc.phy.o.light.plane_mirrors",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.wave_behaviour",
+   "to": "kc.phy.o.light.refraction",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.wave_equation",
+   "to": "kc.phy.o.em_spectrum.em_wave_calculations",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.wave_properties.wave_equation",
+   "to": "kc.phy.o.wave_properties.wave_behaviour",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.density.density_calculation",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.current_and_charge",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.electrical_quantities.resistance",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.forces.force_mass_acceleration",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.motion.solve_with_equation",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.algebra_and_graphs.change_subject",
+   "to": "kc.phy.o.pressure.pressure_on_surfaces",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.distance_time_gradient",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.distance_time_gradient",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.velocity_time_gradient",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.coordinate_geometry.gradient",
+   "to": "kc.phy.o.motion.velocity_time_gradient",
+   "kind": "root_gap"
+  },
+  {
+   "from": "kc.mth.o.number.rates",
+   "to": "kc.phy.o.motion.acceleration_from_change",
+   "kind": "root_gap"
+  }
+ ]
+}

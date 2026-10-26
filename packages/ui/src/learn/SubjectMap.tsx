@@ -11,8 +11,10 @@
 // or one syllabus's: a chosen syllabus hides the topics outside it (and a section left empty), each tile shows its
 // codes, and a line under the switch names every board shown as not endorsing Jana. The topic sheet lists the topic's
 // syllabus points, "Partly covers" on a partial one.
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
-import { syllabusCodes, topicLabel, type MapKc, type MapSyllabus, type MapTopic, type MapView, type SubjectMapController } from "@jana/client-core";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
+import { syllabusCodes, topicLabel, type ConceptMapController, type ConceptMapView, type ConceptNode, type MapKc, type MapSyllabus, type MapTopic, type MapView, type SubjectMapController } from "@jana/client-core";
+import { ConceptMapContent, type ConceptActions } from "./ConceptMap.js";
+import { useVoicePointer } from "../voice/SpeechTools.js";
 import { ScreenHeader } from "../frame/Frame.js";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
@@ -246,8 +248,36 @@ function SubjectSwitch({ subjects, value, onSubject }: { subjects: SubjectChoice
 }
 
 /** The map from its view: the gallery and the tests render this directly. */
-export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, onRetry, actions = {}, initialTopic, inProgress = null, onContinue }: {
+/** The concept map shown in the subject map's "Map" mode, with what it needs from the app. */
+export interface ConceptMapMode {
+  view: ConceptMapView;
+  onOpen: () => void;
+  onRetry?: () => void;
+  onShowGap?: (gap: { misconceptionId: string; rootKcId: string; kcId: string }) => void;
+  onClearGap?: () => void;
+  /** An open question taken to the tutor in the learner's words. */
+  onAskQuestion?: (text: string) => void;
+  pointed?: string | null;
+  /** Start in "Map" mode (the gallery's map state, or a root-gap card's "See it on the map"). */
+  initial?: boolean;
+}
+
+/** The subject map's actions for one KC of the concept map: through its topic tile (asking and practising are
+ * topic actions on the subject map). */
+function conceptActions(view: MapView, actions: MapActions, concept: ConceptMapMode): ConceptActions {
+  const topicOf = (node: ConceptNode) => view.map?.sections.flatMap((s) => s.topics).find((tp) => tp.kcs.some((k) => k.kc_id === node.kc_id));
+  const out: ConceptActions = {};
+  if (actions.onAsk !== undefined) out.onAskKc = (node) => { const tp = topicOf(node); if (tp !== undefined) actions.onAsk?.(tp); };
+  if (actions.onJourney !== undefined) out.onPractiseKc = (node) => { const tp = topicOf(node), kc = tp?.kcs.find((k) => k.kc_id === node.kc_id); if (tp !== undefined && kc !== undefined) actions.onJourney?.(tp, kc); };
+  else if (actions.onPractise !== undefined) out.onPractiseKc = (node) => { const tp = topicOf(node); if (tp !== undefined) actions.onPractise?.(tp); };
+  if (concept.onAskQuestion !== undefined) out.onAskQuestion = concept.onAskQuestion;
+  return out;
+}
+
+export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, onRetry, actions = {}, initialTopic, inProgress = null, onContinue, concept }: {
   view: MapView;
+  /** The concept map: with it, a "Topics / Map" switch shows the topic cards or the map of skills. */
+  concept?: ConceptMapMode;
   subjects?: SubjectChoice[];
   onSubject?: (subjectId: string) => void;
   /** The syllabus switch's choice, kept by the controller; without it the choice is this view's own. */
@@ -263,6 +293,11 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
   const t = useT();
   const [open, setOpen] = useState<{ id: string; from: HTMLButtonElement | null } | null>(initialTopic === undefined ? null : { id: initialTopic, from: null });
   const [ownSyllabus, setOwnSyllabus] = useState<string | null>(view.syllabus ?? null);
+  const [showing, setShowing] = useState<"tiles" | "map">(concept?.initial === true ? "map" : "tiles");
+  const openConcept = concept?.onOpen;
+  useEffect(() => {
+    if (showing === "map") openConcept?.();
+  }, [showing, openConcept, view.subjectId]);
   const map = view.map;
   const syllabuses = map?.syllabuses ?? [];
   const chosen = onSyllabus !== undefined ? view.syllabus ?? null : ownSyllabus;
@@ -280,6 +315,13 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
     setOpen(null);
   };
   const body = () => {
+    if (concept !== undefined && showing === "map") {
+      return (
+        <ConceptMapContent view={concept.view} actions={conceptActions(view, actions, concept)} pointed={concept.pointed ?? null}
+          {...(concept.onRetry !== undefined ? { onRetry: concept.onRetry } : {})} {...(concept.onShowGap !== undefined ? { onShowGap: concept.onShowGap } : {})}
+          {...(concept.onClearGap !== undefined ? { onClearGap: concept.onClearGap } : {})} />
+      );
+    }
     if (view.status === "failed") {
       return <ErrorState message={t("map.failed")} {...(onRetry !== undefined ? { action: { label: t("action.try_again"), onClick: onRetry } } : {})} />;
     }
@@ -309,10 +351,17 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
         <span className="text-ui font-semibold text-ink">{t("nav.lessons")}</span>
       </ScreenHeader>
       <div className="flex-1 px-6 pt-6 pb-12 lg:px-10">
-        <div className={`mx-auto grid w-full grid-cols-1 items-start gap-8 ${topic !== null ? "max-w-300 lg:grid-cols-[minmax(0,1fr)_22rem]" : "max-w-240"}`}>
+        <div className={`mx-auto grid w-full grid-cols-1 items-start gap-8 ${showing === "map" ? "max-w-360" : topic !== null ? "max-w-300 lg:grid-cols-[minmax(0,1fr)_22rem]" : "max-w-240"}`}>
           <div className="flex min-w-0 flex-col gap-8">
             <section aria-labelledby="map-subject" className="flex flex-col gap-4">
-              <h1 id="map-subject" className="text-display text-ink">{map?.title ?? t("map.title")}</h1>
+              <span className="flex flex-wrap items-center justify-between gap-3">
+                <h1 id="map-subject" className="text-display text-ink">{map?.title ?? t("map.title")}</h1>
+                {concept !== undefined && (
+                  <span data-map-mode={showing}>
+                    <SegmentedControl label={t("map.mode")} value={showing} onChange={setShowing} options={[{ value: "tiles", label: t("map.mode.tiles") }, { value: "map", label: t("map.mode.map") }]} />
+                  </span>
+                )}
+              </span>
               {map !== null && map.status === "ready" && topics.length > 0 && (
                 <span className="block max-w-105">
                   <ProgressBar label={t("map.topics_secure")} value={secure} max={topics.length} valueText={t("map.of", { count: secure, total: topics.length })} />
@@ -336,7 +385,7 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
             )}
             {body()}
           </div>
-          {topic !== null && <TopicSheet topic={topic} actions={actions} onClose={close} syllabuses={syllabuses} />}
+          {topic !== null && showing === "tiles" && <TopicSheet topic={topic} actions={actions} onClose={close} syllabuses={syllabuses} />}
         </div>
       </div>
     </div>
@@ -344,8 +393,13 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
 }
 
 /** The map for the unlocked profile: reads on open and on a subject change, re-reads on a mastery change. */
-export function SubjectMap({ controller, subjectId, subjects, onSubject, actions, inProgress, onContinue, initialTopic }: {
+export function SubjectMap({ controller, subjectId, subjects, onSubject, actions, inProgress, onContinue, initialTopic, concept, onAskQuestion, pointed, conceptFirst }: {
   controller: SubjectMapController;
+  /** The concept map's controller: with it the map has its "Map" mode. */
+  concept?: ConceptMapController;
+  onAskQuestion?: (text: string) => void;
+  pointed?: string | null;
+  conceptFirst?: boolean;
   subjectId: string;
   initialTopic?: string;
   subjects?: SubjectChoice[];
@@ -355,12 +409,22 @@ export function SubjectMap({ controller, subjectId, subjects, onSubject, actions
   onContinue?: (lessonId: string) => void;
 }) {
   const view = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView);
+  const none = useRef(() => () => undefined).current;
+  // The tutor's spoken pointer at a skill (`kc:` cue), when the map is on screen.
+  const heard = useVoicePointer();
+  const conceptView = useSyncExternalStore(concept?.subscribe ?? none, concept?.getView ?? (() => null), concept?.getView ?? (() => null));
   useEffect(() => {
     void controller.load(subjectId);
   }, [controller, subjectId]);
+  const onOpen = useMemo(() => (concept === undefined ? undefined : () => void concept.load(subjectId)), [concept, subjectId]);
+  const mode: ConceptMapMode | undefined = concept === undefined || conceptView === null || onOpen === undefined ? undefined : {
+    view: conceptView, onOpen, onRetry: onOpen, onShowGap: (gap) => concept.showGap(gap), onClearGap: () => concept.clearGap(),
+    ...(onAskQuestion !== undefined ? { onAskQuestion } : {}), pointed: pointed ?? (heard?.target.kind === "kc" ? heard.target.kc_id : null), initial: conceptFirst === true,
+  };
   return (
     <SubjectMapContent
       view={view}
+      {...(mode !== undefined ? { concept: mode } : {})}
       onRetry={() => void controller.load(subjectId)}
       onSyllabus={(scheme) => controller.chooseSyllabus(scheme)}
       {...(initialTopic !== undefined ? { initialTopic } : {})}

@@ -27,9 +27,11 @@ MAX_PCM = 4800  # 100 ms of 24 kHz mono PCM16
 KEY_UP_MARGIN_MS = 240  # trailing silence beyond the configured pause sent on push-to-talk key-up
 MAX_HELD_PCM = 480_000  # 10 s of microphone audio held while the endpoint is replaced (VOC-29)
 SYLLABLES_PER_S = 3.83  # the VOC-09 fallback synchroniser's rate
-# A cue names a board step or a part of a visual on screen, by id only (VSL-19, UXS-58 `<visual_id>:<part_id>`).
+# A cue names a board step, a part of a visual on screen (VSL-19, UXS-58 `<visual_id>:<part_id>`) or a skill on the
+# concept map (`kc:<kc_id>`), by id only.
 CUE_TARGET = re.compile(
     r"stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*"
+    r"|kc:kc\.(mth|phy|chm|bio|acc)\.(o|a)\.[a-z0-9_]+\.[a-z0-9_]+"
 )
 MAX_OUTPUT_PCM = 240_000  # bound an endpoint's single output frame to five seconds
 MODELS: dict[str, type[BaseModel]] = {

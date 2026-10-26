@@ -7,10 +7,10 @@ import { useT } from "../i18n.js";
 import { Icon, type IconName } from "../icons.js";
 import { Button, Dialog, FIELD_LOOK, IconButton, Notice, SegmentedControl, Switch } from "../primitives/index.js";
 
-const TOOL_ICON: Record<GenerateTool, IconName> = { summary: "notes", quiz: "question", flashcards: "flashcards", notes: "learn", audio_overview: "read-aloud", lesson_plan: "timer" };
+const TOOL_ICON: Record<GenerateTool, IconName> = { summary: "notes", quiz: "question", flashcards: "flashcards", notes: "learn", audio_overview: "read-aloud", lesson_plan: "timer", concept_map: "share" };
 /** Small, decorative accents use Jana's existing palette; names and icons still identify every tool. */
 function StudyToolIcon({ kind, size = 20 }: { kind: W.AidKind; size?: 16 | 20 }) {
-  const colour = { summary: "blue", quiz: "pink", flashcards: "orange", notes: "amber", audio_overview: "purple", lesson_plan: "blue-green", chapters: "blue-green", chat: "blue" }[kind];
+  const colour = { summary: "blue", quiz: "pink", flashcards: "orange", notes: "amber", audio_overview: "purple", lesson_plan: "blue-green", chapters: "blue-green", chat: "blue", concept_map: "purple" }[kind];
   return <span aria-hidden="true" className={`study-tool-icon study-tool-icon-${colour} inline-flex shrink-0 items-center justify-center rounded-control p-1`}><Icon name={kind === "chapters" ? "table" : TOOL_ICON[kind as GenerateTool] ?? "notes"} size={size} /></span>;
 }
 /** The question types a learner picks from (STU-21); a number and an expression are one choice. */
@@ -52,7 +52,8 @@ export function GenerateDialog({ tool, topics, syllabi, busy, error = null, revi
   const [summaryStyle, setSummaryStyle] = useState<keyof typeof SUMMARY_STYLES>("detailed");
   useEffect(() => setKept(topics.map((topic) => topic.title)), [topics]);
   if (tool === null) return null;
-  const takesTopics = tool !== "audio_overview";
+  // A concept map takes no settings: it maps the whole material (its job refuses topics and focus).
+  const takesTopics = tool !== "audio_overview" && tool !== "concept_map";
   const quiz = tool === "quiz", cards = tool === "flashcards";
   const ready = (!reviewRequired || reviewed) && (!quiz || types.length > 0) && (!customTopics || !takesTopics || topics.length === 0 || kept.length > 0);
   const toggle = (group: readonly QuizType[]) => setTypes((now) => group.every((x) => now.includes(x)) ? now.filter((x) => !group.includes(x)) : [...now, ...group.filter((x) => !now.includes(x))]);

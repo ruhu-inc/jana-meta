@@ -52,3 +52,5 @@ export const SIM_SETUPS: Record<string, (spec: ResolvedSpec) => SimSetup<unknown
 };
 export type { SimModel, SimSetup };
 export { SketchView, SKETCH_DASH, SKETCH_STROKE, type ResolvedSketch, type SketchElement, type SketchFrame } from "./sketch.js";
+export { layout as conceptLayout, overlaps as conceptOverlaps, NODE_HEIGHT as CONCEPT_NODE_HEIGHT, NODE_WIDTH as CONCEPT_NODE_WIDTH, type Layout as ConceptLayout, type LayoutEdge as ConceptLayoutEdge, type LayoutNode as ConceptLayoutNode } from "./conceptmap/layout.js";
+export { ConceptMapSvg, layoutOf as conceptLayoutOf, moveFrom as conceptMoveFrom, wrap as conceptWrap, type DrawEdge as ConceptDrawEdge, type DrawNode as ConceptDrawNode } from "./conceptmap/ConceptMapSvg.js";

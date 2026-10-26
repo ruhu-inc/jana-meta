@@ -12,6 +12,7 @@ import { ComposerShell } from "../primitives/ComposerShell.js";
 import { StudyInline as PackInline, StudyText as PackText, StudySourceText } from "./StudyText.js";
 import { useOpenLesson, useOpenTopic } from "./link.js";
 import { defaultRequest, GenerateDialog, GenerateTools, MySets, RecordingPlayer, type GenerateRequest } from "./StudyGenerate.js";
+import { StudyConceptMap } from "./StudyConceptMap.js";
 import { StudyLibrary, materialGroups } from "./StudyLibrary.js";
 import { StudyJourney } from "./StudyJourney.js";
 import { citationKey, StudyCitations } from "./StudyCitation.js";
@@ -32,7 +33,10 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
   const view = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView), t = useT();
   const [journeyChoices, setJourneyChoices] = useState<Record<string, string>>({});
   const [topicsSearched, setTopicsSearched] = useState(false);
+  const [topicText, setTopicText] = useState("");
   const [teachReview, setTeachReview] = useState(false);
+  const studyReady = view.status === "ready";
+  useEffect(() => { if (studyReady) controller.loadTopicMaps().catch(() => undefined); }, [controller, studyReady]);
   useEffect(() => setTopicsSearched(false), [view.source?.source_id, view.source?.revision]);
   const [adding, setAdding] = useState(false), [activityOpen, setActivityOpen] = useState(false), [allSetsOpen, setAllSetsOpen] = useState(false), [activityLimit, setActivityLimit] = useState(8);
   const [title, setTitle] = useState(""), [text, setText] = useState(""), [confirm, setConfirm] = useState<string | null>(null);
@@ -178,6 +182,22 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
   const revisionTag = (revision: number) => revision > 1 ? ` · ${t("study.revision", { revision })}` : "";
   const errorText = (code: string) => t(`study.error.${code}`) === `study.error.${code}` ? t("study.error.generic") : t(`study.error.${code}`);
   const accessBlocked = (view.access && view.access.status !== "ready") || view.error === "consent_required";
+  // A concept map of a typed topic, with no document (the pack's curated skills, or Muse Spark's with no source).
+  const topicMap = view.conceptTopic ?? null;
+  const topicMaps = <section className="flex flex-col gap-3" aria-labelledby="study-topic-map" data-topic-maps>
+    <h2 id="study-topic-map" className="text-ui font-semibold text-ink">{t("study.concept.topic_heading")}</h2>
+    <p className="text-meta text-muted">{t("study.concept.topic_help")}</p>
+    <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); void controller.makeTopicMap(topicText, preferCloud).then(() => { if (!controller.getView().error) setTopicText(""); }); }}>
+      <label className="flex min-w-0 flex-1 basis-56 flex-col gap-1 text-ui text-ink">{t("study.concept.topic_label")}<input className={FIELD_LOOK} value={topicText} maxLength={120} disabled={view.busy} onChange={(e) => setTopicText(e.target.value)} /></label>
+      <Button type="submit" disabled={view.busy || !topicText.trim()}>{t("study.concept.topic_make")}</Button>
+    </form>
+    {(view.conceptTopics ?? []).length > 0 && <div className="flex flex-wrap gap-2" aria-label={t("study.concept.topic_saved")}>{(view.conceptTopics ?? []).slice(0, 8).map((m) => <Button key={m.map_id} size="sm" tone="ghost" aria-pressed={topicMap?.map_id === m.map_id} disabled={view.busy} onClick={() => { void controller.openTopicMap(m.map_id); }}>{m.topic}</Button>)}</div>}
+    {topicMap !== null && <StudyConceptMap map={topicMap.concept_map} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editTopicMap(ops); }}
+      heading={<div className="flex flex-wrap items-center justify-between gap-2" data-topic-map={topicMap.map_id} data-origin={topicMap.origin}>
+        <div className="flex flex-col"><h3 className="text-heading text-ink">{topicMap.topic}</h3><p className="text-meta text-muted">{t(`study.concept.topic_origin.${topicMap.origin}`)}</p></div>
+        <span className="flex gap-2">{openTopic && topicMap.node_id && <Button size="sm" onClick={() => { if (topicMap.node_id) openTopic(topicMap.node_id); }}>{t("study.topic_guide")}</Button>}<Button size="sm" tone="ghost" onClick={() => { void controller.openTopicMap(null); }}>{t("action.close")}</Button></span>
+      </div>} />}
+  </section>;
   const ready = !accessBlocked && (view.source?.state === "ready" || (view.source?.state === "partial" && readableConfirmed));
 
   const status = <>
@@ -252,6 +272,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
     <Dialog open={confirm !== null} heading={t("study.private_source")} closeLabel={t("action.cancel")} onClose={() => setConfirm(null)}><p className="text-ui">{t("study.private_confirm")}</p><Button onClick={() => { const id = confirm; setConfirm(null); if (id) void controller.open(id); }}>{t("study.open_private")}</Button></Dialog>
     {/* Before any material the tools show what they will do, greyed (STU-21). */}
     {view.sources.length === 0 && view.status === "ready" && <GenerateTools disabled empty onPick={() => undefined} />}
+    {topicMaps}
     {jobs(view.jobs.filter((job) => ["running", "queued", "waiting_online", "paused"].includes(job.state)))}
   </section>{activityDialog}<Dialog open={allSetsOpen} heading={t("study.all_sets")} closeLabel={t("action.close")} onClose={() => setAllSetsOpen(false)} wide><MySets sets={view.sets} busy={view.busy} heading={false} onOpen={(set) => { setAllSetsOpen(false); void controller.openSet(set); }} /></Dialog></>;
 
@@ -386,7 +407,9 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
             <p className="text-meta text-muted">{t(view.podcastVoice?.enabled ? "study.audio_nvidia" : "study.audio_local")}</p>
           </>}
           {shown.status === "stale" && <Notice message={t("study.stale_help")} />}
-          {summaryGroups ? summaryGroups.map((group, i) => <section key={i} className="flex flex-col gap-3"><h3 className="text-ui font-semibold text-ink">{group.label}</h3>{shown.settings?.focus?.startsWith("Format as concise revision bullet points.") ? <ul className="flex list-disc flex-col gap-3 ps-5">{group.claims.map((c, j) => <li key={j}>{claim(c)}</li>)}</ul> : group.claims.map((c, j) => claim(c, String(j)))}</section>) : !view.deck && !view.quiz && shown.claims.map((c, i) => claim(c, String(i)))}
+          {shown.kind === "concept_map" && shown.concept_map && <StudyConceptMap map={shown.concept_map} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editConceptMap(ops); }}
+            actions={ready ? { onAsk: (name) => { setTab("chat"); void controller.conceptAction(name, "ask", preferCloud); }, onFlashcards: (name) => { void controller.conceptAction(name, "flashcards", preferCloud); }, onQuiz: (name) => { void controller.conceptAction(name, "quiz", preferCloud); } } : {}} />}
+          {summaryGroups ? summaryGroups.map((group, i) => <section key={i} className="flex flex-col gap-3"><h3 className="text-ui font-semibold text-ink">{group.label}</h3>{shown.settings?.focus?.startsWith("Format as concise revision bullet points.") ? <ul className="flex list-disc flex-col gap-3 ps-5">{group.claims.map((c, j) => <li key={j}>{claim(c)}</li>)}</ul> : group.claims.map((c, j) => claim(c, String(j)))}</section>) : !view.deck && !view.quiz && shown.kind !== "concept_map" && shown.claims.map((c, i) => claim(c, String(i)))}
           {shown.kind === "chat" && shown.status === "ready" && savedJourney?.lesson_aid_id === shown.aid_id && savedJourney.phase === "review" && <span><Button tone="primary" disabled={view.busy} onClick={() => { void controller.saveJourney("lesson_reviewed"); }}>{t("study.journey.reviewed_lesson")}</Button></span>}
           {/* After a chat answer, at most two next steps (UXS-68): cards from it, or a step explained again. */}
           {shown.kind === "chat" && shown.status === "ready" && <FollowUpChips disabled={view.busy || !ready}
