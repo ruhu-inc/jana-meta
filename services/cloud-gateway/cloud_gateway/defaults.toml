@@ -32,3 +32,9 @@ id = "muse-spark-1.3"
 input = 1.25
 cached_input = 0.15
 output = 4.25
+
+# Same price; kept so the day-1 checks can compare 1.2 with 1.3 under the ledger (§4.4).
+[prices."muse-spark-1.2"]
+input = 1.25
+cached_input = 0.15
+output = 4.25

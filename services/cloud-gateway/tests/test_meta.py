@@ -59,6 +59,10 @@ def test_refused_fields_and_history_reasoning_are_dropped_and_completions_not_st
     assert {"stop", "n", "logprobs", "chat_template_kwargs", "top_p"}.isdisjoint(sent)
     assert sent["messages"][1] == {"role": "assistant", "content": "A hint."}
     assert sent["response_format"] == body["response_format"] and sent["seed"] == 7  # kept as is
+    strict = {"type": "json_schema", "json_schema": {"name": "x", "strict": True, "schema": {"type": "object"}}}
+    relaxed = prepare_body({"messages": [], "response_format": strict})["response_format"]
+    assert relaxed["json_schema"] == {"name": "x", "strict": False, "schema": {"type": "object"}}  # still decoded
+    assert strict["json_schema"]["strict"] is True
     assert sent["store"] is False
     assert prepare_body(sent) == sent
 

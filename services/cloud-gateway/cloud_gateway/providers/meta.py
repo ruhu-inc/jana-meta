@@ -6,7 +6,9 @@ checked against https://dev.meta.ai/docs on 2026-10-26:
 
 - `tool_choice` accepts only `"auto"`; `"required"`, `"none"` and a named function are 400s.
 - `reasoning_effort` accepts minimal, low, medium, high and xhigh; Muse Spark always reasons, so `"none"` is a 400.
-- `response_format: json_schema` is decoded under constraint, so no schema copy in the prompt is needed.
+- `response_format: json_schema` is decoded under constraint, so no schema copy in the prompt is needed. `strict: true`
+  additionally demands that every property be required at every level, which the engine's contracts (with optional
+  fields) do not meet; `strict: false` is still decoded under the schema, so strict is sent as false (verify day 1).
 - `completion_tokens` already includes `completion_tokens_details.reasoning_tokens`: usage is billed as reported.
 - Some OpenAI fields are refused (`stop`, `n`, `logprobs`, ...): they are dropped here rather than sent.
 """
@@ -45,6 +47,13 @@ def prepare_body(body: dict[str, Any]) -> dict[str, Any]:
     effort = out.get("reasoning_effort")
     if effort is not None and effort not in EFFORTS:
         out["reasoning_effort"] = "minimal"  # "none": Spark always reasons; minimal is its lightest setting
+    response_format = out.get("response_format")
+    if isinstance(response_format, dict) and isinstance(response_format.get("json_schema"), dict):
+        if response_format["json_schema"].get("strict"):
+            out["response_format"] = {
+                **response_format,
+                "json_schema": {**response_format["json_schema"], "strict": False},
+            }
     if out.get("top_p") == 0:
         out.pop("top_p")
     messages = out.get("messages")
