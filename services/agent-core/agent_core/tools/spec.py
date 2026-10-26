@@ -9,6 +9,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field, fields
 from typing import Any, Literal
 
+from agent_core.tools.unroll import unrolled
+
 Profile = Literal["small", "full"]
 
 
@@ -125,9 +127,10 @@ class ToolSpec:
         return bool(self.describe(InitCtx()).strip())
 
     def model_definition(self, ctx: InitCtx) -> dict[str, Any]:
-        """What a model sees: name, description and argument schema. Never the metadata (TOL-01)."""
+        """What a model sees: name, description and argument schema, never recursive (SPEC §16). Never the metadata
+        (TOL-01)."""
         params = self.params_small if ctx.profile == "small" and self.params_small else self.params
-        return {"name": self.name, "description": self.describe(ctx), "parameters": params}
+        return {"name": self.name, "description": self.describe(ctx), "parameters": unrolled(params)}
 
     def data(self) -> dict[str, Any]:
         """The serialisable part of the spec, for the contract round trip (TOL-01)."""
