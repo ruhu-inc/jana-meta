@@ -139,6 +139,7 @@ async def transcribe(service: Any, key: str, buffer: Any, session: Any) -> tuple
                         },
                     },
                     "",
+                    role="study",
                 )
             )
             result = json.loads(reply.body["choices"][0]["message"]["content"])

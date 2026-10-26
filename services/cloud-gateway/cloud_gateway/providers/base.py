@@ -37,6 +37,7 @@ class ProviderRequest:
     model: ModelSpec  # the concrete model the slot and alias resolve to
     body: dict[str, Any]  # the allow-listed OpenAI chat-completions body (model and stream fields removed)
     pseudonym: str  # the per-session random pseudonym (PRV-25); the only per-user value a provider may receive
+    role: str = "unspecified"  # the engine role or gateway feature, for the budget ledger only; never sent upstream
 
 
 @dataclass(frozen=True)

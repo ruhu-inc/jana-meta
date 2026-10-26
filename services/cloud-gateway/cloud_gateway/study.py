@@ -1308,6 +1308,7 @@ class StudyService:
                                 },
                             },
                             pseudonym,
+                            role="study",
                         )
                     ),
                     remaining,
@@ -1658,6 +1659,7 @@ class StudyService:
                                 },
                             },
                             pseudonym,
+                            role="study",
                         )
                     ),
                     remaining,
@@ -1870,7 +1872,7 @@ class StudyService:
                 "max_tokens": limit, "reasoning_effort": "low",
                 "response_format": {"type": "json_schema", "json_schema": {"name": "concept_topic", "strict": True,
                                                                            "schema": plain(draft)}},
-            }, secrets.token_hex(16))), 120)  # fmt: skip
+            }, secrets.token_hex(16), role="study")), 120)  # fmt: skip
             usage, known = reply.usage, known + 1
             result = completed_object(reply)
             if errors(PREFIX + "ConceptTopicDraft", result) or result["request_id"] != body["request_id"]:

@@ -261,6 +261,7 @@ class AskService:
                         },
                     },
                     secrets.token_hex(16),
+                    role="ask",
                 )
             )
         except Exception:
@@ -342,6 +343,7 @@ class AskService:
                         },
                     },
                     secrets.token_hex(16),
+                    role="ask",
                 )
             )
             self.gw.finish(call, 200, "support_check", reply.usage)

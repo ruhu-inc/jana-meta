@@ -6,10 +6,16 @@ tokens (including reasoning) are explicitly bounded. A successful response with 
 with actual cost; missing usage, failures, cancellations and crashes retain the bound until operator reconciliation.
 No prompt, reply, account identifier or credential is stored here. Daily aggregate counters survive metadata purge;
 unresolved calls remain held across midnight. This ledger covers inference, not external hosting/voice/search fees.
+
+Each hold also has a row in `inference_budget_holds` saying when it was made, for which role and model, and how its
+call ended (`OUTCOMES`), so an operator can release the holds of calls that are over (`release_held`) without ever
+touching a call still in flight. The row carries no payload, pseudonym or account. A settle always records the
+billed amount, even for a hold an operator already released, so a release can never lose real spend.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import math
 import secrets
@@ -34,7 +40,33 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS inference_budget_days (day TEXT PRIMARY KEY, spent_micros INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS inference_budget_pending (id TEXT PRIMARY KEY, reserved_micros INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS inference_budget_state (singleton INTEGER PRIMARY KEY CHECK(singleton=1));
+CREATE TABLE IF NOT EXISTS inference_budget_holds (
+    id TEXT PRIMARY KEY, reserved_micros INTEGER NOT NULL, created_at REAL NOT NULL, migrated INTEGER NOT NULL,
+    role TEXT NOT NULL, model TEXT NOT NULL, outcome TEXT NOT NULL, status INTEGER, resolved_at REAL,
+    released_at REAL, spent_micros INTEGER);
 """
+# How a held call ended. `inference_budget_pending` stays the set of holds counted against the caps; these say why.
+IN_FLIGHT = "in_flight"  # the call has not ended; never released by an operator
+SETTLED = "settled"  # usage known: the hold was replaced by the billed amount
+UNBILLED = "unbilled"  # refused before processing (401/403/429, no key): released at once
+FAILED_UNBILLED_UNKNOWN = "failed_unbilled_unknown"  # another 4xx (e.g. 400): SPEC §16 does not say whether it bills
+FAILED_OTHER = "failed_other"  # a 5xx, a network failure or an unclassified error: it may have been processed
+TIMED_OUT = "timed_out"  # the provider timed out (408/504, or the client's timeout)
+CANCELLED = "cancelled"  # the caller went away (task cancelled, stream closed early)
+NO_USAGE = "no_usage"  # the call ended without usable usage counters
+UNKNOWN = "unknown"  # a hold made before outcomes were recorded (or by an older gateway still running)
+ENDED = (FAILED_UNBILLED_UNKNOWN, FAILED_OTHER, TIMED_OUT, CANCELLED, NO_USAGE)
+# What `release_held` accepts. In-flight holds are never selectable; migrated (`unknown`) ones only by name.
+RELEASABLE = {
+    "failed": (FAILED_UNBILLED_UNKNOWN, FAILED_OTHER),
+    "ended": ENDED,
+    **{outcome: (outcome,) for outcome in (*ENDED, UNKNOWN)},
+}
+# The counted holds a release selects: outcome in a JSON list, made by a time, and of a status if one is given.
+SELECTED = (
+    "SELECT p.id, p.reserved_micros FROM inference_budget_pending p JOIN inference_budget_holds h ON h.id=p.id "
+    "WHERE h.outcome IN (SELECT value FROM json_each(?)) AND h.created_at <= ? AND (? IS NULL OR h.status = ?)"
+)
 
 
 def micros(usd: float) -> int:
@@ -59,6 +91,14 @@ class InferenceBudget:
                 for day, usd in db.execute("SELECT day,sum(cost_usd) FROM requests GROUP BY day").fetchall():
                     db.execute("INSERT INTO inference_budget_days VALUES (?,?)", (day, micros(usd)))
                 db.execute("INSERT INTO inference_budget_state VALUES (1)")
+            # Holds made before outcomes were recorded (or by an older gateway still running against this file) get
+            # an `unknown` row dated now, an upper bound on their age. They are never released unless named.
+            db.execute(
+                "INSERT INTO inference_budget_holds (id,reserved_micros,created_at,migrated,role,model,outcome) "
+                "SELECT id,reserved_micros,?,1,'unknown','unknown',? FROM inference_budget_pending p "
+                "WHERE NOT EXISTS (SELECT 1 FROM inference_budget_holds h WHERE h.id=p.id)",
+                (self.clock(), UNKNOWN),
+            )
 
     def reserve(self, request: ProviderRequest) -> tuple[str, ProviderRequest]:
         expires = self.config.quotas.deployment_budget_expires_at
@@ -95,27 +135,19 @@ class InferenceBudget:
         input_bound = (body_bytes + 4096 + 256 * len(body.get("messages", []))
                        + images * self.config.quotas.deployment_image_input_tokens)  # fmt: skip
         bound = micros(cost_usd(price, Usage(input_bound, limit)))
-        key, day = secrets.token_hex(16), day_of(self.clock())
-        with self.store._tx() as db:
-            held = db.execute("SELECT coalesce(sum(reserved_micros),0) FROM inference_budget_pending").fetchone()[0]
-            spent = db.execute("SELECT coalesce(sum(spent_micros),0) FROM inference_budget_days").fetchone()[0]
-            today = db.execute("SELECT spent_micros FROM inference_budget_days WHERE day=?", (day,)).fetchone()
-            today_spent = today[0] if today else 0
-            if (self.total_micros is not None and spent + held + bound > self.total_micros) or (
-                self.daily_micros is not None and today_spent + held + bound > self.daily_micros
-            ):
-                raise UpstreamError("quota_or_billing", "deployment inference budget exhausted")
-            db.execute("INSERT INTO inference_budget_pending VALUES (?,?)", (key, bound))
-        return key, replace(request, body=body)
+        return self._hold(bound, request.role, request.model.id), replace(request, body=body)
 
-    def reserve_flat(self, usd: float) -> str:
+    def reserve_flat(self, usd: float, *, role: str = "unspecified", model: str = "unspecified") -> str:
         """A hold for a call priced per unit rather than per token (SAM 3.1 at $2.50 per 1,000 images): its exact
         cost is known before the send, so the hold is the cost. Settle it with `settle_flat`."""
         expires = self.config.quotas.deployment_budget_expires_at
         if expires is not None and self.clock() >= expires.timestamp():
             raise UpstreamError("quota_or_billing", "approved deployment inference period has ended")
-        bound = micros(usd)
-        key, day = secrets.token_hex(16), day_of(self.clock())
+        return self._hold(micros(usd), role, model)
+
+    def _hold(self, bound: int, role: str, model: str) -> str:
+        now = self.clock()
+        key, day = secrets.token_hex(16), day_of(now)
         with self.store._tx() as db:
             held = db.execute("SELECT coalesce(sum(reserved_micros),0) FROM inference_budget_pending").fetchone()[0]
             spent = db.execute("SELECT coalesce(sum(spent_micros),0) FROM inference_budget_days").fetchone()[0]
@@ -126,46 +158,121 @@ class InferenceBudget:
             ):
                 raise UpstreamError("quota_or_billing", "deployment inference budget exhausted")
             db.execute("INSERT INTO inference_budget_pending VALUES (?,?)", (key, bound))
+            db.execute(
+                "INSERT INTO inference_budget_holds (id,reserved_micros,created_at,migrated,role,model,outcome) "
+                "VALUES (?,?,?,0,?,?,?)",
+                (key, bound, now, role, model, IN_FLIGHT),
+            )
         return key
 
     def settle_flat(self, key: str, usd: float) -> None:
         """Replace a flat hold with the amount the provider billed."""
-        amount = micros(usd)
-        with self.store._tx() as db:
-            if db.execute("DELETE FROM inference_budget_pending WHERE id=?", (key,)).rowcount:
-                db.execute(
-                    "INSERT INTO inference_budget_days VALUES (?,?) ON CONFLICT(day) "
-                    "DO UPDATE SET spent_micros=spent_micros+excluded.spent_micros",
-                    (day_of(self.clock()), amount),
-                )
+        self._settle(key, micros(usd))
 
     def settle(self, key: str, request: ProviderRequest, usage: Usage) -> None:
         # A text request always has input tokens. Missing/invalid counters cannot establish actual spend.
         if usage.input_tokens <= 0 or usage.output_tokens < 0 or not 0 <= usage.cached_tokens <= usage.input_tokens:
+            self._mark(key, NO_USAGE)
             return
-        amount = micros(cost_usd(self.config.prices[request.model.id], usage))
+        self._settle(key, micros(cost_usd(self.config.prices[request.model.id], usage)))
+
+    def _settle(self, key: str, amount: int) -> None:
+        """Record the billed amount once per hold. A hold an operator released is still settled: real spend is
+        never lost to a release (the hold's bound is not counted twice, since the release already dropped it)."""
+        now = self.clock()
         with self.store._tx() as db:
-            changed = db.execute("DELETE FROM inference_budget_pending WHERE id=?", (key,)).rowcount
-            if changed:
-                db.execute(
-                    "INSERT INTO inference_budget_days VALUES (?,?) ON CONFLICT(day) "
-                    "DO UPDATE SET spent_micros=spent_micros+excluded.spent_micros",
-                    (day_of(self.clock()), amount),
-                )
+            row = db.execute("SELECT outcome FROM inference_budget_holds WHERE id=?", (key,)).fetchone()
+            dropped = db.execute("DELETE FROM inference_budget_pending WHERE id=?", (key,)).rowcount
+            if (row is None and not dropped) or (row is not None and row[0] == SETTLED):
+                return  # already settled
+            db.execute(
+                "UPDATE inference_budget_holds SET outcome=?, resolved_at=?, spent_micros=? WHERE id=?",
+                (SETTLED, now, amount, key),
+            )
+            db.execute(
+                "INSERT INTO inference_budget_days VALUES (?,?) ON CONFLICT(day) "
+                "DO UPDATE SET spent_micros=spent_micros+excluded.spent_micros",
+                (day_of(now), amount),
+            )
+
+    def _mark(self, key: str, outcome: str, status: int | None = None) -> None:
+        """Record how a call ended. Only an in-flight hold changes: a settled or already-ended one keeps its outcome."""
+        with self.store._tx() as db:
+            db.execute(
+                "UPDATE inference_budget_holds SET outcome=?, status=?, resolved_at=? WHERE id=? AND outcome=?",
+                (outcome, status, self.clock(), key, IN_FLIGHT),
+            )
+
+    def fail(self, key: str, error: BaseException, *, output_seen: bool = False) -> None:
+        """Record why a call ended without usage. Only a refusal before processing (`unbilled`, before any output)
+        releases its hold; any other failure keeps it until an operator, having checked billing, releases it."""
+        if isinstance(error, UpstreamError) and error.extra.get("unbilled") and not output_seen:
+            self.release(key)
+        elif isinstance(error, UpstreamError) and error.reason == "timeout":
+            self._mark(key, TIMED_OUT, error.upstream_status)
+        elif isinstance(error, UpstreamError) and error.upstream_status and 400 <= error.upstream_status < 500:
+            # SPEC §16 records Meta's 4xx errors but not whether a rejected request (e.g. a 400 for a recursive
+            # schema) is billed, so the hold stays and the outcome says so instead of guessing.
+            self._mark(key, FAILED_UNBILLED_UNKNOWN, error.upstream_status)
+        elif isinstance(error, (asyncio.CancelledError, GeneratorExit)):
+            self._mark(key, CANCELLED)
+        else:
+            self._mark(key, FAILED_OTHER, error.upstream_status if isinstance(error, UpstreamError) else None)
 
     def release(self, key: str) -> None:
         """Drop a reservation for a call the provider refused before processing it (it bills nothing)."""
+        now = self.clock()
         with self.store._tx() as db:
             db.execute("DELETE FROM inference_budget_pending WHERE id=?", (key,))
+            db.execute(
+                "UPDATE inference_budget_holds SET outcome=?, resolved_at=?, released_at=? WHERE id=? AND outcome=?",
+                (UNBILLED, now, now, key, IN_FLIGHT),
+            )
 
-    def release_all(self) -> tuple[int, float]:
-        """Operator reconciliation: drop every unresolved hold, once provider billing shows none of them was charged."""
+    def release_held(
+        self, selector: str, older_than_s: float, *, status: int | None = None, apply: bool = False
+    ) -> tuple[int, float]:
+        """Operator reconciliation: the holds still counted whose call ended with an outcome `selector` names
+        (`RELEASABLE`), made at least `older_than_s` ago, and, if given, with this upstream status. A dry run (the
+        default) only counts them; `apply` releases them in the same transaction, so a call that is still in flight,
+        or settles meanwhile, is never touched. Returns the count and the dollars held."""
+        if selector not in RELEASABLE:
+            raise ValueError(f"cannot release {selector!r}; choose one of {', '.join(RELEASABLE)}")
+        now = self.clock()
+        params = (json.dumps(RELEASABLE[selector]), now - older_than_s, status, status)
         with self.store._tx() as db:
-            count, held = db.execute(
-                "SELECT count(*), coalesce(sum(reserved_micros),0) FROM inference_budget_pending"
-            ).fetchone()
-            db.execute("DELETE FROM inference_budget_pending")
-        return int(count), held / MICROS
+            selected = db.execute(SELECTED, params).fetchall()
+            if apply:
+                db.executemany(
+                    "UPDATE inference_budget_holds SET released_at=? WHERE id=?", [(now, i) for i, _ in selected]
+                )
+                db.executemany("DELETE FROM inference_budget_pending WHERE id=?", [(i,) for i, _ in selected])
+        return len(selected), sum(held for _, held in selected) / MICROS
+
+    def holds(self) -> list[dict[str, Any]]:
+        """The holds still counted, grouped by outcome, role, model and status: count, dollars and oldest time."""
+        with self.store._lock:
+            rows = self.store._db.execute(
+                "SELECT coalesce(h.outcome,?), coalesce(h.role,'unknown'), coalesce(h.model,'unknown'), h.status, "
+                "count(*), sum(p.reserved_micros), min(h.created_at), max(coalesce(h.migrated,1)) "
+                "FROM inference_budget_pending p LEFT JOIN inference_budget_holds h ON h.id=p.id "
+                "GROUP BY 1,2,3,4 ORDER BY 6 DESC",
+                (UNKNOWN,),
+            ).fetchall()
+        return [
+            {"outcome": outcome, "role": role, "model": model, "status": status, "count": count,
+             "held_usd": held / MICROS, "oldest_at": oldest, "migrated": bool(migrated)}
+            for outcome, role, model, status, count, held, oldest, migrated in rows
+        ]  # fmt: skip
+
+    def purge(self, now: float, retention_days: int) -> None:
+        """Drop the outcome rows of holds no longer counted (settled or released) once past metadata retention."""
+        with self.store._tx() as db:
+            db.execute(
+                "DELETE FROM inference_budget_holds WHERE coalesce(resolved_at, created_at) < ? "
+                "AND NOT EXISTS (SELECT 1 FROM inference_budget_pending p WHERE p.id=inference_budget_holds.id)",
+                (now - retention_days * 86400,),
+            )
 
     def snapshot(self) -> dict[str, Any]:
         with self.store._lock:
@@ -192,26 +299,25 @@ class BudgetedAdapter:
         key, bounded = self.budget.reserve(request)
         try:
             reply = await self.adapter.complete(bounded)
-        except UpstreamError as error:
-            if error.extra.get("unbilled"):
-                self.budget.release(key)  # refused before processing: nothing to hold
+        except BaseException as error:  # cancellation included: the hold says how the call ended
+            self.budget.fail(key, error)
             raise
         self.budget.settle(key, bounded, reply.usage)
         return reply
 
     async def stream(self, request: ProviderRequest) -> AsyncGenerator[StreamPart]:
         key, bounded = self.budget.reserve(request)
-        parts, usage = self.adapter.stream(bounded), None
+        parts, usage, ended = self.adapter.stream(bounded), None, False
         try:
             async for part in parts:
                 if part.usage is not None:
                     usage = part.usage
                 yield part
-            if usage is not None:
-                self.budget.settle(key, bounded, usage)
-        except UpstreamError as error:
-            if error.extra.get("unbilled") and usage is None:
-                self.budget.release(key)  # refused before any output: nothing to hold
+            ended = True
+            self.budget.settle(key, bounded, usage or Usage())  # no usage: the hold stays, marked `no_usage`
+        except BaseException as error:  # a closed stream (GeneratorExit) or a cancelled task is `cancelled`
+            if not ended:
+                self.budget.fail(key, error, output_seen=usage is not None)
             raise
         finally:
             await parts.aclose()

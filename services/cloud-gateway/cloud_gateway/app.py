@@ -128,7 +128,7 @@ class Gateway:
         self.quotas = Quotas(config, self.store, alerts)
         self.operations = GatewayOperations(config.storage_dir, config.operations, alerts=alerts)
         self.health = UpstreamHealth(config.objectives)
-        self.store.purge(clock(), config.metadata_retention_days)
+        self.purge(clock())
         self._purged_hour = int(clock() // 3600)
 
     async def json_body(self, request: Request, limit: int | None = None) -> dict[str, Any] | JSONResponse:
@@ -197,7 +197,12 @@ class Gateway:
         hour = int(now // 3600)
         if hour != self._purged_hour:
             self._purged_hour = hour
-            self.store.purge(now, self.config.metadata_retention_days)
+            self.purge(now)
+
+    def purge(self, now: float) -> None:
+        self.store.purge(now, self.config.metadata_retention_days)
+        if self.inference_budget is not None:
+            self.inference_budget.purge(now, self.config.metadata_retention_days)
 
     async def chat(self, request: Request) -> Response:
         started = self.clock()
@@ -254,7 +259,7 @@ class Gateway:
         }:
             role = "unspecified"
         call = _Call(session, device_hash, provider, adapter, model, started, role)
-        upstream = ProviderRequest(model, minimise.forwarded(body), request.headers[PSEUDONYM_HEADER])
+        upstream = ProviderRequest(model, minimise.forwarded(body), request.headers[PSEUDONYM_HEADER], role)
         if asked.stream:
             include_usage = bool(asked.stream_options is not None and asked.stream_options.include_usage)
             return await self._stream(call, upstream, include_usage)
@@ -391,6 +396,7 @@ def create_app(
                                 model,
                                 {"messages": [{"role": "user", "content": "Reply with OK."}]},
                                 "synthetic-ops-probe",
+                                "probe",
                             )
                         ),
                         timeout=policy.latency_objective_s * policy.latency_multiple,
