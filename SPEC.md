@@ -433,12 +433,12 @@ checks every step with code, keeps working without power or internet, and uses M
 3. NVIDIA: is trial audio allowed in the video? If not, approve the self-hosted Magpie spend (Modal/Baseten credits).
 4. Submission scope in §9 (which subjects; whether Study stays). §9 as written does not install (§17).
 5. Hosting: GCP project `jana-meta` (JM-D7) or partner credits only.
-6. Photo demo (§5): handwritten working now goes to the cloud after the local privacy pass (W2, parallel session);
-   confirm that is the policy you want for the entry.
+6. Photo demo (§5): handwritten working goes to the cloud after the local privacy pass and the per-photo notice
+   (owner, 2026-10-26: accepted).
 7. Demo laptop: its specification, to set Glimmer's speed gate; and whether `--local-model` may download weights.
 8. Ask anything: leave it out of the demo (anti-project list, §14); the research agent (§18) is the web-research feature.
 9. Budget dates: resolved (valid until 2026-11-09; ledger in `~/.jana-meta/gateway`).
-10. Research agent decisions (§18.10).
+10. Research agent decisions: settled (§18.10).
 11. Before submission: rewrite the README as a Meta project (JM-D19), rename the app identifier and keychain prefix
     (§17 Identity), and a trial `git archive` install and test of the §9 scope by Nov 1.
 
@@ -665,10 +665,14 @@ withholding of instruction-like source text; import into Study's stores; the UI 
 before any request leaves; a pack failing the release gates publishing nothing; a second session getting 404 for
 another's job; parallel research respecting the limit of 4.
 
-### 18.10 Open decisions
+### 18.10 Decisions (owner, 2026-10-26: "go with the recommended options")
 
-1. Zero data retention or research (§15 item 2).
-2. The agent in the gateway (recommended: survives a sleeping laptop) or on the device.
-3. Allowance per learner per day and the cap per job.
-4. Source policy: which sites to prefer or exclude.
-5. Scope: any topic, or exam subjects plus Biology diagrams.
+1. **Research over zero data retention**: zero data retention is not requested (it would switch off web search and
+   background requests).
+2. **The agent runs in the gateway** as a durable job (§18.3).
+3. **5 packs per learner per day; $0.30 cap per job**, to be revisited after the first measured packs.
+4. **Source policy**: no allow-list; prefer reference and educational sources (encyclopaedias, university, government
+   and examination-board pages, open textbooks); exclude social media, forums, video pages and answer-selling sites.
+   Applied as a ranking and exclusion rule on the cited results, never by trusting a page's own claims.
+5. **Scope**: the exam subjects (Mathematics, Physics, Chemistry, Accounting) plus Biology diagrams; other topics get
+   a short "not something Jana researches yet".
