@@ -10,12 +10,31 @@ Every Meta API detail marked **(verify)** must be confirmed with a real key on d
 2026-10-26 the Meta docs (dev.meta.ai/docs) confirmed or corrected most of them; §16 records what they say, and items
 still marked (verify) are not documented and need a real call.
 
+## Status (updated 2026-10-26, evening)
+
+Work landed on `main` today, from this session and from parallel sessions merged at 17:33–17:41:
+
+| W | State | Remaining |
+|---|---|---|
+| W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, the Google stack still registered (§8.1), streaming the Coach to cut time to first words (§12) |
+| W2 Vision | **Mostly done** (parallel session): SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed | **Diagram drill** (tap a part, checked against SAM's outline; §5.2, needed by §18) |
+| W3 Glimmer | Downloaded and verified (with the DFlash draft); measured (§7) | Launcher and router entries, the lean offline path, power-cut switch timing and recovery |
+| W4 Speech | Not started | §6, re-baselined by §12 |
+| W5 Adult | Sign-up with date of birth, adult copy, parent sections removed, safety wording | Engine-side band check, remaining guardian copy (§17) |
+| W6 Bugs | #1, #4, #6 done; #5 partly (parallel session) | #2, #3, #7 |
+| W7 Research agent | Specified (§18) | All |
+| Standout features (parallel session) | Checked figures, gap tracing, explain-back, predict-before-you-see sims merged | — |
+| Glimmer-free check | `phys_circuit`'s recursive schema unrolled for Spark (§16) | — |
+
 ## 1. What we are building
 
-**Jana for adult learners, on Meta.** A voice-first AI tutor for learners **aged 18 and over** preparing for O level
-exams (WAEC/NECO private candidates, JAMB re-takers, adult-education students, first-year university revision). It
-keeps Jana's teaching rules: it never just hands over an answer, every number is checked by tools before it is said,
-and anything it could not check is labelled.
+**Jana for adult learners, on Meta.** An exam-prep system for learners **aged 18 and over** preparing for O level
+exams, or refreshing those foundations for university entry and first-year study. The packs cover Mathematics,
+Physics, Chemistry and Accounting on the Cambridge O level topic structure (5054, 5070), in our own words; they cover
+the core O level topics that WAEC, NECO and GCE syllabuses share, so the pitch says that and no more (§17 Claims).
+It keeps Jana's teaching rules: it never just hands over an answer, every number is checked by code before it is
+said, and anything it could not check is labelled. It sees (photos of working, diagrams), hears, reasons, researches
+(§18) and keeps working offline. It is not presented as a chatbot (§14).
 
 Event: Meta Global AI Developer Hackathon, remote, **Oct 26 12:00 PM – Nov 4 9:00 PM ET**, Startup track, theme
 "Build for Your World". Judging: Impact 30%, Use of Meta AI tooling 25% (beyond a basic integration), Technical
@@ -36,14 +55,14 @@ for schools once it has a public link.
 
 | # | Decision |
 |---|---|
-| JM-D9 | **Online reasoning is Muse Spark** for every engine role (Coach, Diagnoser, Solver, Checker, Reflector, auxiliary roles) and for Study and Ask generation. No other cloud language model is configured. |
+| JM-D9 | **Online reasoning is Muse Spark** for the engine roles that may leave the device (Coach, Diagnoser, Solver, Checker, the input guard and other auxiliary roles; the Reflector stays local because it reads private notes), for Study and for the research agent (§18). No other cloud language model is configured. |
 | JM-D10 | **Online vision is Muse Spark + SAM 3.1.** Muse Spark reads the photo (what the question is, which regions matter); SAM 3.1 turns those regions into exact masks so Jana can crop for a second, sharper read and point at the exact place on the learner's own photo. |
 | JM-D11 | **Local inference is Muse Glimmer 30B** (Apache-2.0, official GGUF Q4_K_M, ~16.8 GB) under the existing llama-server supervisor, on 32 GB+ machines. Smaller machines run online only. No non-Meta local language model ships in the entry (offline speech models are covered by JM-D12 and JM-D13). |
 | JM-D12 | **Speech to text is Meta.** Online: Muse Voice Transcribe (realtime). Offline: Meta **Omnilingual ASR** (Apache-2.0) if it passes the latency gate in §6.3; otherwise faster-whisper stays as the offline fallback. English only (JM-D18). |
-| JM-D13 | **Text to speech is not Meta**, because Meta has no commercially usable TTS (MMS-TTS is CC-BY-NC and not streaming). Online: **NVIDIA Magpie TTS** (self-hosted open weights for anything judges see; §6.4). Offline: **Kokoro-82M** (Apache-2.0, already in the speech pack). |
+| JM-D13 | **Text to speech is not Meta**, because Meta has no commercially usable TTS (MMS-TTS is CC-BY-NC and not streaming). Online: **NVIDIA Magpie TTS** (self-hosted open weights for anything judges see; §6.4). Offline, and for every podcast (study packs, §18): **Kokoro-82M** (Apache-2.0, already in the speech pack), read on the device. |
 | JM-D14 | **Removed:** Nebius Token Factory, all Nemotron models, Tavily web search, and the Google/Gemini cloud stack (Gemini models, Gemini Live, Chirp STT/TTS) from configuration and from the submission. |
 | JM-D15 | **Adult product:** every profile is `18_plus`; guardian consent, parent summaries, family plan and under-18 Ask policies are hidden or removed. Sign-up asks for date of birth and blocks under-18s. |
-| JM-D16 | **Muse Spark Standard mode only**, never Contributor mode (Meta trains on Contributor data). Contributor mode is a separate model id (`muse-spark-1.3-contributor`), so the gateway configures only Standard ids. Request zero data retention for the project account (through Meta's contact-sales form; it disables search grounding and file uploads). Muse Code, if used, must not run in Contributor mode on this repository: **Muse Code subscriptions default to Contributor mode**, so run it with `--contributor-mode off` or `MUSE_CONTRIBUTOR_MODE=0`. |
+| JM-D16 | **Muse Spark Standard mode only**, never Contributor mode (Meta trains on Contributor data). Contributor mode is a separate model id (`muse-spark-1.3-contributor`), so the gateway configures only Standard ids. Zero data retention for the project account is requested only if the owner chooses it over the research agent (§15 item 2): it disables search grounding, background and stored requests, and file uploads. Muse Code, if used, must not run in Contributor mode on this repository: **Muse Code subscriptions default to Contributor mode**, so run it with `--contributor-mode off` or `MUSE_CONTRIBUTOR_MODE=0`. |
 | JM-D17 | **Submission scope:** the organisers receive a perpetual licence to whatever is submitted (Official Rules, "Hackathon Submission"). Only what the entry needs is submitted (§9). The owner signs off on the scope before submission. |
 | JM-D18 | **English only** (owner, 2026-10-26). No Yoruba, Hausa, Igbo or Pidgin input in the entry; Voice Transcribe does not support the first three anyway. |
 | JM-D19 | **Meta-native presentation** (owner, 2026-10-26). The code, configuration names, interface copy and documentation read as a project built for Meta's models from the start: no Nebius, Nemotron, Tavily or earlier-hackathon framing remains (for example the keychain service is `jana-meta.cloud-gateway`, and the README is about Meta). |
@@ -52,17 +71,19 @@ for schools once it has a public link.
 
 ```
  Learner (browser demo host or desktop app)
-   mic ─► client VAD (barge-in) ─────────────┐                 photo ─► perception worker (local, sandboxed):
-   speaker ◄─────────────────────────────┐   │                 orientation, face/person screen, crop, deskew,
-                                         │   ▼                 privacy mask, ≤1600 px JPEG
- ┌──────────── cloud gateway (jana-meta) ┴──────────────────────┐        │
- │ voice WS: Muse Voice Transcribe (STT) ─► transcript ─────────┼──► Jana engine (agent-core, on device)
- │           NVIDIA Magpie TTS ◄── accepted say_spoken only ◄───┼─── input guard → Diagnoser → Solver + tools
- │ chat:     Muse Spark (api.meta.ai/v1) ◄──────────────────────┼─── → Checker → Coach → release gates
- │ vision:   Muse Spark (read) ⇄ SAM 3.1 (masks) ◄──────────────┼─── PhotoReader (engine/vision.py)
- │ budget ledger (credits cap) · secrets · no payload logging   │
- └──────────────────────────────────────────────────────────────┘
- Offline (32 GB+): llama-server + Muse Glimmer 30B · Omnilingual ASR or faster-whisper · Kokoro · same engine
+   mic ─► voice bridge (barge-in is a server `flush`) ┐        photo ─► perception worker (local, sandboxed):
+   speaker ◄──────────────────────────────────┐       │        orientation, face/person screen, crop, deskew,
+                                              │       ▼        privacy mask, ≤1600 px JPEG
+ ┌──────────── cloud gateway (jana-meta) ─────┴──────────────────┐        │
+ │ voice WS: Muse Voice Transcribe (STT) ─► transcript ──────────┼──► Jana engine (agent-core, on device)
+ │           Magpie or Kokoro ◄── accepted say_spoken only ◄─────┼─── input guard → Diagnoser → Solver + tools
+ │ chat:     Muse Spark, Chat Completions (api.meta.ai/v1) ◄─────┼─── → Checker → Coach → release gates
+ │ vision:   Muse Spark (read) ⇄ SAM 3.1 at /v1/vision/segment ◄──┼─── PhotoReader (engine/vision.py)
+ │ research: agent jobs on the Responses API + web_search (§18) ◄─┼─── Study: Learn from a picture / Research a topic
+ │ budget ledger (credits cap) · secrets · no payload logging    │
+ └───────────────────────────────────────────────────────────────┘
+ Offline, any laptop: signed packs: lessons, practice with checked marking and hints, mock papers, saved study packs
+ Offline, 32 GB+: llama-server + Muse Glimmer 30B (+ DFlash draft) · faster-whisper or Omnilingual · Kokoro
 ```
 
 The engine, tools, gates and voice bridge do not change design. Only providers, configuration, speech stages and
@@ -74,8 +95,11 @@ the vision step change.
 
 | Alias (device sends `primary/<alias>`) | Model | Used by | Reasoning |
 |---|---|---|---|
-| `fast-model` | `muse-spark-1.3` (confirmed; Meta recommends it for new work; 1.2 has the same price and limits, so pick by §4.4) | coach, diagnoser, title, input_guard, ask | low |
-| `strong-model` | same model id | solver, checker, reflector, study | solver high, checker medium |
+| `fast-model` | `muse-spark-1.3` (chosen; 1.2 has the same price and limits) | coach, diagnoser, title, input_guard, rule_matcher, compaction | device low → Spark `minimal` |
+| `strong-model` | same model id | solver, checker, study, research agent | device high → Spark `low`; medium → `minimal` |
+
+The device still asks low, medium or high; each alias's `thinking` map in `defaults.toml` sets the Spark effort
+(2026-10-26: this halved a guided turn from ~23 s to 12.8 s with the checks still passing).
 | `small-model` | removed | — | — |
 
 One model serves both aliases; the aliases stay so the router's tiers and `router.yaml` keep working. Muse Wonder is
@@ -85,20 +109,20 @@ not used (preview, about 5× the output price).
 
 | File | Change |
 |---|---|
-| `services/cloud-gateway/cloud_gateway/providers/meta.py` (new) | `MetaAdapter(OpenAICompatAdapter)`: base `https://api.meta.ai/v1`, Bearer `meta_api_key`. `prepare_body` (a module function, as `nebius.py` had, called from `_body`): `tool_choice` `"required"` → `"auto"` (Spark accepts only `auto`; anything else is a 400; the engine's existing tool nudge stays), a named-function `tool_choice` → `"auto"`, `"none"` → send no `tools` and no `tool_choice` (whether earlier tool calls in the history are accepted then is **(verify)**); keep `response_format: json_schema` as is (constrained decoding; strict schemas need `additionalProperties:false`, every property required, no `allOf`/`oneOf`, no root `anyOf`); drop `chat_template_kwargs`, `stop`, `logprobs`, `n` and other fields Spark rejects (§16); map `reasoning_effort` none → `minimal` (Spark always reasons; `none` is a 400). Usage: `completion_tokens` already includes reasoning tokens, so bill `completion_tokens` only (adding `reasoning_tokens` would double-count). Streams: drop any reasoning delta before it reaches the device. |
+| `services/cloud-gateway/cloud_gateway/providers/meta.py` (new) | `MetaAdapter(OpenAICompatAdapter)`: base `https://api.meta.ai/v1`, Bearer `meta_api_key`. `prepare_body` (a module function, as `nebius.py` had, called from `_body`): `tool_choice` `"required"` → `"auto"` (Spark accepts only `auto`; anything else is a 400; the engine's existing tool nudge stays), a named-function `tool_choice` → `"auto"`, `"none"` → send no `tools` and no `tool_choice` (whether earlier tool calls in the history are accepted then is **(verify)**); send `response_format: json_schema` with `strict: false` (still decoded under the schema; strict additionally demands every property be required, which the engine's contracts do not meet), with every cross-document `$ref` copied into the schema (`bundled_schemas`, done); drop `chat_template_kwargs`, `stop`, `logprobs`, `n` and other fields Spark rejects (§16); map `reasoning_effort` none → `minimal` (Spark always reasons; `none` is a 400). Usage: `completion_tokens` already includes reasoning tokens, so bill `completion_tokens` only (adding `reasoning_tokens` would double-count). Streams: drop any reasoning delta before it reaches the device. |
 | `cloud_gateway/providers/__init__.py`, `config.py` (`AdapterKind`) | Register `meta`; remove `nebius`. |
 | `cloud_gateway/defaults.toml` | `[slots] primary="meta"`; `[providers.meta]` with the aliases above; prices $1.25 input / $0.15 cached / $4.25 output per 1M tokens (confirmed for 1.3, 1.2 and 1.1). |
 | `cloud_gateway/custody.py`, `secret_scan.py` | `META_API_KEY` environment secret (Meta's docs call it `MODEL_API_KEY`; ours is a gateway-only name) and keychain account `meta_api_key` under service `jana-meta.cloud-gateway`; remove the Nebius and Tavily sources; add a Meta key pattern (keys look like `LLM_<digits>_<secret>`; the secret's alphabet is **(verify)**). The `tvly-` pattern stays in the scanner (done 2026-10-26): an old Tavily key may still be on the machine, and catching it costs nothing. |
 | `services/agent-core/agent_core/router/cloud_models.json` | Two aliases with Spark's context (1M advertised; cap the engine at 131072 to bound cost), max output 16384 (reasoning tokens share the budget), `vision: true`, prices. |
 | `agent_core/router/router.yaml` | Comments and tier lists name Spark; `cloud.send_photos: true` (still gated by the photo notice, §5). |
 | `cloud_gateway/study.py` | Remove the Nebius branches (~507, ~542, `structured_math = provider == "nebius"` ~1048, malformed-verifier retry ~1643); use the generic path. |
-| `scripts/jana_tools/hackathon_app.py` | Expect `slots.primary == "meta"`; use `meta.prepare_body` in `GatewayHop`; rename env vars `JANA_NEBIUS_*` → `JANA_META_*`. |
-| `apps/desktop/dev/sidecar.ts`, `scripts/jana_tools/hackathon_dev.py` | Same renames; default data dir `/tmp/jana-meta-browser`. |
-| `services/cloud-gateway/deploy/meta-dev.toml` (rename of `nebius-dev.toml`) | Meta slot; quotas sized to the $150 credit (§8.3); `[tavily]` removed. |
+| `scripts/jana_tools/hackathon_app.py` | Expect `slots.primary == "meta"`; `GatewayHop` forwards the device's request unchanged (adding provider fields there broke the gateway's device contract); env vars `JANA_META_*`. Done. |
+| `apps/desktop/dev/sidecar.ts`, `scripts/jana_tools/hackathon_dev.py` | Same renames; default data dir `jana-meta-browser` in the system temporary folder; provider keys scrubbed from child processes. Done. |
+| `services/cloud-gateway/deploy/meta-dev.toml` (rename of `nebius-dev.toml`) | Meta slot; $10 a day, $120 in total, valid until 2026-11-09 (judging); ledger in `~/.jana-meta/gateway`, outside `/tmp`; `[tavily]` removed. Done. |
 
 ### 4.3 Budget fixes that matter with $150 of credit
 
-From the 2026-10-25 review; both protect the credit:
+From the 2026-10-25 review; both protect the credit (images: done; dropped streams: open):
 - A dropped stream is recorded at $0 (`cloud_gateway/app.py` ~283–302). Charge at least the input estimate on
   disconnect and record `client_disconnected`.
 - `InferenceBudget.reserve` refuses image content parts (`inference_budget.py` ~70–73). Allow image parts and price
@@ -114,7 +138,11 @@ From the 2026-10-25 review; both protect the credit:
 5. Latency: time to an accepted Coach turn at `reasoning_effort: low`. Target ≤ 3 s typical (§12).
 6. 1.2 vs 1.3: pick the one that passes 1–4 with the better latency.
 
-**Done when:** `test_m19_gw_conformance.py` runs with the `meta` provider, and a typed maths and a typed physics
+Results (2026-10-26, `jana_tools.meta_checks`): 1 tool calls 10/10; 2 bare-prompt Coach JSON 0/10, failing only the
+schema's conditional rules, which the engine's own prompt and retry meet in real turns; 3 usage on the final chunk;
+4 images read correctly; 5 Coach 6.0 s at `low`, 3.8 s at `minimal`; 6 1.3 kept (same price, recommended).
+
+**Done when:** (met 2026-10-26) `test_m19_gw_conformance.py` runs with the `meta` provider, and a typed maths and a typed physics
 question each complete a full tutoring turn on Spark in the browser demo host, with checked numbers.
 
 ## 5. Online vision: Muse Spark + SAM 3.1 (JM-D10)
@@ -142,6 +170,9 @@ question each complete a full tutoring turn on Spark in the browser demo host, w
   line lights up on the learner's own photo.
 - **Diagram questions**: SAM finds every arrow or label in a physics diagram so Jana can ask "which of these is the
   normal force?" by pointing, not describing.
+- **Diagram drill** (still to do; the research agent reuses it, §18): a photographed diagram becomes "tap the part
+  that…" questions; each tap is checked by testing whether it falls inside the right SAM outline, so the mark comes from
+  code, not a model. Tapping a part shows its name and role.
 
 ### 5.3 Changes
 
@@ -179,7 +210,8 @@ PCM silence between turns or reconnects; `endStream` ends the whole session.
 
 `cloud_gateway/podcast_speech.py` already calls Magpie (NVCF HTTP, LINEAR_PCM 22.05 kHz). Generalise it into a
 `MagpieSynthesizer` implementing `Synthesizer`: one request per accepted sentence, resample 22.05 → 24 kHz for the
-bridge, voice `Magpie-Multilingual.EN-US.Aria.Calm` (Neutral as fallback). Podcast narration keeps using it.
+bridge, voice `Magpie-Multilingual.EN-US.Aria.Calm` (Neutral as fallback). Podcasts move to Kokoro on the device
+(§18): the trial's audio cannot be shown, and Kokoro plays offline.
 
 ### 6.3 Offline speech to text: Omnilingual ASR, gated
 
@@ -224,11 +256,22 @@ still, so the power-cut demo needs a lean offline path: fewer calls (the engine'
 exist), short prompts (the low-class lean prompts), capped reasoning, and streaming the Coach; and the demo laptop's
 own numbers before the class gate is set.
 
+**Why it is slow and what helps** (A/B on the same machine, 2026-10-26): generation is bound by memory bandwidth (a
+dense 30B reads ~16.8 GB per token, so the M4 Max tops out near 32 tokens/s; 27 measured idle). Other work on the
+same machine halved it (12 tokens/s with two other llama-servers and test runs going), so the demo laptop must run
+nothing else. **DFlash speculative decoding** (`dflash-Muse-Glimmer-30B-Q4_K_M.gguf`, 1.6 GB, verified; `-md …
+--spec-type draft-dflash -ngld 99 --spec-draft-n-max 4`) raised generation 30–45% on short prompts (≈45% of drafts
+accepted) and did not help on a 2,600-token prompt. At `reasoning_strength: low` Glimmer reasons only ~150–250 tokens,
+so a 256-token `--reasoning-budget` never bound. The biggest per-call cost is reading the prompt (~230 tokens/s):
+keep each role's prompt cached in its own server slot (a repeated 3,000-token prompt read in ~0 s), use the short
+low-class prompts, make fewer calls per offline turn, and stream the Coach. Replies stayed properly guiding throughout.
+
 Power cut: when the gateway is unreachable the router falls to `local:muse-glimmer-30b` and the offline speech pack
 (§6.3, §6.4); the UI shows "Working offline".
 
-**Done when:** with Wi-Fi off on the 32 GB demo laptop, a typed and a spoken maths question each complete a checked
-tutoring turn on Glimmer.
+**Done when:** with Wi-Fi off on the demo laptop, practice keeps marking instantly from the packs (authored hints
+served without a model), a mock paper opens and marks, and a typed free-form question gets a streamed, checked
+Glimmer reply with its first words within ~8 s. A spoken offline turn is a stretch goal (W4).
 
 ## 8. Removals and the adult product (JM-D14, JM-D15)
 
@@ -240,14 +283,15 @@ tutoring turn on Glimmer.
 | Tavily | `cloud_gateway/tavily.py`; `app.py` (~126–128, routes ~434–440); `ask.py` (branches ~213–249, ~316); `config.py` (`TavilySettings`, validator ~377–387); `custody.py`; `secret_scan.py`; `agent_core/api/study.py` (`/v1/study/web` ~593–656); `client-core/src/study-workspace.ts` (~291); `client-core/src/ask-anything.ts` (`web_confirmed`); UI `StudyWorkspace.tsx` (~243); i18n `ask.web_permission`, `ask.search_web`, `study.web_consent`, `study.import_web`; tests `test_tavily.py`, `test_study_web.py` |
 | Google/Gemini cloud stack | `providers/gemini.py`, `vertex.py`, `gemini_live.py`, `google_speech.py` out of configuration (deleted before submission if time allows); `config.voice_google` |
 
-**Ask anything after Tavily:** answers from the curriculum packs and Muse Spark only, labelled "from your course".
-Web search is out of scope for the entry. **Study:** file and paste import stay; web-page import is removed.
+**Ask anything after Tavily:** out of the demo (§14). Without a search backend `/v1/ask` returns "unavailable"; web
+research lives in the research agent (§18). **Study:** file and paste import stay; web-page import is removed (done).
+Tavily removal: done. Google stack: still registered as adapters (not configured); delete before submission.
 
 ### 8.2 Adult product
 
 | Area | Change |
 |---|---|
-| Sign-up | Date of birth field; under 18 → blocked with a short explanation. Store `age_band = "18_plus"` (`store/profiles.py` `ADULT_BAND`). |
+| Sign-up | Date of birth field; under 18 → blocked with a short explanation. Store `age_band = "18_plus"` (`store/profiles.py` `ADULT_BAND`). Done in the app; the engine-side check is still open (§17 W5). |
 | Ask policy | `engine/ask_anything.py` `policy_for()` and `cloud_gateway/ask.py` audience: adult only; the `under_18` branch is removed from the UI. |
 | Consent | Keep per-feature consent (the learner's own consent now). Remove guardian flows: `store/subscription.py` guardian consent, `plans.toml` `jana_family`, UI `ParentSummary.tsx`, `FamilyControls.tsx`, guardian parts of `OnlineFeatures.tsx`, `Studies.tsx`, `StudyWorkspace.tsx`; `engine/parents.py` not wired. |
 | Copy | Rewrite `parents.*`, `settings.study.needs_guardian`, `study.access.guardian`, `error.guardian_consent_required` and related keys for an adult managing their own settings; the study banner "A parent or guardian needs to approve" becomes the learner's own consent prompt. |
@@ -263,16 +307,21 @@ SAM: ≤ 300 images over the event (~$0.75).
 
 The Official Rules grant the organisers a perpetual, irrevocable, royalty-free licence to the Submission. Submit only:
 
-- the engine (`services/agent-core`, `services/tool-worker`, `services/perception-worker`), the cloud gateway, the
-  desktop app and shared packages;
-- **Mathematics and Physics** content packs only (proposal; Chemistry and Accounting stay out);
+- the engine (`services/agent-core`, `services/tool-worker`, `services/perception-worker`), the cloud gateway (with
+  the research agent, §18), the desktop app and shared packages, and `services/study-worker` (Study stays: study packs
+  are saved into it);
+- **Mathematics and Physics** content packs (proposal); **Chemistry** only if the demo shows a chemistry moment (owner
+  decision); Accounting stays out;
 - not: Studio and authoring tools (`apps/studio`, `services/pack-builder`), `services/signing-service`,
-  `services/ingest`, `services/study-worker` if Study is cut, private specs, evals with licensed material.
+  `services/ingest`, private specs, evals with licensed material, and the files listed in §17 (§9 does not install).
 
 The submission repository is built from this one at the end with only the parts above (same `git archive` method,
 no history). Licence: Apache-2.0 for code; content packs under the owner's licence (`LicenseRef-Own`).
 
 ## 10. Demo-visible bugs to fix (from the 2026-10-25 review)
+
+Status 2026-10-26: #1, #4 and #6 done; #5 partly done (parallel session: distress screening on the explain-back and
+visual-answer routes); #2, #3 and #7 open.
 
 1. Maths starting with a digit shows as raw LaTeX (fixed in Jana main, uncommitted:
    `packages/ui/src/learn/PackText.tsx` and `agent_core/engine/assessment/items.py`; port it).
@@ -297,6 +346,11 @@ no history). Licence: Apache-2.0 for code; content packs under the owner's licen
   `study-workspace.test.tsx`; `i18n` catalogue checks; `apps/desktop/test/podcast-audio.test.ts`.
 
 ## 12. Latency budget (measure on days 1–3)
+
+**Re-baselined 2026-10-26** after measuring: the original table below is the voice ambition; the working targets are
+**first words of the reply ≤ 3 s** (stream the Coach), **a typed turn ≤ 8 s**, spoken replies starting ≤ 4 s after
+the end of speech with a filler at 1.5 s, and offline: pack hints instant, Glimmer's first words ≤ 8 s. A guided
+typed turn measured 12.8–15 s after the effort change (§4.1).
 
 | Step | Target |
 |---|---|
@@ -334,17 +388,18 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
 | W4 | Speech: Voice Transcribe, Magpie synthesizer, Omnilingual gate | 6 |
 | W5 | Adult product and copy | 8.2 |
 | W6 | Demo bugs | 10 |
-| W7 | Research pack: long-running research agent, Learn from a picture | 18 |
+| W7 | Research agent: a long-running agent that builds study packs (Learn from a picture, Research a topic) | 18 |
 
 | Day | Work |
 |---|---|
 | Oct 26 | Done: W1 (Spark live, latency halved), W5 sign-up and copy, W6 #1/#4/#6, input guard on Spark, Glimmer downloaded and measured |
-| Oct 27–28 | W2: SAM route, photos of working, `photo_region` overlay, diagram drill (§5, §18.2) |
-| Oct 29 – Nov 1 | W7 research pack (§18): Responses client and fakes, the gateway job, synthesis and verification, device import and UI, Kokoro podcast |
+| Oct 27 | Diagram drill (W2's remaining piece, §5.2); stream the Coach and cut calls on simple turns (§12) |
+| Oct 28 – Nov 1 | W7 research agent (§18): Responses client and fakes, the gateway job, synthesis and verification, device import and UI, Kokoro podcast |
 | Oct 31 – Nov 1 | W4 voice online (reduced: Voice Transcribe in, Magpie or Kokoro out); W3 lean offline path (pack hints instant, Glimmer for free-form questions) |
 | Nov 2–3 | Polish, safety checks, eval run, record the video; owner signs off the §9 scope |
 | Nov 4 | Build the submission repo (§9) and submit by 9:00 PM ET |
-(Re-planned 2026-10-26 with the owner: W2, then W7, ahead of voice and the offline model; see §18.)
+(Re-planned 2026-10-26 with the owner: W2, then W7, ahead of voice and the offline model; W2 then landed from a
+parallel session the same day, so only its diagram drill remains.)
 
 ## 14. Demo (about 3 minutes)
 
@@ -358,7 +413,7 @@ checks every step with code, keeps working without power or internet, and uses M
    asks about it rather than correcting it.
 2. Diagram drill: a photographed physics diagram (our own) becomes "tap the component that…" questions, each tap
    checked against SAM's outline.
-3. Research pack (§18): "Learn from a picture" starts a long-running research job; the finished pack (prepared before
+3. Research agent (§18): "Learn from a picture" starts a long-running research job; the finished study pack (prepared before
    the recording, its progress shown) has the tap-to-learn diagram, cited concepts, flashcards, quiz and a podcast.
 4. A spoken question ("A car speeds up from rest to 20 m/s in 5 s…") gets a guided, checked spoken reply.
 5. **Power cut:** the network drops; practice keeps marking instantly from the signed packs, a mock paper opens, and
@@ -374,15 +429,18 @@ checks every step with code, keeps working without power or internet, and uses M
    wider than §9 assumes: take a legal view before showing private Jana work in workshops, Discord or office hours.
    The Startup track's Representative must be an active employee of the startup.
 2. Meta API key (done 2026-10-26) and credit claim. Zero data retention or research: Meta's zero data retention turns
-   off search grounding, background and stored requests, which the research pack (§18) needs. Decide one.
+   off search grounding, background and stored requests, which the research agent (§18) needs. Decide one.
 3. NVIDIA: is trial audio allowed in the video? If not, approve the self-hosted Magpie spend (Modal/Baseten credits).
 4. Submission scope in §9 (which subjects; whether Study stays). §9 as written does not install (§17).
 5. Hosting: GCP project `jana-meta` (JM-D7) or partner credits only.
-6. Photo demo (§5): may handwritten working go to the cloud, and what replaces the printed-text privacy check for it?
+6. Photo demo (§5): handwritten working now goes to the cloud after the local privacy pass (W2, parallel session);
+   confirm that is the policy you want for the entry.
 7. Demo laptop: its specification, to set Glimmer's speed gate; and whether `--local-model` may download weights.
-8. Ask anything: leave it out of the demo (anti-project list, §14); the research pack (§18) is the web-research feature.
-9. Budget dates: the copied dev config expires on 2026-11-02 00:46 UTC, before the deadline and judging, and keeps
-   its ledger under `/tmp`; move both.
+8. Ask anything: leave it out of the demo (anti-project list, §14); the research agent (§18) is the web-research feature.
+9. Budget dates: resolved (valid until 2026-11-09; ledger in `~/.jana-meta/gateway`).
+10. Research agent decisions (§18.10).
+11. Before submission: rewrite the README as a Meta project (JM-D19), rename the app identifier and keychain prefix
+    (§17 Identity), and a trial `git archive` install and test of the §9 scope by Nov 1.
 
 ## 16. Meta facts confirmed from the docs (2026-10-26)
 
@@ -417,9 +475,6 @@ and the voice and vision clients must also handle.
   decoded with Meta's `meta-sam-parser` (SAM License: commercial use allowed). The reply's usage has zero tokens and
   an undocumented `images_processed: 1`. Measured latency: 2.2–4.2 s per image for 2–8 box prompts on a 1,400 px
   photo. No SAM-specific image size limit is documented (only the 50 MB inline-media limit).
-- **Recursive tool schemas are refused**: Spark answers 400 "Recursive JSON schemas are not currently supported"
-  (`param: parameters`) for a tool whose parameters refer to themselves; `phys_circuit` does (`group` → `members`),
-  so a physics Solver call that offers it fails (found 2026-10-26; not yet fixed).
 - **Not documented, still (verify) with a real key**: the latency targets in §12; SAM image size limits;
   whether tool history is accepted when `tools` is omitted; Spark's maximum output tokens; JSON Schema keywords
   such as `minLength`, `maxItems` and `pattern` in strict mode; free credits beyond the event's $150.
@@ -427,6 +482,12 @@ and the voice and vision clients must also handle.
 ## 17. Corrections from the 2026-10-26 review
 
 The project review of 2026-10-26 found these gaps in the plan above; each must be handled by the workstream named.
+
+Status 2026-10-26: W1's holds, output cap, device caps and `calls_per_turn` are fixed; W2's items were fixed by the
+parallel session (verified: cloud reading of working after the privacy pass, the vision slot's cloud fallback,
+`photo_region`, the base64 false positive); W3's auxiliary roles now fall back to Spark (the Reflector stays local,
+JM-D9); §3's diagram is corrected. Still open: the voice config (W1/W4), "from your course" answers (dropped from the
+demo, §8.1), health probes, W3's timeout, reset and launcher, W4, the rest of W5, W6 #2, #3, #7, §9, Identity.
 
 - **W1**: `config.py` refuses a budget together with `voice_enabled` (~379–388) and requires a Live voice price
   (~389), so §6.1's config cannot load as written; the default `tier.calls_per_turn` names `small-model`, so removing
@@ -474,9 +535,10 @@ The project review of 2026-10-26 found these gaps in the plan above; each must b
 - **Claims**: the packs follow Cambridge 5054/5070, not WAEC; JAMB is a university-entry exam, not O level. Word the
   pitch and §1 accordingly.
 - **Budget arithmetic**: $10 a day over about 9.4 days is $94, so the $120 total never binds and the $30 kept for
-  judging is not protected by any date.
+  judging is not protected by any date. (Now valid to 2026-11-09, so the total can bind; the $30 for judging still
+  depends on spending under $90 by the deadline. $0.44 spent so far.)
 
-## 18. Research pack: a long-running research agent (W7)
+## 18. Research agent: a long-running agent that builds study packs (W7)
 
 Status: **specified 2026-10-26** at the owner's request; open decisions in §18.10. Builds on W2 (SAM) and reuses
 Study's storage, review and marking, but not Study's batch pipeline, which is built for 300-page documents and would
@@ -486,18 +548,26 @@ take minutes per aid here.
 
 In Study, **Learn from a picture** (a photo of a diagram, a textbook figure, a whiteboard) or **Research a topic**
 (typed, e.g. "how the heart pumps blood", with a level: O level or first year). Jana researches in the background,
-for minutes if it needs to, and the learner may close the app; when it is done Study shows a **research pack**:
+for minutes if it needs to, and the learner may close the app; when it is done Study shows a **study pack** (the agent's output; "pack" below means this, not a curriculum pack):
 
 | Part | What it is |
 |---|---|
 | Tap-to-learn diagram | The learner's own picture with SAM outlines: tap a part for its name and role; drill mode asks "tap the part that…" and checks the tap against the outline. With a typed topic, the closest of Jana's own drawn visuals (packages/renderers) when one fits. Never a generated anatomy image. |
 | Key concepts | Short explanations at the chosen level, each statement citing the sources that support it |
 | Flashcards | Saved to Study with spaced repetition |
-| Quiz | Study's question types, marked as Study marks them |
+| Quiz | Only question types marked by code (multiple choice, true/false, numeric with tolerance, tap the part): Study's worded-answer marker needs the local model (`engine/study.py`, `model.local_ready()`), so worded answers would go unmarked on most laptops |
 | Podcast | A verified script read on the device by Kokoro (Apache-2.0), so it plays offline and may appear in the video |
 | Sources | Every page used, each opening the original |
 
 Everything is saved on the device and opens offline afterwards.
+
+**Limits of one pack**: 4–8 sub-questions, at most 12 searches, at most 30 sources kept, 6–12 concepts, 10–30
+flashcards, 10 quiz questions, a podcast of 3–5 minutes (about 450–750 words), one photo of at most 1600 px.
+
+**What the learner sees**: in Study, two buttons beside the existing import; the gallery shows each pack's state
+(researching with step k of n and the sub-question titles, ready, failed with the reason and a retry, cancelled).
+Copy is written in §11's style and added to `en.json` (keys `study.research.*`); the button reads "Research a topic",
+the consent line says what leaves (§18.6), and a ready pack is labelled "From the web, checked against its sources".
 
 ### 18.2 Guardrails
 
@@ -506,6 +576,13 @@ Everything is saved on the device and opens offline afterwards.
 - **No health advice**: anatomy is study material; personal medical questions get the existing advice template.
 - **Images**: the demo uses our own pictures; textbook images stay the learner's own private study material.
 - Outside Jana's packs (e.g. Biology) nothing is checked by the maths tools, and the pack says so.
+- **Screening on the way in**: a typed topic goes through the device's input guard and distress screening (the same
+  as a typed tutoring question) before it is sent; refused topics never reach the gateway.
+- **Checks on the way out**: the assembled pack passes the release gates that apply to Study text (the safety and
+  brand checks, no personal advice) before it is saved; a pack that fails is not shown in part. A failed job publishes
+  nothing; the learner sees the reason and may retry.
+- **Only its creator can fetch it**: a job is bound to the device session that started it; another session's request
+  for it gets 404.
 
 ### 18.3 The agent
 
@@ -513,10 +590,12 @@ The agent runs **in the gateway as a durable job**, so the learner's laptop can 
 submits the request, follows progress when online, and fetches the finished pack, which the gateway then deletes.
 Each stage writes a checkpoint; a restarted gateway resumes from the last finished stage.
 
-1. **Understand**: a photo is read by Spark (topic, labels, regions) and outlined by SAM (W2); a typed topic is turned
-   into a scoped title and level.
+1. **Understand**: a photo has already passed the perception worker's privacy pass on the device (faces and people
+   screened, masked, ≤1600 px); the gateway reads it with Spark (topic, labels, regions) and outlines it with SAM
+   through the same code as `/v1/vision/segment` (W2); a typed topic is turned into a scoped title and level.
 2. **Plan**: Spark writes 4–8 focused sub-questions at the learner's level. Meta's docs warn that complex multi-hop
-   research "is less dependable today" and advise narrower requests, so each sub-question is one search.
+   research "is less dependable today" and advise narrower requests, so each sub-question is one search; sub-questions
+   are researched in parallel (at most 4 at once).
 3. **Research**: one Responses API request per sub-question, `tools: [{"type": "web_search"}]`,
    `include: ["web_search_call.results"]`, `background: true`, progress by streamed retrieval
    (`GET /v1/responses/{id}?stream=true`). Findings keep their `url_citation`s and bounded source excerpts; any text
@@ -541,6 +620,12 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
   tokens for every stage; a cap per job (proposed $0.30, set after measuring) within the gateway's daily and total
   ledger. Searches are counted from `web_search_call` items and priced in the ledger.
 - A learner allowance per day (proposed 5 packs) in `plans.toml`.
+- **Estimate** (to confirm on day one of W7): 6 searches ($0.015), research turns ~30k input and 6k output tokens
+  ($0.06), synthesis and verification ~25k in and 8k out ($0.065): about **$0.10–0.15 a pack**, so 20 demo packs fit
+  in under $3 of the credit.
+- (verify) Whether `web_search` usage appears in Responses `usage` or only as `web_search_call` items, and whether a
+  search is billed when the response is cancelled; the W7 day-1 checks (an addition to `jana_tools.meta_checks`)
+  record both before the ledger prices them.
 
 ### 18.6 Privacy and consent
 
@@ -558,10 +643,11 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
 | `cloud_gateway/research.py` (new) | The job runner and stages, checkpoints in the gateway store; `POST /v1/research`, `GET /v1/research/{id}` (with an event stream), `POST /v1/research/{id}/cancel`, `DELETE /v1/research/{id}` |
 | `cloud_gateway/inference_budget.py`, `config.py` | Search pricing in the ledger; `[research]` settings (searches, rounds, time limits, allowance, source policy) |
 | `contracts/cloud/` and `contracts/study/` + codegen | The research request, job and pack contracts; a `research` source kind and web citations in Study |
-| `agent_core/api/study.py`, `net/study.py` | Start, follow, cancel and import a pack into Study's stores |
+| `agent_core/api/study.py`, `net/study.py` | Start, follow, cancel and import a pack into Study's stores: concepts become notes with web citations, flashcards and the quiz become Study cards and items, the podcast becomes an `audio_overview` aid, the sources are kept with the pack |
+| `contracts/study/` aid kinds | A new `diagram` aid kind (the photo, its SAM outlines and the part map) for the tap-to-learn view, since Study has no aid that holds masks |
 | Study podcast | Read `audio_overview` scripts with Kokoro on the device instead of NVIDIA's trial |
 | `packages/ui` Study | Entry points, the progress view, the pack view (diagram, concepts, cards, quiz, podcast, sources) |
-| W2 dependency | SAM client, `photo_region` overlay and diagram drill |
+| W2 dependency | SAM client and `photo_region` overlay (done); diagram drill (to do, §5.2) |
 
 ### 18.8 Done when
 
@@ -575,7 +661,9 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
 
 A fake Responses server (background create, streamed retrieval, cancel, `web_search_call`, `url_citation`); stage
 checkpoints, resume and cancel; budget reservation including searches; verification dropping unsupported claims;
-withholding of instruction-like source text; import into Study's stores; the UI states.
+withholding of instruction-like source text; import into Study's stores; the UI states; topic screening refusing
+before any request leaves; a pack failing the release gates publishing nothing; a second session getting 404 for
+another's job; parallel research respecting the limit of 4.
 
 ### 18.10 Open decisions
 
