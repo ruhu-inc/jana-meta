@@ -1,0 +1,192 @@
+packages/contracts-ts/src/generated/validators.d.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 868-889
+services/agent-core/agent_core/contracts/compat.json
+  s_87311ffec186a4::t_1320d29bcb29bc 176
+packages/client-core/src/study-workspace.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 38-40,50,342-386
+contracts/api/events.schema.json
+  s_87311ffec186a4::t_1320d29bcb29bc 1601-1603,2201,3283-3309
+  s_87311ffec186a4::t_a8d72ce1722c25 3310
+packages/contracts-ts/src/generated/compat.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 5
+packages/contracts-ts/src/generated/index.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 4,162-1001
+packages/renderers/test/conceptmap-layout.test.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 1-82
+packages/client-core/test/pointer.test.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 251-256
+packages/ui/src/learn/link.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 28-45
+packages/contracts-ts/src/generated/study/workspace.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 2,101,107-116,171-175,206-210,500,516-568,877,913-947,1211-1318
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 15,36,38-39,185-200,275,410-412
+packages/ui/test/study-concept-map.test.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 1-90
+packages/ui/src/transcript/parts.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 15,321-340
+services/agent-core/agent_core/contracts/cloud/gateway.py
+  s_87311ffec186a4::t_1320d29bcb29bc 245-250,252-254,473-491,558-565,585
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_87311ffec186a4::t_1320d29bcb29bc 2,8931-9331
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_87311ffec186a4::t_1320d29bcb29bc 2,1303-1318,3091-3179
+services/agent-core/agent_core/contracts/schemas/api/events.schema.json
+  s_87311ffec186a4::t_1320d29bcb29bc 2,1597-1599,2197,3279-3304
+  s_87311ffec186a4::t_654b31ebd8e2f2 3305
+services/agent-core/agent_core/engine/concept_questions.py
+  s_87311ffec186a4::t_1320d29bcb29bc 1-199
+services/agent-core/agent_core/engine/pointing.py
+  s_87311ffec186a4::t_1320d29bcb29bc 40-41,69-71,83-87,163-164
+packages/ui/test/concept-map.test.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 1-119
+services/agent-core/agent_core/store/retention.py
+  s_87311ffec186a4::t_1320d29bcb29bc 352-353
+packages/ui/src/learn/ConceptMap.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 1-385
+services/agent-core/agent_core/api/projection.py
+  s_87311ffec186a4::t_1320d29bcb29bc 188,193
+packages/renderers/test/conceptmap-view.test.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 1-68
+services/agent-core/agent_core/api/learn.py
+  s_87311ffec186a4::t_1320d29bcb29bc 2-3,72-77
+  s_87311ffec186a4::t_7c0732febdb74a 78-79
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 240-250,254-260,340-361,409-430
+packages/contracts-ts/src/generated/cloud/gateway.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 39,96-101,404,506-540,699
+packages/ui/src/learn/SubjectMap.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 14-17,251-277,279-280,296-300,318-324,354,357-364,388,396,398-402,412-415,419-423,427
+packages/ui/src/board/Pen.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 15
+services/agent-core/agent_core/store/migration_v17.py
+  s_87311ffec186a4::t_1320d29bcb29bc 1-11
+packages/client-core/src/voice.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 11
+apps/desktop/src/App.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 38,44,49,68,118,206,361-362,759-765,1220-1221,1224-1225,1335-1340,1343,1386-1387,1394
+services/agent-core/agent_core/engine/study_concepts.py
+  s_87311ffec186a4::t_1320d29bcb29bc 1-317
+packages/contracts-ts/src/generated/api/events.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 2,834-844
+services/agent-core/agent_core/engine/concept_map.py
+  s_87311ffec186a4::t_1320d29bcb29bc 1-225
+packages/renderers/fixtures/concept-map/phy.json
+  s_87311ffec186a4::t_1320d29bcb29bc 1-1247
+services/agent-core/agent_core/contracts/study/workspace.py
+  s_87311ffec186a4::t_1320d29bcb29bc 2,283-285,291-302,821-1032,1073,1172
+services/agent-core/tests/test_study_concept_map.py
+  s_87311ffec186a4::t_1320d29bcb29bc 1-339
+packages/contracts-ts/src/generated/client.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 4,136-542
+packages/i18n/locales/en.json
+  s_87311ffec186a4::t_1320d29bcb29bc 2016-2096,2307,2315-2356
+packages/renderers/src/conceptmap/layout.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 1-320
+packages/client-core/src/index.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 25-28
+packages/ui/src/index.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 53-54,99
+services/agent-core/agent_core/api/screening.py
+  s_87311ffec186a4::t_1320d29bcb29bc 71-81,150-153
+packages/ui/test/study-workspace.test.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 12,26,512
+services/cloud-gateway/cloud_gateway/contracts/cloud/gateway.py
+  s_87311ffec186a4::t_1320d29bcb29bc 245-250,252-254,473-491,558-565,585
+packages/client-core/test/study-workspace.test.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 554-576
+services/agent-core/tests/test_a1_input_routes.py
+  s_87311ffec186a4::t_1320d29bcb29bc 81-86,89,111-116
+contracts/api/commands.schema.json
+  s_87311ffec186a4::t_1320d29bcb29bc 8932-9341,10639-10654,12427-12515
+packages/ui/test/fixtures/concept-map.phy.json
+  s_87311ffec186a4::t_1320d29bcb29bc 1-2300
+services/agent-core/agent_core/net/study.py
+  s_87311ffec186a4::t_1320d29bcb29bc 217-230
+services/agent-core/tests/test_root_gap.py
+  s_87311ffec186a4::t_1320d29bcb29bc 114-117
+packages/ui/test/root-gap-link.test.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 1-66
+services/agent-core/agent_core/engine/offers.py
+  s_87311ffec186a4::t_1320d29bcb29bc 196-202,233
+services/agent-core/agent_core/contracts/schemas/study/workspace.schema.json
+  s_87311ffec186a4::t_1320d29bcb29bc 2,694-695,708-709,830-831,854-855,919-920,1125-1127,1167-1171,1203-1207,1244-1248,1280-1320,2087-2089,2124-2128,2160-2164,2201-2205,2237-2277,3437-4012
+contracts/study/workspace.schema.json
+  s_87311ffec186a4::t_1320d29bcb29bc 693-694,707-708,830-831,854-855,919-920,1125-1127,1167-1171,1203-1207,1244-1248,1280-1320,2089-2091,2126-2130,2162-2166,2203-2207,2239-2279,3439-4022
+services/agent-core/agent_core/contracts/api/events.py
+  s_87311ffec186a4::t_1320d29bcb29bc 2,760,1028-1043,1563
+packages/client-core/test/concept-map.test.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 1-104
+packages/client-core/test/profilecore.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 208-209,756-759
+packages/renderers/fixtures/concept-map/mth.json
+  s_87311ffec186a4::t_1320d29bcb29bc 1-1267
+packages/ui/src/learn/mastery.css
+  s_87311ffec186a4::t_1320d29bcb29bc 31-36
+services/agent-core/agent_core/store/generated/schema.py
+  s_87311ffec186a4::t_1320d29bcb29bc 2,6,8
+services/agent-core/agent_core/contracts/api/commands.py
+  s_87311ffec186a4::t_1320d29bcb29bc 2,2268-2396,2718,2865-2880,3329-3331,5423,5507
+services/agent-core/agent_core/engine/voice_bridge.py
+  s_87311ffec186a4::t_1320d29bcb29bc 30-31,34
+packages/client-core/src/pointer.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 22,45-46,51-52
+contracts/data/schema.sql
+  s_87311ffec186a4::t_1320d29bcb29bc 645-650
+services/cloud-gateway/cloud_gateway/study.py
+  s_87311ffec186a4::t_1320d29bcb29bc 473,648,657-659,687-692,736-746,1161-1171,1816-1893,2172-2175
+  s_87311ffec186a4::t_8c478e16ddc245 2176-2178
+packages/client-core/src/concept-map.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 1-156
+packages/client-core/src/reducer.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 250-251
+packages/client-core/src/store.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 3,103-104
+packages/contracts-ts/src/generated/api/commands.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 2,3770-3780,4454-4563
+packages/renderers/src/index.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 55-56
+packages/ui/src/learn/StudyGenerate.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 10,13,55-56
+packages/renderers/src/conceptmap/ConceptMapSvg.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 1-238
+services/cloud-gateway/cloud_gateway/contracts/schemas/study/workspace.schema.json
+  s_87311ffec186a4::t_1320d29bcb29bc 2,694-695,708-709,830-831,854-855,919-920,1125-1127,1167-1171,1203-1207,1244-1248,1280-1320,2087-2089,2124-2128,2160-2164,2201-2205,2237-2277,3437-4012
+services/agent-core/agent_core/api/study.py
+  s_87311ffec186a4::t_1320d29bcb29bc 20,646-732
+  s_87311ffec186a4::t_5793e6eb8a36f3 733
+services/agent-core/agent_core/engine/learn.py
+  s_87311ffec186a4::t_1320d29bcb29bc 310-322
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_87311ffec186a4::t_1320d29bcb29bc 2,1311-1326,3099-3187
+packages/ui/src/learn/StudyConceptMap.tsx
+  s_87311ffec186a4::t_1320d29bcb29bc 1-195
+services/agent-core/agent_core/engine/study.py
+  s_87311ffec186a4::t_1320d29bcb29bc 22,1253-1254,1263,1270,1279-1281,1312-1314,2031-2032,2120,2212-2215,2277
+services/agent-core/agent_core/store/sqlite.py
+  s_87311ffec186a4::t_1320d29bcb29bc 33,92
+services/agent-core/tests/test_concept_map.py
+  s_87311ffec186a4::t_1320d29bcb29bc 1-298
+services/cloud-gateway/tests/test_gateway_study_concept_map.py
+  s_87311ffec186a4::t_1320d29bcb29bc 1-186
+packages/contracts-ts/src/generated/client-validators.js
+  s_87311ffec186a4::t_d6c62452033814 10
+packages/contracts-ts/src/generated/validators.js
+  s_87311ffec186a4::t_334d10935fb1a8 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3dacb966cee33f419a7b3097ffed1d76160fe0cb",
+  "prompts": {},
+  "sessions": {
+    "s_87311ffec186a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02ea0a11-c16d-43dd-9ca0-be1ee039343a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
