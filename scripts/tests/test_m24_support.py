@@ -121,7 +121,8 @@ def test_policy_uxs46_sections_complete():
         "help",
         "about",
     }
-    assert len(settings_sections("S3")) == len(sections) + 3
+    # S3 adds voice only: adults only (JM-D15), so no parent summary or alerts sections.
+    assert [s["id"] for s in settings_sections("S3")] == [*(s["id"] for s in sections), "voice"]
     assert all(s["gate"] == "open" for s in settings_sections("S3"))
 
 
