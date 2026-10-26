@@ -10,6 +10,7 @@ import io
 import json
 import re
 import time
+from collections.abc import Sequence
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
@@ -71,6 +72,7 @@ class CaptureDesk:
         self.trace_failures = 0
         self.traced_terminal: dict[str, str] = {}
         self.semaphore = asyncio.Semaphore(1)
+        self.late: dict[str, asyncio.Future[None]] = {}  # SAM outlines still arriving (JM-D10)
         core.on_profile_closing.append(self.forget)
         core.closers.insert(0, self.close)
 
@@ -124,7 +126,7 @@ class CaptureDesk:
             self.owners.pop(cap, None)
 
     async def close(self) -> None:
-        tasks = list(self.tasks.values())
+        tasks = [*self.tasks.values(), *self.late.values()]
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
@@ -138,6 +140,7 @@ class CaptureDesk:
         self.raw.clear()
         self.prepared.clear()
         self.tasks.clear()
+        self.late.clear()
         self.owners.clear()
         self.traced_terminal.clear()
         self.trace_builders.clear()
@@ -444,6 +447,7 @@ class CaptureDesk:
                 screen=(lambda _: safe) if prepared["privacy_available"] else None,
                 structured=True,
                 purpose=record["purpose"],
+                outline_later=True,  # SAM outlines the lines while the student confirms them (JM-D10, SPEC §12)
             )
             if reading.status == "read" and reading.refusal:
                 record["status"] = "refused"
@@ -712,6 +716,8 @@ class CaptureDesk:
                 record["questions"] = questions
             if cap in self.raw and self.owners.get(cap) == CURRENT_PROFILE.get():
                 self.put(record)
+                if reading.outlining is not None and reading.regions and record["attachments"]:
+                    self.late[cap] = asyncio.ensure_future(self._late_outlines(cap, reading.outlining, reading.regions))
         except asyncio.CancelledError:
             raise
         except Exception:
@@ -725,6 +731,31 @@ class CaptureDesk:
             # The derivative remains for confirmation, but the original is no longer needed.
             self.raw.pop(cap, None)
             self.prepared.pop(cap, None)
+
+    async def _late_outlines(self, cap: str, outlining: Any, read: Sequence[dict[str, Any]]) -> None:
+        """SAM's outlines, arriving while the student confirms what was read: added to the regions that still show
+        on the photo (a deleted or redacted capture gets none). Region i is the reader's region i (`_read`)."""
+        try:
+            await asyncio.wait_for(outlining, timeout=30)
+            record = self.get(cap)
+            if not record["attachments"] or record["status"] in ("cancelled", "refused"):
+                return
+            changed = False
+            for region in record["regions"]:
+                source = read[region["order"]] if region["order"] < len(read) else None
+                if source is None or region.get("bbox") is None or not source.get("outline"):
+                    continue
+                region["outline"] = source["outline"]
+                region["bbox"] = {**source["bbox"], "image_id": region["bbox"]["image_id"]}
+                changed = True
+            if changed:
+                self.put(record, record_trace=False)
+        except (TimeoutError, ApiError):
+            return  # no outline: the photo still shows each line's box
+        except Exception:
+            return  # a failed segmentation never touches the capture
+        finally:
+            self.late.pop(cap, None)
 
     def screen(self, text: str, record: dict[str, Any]) -> tuple[str, int]:
         """PRM-18 for a capture's text: words read from a photo lose instruction-like spans; typed, pasted and
@@ -810,6 +841,9 @@ class CaptureDesk:
         task = self.tasks.pop(cap, None)
         if task:
             task.cancel()
+        late = self.late.pop(cap, None)
+        if late:
+            late.cancel()
         self.raw.pop(cap, None)
         self.prepared.pop(cap, None)
         self.owners.pop(cap, None)

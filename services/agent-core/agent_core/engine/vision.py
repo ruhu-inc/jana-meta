@@ -18,6 +18,7 @@ confirmation before anything uses it (INP-01), and nothing here logs it.
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import copy
 import logging
@@ -82,6 +83,8 @@ class PhotoReading:
     egress: dict[str, object] | None = None
     outlined: int = 0  # regions SAM 3.1 outlined on the photo (JM-D10)
     reread: int = 0  # regions a sharper crop re-read changed
+    # With `outline_later`: SAM still at work on `regions` (in place); its result is (outlined, reread).
+    outlining: asyncio.Future[tuple[int, int]] | None = None
 
 
 class PhotoReader:
@@ -93,10 +96,17 @@ class PhotoReader:
         self.screen = screen
 
     async def read(
-        self, data: bytes, *, send_to_cloud: bool | None = None, structured: bool = False, purpose: str = "question"
+        self,
+        data: bytes,
+        *,
+        send_to_cloud: bool | None = None,
+        structured: bool = False,
+        purpose: str = "question",
+        outline_later: bool = False,
     ) -> PhotoReading:
         """Read one photo. `send_to_cloud` is the student's answer to this photo's pre-send notice: True accepted,
-        False declined ("Read it on this computer"), None not asked."""
+        False declined ("Read it on this computer"), None not asked. `outline_later`: SAM's outlines may arrive after
+        the reading, while the student confirms it (`PhotoReading.outlining`), unless a line needs its crop re-read."""
         try:
             photo = make_safe(data, self.settings)
         except PhotoRejectedError as error:
@@ -195,8 +205,13 @@ class PhotoReader:
                         if isinstance(element.get(end), dict):
                             element[end] = {k: min(float(v), 1000) / 1000 for k, v in element[end].items()}
         outlined = reread = 0
+        outlining = None
         if content and left and outbound is not None:
-            outlined, reread = await self._sharpen(slot.candidates, outbound, content["regions"], purpose)
+            work = self._sharpen(slot.candidates, outbound, content["regions"], purpose)
+            if outline_later and not any(uncertain(r) for r in content["regions"]):
+                outlining = asyncio.ensure_future(work)  # the regions it outlines are this reading's own
+            else:
+                outlined, reread = await work
 
         text = "\n".join(str(r["text"]) for r in content["regions"]) if content else result.turn.text.strip()
         return PhotoReading(
@@ -209,6 +224,7 @@ class PhotoReader:
             egress=egress,
             outlined=outlined,
             reread=reread,
+            outlining=outlining,
         )
 
     async def _sharpen(self, candidates: list[Candidate], photo: SafePhoto, regions: list[dict[str, Any]],

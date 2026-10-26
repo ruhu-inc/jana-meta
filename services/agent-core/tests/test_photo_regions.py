@@ -380,3 +380,48 @@ def test_the_first_wrong_line_from_a_photo_is_lit_on_the_board_and_the_photo(tmp
 
     (event,) = asyncio.run(go())
     assert event["step_ids"] == [STEPS[1]] and event["photo_regions"] == [f"{CAP}:rgn_1"]
+
+
+def test_outlines_may_arrive_while_the_student_confirms(tmp_path: Path) -> None:
+    engine, cloud = reader(tmp_path, THREE_LINES)
+    cloud.answer = found_in_each_box
+    try:
+        reading = run(engine.read_photo(working_photo(), send_to_cloud=True, screen=screened, structured=True,
+                                        purpose="working", outline_later=True))  # fmt: skip
+        assert reading.status == "read" and reading.outlining is not None and reading.outlined == 0
+        assert run(reading.outlining) == (3, 0)
+        assert reading.regions is not None and all(len(r["outline"]) >= 3 for r in reading.regions)
+        # An uncertain line needs SAM's box for its crop re-read first: then the reading waits for both.
+        unsure = {"regions": [line(0, "3x [?] 5 = 20", 100, 0.6)], "refusal": None}
+        engine2, cloud2 = reader(tmp_path / "unsure", unsure, rereads=["3x + 5 = 20"])
+        cloud2.answer = found_in_each_box
+        try:
+            waited = run(engine2.read_photo(working_photo(), send_to_cloud=True, screen=screened, structured=True,
+                                            purpose="working", outline_later=True))  # fmt: skip
+            assert waited.outlining is None and waited.reread == 1
+        finally:
+            run(close(engine2))
+    finally:
+        run(close(engine))
+
+
+def test_late_outlines_reach_the_capture_record_only_where_the_photo_still_shows() -> None:
+    from types import SimpleNamespace
+
+    from agent_core.api.captures import CaptureDesk
+
+    record = {"capture_id": CAP, "status": "awaiting_confirmation", "attachments": [{"image_id": "img_1"}],
+              "regions": [{"order": 0, "bbox": {"x": 0.1, "y": 0.1, "w": 0.5, "h": 0.1, "image_id": "img_1"}},
+                          {"order": 1, "bbox": None}]}  # fmt: skip
+    put: list[dict[str, Any]] = []
+    desk = SimpleNamespace(get=lambda cap: record, put=lambda r, **kw: put.append(r), late={CAP: None})
+    read = [{"bbox": {"x": 0.12, "y": 0.11, "w": 0.4, "h": 0.08}, "outline": [{"x": 0.1, "y": 0.1}] * 3},
+            {"bbox": {"x": 0.1, "y": 0.3, "w": 0.4, "h": 0.08}, "outline": [{"x": 0.1, "y": 0.3}] * 3}]  # fmt: skip
+    done: asyncio.Future[tuple[int, int]] = LOOP.create_future()
+    done.set_result((2, 0))
+    run(CaptureDesk._late_outlines(desk, CAP, done, read))  # type: ignore[arg-type]
+    (saved,) = put
+    assert saved["regions"][0]["outline"] == read[0]["outline"]
+    assert saved["regions"][0]["bbox"] == {**read[0]["bbox"], "image_id": "img_1"}
+    assert "outline" not in saved["regions"][1]  # a region the student's photo no longer shows (redacted) gets none
+    assert desk.late == {}
