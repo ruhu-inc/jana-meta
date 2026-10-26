@@ -64,6 +64,23 @@ class NvidiaPodcastSpeech(_Strict):
     expires_at: AwareDatetime | None = None
 
 
+class Sam(_Strict):
+    """SAM 3.1 segmentation through Meta's Responses API (JM-D10, SPEC §5): the photo regions Muse Spark read become
+    exact masks so Jana can point at the learner's own working. Priced per image, not per token, and counted against
+    the shared inference budget like chat (§4.3). Images are capped separately (§8.3: about 300 over the event)."""
+
+    enabled: bool = False
+    adapter: Literal["sam"] = "sam"  # the HTTP client factory picks the transport by adapter kind, as for providers
+    base_url: str = Field(default="https://api.meta.ai/v1", pattern=r"^https://")
+    secret: str = "meta_api_key"  # noqa: S105 -- the secret's name in the secret source, not a key
+    model: str = "sam-3.1"
+    timeout_s: float = key(30.0, serves="ARC-12", unit="s", ge=1, le=120)
+    image_usd: float = key(0.0025, serves="BIZ-08", unit="USD/image", ge=0)
+    max_prompts: int = key(16, serves="MDL-26", unit="objects", ge=1, le=16)  # the model's documented limit
+    daily_images: int = key(100, serves="SEC-20", unit="images", ge=1)
+    total_images: int = key(300, serves="SEC-20", unit="images", ge=1)
+
+
 class ModelSpec(_Strict):
     id: str
     thinking: Thinking | None = None
@@ -356,6 +373,7 @@ class GatewayConfig(_Strict):
     ask_model: str = Field(default="primary/fast-model", pattern=r"^[a-z][a-z0-9_-]*/[a-z][a-z0-9_-]*$")
     ask_search: AskSearch | None = None
     podcast_speech: NvidiaPodcastSpeech = Field(default_factory=NvidiaPodcastSpeech)
+    sam: Sam = Field(default_factory=Sam)
     ask_search_results: int = key(6, serves="STU-20", unit="sources", ge=1, le=10)
     ask_max_tokens: int = key(4096, serves="STU-20", unit="tokens", ge=512, le=16384)
     objectives: Objectives = Field(default_factory=Objectives)

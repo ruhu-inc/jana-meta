@@ -17,6 +17,8 @@ dependencies = [
     # Cloud voice's Gemini Live reader (VOC-28, D124).
     "websockets>=15,<16",
     "youtube-transcript-api>=1.2,<2",
+    # SAM 3.1 replies: Meta's reference decoder for its range-coded masks (JM-D10).
+    "meta-sam-parser==0.1.0",
 ]
 
 [project.optional-dependencies]

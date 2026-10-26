@@ -719,3 +719,10 @@ licence = "MIT"
 maintainer_health = "Jonas Depoix; upstream https://github.com/jdepoix/youtube-transcript-api; installed 1.2.4 metadata and bundled MIT licence inspected 2026-10-24; exact distribution hashes pinned in uv.lock"
 size = "About 2.1 MiB installed package and metadata, excluding requests and defusedxml dependencies"
 shipped = false
+
+[pypi.meta-sam-parser]
+purpose = "Decode SAM 3.1 segmentation replies (range-coded base85 masks) and build its object prompts in the cloud gateway (JM-D10, SPEC §5)"
+licence = "SAM License (Meta, 2025-11-19): royalty-free, commercial use and redistribution allowed with its notice; not a non-commercial licence, so JM-D8 does not bar it"
+maintainer_health = "Meta Platforms (github.com/meta-models/meta-sam), the reference parser for its own API; version 0.1.0 pinned; no dependencies"
+size = "about 120 KB installed; pure Python"
+shipped = false

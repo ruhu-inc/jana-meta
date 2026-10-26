@@ -24,6 +24,9 @@ _ESCAPE = re.compile(r"\\u([0-9a-fA-F]{4})")
 PROFILE_KEYS = frozenset({"profile_id", "profile_ids", "display_name", "profile_name", "profile_token"})
 PROFILE_HEADER = "x-profile-token"
 PSEUDONYM = re.compile(r"^[A-Za-z0-9_-]{16,128}$")
+# An inline image is base64, which spells `prf…` in about a quarter of photos: its bytes are not words, so the
+# profile-id check reads past it (an image carries no profile field the device could have meant to send).
+IMAGE_DATA = re.compile(r"^data:image/[a-z0-9.+-]{1,20};base64,[A-Za-z0-9+/=\s]*$")
 
 
 def _keys(value: Any) -> set[str]:
@@ -48,7 +51,7 @@ def normalised(text: str) -> str:
 def _strings(value: Any) -> list[str]:
     """Every key and string value of the body, so each is normalised as the provider would read it."""
     if isinstance(value, str):
-        return [value]
+        return [] if IMAGE_DATA.match(value) else [value]
     if isinstance(value, dict):
         return [s for k, v in value.items() for s in (str(k), *_strings(v))]
     if isinstance(value, list):

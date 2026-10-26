@@ -108,6 +108,37 @@ class InferenceBudget:
             db.execute("INSERT INTO inference_budget_pending VALUES (?,?)", (key, bound))
         return key, replace(request, body=body)
 
+    def reserve_flat(self, usd: float) -> str:
+        """A hold for a call priced per unit rather than per token (SAM 3.1 at $2.50 per 1,000 images): its exact
+        cost is known before the send, so the hold is the cost. Settle it with `settle_flat`."""
+        expires = self.config.quotas.deployment_budget_expires_at
+        if expires is not None and self.clock() >= expires.timestamp():
+            raise UpstreamError("quota_or_billing", "approved deployment inference period has ended")
+        bound = micros(usd)
+        key, day = secrets.token_hex(16), day_of(self.clock())
+        with self.store._tx() as db:
+            held = db.execute("SELECT coalesce(sum(reserved_micros),0) FROM inference_budget_pending").fetchone()[0]
+            spent = db.execute("SELECT coalesce(sum(spent_micros),0) FROM inference_budget_days").fetchone()[0]
+            today = db.execute("SELECT spent_micros FROM inference_budget_days WHERE day=?", (day,)).fetchone()
+            today_spent = today[0] if today else 0
+            if (self.total_micros is not None and spent + held + bound > self.total_micros) or (
+                self.daily_micros is not None and today_spent + held + bound > self.daily_micros
+            ):
+                raise UpstreamError("quota_or_billing", "deployment inference budget exhausted")
+            db.execute("INSERT INTO inference_budget_pending VALUES (?,?)", (key, bound))
+        return key
+
+    def settle_flat(self, key: str, usd: float) -> None:
+        """Replace a flat hold with the amount the provider billed."""
+        amount = micros(usd)
+        with self.store._tx() as db:
+            if db.execute("DELETE FROM inference_budget_pending WHERE id=?", (key,)).rowcount:
+                db.execute(
+                    "INSERT INTO inference_budget_days VALUES (?,?) ON CONFLICT(day) "
+                    "DO UPDATE SET spent_micros=spent_micros+excluded.spent_micros",
+                    (day_of(self.clock()), amount),
+                )
+
     def settle(self, key: str, request: ProviderRequest, usage: Usage) -> None:
         # A text request always has input tokens. Missing/invalid counters cannot establish actual spend.
         if usage.input_tokens <= 0 or usage.output_tokens < 0 or not 0 <= usage.cached_tokens <= usage.input_tokens:
