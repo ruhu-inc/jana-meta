@@ -120,6 +120,19 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
 
         return await mutating(request, run)
 
+    @app.post("/v1/assessments/{identity}/explain")
+    async def explain(identity: str, request: Request) -> Response:
+        async def run(body: Any) -> tuple[int, Any]:
+            asked = checked("ExplainBack", body)
+            try:
+                return 200, await desk(core).explain_back(
+                    identity, asked["client_explain_id"], asked["text"], asked["modality"]
+                )
+            except Refused as error:
+                raise translate(error) from None
+
+        return await mutating(request, run)
+
     @app.post("/v1/assessments/{identity}/resume")
     async def resume(identity: str, request: Request) -> Response:
         async def run(body: Any) -> tuple[int, Any]:

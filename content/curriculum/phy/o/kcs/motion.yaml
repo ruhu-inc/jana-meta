@@ -107,6 +107,17 @@
   - deceleration
   - decelerate
   - accelerate
+  key_points:
+  - id: kp_change_over_time
+    text:
+      en: Acceleration is the change in velocity divided by the time the change takes.
+    follow_up:
+      en: Which two velocities do you need, and what do you do with them before you use the time?
+  - id: kp_per_second
+    text:
+      en: Its unit, m/s², means the velocity gained (or lost) each second.
+    follow_up:
+      en: What does an acceleration of 2 m/s² tell you happens to the speed every second?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -160,6 +171,17 @@
   - acceleration
   - velocity
   - deceleration
+  key_points:
+  - id: kp_gradient_is_acceleration
+    text:
+      en: The gradient (slope) of a velocity-time graph is the acceleration.
+    follow_up:
+      en: Which feature of the line on a velocity-time graph tells you how quickly the velocity changes?
+  - id: kp_two_points
+    text:
+      en: The gradient is the change in velocity divided by the change in time between two points on the line.
+    follow_up:
+      en: What do you work out from two points on the line to find that gradient?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active

@@ -81,6 +81,17 @@
   - coordinate
   - horizontal
   - vertical
+  key_points:
+  - id: kp_rise_over_run
+    text:
+      en: The gradient is the change in y divided by the change in x between two points.
+    follow_up:
+      en: From two points on a line, which change goes on top when you work out the gradient?
+  - id: kp_negative
+    text:
+      en: A line that goes down from left to right has a negative gradient.
+    follow_up:
+      en: How can you tell by looking at a line that its gradient is negative?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active

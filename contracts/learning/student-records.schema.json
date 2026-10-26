@@ -383,7 +383,8 @@
       "waiting",
       "stopped",
       "completed",
-      "failed"
+      "failed",
+      "explaining"
      ]
     },
     "answered_count": {
@@ -482,6 +483,50 @@
       ]
      },
      "maxItems": 40
+    },
+    "explain": {
+     "type": "object",
+     "additionalProperties": false,
+     "description": "A mastery check whose items all passed waits for the learner's own explanation of the KC's key points before it counts as mastered (explain it back). Absent on a diagnostic and on a KC with no key points.",
+     "required": [
+      "statement",
+      "follow_up",
+      "attempts",
+      "outcome"
+     ],
+     "properties": {
+      "statement": {
+       "type": "string",
+       "maxLength": 200,
+       "description": "The KC the learner explains, as the pack states it."
+      },
+      "follow_up": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 300
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "The one targeted follow-up question after an explanation that missed a key point; it probes the point, never states it."
+      },
+      "attempts": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 2
+      },
+      "outcome": {
+       "enum": [
+        "awaiting",
+        "follow_up",
+        "passed",
+        "not_yet",
+        "unavailable"
+       ]
+      }
+     }
     }
    },
    "required": [
@@ -497,6 +542,33 @@
     "outcome_topics",
     "answered_items"
    ]
+  },
+  "ExplainBack": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "The learner's explanation of a KC in their own words, typed or the transcript of what they said; the same judging either way.",
+   "required": [
+    "client_explain_id",
+    "text",
+    "modality"
+   ],
+   "properties": {
+    "client_explain_id": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 1200
+    },
+    "modality": {
+     "enum": [
+      "typed",
+      "spoken"
+     ]
+    }
+   }
   }
  }
 }

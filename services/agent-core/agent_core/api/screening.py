@@ -182,6 +182,8 @@ ROUTES: dict[str, Rule] = {
     ),
     "POST /v1/practice/sets/{identity}/answers": Screened("practice_answer", field_text("answer"), ANSWER),
     "POST /v1/assessments/{identity}/answers": Screened("assessment_answer", field_text("answer"), ANSWER),
+    # Explain it back: the learner's own explanation of a KC (typed, or the transcript of what they said).
+    "POST /v1/assessments/{identity}/explain": Screened("explain_back", field_text("text"), ANSWER),
     "PUT /v1/mocks/{identity}/answers/{question_id}": Screened("mock_answer", field_text("answer"), ANSWER),
     "POST /v1/lessons/{lesson_id}/checks": Screened("lesson_check", field_text("answer"), ANSWER),
     "PATCH /v1/sessions/{session_id}": Screened(

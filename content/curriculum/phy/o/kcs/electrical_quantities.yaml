@@ -141,6 +141,17 @@
   - milliamp
   - voltage
   - circuit
+  key_points:
+  - id: kp_v_over_i
+    text:
+      en: Resistance is the p.d. across a component divided by the current through it (R = V/I).
+    follow_up:
+      en: Which quantity goes on top when you work out a resistance from a p.d. and a current?
+  - id: kp_si_units
+    text:
+      en: Use volts and amps, not milliamps, to get the resistance in ohms.
+    follow_up:
+      en: What must you do to a current given in milliamps before you use it?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active

@@ -260,6 +260,7 @@ MODEL_ENTRY_POINTS = {
     ("engine/team.py", "name_session", "title"): "the statement of a turn the guard admitted",
     ("engine/assembly.py", "assemble", "judge_rules"): "the soft-rule judge inside a guarded turn (PED-15)",
     ("engine/assembly.py", "_assessment_judge", "judge"): "judge_text: the guard runs on the working first",
+    ("engine/assembly.py", "_explanation_judge", "judge"): "judge_text: the guard runs on the explanation first",
     ("engine/vision.py", "read", "complete"): "photo pixels only; the words read are guarded when confirmed and sent",
     ("engine/reflection.py", "call", "complete"): "guarded transcripts only; a window with safety_flagged is skipped",
     ("engine/auxiliary.py", "call", "complete"): "the auxiliary roles above, each reached from a guarded path",

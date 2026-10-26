@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/learning/student-records.schema.json sha256 b6c0eac3f2f3a018dc2a6e4719f77239fd280417c2eac65a943e6c6ff5254c3d; do not edit",
+ "$comment": "GENERATED from contracts/learning/student-records.schema.json sha256 685d670568fa3abd94b4307ab47358a77f319a479d821f663dce7d08eb45ad27; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/learning/student-records",
  "title": "Student records",
@@ -384,7 +384,8 @@
       "waiting",
       "stopped",
       "completed",
-      "failed"
+      "failed",
+      "explaining"
      ]
     },
     "answered_count": {
@@ -483,6 +484,47 @@
       ]
      },
      "maxItems": 40
+    },
+    "explain": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "statement",
+      "follow_up",
+      "attempts",
+      "outcome"
+     ],
+     "properties": {
+      "statement": {
+       "type": "string",
+       "maxLength": 200
+      },
+      "follow_up": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 300
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "attempts": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 2
+      },
+      "outcome": {
+       "enum": [
+        "awaiting",
+        "follow_up",
+        "passed",
+        "not_yet",
+        "unavailable"
+       ]
+      }
+     }
     }
    },
    "required": [
@@ -498,6 +540,32 @@
     "outcome_topics",
     "answered_items"
    ]
+  },
+  "ExplainBack": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "client_explain_id",
+    "text",
+    "modality"
+   ],
+   "properties": {
+    "client_explain_id": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 1200
+    },
+    "modality": {
+     "enum": [
+      "typed",
+      "spoken"
+     ]
+    }
+   }
   }
  }
 }

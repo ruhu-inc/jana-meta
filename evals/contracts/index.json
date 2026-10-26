@@ -3162,6 +3162,18 @@
     "origin": "synthesised"
   },
   {
+    "file": "learning/student-records/ExplainBack/invalid/unknown_property.json",
+    "contract": "learning/student-records#/$defs/ExplainBack",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "learning/student-records/ExplainBack/valid/minimal.json",
+    "contract": "learning/student-records#/$defs/ExplainBack",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "learning/student-records/ProblemReport/invalid/unknown_property.json",
     "contract": "learning/student-records#/$defs/ProblemReport",
     "expect": "invalid",

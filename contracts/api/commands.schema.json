@@ -9894,6 +9894,23 @@
   },
   {
    "method": "POST",
+   "path": "/v1/assessments/{assessment_id}/explain",
+   "request": "https://jana.dev/contracts/learning/student-records#/$defs/ExplainBack",
+   "response": "https://jana.dev/contracts/learning/student-records#/$defs/AssessmentState",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "validation_failed",
+    "not_found",
+    "worker_unavailable"
+   ],
+   "stage": "S2",
+   "owner": "API-27"
+  },
+  {
+   "method": "POST",
    "path": "/v1/profiles/{profile_id}/archive-authorizations",
    "request": "#/$defs/ArchiveAuthorizationRequest",
    "response": "#/$defs/ArchiveAuthorization",
