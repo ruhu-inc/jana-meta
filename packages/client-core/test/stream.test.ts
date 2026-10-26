@@ -140,3 +140,40 @@ describe("UIA-22", () => {
     expect(Math.abs(elapsedMs(phaseStarted, connection) - 4_000)).toBeLessThan(1_000);
   }, 20_000);
 });
+
+describe("UIA-05", () => {
+  test("a send the core refused is not sent again when the stream comes back", async () => {
+    const core = new FakeCore(recording, 50);
+    const posted: string[] = [];
+    let refuse = true;
+    const fetch = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      if ((init?.method ?? "GET") === "POST" && String(input).endsWith("/turns") && !core.down) {
+        posted.push(new Headers(init?.headers).get("idempotency-key")!);
+        if (refuse) return new Response(JSON.stringify({ error: { code: "safety_blocked", message: "", retryable: false, action_taken: false, request_id: "req_x" } }), { status: 422 });
+      }
+      return core.fetch(input, init);
+    };
+    const session = new SessionController({ endpoint: async () => ({ baseUrl: "http://core.test", token: core.token }) }, new StoreHolder(), core.recording.session_id, { fetch });
+    await session.open();
+    core.start();
+    const key = `session:${recording.session_id}`;
+    await until(() => session.holder.getState().connection[key]?.state === "live");
+    const refused = session.send([{ type: "text", text: "a message the core refuses" }]);
+    await until(() => session.holder.getState().messages[refused]?.state === "failed");
+    for (let outage = 0; outage < 2; outage += 1) {
+      core.kill();
+      await sleep(300);
+      core.restart();
+      await until(() => session.holder.getState().connection[key]?.state === "live", 6_000);
+      await sleep(50);
+    }
+    expect(posted).toEqual([refused]);
+    // "Try again" still sends it, with the same key.
+    refuse = false;
+    session.retry(refused);
+    await until(() => posted.length === 2);
+    expect(posted).toEqual([refused, refused]);
+    session.close();
+    core.stop();
+  }, 30_000);
+});

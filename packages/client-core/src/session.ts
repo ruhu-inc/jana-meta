@@ -475,7 +475,9 @@ export class SessionController {
     if (state === "live" || state === "replaying") {
       if (this.bannerTimer !== null) this.timers.clearTimeout(this.bannerTimer);
       this.bannerTimer = null;
-      for (const send of [...this.pending.values()]) void this.deliver(send);
+      // Sends the stream dropped go again with their key; a send the core refused waits for "Try again" (§10.4).
+      const messages = this.holder.getState().messages;
+      for (const send of [...this.pending.values()]) if (messages[send.key]?.state !== "failed") void this.deliver(send);
       return;
     }
     // Unreachable or resyncing: the banner appears only if it lasts past the threshold (UIA-07).
