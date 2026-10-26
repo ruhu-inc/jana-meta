@@ -55,8 +55,9 @@ def test_transport_streaming_auth_and_compatibility() -> None:
             assert request.url == "http://127.0.0.1:8081/v1/chat/completions"
             assert request.headers["authorization"] == "Bearer synthetic-device-token"
             body = json.loads(await request.aread())
-            assert body["tool_choice"] == "auto" and body["store"] is False
-            assert body["response_format"]["type"] == "json_schema"  # Spark decodes to the schema; no prompt copy
+            # Forwarded unchanged: the gateway validates the device contract (which refuses a caller's `store`) and
+            # its Meta adapter applies the provider's rules.
+            assert body["tool_choice"] == "required" and "store" not in body
             assert int(request.headers["content-length"]) == len(request.content)
             return httpx.Response(200, content=b'data: {"choices":[]}\n\ndata: [DONE]\n\n')
 

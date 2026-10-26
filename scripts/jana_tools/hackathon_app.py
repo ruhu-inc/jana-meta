@@ -25,7 +25,6 @@ from agent_core.router.hardware import TutorPath
 from agent_core.store import subscription as subscriptions
 from agent_core.store.keystore import FileKeyStore, KeyStore, MemoryKeyStore
 from cloud_gateway.config import GatewayConfig, load_config
-from cloud_gateway.providers.meta import prepare_body
 from cloud_gateway.store import GatewayStore
 from cloud_gateway.tier import monthly_allowance_tokens
 
@@ -59,16 +58,11 @@ class GatewayHop(httpx.AsyncBaseTransport):
         url = request.url.copy_with(scheme="http", host="127.0.0.1", port=self.port)
         headers = dict(request.headers)
         headers["host"] = f"127.0.0.1:{self.port}"
-        if request.method == "POST" and request.url.path == "/v1/chat/completions":
-            # Apply the same idempotent provider compatibility rules as the gateway.
-            # This also supports an owner's gateway that predates a host restart.
-            body = prepare_body(json.loads(await request.aread()))
-            headers.pop("content-length", None)
-            forwarded = httpx.Request(request.method, url, headers=headers, json=body, extensions=request.extensions)
-        else:
-            forwarded = httpx.Request(
-                request.method, url, headers=headers, stream=request.stream, extensions=request.extensions
-            )
+        # The device's request goes as it is: the gateway checks it against the device contract and its Meta
+        # adapter applies the provider's rules, so nothing provider-specific is added here.
+        forwarded = httpx.Request(
+            request.method, url, headers=headers, stream=request.stream, extensions=request.extensions
+        )
         response = await self.inner.handle_async_request(forwarded)
         if response.status_code >= 400:
             # The gateway's fixed error codes never contain prompts or credentials.
