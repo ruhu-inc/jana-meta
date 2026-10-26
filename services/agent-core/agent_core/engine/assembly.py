@@ -19,6 +19,7 @@ from collections.abc import Awaitable, Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urljoin
 
 import yaml
 
@@ -141,14 +142,65 @@ def stuck_cap(conn: sqlite3.Connection, kc_ids: list[str], settings: Settings) -
     return False
 
 
+def self_contained(schema: dict[str, Any], documents: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
+    """The schema with every reference to another contract document copied into its own `$defs`, so a decoder that
+    resolves only local references (a provider's structured output, llama.cpp's grammar) sees the whole contract.
+    Copied definitions are named `<document>__<definition>`; their own references are resolved the same way."""
+    base = str(schema.get("$id", ""))
+    imported: dict[str, str] = {}
+    extra: dict[str, Any] = {}
+
+    def target(document: str, pointer: str) -> Any:
+        node: Any = documents[document]
+        for part in [p for p in pointer.split("/") if p]:
+            node = node[part.replace("~1", "/").replace("~0", "~")]
+        return node
+
+    def rewrite(node: Any, document: str) -> Any:
+        if isinstance(node, list):
+            return [rewrite(item, document) for item in node]
+        if not isinstance(node, dict):
+            return node
+        out: dict[str, Any] = {}
+        for key, value in node.items():
+            if key != "$ref" or not isinstance(value, str):
+                out[key] = rewrite(value, document)
+                continue
+            source, _, pointer = value.partition("#")
+            source = urljoin(document, source) if source else document  # relative to the document it sits in
+            if source == base:
+                out[key] = "#" + pointer
+                continue
+            wanted = f"{source}#{pointer}"
+            if wanted not in imported:
+                stem = source.rsplit("/contracts/", 1)[-1].replace("/", "_").replace("-", "_")
+                imported[wanted] = name = f"{stem}__{pointer.rsplit('/', 1)[-1] or 'root'}"
+                copied = json.loads(json.dumps(target(source, pointer)))
+                for drop in ("$id", "$schema", "$defs"):  # a copied root's own definitions come in one by one
+                    copied.pop(drop, None)
+                extra[name] = {}
+                extra[name] = rewrite(copied, source)
+            out[key] = "#/$defs/" + imported[wanted]
+        return out
+
+    result: dict[str, Any] = rewrite(schema, base)
+    if extra:
+        result["$defs"] = {**result.get("$defs", {}), **extra}
+    return result
+
+
 def bundled_schemas(root: Path = CORE / "contracts" / "schemas") -> dict[str, dict[str, Any]]:
-    """Self-contained output schemas for decoding, by contract name (`agents/tutor-turn`). The tutor turn's optional
+    """Self-contained output schemas for decoding, by contract name (`agents/tutor-turn`): references to other contract
+    documents are copied in (`self_contained`), since no decoder fetches them. The tutor turn's optional
     `sketch_wanted` (VSL-43, D106) is left out of the decoding schema, so no local model's grammar or prompt carries it
     (VSL-01); an online candidate's call gets it back through the engine's prepare step (MDL-33, sketch_flow.py)."""
-    schemas = {
+    raw = {
         f"{p.parent.name}/{p.name.removesuffix('.schema.json')}": json.loads(p.read_text())
         for p in sorted(root.glob("*/*.schema.json"))
     }
+    every = (json.loads(p.read_text()) for p in sorted(root.rglob("*.schema.json")))
+    documents = {str(s["$id"]): s for s in every if "$id" in s}
+    schemas = {name: self_contained(schema, documents) for name, schema in raw.items()}
     turn = schemas.get("agents/tutor-turn")
     if turn is not None:
         turn["properties"].pop("sketch_wanted", None)

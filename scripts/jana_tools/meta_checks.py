@@ -28,12 +28,12 @@ from cloud_gateway.inference_budget import InferenceBudget
 from cloud_gateway.providers import ClientFactory, Providers, default_client
 from cloud_gateway.providers.base import ProviderAdapter, ProviderRequest, UpstreamError, Usage
 from cloud_gateway.store import GatewayStore
-from jsonschema import Draft202012Validator
+from agent_core.contracts._validation import validator as contract_validator
+from agent_core.engine.assembly import bundled_schemas
 
 from jana_tools import REPO_ROOT
 
 CONFIG = REPO_ROOT / "services/cloud-gateway/deploy/meta-dev.toml"
-TUTOR_TURN = REPO_ROOT / "contracts/agents/tutor-turn.schema.json"
 MATH_SOLVE = {
     "type": "function",
     "function": {
@@ -134,8 +134,8 @@ async def check_tools(run: Run) -> Result:
 
 async def check_json(run: Run) -> Result:
     """2. Coach turns validate against tutor-turn.schema.json on the first try."""
-    schema = json.loads(TUTOR_TURN.read_text())
-    validator = Draft202012Validator(schema)
+    schema = bundled_schemas()["agents/tutor-turn"]  # exactly what the engine sends the Coach
+    validator = contract_validator("agents/tutor-turn")  # and checks its reply against
     valid, errors = 0, []
     for index, equation in enumerate(EQUATIONS):
         body = {
@@ -212,7 +212,7 @@ async def check_image(run: Run) -> Result:
 
 async def check_latency(run: Run) -> Result:
     """5. Time to a complete Coach turn at reasoning_effort low (target ≤ 3 s typical, SPEC §12)."""
-    schema = json.loads(TUTOR_TURN.read_text())
+    schema = bundled_schemas()["agents/tutor-turn"]
     times = []
     for equation in EQUATIONS[:5]:
         body = {
