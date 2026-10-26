@@ -1,0 +1,24 @@
+scripts/jana_tools/meta_checks.py
+  s_207b3a26495062::t_9340d7d2329297 31-32,137-138,215
+services/agent-core/agent_core/engine/assembly.py
+  s_207b3a26495062::t_c7aa62b3eb36c6 22,145-191,193-194,197,201-202
+  s_207b3a26495062::t_a0c2ed5dfb96ee 203
+services/agent-core/tests/test_bundled_schemas_self_contained.py
+  s_207b3a26495062::t_4570d033fd3e9c 1-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a72526f57ef42e8d0afd9b9754f6f5e946d2124e",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
