@@ -1,0 +1,147 @@
+evals/contracts/study/workspace/ConceptRelationType/invalid/wrong_type.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1
+evals/contracts/learning/journey/Reply/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-23
+evals/contracts/api/commands/ConceptMistake/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-13
+evals/contracts/study/workspace/ReviewIntervals/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-6
+evals/contracts/api/commands/ConceptQuestion/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-10
+evals/contracts/study/workspace/StudyRelation/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-19
+evals/contracts/api/commands/ManipulationOpened/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-4
+evals/contracts/api/commands/ConceptMap/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-15
+evals/contracts/api/commands/ConceptMistake/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-12
+evals/contracts/study/workspace/DraftRelation/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-19
+evals/contracts/study/workspace/StudyConcept/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-25
+evals/contracts/learning/journey/Start/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-4
+evals/contracts/study/workspace/DraftConcept/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-18
+evals/contracts/study/workspace/ConceptTopicMap/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-13
+evals/contracts/study/workspace/ReviewIntervals/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-7
+evals/contracts/study/workspace/ConceptTopicDraft/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-11
+evals/contracts/api/commands/ConceptNode/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-12
+evals/contracts/study/workspace/ConceptMapEdit/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-10
+evals/contracts/index.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 428-499,1040-1051,1064-1075,3146-3193,4328-4435,4496-4519,4532-4543,4820-4831,4928-4939,5144-5167,5180-5227
+evals/contracts/study/workspace/StudyJourneyAction/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-3
+evals/contracts/study/workspace/StudyJourney/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-25
+evals/contracts/study/workspace/StudyConceptMap/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-6
+evals/contracts/study/workspace/QuizSavedResult/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-29
+evals/contracts/api/commands/ConceptNext/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-7
+evals/contracts/study/workspace/ConceptTopicProcessing/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-4
+evals/contracts/study/workspace/DraftConceptMap/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-23
+evals/contracts/study/workspace/ConceptAnchor/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-5
+evals/contracts/study/workspace/ConceptAnchor/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-6
+evals/contracts/study/workspace/ConceptTopicRequest/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-3
+evals/contracts/study/workspace/ConceptTopicMap/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-12
+evals/contracts/api/commands/ManipulationOpened/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-3
+evals/contracts/study/workspace/ConceptRelationType/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1
+evals/contracts/study/workspace/ConceptTopicProcessing/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-5
+evals/contracts/learning/journey/Step/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-3
+evals/contracts/study/workspace/StudyJourney/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-26
+evals/contracts/study/workspace/DraftRelation/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-18
+evals/contracts/study/workspace/DraftConceptMap/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-22
+evals/contracts/study/workspace/ConceptEditOp/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-5
+evals/contracts/study/workspace/ConceptTopicMapList/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-3
+evals/contracts/study/workspace/ConceptTopicRequest/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-4
+evals/contracts/api/commands/ManipulationStart/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-3
+evals/contracts/study/workspace/ConceptTopicMapList/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-4
+evals/contracts/study/workspace/ConceptMapEdit/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-9
+evals/contracts/learning/journey/View/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-22
+evals/contracts/api/commands/ConceptEdge/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-6
+evals/contracts/study/workspace/ConceptTopicDraft/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-12
+evals/contracts/learning/journey/Step/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-4
+evals/contracts/api/commands/ConceptMap/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-16
+evals/contracts/study/workspace/StudyConceptMap/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-5
+evals/contracts/learning/journey/View/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-21
+evals/contracts/api/commands/ConceptNode/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-13
+evals/contracts/study/workspace/StudyJourneyReply/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-27
+evals/contracts/api/commands/ConceptNext/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-6
+evals/contracts/api/commands/ConceptQuestion/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-9
+evals/contracts/study/workspace/StudyJourneyAction/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-4
+evals/contracts/study/workspace/StudyConcept/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-24
+evals/contracts/learning/journey/Start/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-5
+evals/contracts/study/workspace/QuizSavedResult/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-30
+evals/contracts/learning/journey/Reply/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-24
+evals/contracts/study/workspace/StudyRelation/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-20
+evals/contracts/api/commands/ManipulationStart/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-4
+evals/contracts/study/workspace/StudyJourneyReply/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-28
+evals/contracts/api/commands/ConceptEdge/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-5
+evals/contracts/study/workspace/ConceptEditOp/invalid/unknown_property.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-6
+evals/contracts/study/workspace/DraftConcept/valid/minimal.json
+  s_c8aac60c34196a::t_f0937ca13e0a4f 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ad6e5375b644d0728df9368ff8395d53d601a80d",
+  "prompts": {},
+  "sessions": {
+    "s_c8aac60c34196a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f064582-e300-4e0e-986d-516442dfc836",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
