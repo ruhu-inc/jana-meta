@@ -114,6 +114,7 @@ auxiliary:
     priority: 1
   vision:
     inherit: true
+    tier: fast # the local vision model first; Muse Spark reads a photo only after its notice (JM-D10)
     requires:
       vision: true
     priority: 8
@@ -177,7 +178,7 @@ local:
 cloud:
   enabled: true # Still gated by the online switch, consent, connectivity and budgets at runtime.
   probe_interval_s: 60
-  send_photos: false
+  send_photos: true # still per photo: the local privacy pass and the photo notice come first (SPEC §5)
   redaction_check: true
   roles_allowed:
   - coach

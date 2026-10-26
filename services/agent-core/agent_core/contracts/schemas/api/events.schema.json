@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/events.schema.json sha256 ff7db76e8608a3512464bba3f23b0add11f9e94a0f08bd5fa490887def4a99d7; do not edit",
+ "$comment": "GENERATED from contracts/api/events.schema.json sha256 53cd34b3b08bcaded49e0e2d2b451e0f5b33ada86bb4a3b372e06698d1aaf1c4; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/events",
  "title": "Event envelope",
@@ -1429,6 +1429,14 @@
     },
     "spotlight": {
      "type": "boolean"
+    },
+    "photo_regions": {
+     "type": "array",
+     "maxItems": 20,
+     "items": {
+      "type": "string",
+      "pattern": "^cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3}$"
+     }
     }
    },
    "required": [
@@ -2183,7 +2191,7 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 128,
-        "pattern": "^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*)$"
+        "pattern": "^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3})$"
        },
        "action": {
         "enum": [

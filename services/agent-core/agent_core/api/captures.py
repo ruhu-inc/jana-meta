@@ -10,6 +10,7 @@ import io
 import json
 import re
 import time
+from collections.abc import Sequence
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
@@ -53,6 +54,8 @@ def edit_distance(left: str, right: str) -> int:
     return distance
 
 
+# Photos of the student's own handwriting: printed-text OCR cannot vouch for them (SPEC §17, W2), see `handwriting`.
+HANDWRITTEN = ("working", "sketch")
 PHOTO_SOURCES = {"photo_file", "photo_paste", "photo_drop", "webcam", "device_camera", "handwriting_photo"}
 
 
@@ -69,6 +72,7 @@ class CaptureDesk:
         self.trace_failures = 0
         self.traced_terminal: dict[str, str] = {}
         self.semaphore = asyncio.Semaphore(1)
+        self.late: dict[str, asyncio.Future[None]] = {}  # SAM outlines still arriving (JM-D10)
         core.on_profile_closing.append(self.forget)
         core.closers.insert(0, self.close)
 
@@ -122,7 +126,7 @@ class CaptureDesk:
             self.owners.pop(cap, None)
 
     async def close(self) -> None:
-        tasks = list(self.tasks.values())
+        tasks = [*self.tasks.values(), *self.late.values()]
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
@@ -136,6 +140,7 @@ class CaptureDesk:
         self.raw.clear()
         self.prepared.clear()
         self.tasks.clear()
+        self.late.clear()
         self.owners.clear()
         self.traced_terminal.clear()
         self.trace_builders.clear()
@@ -363,6 +368,8 @@ class CaptureDesk:
             record["refusal"] = {"reason": prepared["refusal"]}
             self.raw.pop(cap, None)
             return self.put(record)
+        if record["purpose"] in HANDWRITTEN:
+            prepared = handwriting(prepared)
         self.prepared[cap] = prepared
         record["quality"]["checks"] = prepared["checks"]
         record["status"] = "quality_failed" if any(c["outcome"] != "pass" for c in prepared["checks"]) else "drafting"
@@ -418,7 +425,7 @@ class CaptureDesk:
         outcomes = [c["outcome"] for c in record["quality"]["checks"]]
         if "blocking" in outcomes or ("advisory" in outcomes and not body.get("override_quality")):
             raise ApiError("capture_not_ready", "retake the photo or accept advisory quality warnings")
-        if body.get("send_to_cloud") and (not prepared["privacy_available"] or record["purpose"] == "working"):
+        if body.get("send_to_cloud") and not prepared["privacy_available"]:
             raise ApiError("photo_reading_unavailable", "this photo can only be read locally")
         record["quality"]["overridden"] = bool(body.get("override_quality"))
         record["status"] = "reading"
@@ -440,6 +447,7 @@ class CaptureDesk:
                 screen=(lambda _: safe) if prepared["privacy_available"] else None,
                 structured=True,
                 purpose=record["purpose"],
+                outline_later=True,  # SAM outlines the lines while the student confirms them (JM-D10, SPEC §12)
             )
             if reading.status == "read" and reading.refusal:
                 record["status"] = "refused"
@@ -500,6 +508,8 @@ class CaptureDesk:
                         "region_id": f"rgn_{i}",
                         "kind": "working_line"
                         if record["purpose"] == "working"
+                        else "diagram"
+                        if record["purpose"] == "sketch"
                         else line.get("kind")
                         or (
                             "working_line"
@@ -522,6 +532,8 @@ class CaptureDesk:
                         "latex": line.get("latex"),
                         "table": line.get("table"),
                         "bbox": bbox,
+                        "outline": line.get("outline") if bbox is not None else None,
+                        "sketch_element": line.get("sketch_element") if record["purpose"] == "sketch" else None,
                     }
                 )
             text = "\n".join(r["text"] for r in regions)[:8000]
@@ -565,13 +577,14 @@ class CaptureDesk:
                         or box["y"] + box["h"] > 1
                     ):
                         region["bbox"] = None
+                        region["outline"] = None
             if any(r["language"] not in ("en", "und") for r in regions):
                 record.update(status="refused", refusal={"reason": "unsupported_language"})
                 self.delete_images(record)
                 record["attachments"] = []
                 self.put(record)
                 return
-            if record["purpose"] != "working" and not re.search(
+            if record["purpose"] not in HANDWRITTEN and not re.search(
                 r"[?=+*/^]|\b(find|solve|calculate|explain|describe|state|show|evaluate|simplify|balance|prepare|what|which|how|why|determine|prove|journal|debit|credit)\b",
                 text,
                 re.I,
@@ -588,8 +601,9 @@ class CaptureDesk:
                 record["attachments"] = []
                 for region in regions:
                     region["bbox"] = None
+                    region["outline"] = None
             # Separate diagram crops use only the already-screened derivative.
-            if prepared["privacy_available"] and not personal_found:
+            if prepared["privacy_available"] and not personal_found and record["purpose"] != "sketch":
                 for region in regions:
                     if region["kind"] != "diagram" or not region.get("bbox") or len(record["attachments"]) >= 40:
                         continue
@@ -667,11 +681,17 @@ class CaptureDesk:
                     low_chars += max(0, span["end"] - max(covered_until, span["start"]))
                     covered_until = max(covered_until, span["end"])
             transcription_chars = sum(len(region["text"]) for region in regions)
-            unreadable = (
-                not regions
-                or any(r["confidence"] < self.core.settings.vision_confirm_threshold for r in regions)
-                or low_chars > transcription_chars * 0.3
-            )
+            threshold = self.core.settings.vision_confirm_threshold
+            if record["purpose"] == "sketch":
+                # A sketch's unsure parts are labelled and never judged (`sketch_photo`); it is unreadable only when
+                # no part was read with confidence.
+                unreadable = not any(r["confidence"] >= threshold for r in regions)
+            else:
+                unreadable = (
+                    not regions
+                    or any(r["confidence"] < threshold for r in regions)
+                    or low_chars > transcription_chars * 0.3
+                )
             record.update(
                 text=text,
                 regions=regions,
@@ -683,7 +703,7 @@ class CaptureDesk:
             # Numbered questions require a choice; no automatic first-question submission.
             questions: list[dict[str, Any]] = []
             current: dict[str, Any] | None = None
-            for region in regions if record["purpose"] != "working" else []:
+            for region in regions if record["purpose"] not in HANDWRITTEN else []:
                 match = (
                     re.match(r"^(\d{1,3})", region["number_label"])
                     if region.get("number_label")
@@ -702,6 +722,8 @@ class CaptureDesk:
                 record["questions"] = questions
             if cap in self.raw and self.owners.get(cap) == CURRENT_PROFILE.get():
                 self.put(record)
+                if reading.outlining is not None and reading.regions and record["attachments"]:
+                    self.late[cap] = asyncio.ensure_future(self._late_outlines(cap, reading.outlining, reading.regions))
         except asyncio.CancelledError:
             raise
         except Exception:
@@ -715,6 +737,31 @@ class CaptureDesk:
             # The derivative remains for confirmation, but the original is no longer needed.
             self.raw.pop(cap, None)
             self.prepared.pop(cap, None)
+
+    async def _late_outlines(self, cap: str, outlining: Any, read: Sequence[dict[str, Any]]) -> None:
+        """SAM's outlines, arriving while the student confirms what was read: added to the regions that still show
+        on the photo (a deleted or redacted capture gets none). Region i is the reader's region i (`_read`)."""
+        try:
+            await asyncio.wait_for(outlining, timeout=30)
+            record = self.get(cap)
+            if not record["attachments"] or record["status"] in ("cancelled", "refused"):
+                return
+            changed = False
+            for region in record["regions"]:
+                source = read[region["order"]] if region["order"] < len(read) else None
+                if source is None or region.get("bbox") is None or not source.get("outline"):
+                    continue
+                region["outline"] = source["outline"]
+                region["bbox"] = {**source["bbox"], "image_id": region["bbox"]["image_id"]}
+                changed = True
+            if changed:
+                self.put(record, record_trace=False)
+        except (TimeoutError, ApiError):
+            return  # no outline: the photo still shows each line's box
+        except Exception:
+            return  # a failed segmentation never touches the capture
+        finally:
+            self.late.pop(cap, None)
 
     def screen(self, text: str, record: dict[str, Any]) -> tuple[str, int]:
         """PRM-18 for a capture's text: words read from a photo lose instruction-like spans; typed, pasted and
@@ -780,7 +827,9 @@ class CaptureDesk:
         record = self.get(cap)
         if record["session_id"] != sid or record["status"] != "confirmed" or not record["confirmation"]["confirmed"]:
             raise ApiError("capture_not_ready")
-        if (record["purpose"] == "working") != (body["intent"] == "board_line"):
+        if (record["purpose"] == "working") != (body["intent"] == "board_line") or (
+            (record["purpose"] == "sketch") != (body["intent"] == "check_my_working")
+        ):
             raise ApiError("validation_failed", "capture purpose does not match the turn")
         return {**body, "content": [{"type": "text", "text": record["text"]}]}
 
@@ -798,6 +847,9 @@ class CaptureDesk:
         task = self.tasks.pop(cap, None)
         if task:
             task.cancel()
+        late = self.late.pop(cap, None)
+        if late:
+            late.cancel()
         self.raw.pop(cap, None)
         self.prepared.pop(cap, None)
         self.owners.pop(cap, None)
@@ -805,6 +857,21 @@ class CaptureDesk:
         record["status"] = "cancelled"
         self.put(record, record_trace=not terminal)
         self.conn().execute("DELETE FROM captures WHERE capture_id=?", (cap,))
+
+
+def handwriting(prepared: dict[str, Any]) -> dict[str, Any]:
+    """The local privacy pass for a photo of the student's own working or sketch (SPEC §5, §17 W2).
+
+    The pass vouches for a photo by reading its printed text on the device; handwriting defeats that reader, so a
+    photo of working would never count as screened. For these photos the pass counts when it ran in full: the
+    person and face screen found nobody, and every line the device could read was checked and any personal detail
+    in it masked. Lines it could not read are still read back to the student and redacted before use, and a read that
+    finds a personal detail deletes the image (`_read`). Without OCR at all nothing changes. No text found is not a
+    blocking quality failure for handwriting: the reader decides whether anything is legible."""
+    if prepared.get("refusal") or prepared.get("ocr_model_version") is None or "checks" not in prepared:
+        return prepared
+    checks = [{**check, "outcome": "pass"} if check["check"] == "no_text" else check for check in prepared["checks"]]
+    return {**prepared, "privacy_available": True, "checks": checks}
 
 
 def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> CaptureDesk:

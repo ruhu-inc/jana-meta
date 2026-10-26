@@ -2586,7 +2586,7 @@ class ApiEventsEvVoiceCaptionCuesItem(BaseModel):
         Field(
             max_length=128,
             min_length=1,
-            pattern="^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*)$",
+            pattern="^(stp_[0-9A-HJKMNP-TV-Z]{26}|vis_[0-9A-HJKMNP-TV-Z]{26}:[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*|cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3})$",
         ),
     ]
     action: Literal["point", "write"] | None = None
@@ -2765,6 +2765,9 @@ type ApiEventsBoardInputKind = Annotated[
 type TtlMs = Annotated[int, Field(ge=0)]
 
 
+type PhotoRegion = Annotated[str, Field(pattern="^cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3}$")]
+
+
 class ApiEventsEvBoardHighlight(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -2774,6 +2777,7 @@ class ApiEventsEvBoardHighlight(BaseModel):
     step_ids: Annotated[list[StepId], Field(max_length=20)]
     ttl_ms: TtlMs | None
     spotlight: bool | None = None
+    photo_regions: Annotated[list[PhotoRegion] | None, Field(max_length=20)] = None
 
 
 type Reason = Annotated[str, Field(max_length=300)]
@@ -3269,13 +3273,56 @@ class InputCapturedQuestionRegionLowConfidenceSpansItem(BaseModel):
     end: Annotated[int, Field(ge=0)]
 
 
+class InputCapturedQuestionRegionOutlineItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    x: Annotated[float, Field(ge=0.0, le=1.0)]
+    y: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
+type Outline = Annotated[list[InputCapturedQuestionRegionOutlineItem], Field(max_length=64, min_length=3)]
+
+
+type Label = Annotated[str, Field(max_length=40)]
+
+
+class InputCapturedQuestionRegionSketchElementAnyOf2FromAnyOf2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    x: Annotated[float, Field(ge=0.0, le=1.0)]
+    y: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
+class InputCapturedQuestionRegionSketchElementAnyOf2ToAnyOf2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    x: Annotated[float, Field(ge=0.0, le=1.0)]
+    y: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
+class InputCapturedQuestionRegionSketchElementAnyOf2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["arrow", "line_segment", "axis", "point", "label", "object"]
+    label: Label | None
+    from_: Annotated[
+        InputCapturedQuestionRegionSketchElementAnyOf2FromAnyOf2 | None,
+        Field(alias="from"),
+    ]
+    to: InputCapturedQuestionRegionSketchElementAnyOf2ToAnyOf2 | None
+
+
 type InputCapturedQuestionRegionId = Annotated[
     str, Field(pattern="^rgn_[0-9]{1,3}$", title="InputCapturedQuestionRegionId")
 ]
 
 
 type InputCapturedQuestionPropertiesPurpose = Annotated[
-    Literal["question", "working", "answer"],
+    Literal["question", "working", "answer", "sketch"],
     Field(title="InputCapturedQuestionPropertiesPurpose"),
 ]
 
@@ -4681,6 +4728,8 @@ class InputCapturedQuestionRegion(BaseModel):
     struck_through: bool | None = None
     language: Literal["en", "fr", "pt", "ar", "und"]
     direction: Literal["ltr", "rtl"]
+    outline: Outline | None = None
+    sketch_element: InputCapturedQuestionRegionSketchElementAnyOf2 | None = None
 
 
 class InputCapturedQuestion(BaseModel):
@@ -4704,7 +4753,7 @@ class InputCapturedQuestion(BaseModel):
         "ink",
         "voice",
     ]
-    purpose: Literal["question", "working", "answer"]
+    purpose: Literal["question", "working", "answer", "sketch"]
     locale: Literal["en", "fr", "pt", "ar"]
     status: Literal[
         "drafting",

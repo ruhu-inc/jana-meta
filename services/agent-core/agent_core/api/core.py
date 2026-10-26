@@ -1000,9 +1000,10 @@ class CoreService:
             raise ApiError("turn_active", "a turn is running in this session", details={"turn_id": entry.active_turn})
         lesson = entry.engine_state.lesson_id is not None
         why_step = self._why_step(entry, body) if body["intent"] == "why" else None
+        sketch = body["intent"] == "check_my_working" and bool(body.get("capture_id"))  # a photographed sketch
         if body["intent"] not in ("ask", "answer", "stuck", "board_line", "show_step", "why") and not (
             lesson and body["intent"] == "next_step"
-        ):
+        ) and not sketch:
             raise ApiError("validation_failed", f"intent {body['intent']!r} is not available yet",
                            details={"errors": ["$.intent: not available in this version"]})  # fmt: skip
         if any(block["type"] == "image_ref" for block in body["content"]):
@@ -1070,6 +1071,14 @@ class CoreService:
             added = sum(step_id not in existing or not existing[step_id].latex.strip() for step_id, _ in board_lines)
             if student_count + added > 30:
                 raise ApiError("validation_failed", "the working board allows up to 30 student lines")
+            if body.get("capture_id") and self.capture_desk is not None:
+                # Lines read from the student's own photo keep their place on it (JM-D10), for pointing.
+                from agent_core.engine.photo_regions import photo_lines
+
+                state = entry.engine_state
+                on_board = set(existing)
+                state.photo_lines = {k: v for k, v in state.photo_lines.items() if k in on_board}
+                state.photo_lines.update(photo_lines(self.capture_desk.get(body["capture_id"]), board_lines))
         engine.voice_mode = False
         if self.reflector is not None:
             self.reflector.pause()  # the student goes first: a running reflection stops and waits (AGT-26)
@@ -1085,7 +1094,12 @@ class CoreService:
         entry.active_turn = ids.turn_id
         new_problem = entry.engine_state.problem is None or entry.engine_state.solved or body["intent"] == "ask"
         new_problem = new_problem and not (guarded and entry.engine_state.problem is not None)
-        if why_step is not None and not guarded:
+        if sketch and not guarded:
+            from agent_core.engine.sketch_photo import sketch_turn
+
+            # Snap your sketch (JM-D10): the drawing is compared with the problem's checked diagram.
+            work = sketch_turn(engine, self.capture_desk.get(body["capture_id"]), ids)
+        elif why_step is not None and not guarded:
             work = engine.why_line(why_step, text, ids=ids)  # "Why?" on a board line (UXS-15, SKL-08)
         elif lesson and body["intent"] == "next_step":
             work = engine.lesson_next(ids=ids)  # the lesson's next block, or its saved one (AGT-22)

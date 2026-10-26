@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import httpx
 
-from cloud_gateway.config import GatewayConfig, ModelSpec, ProviderSpec
+from cloud_gateway.config import GatewayConfig, ModelSpec, ProviderSpec, Sam
 from cloud_gateway.custody import Secret, SecretSource
 from cloud_gateway.providers.base import ProviderAdapter
 from cloud_gateway.providers.gemini import GeminiAdapter
@@ -18,7 +18,7 @@ from cloud_gateway.providers.vertex import VertexAdapter
 if TYPE_CHECKING:
     from cloud_gateway.inference_budget import InferenceBudget
 
-ClientFactory = Callable[[str, ProviderSpec], httpx.AsyncClient]
+ClientFactory = Callable[[str, ProviderSpec | Sam], httpx.AsyncClient]
 ADAPTERS: dict[str, Callable[[ProviderSpec, Secret | None, httpx.AsyncClient], ProviderAdapter]] = {
     "gemini": GeminiAdapter,
     "vertex": VertexAdapter,
@@ -27,7 +27,7 @@ ADAPTERS: dict[str, Callable[[ProviderSpec, Secret | None, httpx.AsyncClient], P
 }
 
 
-def default_client(name: str, spec: ProviderSpec) -> httpx.AsyncClient:
+def default_client(name: str, spec: ProviderSpec | Sam) -> httpx.AsyncClient:
     # TLS with certificate validation, no redirects, no proxy or netrc credentials from the environment (SEC-31).
     return httpx.AsyncClient(follow_redirects=False, trust_env=False)
 

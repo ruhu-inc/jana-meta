@@ -9,7 +9,10 @@ to exactly one element on screen or to nothing:
 - a board step: the `stp_` id, or the step's number as tutor-context lists it (`3` or `board 3`, the integer ref of
   MEM-08), on the accepted board; a tutor line that is unchecked or a draft is never pointed at (UXS-64, AGT-10);
 - a part of a visual shown for this problem: `vis_<id>:<part>` (the UXS-58 form), or a bare part id when exactly one
-  shown visual has that part.
+  shown visual has that part;
+- a place on the student's own photo (JM-D10, kind `photo_region`): `cap_<id>:rgn_<n>`, or `photo 3` (where board line
+  3 is on the photo). A board line read from the photo resolves to its place on the photo, so "this line" lights the
+  student's own handwriting, outlined by SAM 3.1.
 
 Anything else (unknown, no longer shown, matching several elements) draws nothing and is reported as a miss with a
 reason code (VSL-45); the spoken words already name the place, so nothing the student needs is lost. A write cue is
@@ -31,6 +34,8 @@ MARKER = re.compile(r'<point\s+at="([^"<>]{1,80})"\s*/>|<write\s+at="([^"<>]{1,8
 STEP_ID = re.compile(r"stp_[0-9A-HJKMNP-TV-Z]{26}")
 STEP_NUMBER = re.compile(r"(?:board\s+|step\s+|line\s+)?([1-9][0-9]?)", re.I)
 VISUAL_PART = re.compile(r"(vis_[0-9A-HJKMNP-TV-Z]{26}):([A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*)")
+PHOTO_REGION = re.compile(r"cap_[0-9A-HJKMNP-TV-Z]{26}:rgn_[0-9]{1,3}")
+PHOTO_LINE = re.compile(r"photo(?:\s+line)?[\s:]+([1-9][0-9]?)", re.I)
 PART_ID = re.compile(r"[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*")
 MAX_CUES = 50  # `voice.caption` carries at most 50 cues (events contract)
 UNPOINTABLE = ("unchecked", "draft")  # tutor lines whose values are not verified (AGT-10, UXS-64)
@@ -57,6 +62,8 @@ class Targets:
     steps: tuple[tuple[str, str, str], ...] = ()  # (step_id, owner, status) in board order
     visuals: tuple[Shown, ...] = ()
     new_steps: frozenset[str] = frozenset()
+    # (step_id, cap_<id>:rgn_<n>) for lines read from a photo; a sketch's parts appear as (region, region)
+    photo_lines: tuple[tuple[str, str], ...] = ()
 
     @classmethod
     def of(cls, state: Any, new_steps: frozenset[str] = frozenset()) -> Targets:
@@ -65,7 +72,10 @@ class Targets:
             Shown(str(v["visual_id"]), tuple(str(p) for p in v.get("parts", ())))
             for v in getattr(state, "shown_visuals", ())
         )
-        return cls(steps, visuals, new_steps)
+        on_board = {s[0] for s in steps}
+        photo = tuple((k, v) for k, v in getattr(state, "photo_lines", {}).items() if k in on_board)
+        marks = tuple((v, v) for v in getattr(state, "photo_marks", ()))  # a sketch's parts: no board line of their own
+        return cls(steps, visuals, new_steps, photo + marks)
 
 
 @dataclass(frozen=True)
@@ -118,6 +128,15 @@ class _Builder:
 def _resolve(ref: str, targets: Targets) -> tuple[str | None, str | None]:
     """(target, None) for exactly one element on screen, else (None, reason)."""
     ref = ref.strip()
+    photo = dict(targets.photo_lines)
+    if PHOTO_REGION.fullmatch(ref):
+        return (ref, None) if ref in photo.values() else (None, "photo_region_not_shown")
+    if (line := PHOTO_LINE.fullmatch(ref)) is not None:
+        index = int(line[1])
+        if not 1 <= index <= len(targets.steps):
+            return None, "step_not_on_board"
+        region = photo.get(targets.steps[index - 1][0])
+        return (region, None) if region is not None else (None, "photo_region_not_shown")
     step = None
     if STEP_ID.fullmatch(ref):
         step = next((s for s in targets.steps if s[0] == ref), None)
@@ -131,7 +150,7 @@ def _resolve(ref: str, targets: Targets) -> tuple[str | None, str | None]:
     if step is not None:
         if step[1] == "tutor" and step[2] in UNPOINTABLE:
             return None, "step_unchecked"
-        return step[0], None
+        return photo.get(step[0], step[0]), None
     if (pair := VISUAL_PART.fullmatch(ref)) is not None:
         shown = next((v for v in targets.visuals if v.visual_id == pair[1]), None)
         if shown is None:

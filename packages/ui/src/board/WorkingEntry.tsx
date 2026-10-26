@@ -7,7 +7,9 @@ import { useT } from "../i18n.js";
 import { Button, ErrorState } from "../primitives/index.js";
 import { useSelect, useSession } from "../store.js";
 
-export interface WorkingPhoto { sessionId: string; file?: Blob; source?: CaptureSource }
+/** `sketch`: a photo of the student's own graph or free-body diagram, checked against the question's checked diagram
+ * (snap your sketch, JM-D10); otherwise a photo of lines of working. */
+export interface WorkingPhoto { sessionId: string; file?: Blob; source?: CaptureSource; sketch?: boolean }
 export function WorkingEntry({ sessionId, step, onClose, photoInput, onPhotoClose, firstLine = 1 }: { sessionId: string; step?: StepRec; onClose?: () => void; photoInput?: WorkingPhoto | null; onPhotoClose?: () => void; firstLine?: number }) {
   const t = useT();
   const session = useSession();
@@ -52,12 +54,14 @@ export function WorkingEntry({ sessionId, step, onClose, photoInput, onPhotoClos
     return false;
   };
   return <div className="border-t border-line bg-canvas p-3" onClick={(event) => event.stopPropagation()}>
-    {photo?.sessionId === sessionId && <PhotoCapture key={sessionId} {...photo} purpose="working" onConfirmed={(capture) => { if (session !== null) { if (sent !== null) session.discardFailed?.(sent); editor.current?.clear(); editor.current?.insert(capture.text); setSent(session.sendCapture(capture, "board_line")); } }} onTyped={(text) => editor.current?.insert(text)} onDiscardSource={() => { setPhoto({ sessionId }); onPhotoClose?.(); }} onClose={() => { setPhoto(null); onPhotoClose?.(); }} />}
+    {photo?.sessionId === sessionId && photo.sketch === true && <PhotoCapture key={`${sessionId}:sketch`} sessionId={sessionId} {...(photo.file === undefined ? {} : { file: photo.file })} {...(photo.source === undefined ? {} : { source: photo.source })} purpose="sketch" onConfirmed={(capture) => { if (session !== null) { if (sent !== null) session.discardFailed?.(sent); setSent(session.sendCapture(capture, "check_my_working")); } }} onTyped={(text) => editor.current?.insert(text)} onDiscardSource={() => { setPhoto({ sessionId, sketch: true }); onPhotoClose?.(); }} onClose={() => { setPhoto(null); onPhotoClose?.(); }} />}
+    {photo?.sessionId === sessionId && photo.sketch !== true && <PhotoCapture key={sessionId} {...photo} purpose="working" onConfirmed={(capture) => { if (session !== null) { if (sent !== null) session.discardFailed?.(sent); editor.current?.clear(); editor.current?.insert(capture.text); setSent(session.sendCapture(capture, "board_line")); } }} onTyped={(text) => editor.current?.insert(text)} onDiscardSource={() => { setPhoto({ sessionId }); onPhotoClose?.(); }} onClose={() => { setPhoto(null); onPhotoClose?.(); }} />}
     <EntryEditor ref={editor} accounting={subject === "accounting"} mode={subject === "physics" || subject === "chemistry" || subject === "chem" ? "units" : "maths"} sessionId={sessionId} draftSlot={step === undefined ? "working" : `working:${step.step_id}`} label={t(step === undefined ? "input.working" : "input.edit_line")}
       placeholder={t("input.working_placeholder")} initialText={step?.latex ?? ""} multiline={step === undefined} firstLine={firstLine}
       disabled={session === null || live || sending || !hasQuestion} onSubmit={submit} {...(onClose === undefined ? {} : { onCancel: onClose })} />
     <div className="mt-2 flex flex-wrap items-center gap-2">
       {step === undefined && <Button tone="ghost" size="sm" disabled={session === null || live || sending || !hasQuestion} onClick={() => setPhoto({ sessionId })}>{t("photo.working_action")}</Button>}
+      {step === undefined && (subject === "physics" || subject === undefined) && <Button tone="ghost" size="sm" disabled={session === null || live || sending || !hasQuestion} onClick={() => setPhoto({ sessionId, sketch: true })}>{t("photo.sketch_action")}</Button>}
       <span className="flex-1" />
       <Button tone="ghost" size="sm" onClick={() => { editor.current?.clear(); onClose?.(); }}>{t("action.cancel")}</Button>
       <Button tone="primary" size="sm" disabled={session === null || live || sending || !hasQuestion} onClick={() => editor.current?.submit()}>{t("input.check_working")}</Button>

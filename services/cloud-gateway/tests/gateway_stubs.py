@@ -340,6 +340,30 @@ def _openai_sse(seen: Seen, out: Output) -> list[bytes]:
     return events
 
 
+class SamStub:
+    """Meta's Responses API for SAM 3.1: records each request and replays the scripted `output_text` (or an error)."""
+
+    def __init__(self) -> None:
+        self.replies: list[tuple[int, dict[str, Any]] | str] = []
+        self.seen: list[dict[str, Any]] = []
+        self.headers: list[dict[str, str]] = []
+
+    def say(self, *replies: tuple[int, dict[str, Any]] | str) -> None:
+        self.replies.extend(replies)
+
+    def handler(self, request: httpx.Request) -> httpx.Response:
+        self.seen.append(json.loads(request.content))
+        self.headers.append(dict(request.headers))
+        reply = self.replies.pop(0) if self.replies else ""
+        if isinstance(reply, tuple):
+            return httpx.Response(reply[0], json=reply[1])
+        return httpx.Response(200, json={
+            "object": "response", "status": "completed", "model": "sam-3.1",
+            "output": [{"type": "message", "role": "assistant", "status": "completed",
+                        "content": [{"type": "output_text", "text": reply, "annotations": []}]}],
+            "usage": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0, "images_processed": 1}})  # fmt: skip
+
+
 # --- gateway and device ---
 
 
@@ -420,14 +444,15 @@ class Clock:
 @dataclass
 class Harness:
     client: httpx.AsyncClient
-    stubs: dict[str, StubProvider]
+    stubs: dict[str, Any]  # StubProvider by adapter kind, and "sam": SamStub
     clock: Clock
     config: GatewayConfig
     alerts: list[tuple[str, dict[str, object]]]
 
 
 def harness(config: GatewayConfig, clock: Clock | None = None, secrets: FakeSecrets | None = None) -> Harness:
-    stubs = {kind: StubProvider(kind) for kind in PROVIDERS}
+    stubs: dict[str, Any] = {kind: StubProvider(kind) for kind in PROVIDERS}
+    stubs["sam"] = SamStub()
     clock = clock or Clock()
     alerts: list[tuple[str, dict[str, object]]] = []
 

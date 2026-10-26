@@ -8,7 +8,8 @@ import { FRAME_MS, LoudnessTrack, MouthFollower, frameLevels, type MouthShape } 
  * document (tests, workers) every target counts as on screen. */
 function onScreen(target: PointerTarget): boolean {
   if (typeof document === "undefined") return true;
-  const selector = target.kind === "step" ? `[data-step-id="${target.step_id}"]` : `[data-part="${target.part_id}"]`;
+  const selector = target.kind === "step" ? `[data-step-id="${target.step_id}"]`
+    : target.kind === "photo_region" ? `[data-photo-region="${target.capture_id}:${target.region_id}"]` : `[data-part="${target.part_id}"]`;
   return document.querySelector(selector) !== null;
 }
 import type { Endpoint } from "./stream/client.js";

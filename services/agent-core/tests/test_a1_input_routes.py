@@ -262,6 +262,8 @@ MODEL_ENTRY_POINTS = {
     ("engine/assembly.py", "_assessment_judge", "judge"): "judge_text: the guard runs on the working first",
     ("engine/assembly.py", "_explanation_judge", "judge"): "judge_text: the guard runs on the explanation first",
     ("engine/vision.py", "read", "complete"): "photo pixels only; the words read are guarded when confirmed and sent",
+    ("engine/vision.py", "_sharpen", "complete"): "crops of the screened photo only (JM-D10); the words re-read are "
+    "guarded when confirmed and sent",
     ("engine/reflection.py", "call", "complete"): "guarded transcripts only; a window with safety_flagged is skipped",
     ("engine/auxiliary.py", "call", "complete"): "the auxiliary roles above, each reached from a guarded path",
     ("router/__init__.py", "complete", "complete"): "the router's module entry, inside an engine turn or job scope",

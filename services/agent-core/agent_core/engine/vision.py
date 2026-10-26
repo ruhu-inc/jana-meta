@@ -18,8 +18,10 @@ confirmation before anything uses it (INP-01), and nothing here logs it.
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import copy
+import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -31,10 +33,13 @@ from agent_core.config import Settings
 from agent_core.contracts import document
 from agent_core.engine import job_scope
 from agent_core.engine.events import new_id
+from agent_core.engine.photo_regions import MAX_CROPS, crop, merge_rereads, sharpen, uncertain
 from agent_core.router import Message
 from agent_core.router.config import Candidate
 from agent_core.router.core import SLOT_OFF_NOTICES, Router, RouterError
 from agent_core.store.images import PhotoRejectedError, SafePhoto, make_safe
+
+log = logging.getLogger(__name__)
 
 TEXT_MAX_CHARS = 8000  # the captured-question contract's `text`
 READ_INSTRUCTION = (
@@ -42,9 +47,20 @@ READ_INSTRUCTION = (
     "delimiters. Do not answer or solve it, and do not add anything that is not in the photo."
 )
 WORKING_READ_INSTRUCTION = (
-    "Transcribe the printed working in this photo, one working_line region for each line in top-to-bottom order. "
+    "Transcribe the handwritten or printed working in this photo, one working_line region for each line in "
+    "top-to-bottom order, each with a bbox around exactly that line. "
     "Keep exactly the student's symbols and line order, with mathematics in \\( \\) delimiters. "
     "Do not solve, repair or mark the working. Write [?] for unreadable symbols."
+)
+SKETCH_READ_INSTRUCTION = (
+    "This photo is the student's own hand-drawn sketch: a velocity-time (or distance-time) graph, or a free-body "
+    "diagram. Describe only what is drawn, one region per element, with kind diagram and a tight bbox each: every "
+    "axis (sketch_element kind axis, from its origin end to its arrow end, label as written), each straight part of "
+    "the plotted line (kind line_segment, from its left end to its right end), every force arrow (kind arrow, from "
+    "its tail to its head, label as written, such as F, W, R or friction), the object (kind object) and any loose "
+    "label (kind label). Points use the 0 to 1000 grid of the full image, x to the right and y down. Put the label "
+    "as written in text. Write [?] for anything you cannot read and give it a low confidence; never guess a label "
+    "or a direction, never correct the drawing and never say whether it is right."
 )
 Status = Literal["read", "rejected", "off", "notice_needed", "failed"]
 # The local privacy pass of INP-20: the image to send off the device (personal details masked), or None when the
@@ -65,6 +81,10 @@ class PhotoReading:
     photo: SafePhoto | None = None  # the made-safe photo: the only form that is stored
     reader: dict[str, object] | None = None
     egress: dict[str, object] | None = None
+    outlined: int = 0  # regions SAM 3.1 outlined on the photo (JM-D10)
+    reread: int = 0  # regions a sharper crop re-read changed
+    # With `outline_later`: SAM still at work on `regions` (in place); its result is (outlined, reread).
+    outlining: asyncio.Future[tuple[int, int]] | None = None
 
 
 class PhotoReader:
@@ -76,10 +96,17 @@ class PhotoReader:
         self.screen = screen
 
     async def read(
-        self, data: bytes, *, send_to_cloud: bool | None = None, structured: bool = False, purpose: str = "question"
+        self,
+        data: bytes,
+        *,
+        send_to_cloud: bool | None = None,
+        structured: bool = False,
+        purpose: str = "question",
+        outline_later: bool = False,
     ) -> PhotoReading:
         """Read one photo. `send_to_cloud` is the student's answer to this photo's pre-send notice: True accepted,
-        False declined ("Read it on this computer"), None not asked."""
+        False declined ("Read it on this computer"), None not asked. `outline_later`: SAM's outlines may arrive after
+        the reading, while the student confirms it (`PhotoReading.outlining`), unless a line needs its crop re-read."""
         try:
             photo = make_safe(data, self.settings)
         except PhotoRejectedError as error:
@@ -101,7 +128,9 @@ class PhotoReader:
         def message_for(candidate: Candidate) -> list[Message]:
             url = images["local" if candidate.locality == "local" else "cloud"]
             assert url is not None  # no call lets any other candidate through
-            instruction = WORKING_READ_INSTRUCTION if purpose == "working" else READ_INSTRUCTION
+            instruction = {"working": WORKING_READ_INSTRUCTION, "sketch": SKETCH_READ_INSTRUCTION}.get(
+                purpose, READ_INSTRUCTION
+            )
             if structured:
                 instruction += (
                     " Return regions in the requested schema, with normalized boxes, language, confidence and [?] "
@@ -140,7 +169,7 @@ class PhotoReader:
                         message_for(first),
                         allow=allowed,
                         prepare=prepare,
-                        output=reader_output() if structured else None,
+                        output=reader_output(purpose) if structured else None,
                         temperature=0,
                         effort="none",
                     )
@@ -169,7 +198,24 @@ class PhotoReader:
                         r"(?m)^\$([^$\n]*[=<>][^$\n]*)\$$", lambda match: "\\(" + match[1] + "\\)", region["text"]
                     )
                 if region.get("bbox") is not None:
-                    region["bbox"] = {key: float(value) / 1000 for key, value in region["bbox"].items()}
+                    region["bbox"] = _unit_box(region["bbox"])
+                element = region.get("sketch_element")
+                if isinstance(element, dict):
+                    for end in ("from", "to"):
+                        if isinstance(element.get(end), dict):
+                            element[end] = {k: min(float(v), 1000) / 1000 for k, v in element[end].items()}
+                    # What the student confirms is the engine's plain description of each part ("arrow labelled F"),
+                    # never the reader's own prose about the drawing.
+                    region["text"] = sketch_part(element)
+                    region["diagram_description"] = None
+        outlined = reread = 0
+        outlining = None
+        if content and left and outbound is not None:
+            work = self._sharpen(slot.candidates, outbound, content["regions"], purpose)
+            if outline_later and not any(uncertain(r) for r in content["regions"]):
+                outlining = asyncio.ensure_future(work)  # the regions it outlines are this reading's own
+            else:
+                outlined, reread = await work
 
         text = "\n".join(str(r["text"]) for r in content["regions"]) if content else result.turn.text.strip()
         return PhotoReading(
@@ -180,23 +226,85 @@ class PhotoReader:
             photo=photo,
             reader=reader,
             egress=egress,
+            outlined=outlined,
+            reread=reread,
+            outlining=outlining,
         )
+
+    async def _sharpen(self, candidates: list[Candidate], photo: SafePhoto, regions: list[dict[str, Any]],
+                       purpose: str) -> tuple[int, int]:  # fmt: skip
+        """SAM 3.1 outlines for the regions Spark read, then at most one re-read of uncertain regions' crops
+        (JM-D10). Either step failing leaves the regions as Spark read them: the read itself already succeeded."""
+        cloud = next((c for c in candidates if c.locality != "local"), None)
+        segment = getattr(self.router.provider_for(cloud), "segment", None) if cloud is not None else None
+        outlined = reread = 0
+        if segment is not None:
+            try:
+                outlined = await sharpen(segment, _data_url(photo), photo.width, photo.height, regions)
+            except Exception as error:  # a failed segmentation never fails the read
+                log.info("photo.segment_failed %s", type(error).__name__)
+        picked = [i for i, r in enumerate(regions) if r.get("outline") and uncertain(r)][:MAX_CROPS]
+        if picked and cloud is not None and purpose != "sketch":
+            crops = tuple(crop(photo.jpeg, regions[i]["bbox"]) for i in picked)
+            instruction = (f"Each of these {len(crops)} images is one line of a student's working, in order. "
+                           "Transcribe each line exactly as written, with mathematics in \\( \\) delimiters. Do not "
+                           "solve, repair or mark it. Write [?] for any symbol you cannot read.")  # fmt: skip
+            schema = {"type": "object", "additionalProperties": False, "required": ["lines"],
+                      "properties": {"lines": {"type": "array", "maxItems": MAX_CROPS,
+                                               "items": {"type": "string", "maxLength": 4000}}}}  # fmt: skip
+            try:
+                with job_scope(new_id("job")):
+                    result = await self.router.complete(
+                        "vision", [Message("user", instruction, images=crops)],
+                        allow=lambda c: c.locality != "local", output=("PhotoLines", schema,
+                                                                       Draft202012Validator(schema)),
+                        temperature=0, effort="none",
+                    )  # fmt: skip
+                if result.structured:
+                    reread = merge_rereads(regions, picked, list(result.structured.get("lines") or []))
+            except RouterError as error:
+                log.info("photo.reread_failed %s", error.reason)
+        return outlined, reread
 
 
 def _data_url(photo: SafePhoto) -> str:
     return "data:image/jpeg;base64," + base64.b64encode(photo.jpeg).decode("ascii")
 
 
-def reader_output() -> tuple[str, dict[str, Any], Draft202012Validator]:
+def sketch_part(element: dict[str, Any]) -> str:
+    """A read sketch element in a few words, as the student confirms it: "arrow labelled F", "axis", "[?]"."""
+    kind = str(element.get("kind") or "part").replace("_", " ")
+    label = str(element.get("label") or "").strip()
+    return f"{kind} labelled {label}" if label else kind
+
+
+def _unit_box(bbox: dict[str, Any]) -> dict[str, float]:
+    """Spark's 0..1000 box (values can reach 1001) as 0..1 geometry that stays inside the image."""
+    x, y = (min(float(bbox[k]), 1000) / 1000 for k in ("x", "y"))
+    w, h = min(float(bbox["w"]) / 1000, 1 - x), min(float(bbox["h"]) / 1000, 1 - y)
+    return {"x": x, "y": y, "w": w, "h": h}
+
+
+def reader_output(purpose: str = "question") -> tuple[str, dict[str, Any], Draft202012Validator]:
     canonical = copy.deepcopy(document("input/captured-question"))
-    # The reader supplies geometry; the host supplies owned attachment ids and canonical region ids/order.
+    # The reader supplies geometry; the host supplies owned attachment ids and canonical region ids/order. Outlines
+    # come from SAM 3.1, never from the reader; only a sketch's reader describes its elements.
     region = canonical["$defs"]["region"]
+    del region["properties"]["outline"]
+    if purpose == "sketch":
+        region["required"] += ["sketch_element"]
+        element = region["properties"]["sketch_element"]["anyOf"][1]
+        for end in ("from", "to"):
+            for coordinate in element["properties"][end]["anyOf"][1]["properties"].values():
+                coordinate["maximum"] = 1001
+    else:
+        del region["properties"]["sketch_element"]
     region["required"] += ["bbox", "number_label", "diagram_description", "table"]
     bbox = region["properties"]["bbox"]["anyOf"][1]
     bbox["required"].remove("image_id")
     del bbox["properties"]["image_id"]
     for coordinate in bbox["properties"].values():
-        coordinate["maximum"] = 1000
+        coordinate["maximum"] = 1001  # Spark's grid can reach 1001 (dev.meta.ai/docs, image understanding)
     schema = {
         "type": "object",
         "additionalProperties": False,

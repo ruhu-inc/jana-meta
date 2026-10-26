@@ -473,13 +473,14 @@ class Engine(Coordination, Offers, Predictions):
 
     async def read_photo(self, data: bytes, *, send_to_cloud: bool | None = None,
                          screen: Screen | None = None, structured: bool = False,
-                         purpose: str = "question") -> PhotoReading:  # fmt: skip
+                         purpose: str = "question", outline_later: bool = False) -> PhotoReading:  # fmt: skip
         """A photo of a question read through the vision slot (MDL-23): made safe first, read locally unless the
         student accepted this photo's pre-send notice and the local privacy pass (`screen`, INP-20) gave the image to
         send. The capture flow (INP-30) calls this; the text is shown back for confirmation before any turn uses it."""
         reader = PhotoReader(self.deps.router, self.deps.settings, hardware_class=self.state.hardware_class,
                              screen=screen)  # fmt: skip
-        return await reader.read(data, send_to_cloud=send_to_cloud, structured=structured, purpose=purpose)
+        return await reader.read(data, send_to_cloud=send_to_cloud, structured=structured, purpose=purpose,
+                                 outline_later=outline_later)
 
     async def _skill(self, args: dict[str, Any], context: Any) -> Any:
         """The `skill` tool for the calling role; loading grants nothing (SKL-23)."""

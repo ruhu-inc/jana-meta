@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/input/captured-question.schema.json sha256 8b28620eef6c729c4e7386609fdb6ac7d953843ec2a205f07dc89ac3872dbd0c; do not edit",
+ "$comment": "GENERATED from contracts/input/captured-question.schema.json sha256 87abbc25ed696fc7dbbe1f07f88ca86150a24cbe06bb87a5efc54d22a6ac2a6c; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/input/captured-question",
  "title": "CapturedQuestion",
@@ -67,7 +67,8 @@
    "enum": [
     "question",
     "working",
-    "answer"
+    "answer",
+    "sketch"
    ]
   },
   "locale": {
@@ -686,6 +687,132 @@
      "enum": [
       "ltr",
       "rtl"
+     ]
+    },
+    "outline": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "array",
+       "minItems": 3,
+       "maxItems": 64,
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "x",
+         "y"
+        ],
+        "properties": {
+         "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+         },
+         "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+         }
+        }
+       }
+      }
+     ]
+    },
+    "sketch_element": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "kind",
+        "label",
+        "from",
+        "to"
+       ],
+       "properties": {
+        "kind": {
+         "enum": [
+          "arrow",
+          "line_segment",
+          "axis",
+          "point",
+          "label",
+          "object"
+         ]
+        },
+        "label": {
+         "anyOf": [
+          {
+           "type": "string",
+           "maxLength": 40
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "from": {
+         "anyOf": [
+          {
+           "type": "null"
+          },
+          {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "x",
+            "y"
+           ],
+           "properties": {
+            "x": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "y": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            }
+           }
+          }
+         ]
+        },
+        "to": {
+         "anyOf": [
+          {
+           "type": "null"
+          },
+          {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "x",
+            "y"
+           ],
+           "properties": {
+            "x": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "y": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            }
+           }
+          }
+         ]
+        }
+       }
+      }
      ]
     }
    }

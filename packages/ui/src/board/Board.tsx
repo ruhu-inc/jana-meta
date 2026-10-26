@@ -11,7 +11,7 @@
 // cue fired by heard playback, VOC-51) and the student's selection (a dashed outline). They can show together, and the
 // screen reader names each by kind. The pointer clears with its cue (interruption, flush, session change, a revised or
 // removed line); the selection clears when its line is revised or removed.
-import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { CLIENT_KEYS, boardLineLatex, selectBoardLine, type AnnotationRec, type StepRec } from "@jana/client-core";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
@@ -27,6 +27,7 @@ import { Pen } from "./Pen.js";
 import { TermCarry } from "./TermCarry.js";
 import { LineAnnotation } from "./Annotation.js";
 import { WorkingEntry, type WorkingPhoto } from "./WorkingEntry.js";
+import { PhotoRegions } from "./PhotoRegions.js";
 
 /** The error categories of TABLE VER-06a, each with its "look here" words (`board.error.<category>`). */
 const ERROR_CATEGORIES: readonly string[] = ["sign", "arithmetic", "dropped_term", "illegal_operation", "units", "copy", "other"];
@@ -304,6 +305,13 @@ export function Board({ sessionId, onClose }: { sessionId: string; onClose?: () 
   const pointer = useVoicePointer();
   const pointed = pointer?.target.kind === "step" ? pointer.target.step_id : null;
   const pointedNumber = pointed === null ? 0 : stepIds.indexOf(pointed) + 1;
+  // Places on the student's own photo (JM-D10): the lit line or sketch part, and a spoken cue's photo region.
+  const photoLit = useMemo(() => {
+    const live = highlight !== null && (highlight.ttl_ms === null || Date.now() - highlight.ts < highlight.ttl_ms) ? highlight.photo_regions ?? NONE : NONE;
+    const cued = pointer?.target.kind === "photo_region" ? [`${pointer.target.capture_id}:${pointer.target.region_id}`] : NONE;
+    return [...live, ...cued];
+  }, [highlight, pointer]);
+  const photoCapture = photoLit[0]?.split(":")[0] ?? null;
   // The student's selection (UXS-63): the line and the maths it had, so a revision or removal clears it.
   const [selection, setSelection] = useState<{ step_id: string; latex: string } | null>(null);
   const chosen = selection !== null && steps.some((s) => s.step_id === selection.step_id && s.latex === selection.latex) ? selection.step_id : null;
@@ -360,6 +368,7 @@ export function Board({ sessionId, onClose }: { sessionId: string; onClose?: () 
       {steps.length > 1 && <BoardToolbar stepIds={stepIds} current={current} onSelect={select} />}
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pt-2 pb-6">
         <Knowns knowns={knowns} unknowns={unknowns} />
+        {photoCapture !== null && <PhotoRegions sessionId={sessionId} captureId={photoCapture} lit={photoLit} />}
         {steps.length === 0 ? (
           <EmptyState message={t("board.empty")} />
         ) : (

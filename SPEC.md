@@ -315,9 +315,12 @@ took **21–25 s** ("Solve 7x − 3 = 18", the car-acceleration question). Per c
 tokens at low), Solver tool call 1–4 s, Solver plan **7–14 s** (1,400–3,600 reasoning tokens at high, sometimes a
 second round), Coach ~4 s; Coach alone at `minimal` 3.8 s median versus 6.0 s at `low`. The 4 s voice target needs
 the levers above, plus Solver effort below `high` and running the Diagnoser and Solver less often, before voice work
-(W4) can meet §12. Day-1 checks: tools 10/10, streaming usage, image input pass; bare-prompt Coach JSON failed only
-the schema's conditional rules (if/then is not enforced by constrained decoding), which the engine's own prompt and
-retry handle.
+(W4) can meet §12. Photo marking (2026-10-26, three handwritten lines, Spark + SAM through the gateway): local privacy
+pass 0.4 s; Spark's structured read 2.1–6.3 s; SAM 2.2–4.2 s, run while the student confirms the reading; upload to a
+confirmable reading 4.6–6.7 s; the wrong line lit 0.04 s after confirming and the tutor's question 2.7–3.8 s after. A
+photographed free-body sketch: read and outlined in 13–15 s (more elements), the sketch turn 2.5–3.6 s. Day-1 checks:
+tools 10/10, streaming usage, image input pass; bare-prompt Coach JSON failed only the schema's conditional rules
+(if/then is not enforced by constrained decoding), which the engine's own prompt and retry handle.
 
 ## 13. Workstreams and plan
 
@@ -397,7 +400,17 @@ and the voice and vision clients must also handle.
   SHA-256 checksums.
 - **Voice Transcribe**: 25 languages; limits 256 concurrent streams and 16,000 per hour; rate limits close the socket
   with 1013.
-- **Not documented, still (verify) with a real key**: the latency targets in §12; SAM image size limits and latency;
+- **SAM 3.1** (dev.meta.ai/docs/sam, and real calls on 2026-10-26): box and point prompts are not JSON fields but
+  tokens in the `input_text` (`<0f>1<|box;x1=..;y1=..;x2=..;y2=..;w=W;h=H|>`, integer pixels, `x2`/`y2` inclusive,
+  every `w`/`h` the image's size); `metadata` values are strings (`"include_confidence": "true"`). Each object's mask
+  raster covers exactly its box and is range-coded in Meta's own base85 alphabet (not RFC 1924 or Ascii85), so it is
+  decoded with Meta's `meta-sam-parser` (SAM License: commercial use allowed). The reply's usage has zero tokens and
+  an undocumented `images_processed: 1`. Measured latency: 2.2–4.2 s per image for 2–8 box prompts on a 1,400 px
+  photo. No SAM-specific image size limit is documented (only the 50 MB inline-media limit).
+- **Recursive tool schemas are refused**: Spark answers 400 "Recursive JSON schemas are not currently supported"
+  (`param: parameters`) for a tool whose parameters refer to themselves; `phys_circuit` does (`group` → `members`),
+  so a physics Solver call that offers it fails (found 2026-10-26; not yet fixed).
+- **Not documented, still (verify) with a real key**: the latency targets in §12; SAM image size limits;
   whether tool history is accepted when `tools` is omitted; Spark's maximum output tokens; JSON Schema keywords
   such as `minLength`, `maxItems` and `pattern` in strict mode; free credits beyond the event's $150.
 

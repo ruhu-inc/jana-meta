@@ -7,6 +7,8 @@ Device credentials and tokens (SEC-21):
   POST /admin/v1/credentials/{credential_id}/revoke licence portal, admin bearer secret -> 204
 Model calls (ARC-12, MDL-25, MDL-26, SEC-20, OBS-22):
   POST /v1/chat/completions                         OpenAI chat-completions body, model "<slot>/<alias>"
+Photo segmentation (JM-D10, `cloud_gateway.segment`):
+  POST /v1/vision/segment                           a screened photo and boxes, points or one concept -> masks
 Cloud voice (VOC-28, `cloud_gateway.voice`):
   WS /v1/voice/realtime                             the Realtime wire subset (VOC-25) plus the device voice tunnel
 Probes (ARC-08, OBS-22):
@@ -427,6 +429,7 @@ def create_app(
                 await connection.close()
             await app.state.voice.stack.aclose()
             await app.state.podcast_speech.client.aclose()
+            await app.state.segment.sam.aclose()
             await gw.providers.aclose()
             gw.store.close()
 
@@ -444,6 +447,10 @@ def create_app(
     from cloud_gateway.ask import add_routes as ask_routes
 
     app.state.ask = ask_routes(app, gw)  # Ask anything (STU-20)
+    from cloud_gateway.segment import add_routes as segment_routes
+
+    # SAM 3.1 photo segmentation (JM-D10): its own HTTP client, made like a provider's.
+    app.state.segment = segment_routes(app, gw, client_factory("sam", config.sam) if config.sam.enabled else None)
 
     app.add_middleware(_VersionHeader, budget_enabled=gw.inference_budget is not None)
 

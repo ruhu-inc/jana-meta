@@ -66,7 +66,8 @@
    "enum": [
     "question",
     "working",
-    "answer"
+    "answer",
+    "sketch"
    ]
   },
   "locale": {
@@ -685,6 +686,134 @@
      "enum": [
       "ltr",
       "rtl"
+     ]
+    },
+    "outline": {
+     "description": "The region's exact outline on the same image as bbox (JM-D10: SAM 3.1 from the reader's box), as a closed polygon in 0..1 image coordinates; null when no outline was made.",
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "array",
+       "minItems": 3,
+       "maxItems": 64,
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "x",
+         "y"
+        ],
+        "properties": {
+         "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+         },
+         "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+         }
+        }
+       }
+      }
+     ]
+    },
+    "sketch_element": {
+     "description": "For a photo of the student's own sketch (purpose sketch): what this region is, as read. Directions use the image's own axes (x right, y down); the engine compares them with tool-checked values and never trusts them further.",
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "kind",
+        "label",
+        "from",
+        "to"
+       ],
+       "properties": {
+        "kind": {
+         "enum": [
+          "arrow",
+          "line_segment",
+          "axis",
+          "point",
+          "label",
+          "object"
+         ]
+        },
+        "label": {
+         "anyOf": [
+          {
+           "type": "string",
+           "maxLength": 40
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "from": {
+         "anyOf": [
+          {
+           "type": "null"
+          },
+          {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "x",
+            "y"
+           ],
+           "properties": {
+            "x": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "y": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            }
+           }
+          }
+         ]
+        },
+        "to": {
+         "anyOf": [
+          {
+           "type": "null"
+          },
+          {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "x",
+            "y"
+           ],
+           "properties": {
+            "x": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "y": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            }
+           }
+          }
+         ]
+        }
+       }
+      }
      ]
     }
    }
