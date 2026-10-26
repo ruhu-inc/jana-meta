@@ -214,6 +214,16 @@ offline default. English only (JM-D18): no other input language is offered.
 | Model pack | Glimmer ships a vision projector, `mmproj-Muse-Glimmer-30B-Q4_K_M.gguf` (1.4 GB): include it as `vision_projector` so offline photos work. |
 | Hardware class | The high class needs 25 tokens/s (`keys.py` ~477). Meta publishes no laptop tokens/s or RAM figures for Glimmer, so measure on the demo laptop on day 1–3; if it benchmarks below, the class rule (not just the model list) must change or Glimmer is excluded. |
 
+**Measured 2026-10-26** on an Apple M4 Max (128 GB, llama.cpp build 11429, Q4_K_M with the vision projector, 16K
+context; weights verified against Hugging Face's SHA-256): generation 27 tokens/s on a short prompt and 24 tokens/s
+with 3K tokens of context; prompt reading ~230 tokens/s. One Coach-sized call with a 3K-token prompt took ~36 s, most
+of it reasoning (~580 tokens at `reasoning_strength: low`). The replies were properly guiding on a short prompt.
+`--reasoning-budget 96` had no visible effect **(verify the template's thinking tags with llama.cpp)**. A full engine
+turn (4–5 calls) would take minutes even on this machine, and a 32 GB laptop with less memory bandwidth will be slower
+still, so the power-cut demo needs a lean offline path: fewer calls (the engine's own deterministic steps where they
+exist), short prompts (the low-class lean prompts), capped reasoning, and streaming the Coach; and the demo laptop's
+own numbers before the class gate is set.
+
 Power cut: when the gateway is unreachable the router falls to `local:muse-glimmer-30b` and the offline speech pack
 (§6.3, §6.4); the UI shows "Working offline".
 
