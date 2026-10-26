@@ -214,6 +214,20 @@ class StudyCloud:
         self.meter(conn, output)
         return {**output, "request_id": original_jid}
 
+    async def concept_topic(self, conn: Any, request_id: str, topic: str) -> dict[str, Any]:
+        """Muse Spark's no-source concept map of a typed topic (`ConceptTopicDraft`): consent, subscription and the
+        Study allowance as any Study request; the topic is the only learner text sent."""
+        self.guard(conn)
+        body = {"request_id": request_id, "topic": topic, "output_locale": "en"}
+        profile = conn.execute("SELECT display_name,profile_id FROM profile").fetchone()
+        if Redactor(profile or ()).blocks(body):
+            raise StudyCloudError("safety_blocked")
+        output = await self.send(conn, "POST", "/v1/study/concept-topic", body)
+        if errors("study/workspace#/$defs/ConceptTopicDraft", output) or output["request_id"] != request_id:
+            raise StudyCloudError("insufficient_evidence")
+        self.meter(conn, output)
+        return output
+
     async def extract(
         self, conn: Any, jid: str, request: dict[str, Any], source: dict[str, Any], data: bytes
     ) -> list[dict[str, Any]]:

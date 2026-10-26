@@ -12425,6 +12425,95 @@
    "owner": "API-44"
   },
   {
+   "method": "PATCH",
+   "path": "/v1/study/aids/{aid_id}/concept-map",
+   "request": "https://jana.dev/contracts/study/workspace#/$defs/ConceptMapEdit",
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/Aid",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "validation_failed",
+    "request_conflict",
+    "feature_disabled",
+    "tutor_locked"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/study/concept-maps",
+   "request": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicRequest",
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicMap",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "validation_failed",
+    "request_conflict",
+    "feature_disabled",
+    "tutor_locked"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/study/concept-maps",
+   "request": null,
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicMapList",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "feature_disabled"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/study/concept-maps/{map_id}",
+   "request": null,
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicMap",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "feature_disabled"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/study/concept-maps/{map_id}",
+   "request": "https://jana.dev/contracts/study/workspace#/$defs/ConceptMapEdit",
+   "response": "https://jana.dev/contracts/study/workspace#/$defs/ConceptTopicMap",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "validation_failed",
+    "request_conflict",
+    "feature_disabled",
+    "tutor_locked"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
    "method": "GET",
    "path": "/v1/study/quizzes/{quiz_id}/saved-result",
    "request": null,

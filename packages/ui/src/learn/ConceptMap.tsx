@@ -25,6 +25,7 @@ export interface ConceptDrawNode {
   asked: number;
   mistakes: number;
   next: number;
+  badge?: string;
 }
 
 export interface ConceptDrawEdge {
@@ -57,6 +58,10 @@ type Zoom = keyof typeof ZOOMS;
 
 const RendererContext = createContext<ConceptMapRenderer | null>(null);
 export const ConceptMapRendererProvider = RendererContext.Provider;
+/** The app's drawing of a concept map, or null (the map then shows as its table). */
+export function useConceptRenderer(): ConceptMapRenderer | null {
+  return useContext(RendererContext);
+}
 
 export interface ConceptActions {
   /** "Ask Jana about this" on a skill. */

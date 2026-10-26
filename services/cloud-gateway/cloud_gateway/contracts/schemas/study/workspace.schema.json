@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 1fa823310db0716b683c9a7451e545e814e0244b33cdb09ab2ea7fffc2227a6f; do not edit",
+ "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 1a1c742582c0f61539569231757274e620e18d7e1802a6b56eb22859e8b5e2a6; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/study/workspace",
  "$defs": {
@@ -691,7 +691,8 @@
     "quiz",
     "audio_overview",
     "lesson_plan",
-    "chapters"
+    "chapters",
+    "concept_map"
    ]
   },
   "JobKind": {
@@ -704,7 +705,8 @@
     "quiz",
     "audio_overview",
     "lesson_plan",
-    "chapters"
+    "chapters",
+    "concept_map"
    ]
   },
   "JobState": {
@@ -825,7 +827,8 @@
          "flashcards",
          "quiz",
          "audio_overview",
-         "chapters"
+         "chapters",
+         "concept_map"
         ]
        }
       }
@@ -848,7 +851,8 @@
          "summary",
          "audio_overview",
          "lesson_plan",
-         "chapters"
+         "chapters",
+         "concept_map"
         ]
        }
       }
@@ -912,7 +916,8 @@
         "enum": [
          "extract",
          "chat",
-         "chapters"
+         "chapters",
+         "concept_map"
         ]
        }
       }
@@ -1117,6 +1122,9 @@
     },
     "settings": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/GenerateSettings"
+    },
+    "concept_map": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/StudyConceptMap"
     }
    },
    "required": [
@@ -1156,6 +1164,11 @@
          "required": [
           "chapters"
          ]
+        },
+        {
+         "required": [
+          "concept_map"
+         ]
         }
        ]
       }
@@ -1186,6 +1199,11 @@
         {
          "required": [
           "chapters"
+         ]
+        },
+        {
+         "required": [
+          "concept_map"
          ]
         }
        ]
@@ -1223,6 +1241,11 @@
          "required": [
           "chapters"
          ]
+        },
+        {
+         "required": [
+          "concept_map"
+         ]
         }
        ]
       }
@@ -1253,6 +1276,47 @@
         {
          "required": [
           "quiz_id"
+         ]
+        },
+        {
+         "required": [
+          "concept_map"
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "kind": {
+        "const": "concept_map"
+       }
+      },
+      "required": [
+       "kind"
+      ]
+     },
+     "then": {
+      "required": [
+       "concept_map"
+      ],
+      "not": {
+       "anyOf": [
+        {
+         "required": [
+          "deck_id"
+         ]
+        },
+        {
+         "required": [
+          "quiz_id"
+         ]
+        },
+        {
+         "required": [
+          "chapters"
          ]
         }
        ]
@@ -2020,6 +2084,9 @@
      },
      "minItems": 1,
      "maxItems": 60
+    },
+    "concept_map": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/DraftConceptMap"
     }
    },
    "required": [
@@ -2054,6 +2121,11 @@
          "required": [
           "chapters"
          ]
+        },
+        {
+         "required": [
+          "concept_map"
+         ]
         }
        ]
       }
@@ -2084,6 +2156,11 @@
         {
          "required": [
           "chapters"
+         ]
+        },
+        {
+         "required": [
+          "concept_map"
          ]
         }
        ]
@@ -2121,6 +2198,11 @@
          "required": [
           "chapters"
          ]
+        },
+        {
+         "required": [
+          "concept_map"
+         ]
         }
        ]
       }
@@ -2151,6 +2233,47 @@
         {
          "required": [
           "flashcards"
+         ]
+        },
+        {
+         "required": [
+          "concept_map"
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "kind": {
+        "const": "concept_map"
+       }
+      },
+      "required": [
+       "kind"
+      ]
+     },
+     "then": {
+      "required": [
+       "concept_map"
+      ],
+      "not": {
+       "anyOf": [
+        {
+         "required": [
+          "quiz"
+         ]
+        },
+        {
+         "required": [
+          "flashcards"
+         ]
+        },
+        {
+         "required": [
+          "chapters"
          ]
         }
        ]
@@ -3310,6 +3433,582 @@
     "hard",
     "good",
     "easy"
+   ]
+  },
+  "ConceptRelationType": {
+   "enum": [
+    "builds_on",
+    "part_of",
+    "causes",
+    "example_of",
+    "related_to",
+    "contrasts_with"
+   ]
+  },
+  "DraftConcept": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "concept_id": {
+     "type": "string",
+     "pattern": "^c[0-9]{1,2}$"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 80
+    },
+    "summary": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Claim"
+    }
+   },
+   "required": [
+    "concept_id",
+    "name",
+    "summary"
+   ]
+  },
+  "DraftRelation": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "from": {
+     "type": "string",
+     "pattern": "^c[0-9]{1,2}$"
+    },
+    "to": {
+     "type": "string",
+     "pattern": "^c[0-9]{1,2}$"
+    },
+    "type": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/ConceptRelationType"
+    },
+    "claim": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Claim"
+    }
+   },
+   "required": [
+    "from",
+    "to",
+    "type",
+    "claim"
+   ]
+  },
+  "DraftConceptMap": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "concepts": {
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/DraftConcept"
+     },
+     "minItems": 1,
+     "maxItems": 24
+    },
+    "relations": {
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/DraftRelation"
+     },
+     "minItems": 0,
+     "maxItems": 48
+    }
+   },
+   "required": [
+    "concepts",
+    "relations"
+   ]
+  },
+  "ConceptAnchor": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "statement": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 400
+    },
+    "how": {
+     "enum": [
+      "glossary",
+      "statement",
+      "topic"
+     ]
+    }
+   },
+   "required": [
+    "kc_id",
+    "statement",
+    "how"
+   ]
+  },
+  "StudyConcept": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "concept_id": {
+     "type": "string",
+     "pattern": "^[a-z][0-9]{1,3}$"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 80
+    },
+    "summary": {
+     "anyOf": [
+      {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Claim"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "note": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 400
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "origin": {
+     "enum": [
+      "document",
+      "learner",
+      "pack",
+      "model"
+     ]
+    },
+    "anchor": {
+     "anyOf": [
+      {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/ConceptAnchor"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "merged_from": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "pattern": "^[a-z][0-9]{1,3}$"
+     },
+     "maxItems": 24
+    }
+   },
+   "required": [
+    "concept_id",
+    "name",
+    "summary",
+    "note",
+    "origin",
+    "anchor"
+   ]
+  },
+  "StudyRelation": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "from": {
+     "type": "string",
+     "pattern": "^[a-z][0-9]{1,3}$"
+    },
+    "to": {
+     "type": "string",
+     "pattern": "^[a-z][0-9]{1,3}$"
+    },
+    "type": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/ConceptRelationType"
+    },
+    "claim": {
+     "anyOf": [
+      {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Claim"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "origin": {
+     "enum": [
+      "document",
+      "learner",
+      "pack",
+      "model"
+     ]
+    }
+   },
+   "required": [
+    "from",
+    "to",
+    "type",
+    "claim",
+    "origin"
+   ]
+  },
+  "StudyConceptMap": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "concepts": {
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/StudyConcept"
+     },
+     "minItems": 0,
+     "maxItems": 60
+    },
+    "relations": {
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/StudyRelation"
+     },
+     "minItems": 0,
+     "maxItems": 120
+    },
+    "edited": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "concepts",
+    "relations",
+    "edited"
+   ]
+  },
+  "ConceptEditOp": {
+   "anyOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "op": {
+       "const": "rename"
+      },
+      "concept_id": {
+       "type": "string",
+       "pattern": "^[a-z][0-9]{1,3}$"
+      },
+      "name": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 80
+      }
+     },
+     "required": [
+      "op",
+      "concept_id",
+      "name"
+     ]
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "op": {
+       "const": "remove"
+      },
+      "concept_id": {
+       "type": "string",
+       "pattern": "^[a-z][0-9]{1,3}$"
+      }
+     },
+     "required": [
+      "op",
+      "concept_id"
+     ]
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "op": {
+       "const": "merge"
+      },
+      "concept_ids": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "pattern": "^[a-z][0-9]{1,3}$"
+       },
+       "minItems": 2,
+       "maxItems": 6,
+       "uniqueItems": true
+      },
+      "name": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 80
+      }
+     },
+     "required": [
+      "op",
+      "concept_ids",
+      "name"
+     ]
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "op": {
+       "const": "add"
+      },
+      "name": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 80
+      },
+      "link_to": {
+       "type": "string",
+       "pattern": "^[a-z][0-9]{1,3}$"
+      }
+     },
+     "required": [
+      "op",
+      "name"
+     ]
+    }
+   ]
+  },
+  "ConceptMapEdit": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "ops": {
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/ConceptEditOp"
+     },
+     "minItems": 1,
+     "maxItems": 20
+    }
+   },
+   "required": [
+    "ops"
+   ]
+  },
+  "ConceptTopicRequest": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "topic": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "execution": {
+     "enum": [
+      "local",
+      "prefer_cloud"
+     ]
+    }
+   },
+   "required": [
+    "topic"
+   ]
+  },
+  "ConceptTopicMap": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "map_id": {
+     "type": "string",
+     "pattern": "^ctm_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "topic": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "origin": {
+     "enum": [
+      "pack",
+      "model"
+     ]
+    },
+    "node_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 96
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "concept_map": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/StudyConceptMap"
+    },
+    "created_at": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "map_id",
+    "topic",
+    "origin",
+    "node_id",
+    "concept_map",
+    "created_at"
+   ]
+  },
+  "ConceptTopicMapList": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "maps": {
+     "type": "array",
+     "maxItems": 200,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "map_id": {
+        "type": "string",
+        "pattern": "^ctm_[0-9A-HJKMNP-TV-Z]{26}$"
+       },
+       "topic": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+       },
+       "origin": {
+        "enum": [
+         "pack",
+         "model"
+        ]
+       },
+       "created_at": {
+        "type": "integer",
+        "minimum": 0
+       }
+      },
+      "required": [
+       "map_id",
+       "topic",
+       "origin",
+       "created_at"
+      ]
+     }
+    }
+   },
+   "required": [
+    "maps"
+   ]
+  },
+  "ConceptTopicProcessing": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "request_id": {
+     "type": "string",
+     "pattern": "^req_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "topic": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "output_locale": {
+     "type": "string",
+     "maxLength": 35
+    }
+   },
+   "required": [
+    "request_id",
+    "topic"
+   ]
+  },
+  "ConceptTopicDraft": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "request_id": {
+     "type": "string",
+     "pattern": "^req_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "concepts": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 16,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "concept_id": {
+        "type": "string",
+        "pattern": "^c[0-9]{1,2}$"
+       },
+       "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80
+       },
+       "note": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+       }
+      },
+      "required": [
+       "concept_id",
+       "name",
+       "note"
+      ]
+     }
+    },
+    "relations": {
+     "type": "array",
+     "minItems": 0,
+     "maxItems": 30,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+       "from": {
+        "type": "string",
+        "pattern": "^c[0-9]{1,2}$"
+       },
+       "to": {
+        "type": "string",
+        "pattern": "^c[0-9]{1,2}$"
+       },
+       "type": {
+        "$ref": "https://jana.dev/contracts/study/workspace#/$defs/ConceptRelationType"
+       }
+      },
+      "required": [
+       "from",
+       "to",
+       "type"
+      ]
+     }
+    },
+    "usage": {
+     "type": "object"
+    }
+   },
+   "required": [
+    "request_id",
+    "concepts",
+    "relations"
    ]
   }
  }

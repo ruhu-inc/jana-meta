@@ -22,6 +22,7 @@ from agent_core.contracts import errors
 from agent_core.engine import pedagogy
 from agent_core.engine.events import new_id
 from agent_core.engine.safety import LexiconClassifier, OutputCritic, redact_personal
+from agent_core.engine import study_concepts
 from agent_core.engine.study_topics import material_topics
 from agent_core.learner.fsrs import Card, scheduler_of
 from agent_core.learner.mastery import MasteryParams
@@ -1250,7 +1251,8 @@ class StudyDesk:
                     if loc is None or not chapter["start_ms"] <= loc["start_ms"] < chapter["end_ms"]:
                         raise StudyError("insufficient_evidence")
 
-    def commit_aid(self, job: dict[str, Any], output: dict[str, Any], supported: list[bool]) -> dict[str, Any]:
+    def commit_aid(self, job: dict[str, Any], output: dict[str, Any], supported: list[bool],
+                   content: Any = None) -> dict[str, Any]:  # fmt: skip
         checked("ProcessingResponse", output)
         if output["request_id"] != job["job_id"] or output["kind"] != job["kind"]:
             raise StudyError("insufficient_evidence")
@@ -1259,12 +1261,14 @@ class StudyDesk:
         cards = output.get("flashcards", [])
         quiz = output.get("quiz", {"items": [], "keys": []})
         chapters = output.get("chapters", [])
+        drafted = output.get("concept_map")
         all_claims = [
             *claims,
             *(v[k] for v in cards for k in ("front", "back")),
             *(i["stem"] for i in quiz["items"]),
             *(k["explanation"] for k in quiz["keys"]),
             *(s for c in chapters for s in c["summary"]),
+            *(study_concepts.draft_claims(drafted) if drafted else []),
         ]
         for claim in all_claims:
             if OutputCritic().check(claim["text"], "low") is not None:
@@ -1272,6 +1276,9 @@ class StudyDesk:
             self.citation(claim, job["sources"])
         for chapter in chapters:
             if OutputCritic().check(chapter["title"], "low") is not None or redact_personal(chapter["title"])[1]:
+                raise StudyError("insufficient_evidence")
+        for concept in (drafted or {}).get("concepts", []):
+            if OutputCritic().check(concept["name"], "low") is not None or redact_personal(concept["name"])[1]:
                 raise StudyError("insufficient_evidence")
         request = self.one("SELECT checkpoint FROM study_jobs WHERE job_id=?", (job["job_id"],))["request"]
         settings = request.get("settings", {})
@@ -1303,6 +1310,9 @@ class StudyDesk:
             aid["settings"] = settings
         if chapters:
             aid["chapters"] = chapters
+        if drafted:
+            # Anchored to the curated backbone by the pack's own records; the wording stays the document's.
+            aid["concept_map"] = study_concepts.document_map(drafted, content)
         if cards:
             aid["deck_id"] = new_id("dek")
         if quiz["items"]:
@@ -2019,6 +2029,8 @@ class StudyQueue:
         if not batches or len(batches) > 128:
             raise StudyError("source_too_large")
         jid = job["job_id"]
+        if request["kind"] == "concept_map" and request["execution"] != "prefer_cloud":
+            raise StudyError("model_unavailable")  # concept maps are drafted and verified by Muse Spark only
         checkpoint = desk.one("SELECT checkpoint FROM study_jobs WHERE job_id=?", (jid,))
         saved = checkpoint.get("batches", [])
         # Chat is one response to one learner question, not independent answers concatenated
@@ -2106,6 +2118,7 @@ class StudyQueue:
                     *(v[k] for v in output.get("flashcards", []) for k in ("front", "back")),
                     *(v["stem"] for v in output.get("quiz", {}).get("items", [])),
                     *(v["explanation"] for v in output.get("quiz", {}).get("keys", [])),
+                    *(study_concepts.draft_claims(output["concept_map"]) if "concept_map" in output else []),
                 ]:
                     desk.citation(claim, job["sources"])
                 saved.append({"input_digest": sha, "output": output})
@@ -2197,6 +2210,10 @@ class StudyQueue:
                             return [item for _, _, item in sorted(chosen, key=lambda x: (x[0], x[1]))]
             return [item for _, _, item in sorted(chosen, key=lambda x: (x[0], x[1]))]
 
+        if request["kind"] == "concept_map":
+            # One map from every verified section: concepts by name, relations re-pointed (study_concepts).
+            combined["concept_map"] = study_concepts.merge_drafts([o["concept_map"] for o in outputs])
+            combined["claims"] = study_concepts.draft_claims(combined["concept_map"])[:200]
         if request["kind"] == "chapters":
             combined["chapters"] = [c for output in outputs for c in output["chapters"]]
             if len(combined["chapters"]) > 60:
@@ -2258,7 +2275,7 @@ class StudyQueue:
             + len(combined.get("flashcards", []))
             + len(combined.get("quiz", {}).get("items", []))
         )
-        desk.commit_aid(job, combined, [True] * groups)
+        desk.commit_aid(job, combined, [True] * groups, self.content() if self.content is not None else None)
         desk.conn.execute("UPDATE study_jobs SET checkpoint=json_remove(checkpoint,'$.batches') WHERE job_id=?", (jid,))
 
     async def run(self, desk: StudyDesk, jid: str) -> None:

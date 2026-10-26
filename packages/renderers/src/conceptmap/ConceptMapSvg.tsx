@@ -25,6 +25,8 @@ export interface DrawNode {
   mistakes: number;
   /** Ranked in "what next" (its place from 1), or 0. */
   next: number;
+  /** A badge line of its own (a Study concept's "Matches a syllabus skill"), in place of the learner's badges. */
+  badge?: string;
 }
 
 export interface DrawEdge {
@@ -46,6 +48,11 @@ const LOOK: Record<string, [string, string]> = {
   mastered: ["var(--color-mastery-secure)", "var(--color-mastery-secure-ink)"],
   needs_review: ["var(--color-mastery-refresh)", "var(--color-mastery-refresh-ink)"],
   moved_on: ["var(--color-mastery-moved-on)", "var(--color-mastery-moved-on-ink)"],
+  // A Study concept's origin: its word is drawn on the box too (never colour alone).
+  document: ["var(--color-panel)", "var(--color-ink)"],
+  pack: ["var(--color-canvas)", "var(--color-ink)"],
+  learner: ["var(--color-wash)", "var(--color-ink)"],
+  model: [PAPER, "var(--color-ink)"],
 };
 const OUTLINE = "var(--color-mastery-tile-outline)";
 const CHAR = 6.3; // average glyph width at 12 px, for wrapping
@@ -195,8 +202,8 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
         const ring = on || pointed === n.id;
         const inner = placed.width - 16;
         const title = wrap(n.title, inner);
-        const head = n.linked && n.subject !== undefined ? `${n.subject} · ${n.stateWord}` : `${n.code} · ${n.stateWord}`;
-        const badges = [n.next > 0 ? t("concept.next_badge", { place: n.next }) : "", n.asked > 0 ? t("concept.badge.asked", { count: n.asked }) : "",
+        const head = n.linked && n.subject !== undefined ? `${n.subject} · ${n.stateWord}` : n.code ? `${n.code} · ${n.stateWord}` : n.stateWord;
+        const badges = n.badge ?? [n.next > 0 ? t("concept.next_badge", { place: n.next }) : "", n.asked > 0 ? t("concept.badge.asked", { count: n.asked }) : "",
           n.mistakes > 0 ? t("concept.badge.mistakes", { count: n.mistakes }) : ""].filter(Boolean).join(" · ");
         const into = edges.filter((e) => e.to === n.id && e.kind === "root_gap");
         const names = [
@@ -205,6 +212,7 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
           ...(n.next > 0 ? [t("concept.next_place", { place: n.next })] : []),
           ...(n.asked > 0 ? [t("concept.badge.asked", { count: n.asked })] : []),
           ...(n.mistakes > 0 ? [t("concept.badge.mistakes", { count: n.mistakes })] : []),
+          ...(n.badge !== undefined ? [n.badge] : []),
           ...into.map((e) => t(e.reviewed === true ? "concept.root_gap_named" : "concept.root_gap_unreviewed_named", { name: e.name ?? "" })),
           ...(on ? [t("concept.on_gap_path")] : []),
           ...(pointed === n.id ? [t("visual.part.pointed")] : []),

@@ -551,3 +551,26 @@ test.each([false, true])("due review restores a removed card before untouched ca
   fake.clear();
   } finally { vi.useRealTimers(); }
 });
+
+test("concept_map: generated with no count or settings, edited, and a typed topic mapped", async () => {
+  const job = { job_id: `stj_${"0".repeat(26)}`, kind: "concept_map", sources: [{ source_id: sid, revision: 1 }], state: "queued", completed_units: 0, total_units: null, result_ids: [], error: null, created_at: now, updated_at: now };
+  const map = { edited: true, concepts: [{ concept_id: "c1", name: "Speed", summary: cite("DNA"), note: null, origin: "document", anchor: null }], relations: [] };
+  const aid = { aid_id: AID, job_id: job.job_id, kind: "concept_map", sources: [{ source_id: sid, revision: 1 }], title: "Biology", claims: [cite("DNA")], status: "ready", created_at: now, concept_map: map };
+  const topic = { map_id: `ctm_${"0".repeat(26)}`, topic: "Refraction", origin: "model", node_id: null, created_at: 1, concept_map: { edited: false, relations: [], concepts: [{ concept_id: "s1", name: "Refraction", summary: null, note: "Light bends.", origin: "model", anchor: null }] } };
+  const post = vi.fn(async (path: string) => path.endsWith("/open") ? GRANT : path === "/v1/study/jobs" ? job : path.endsWith("/concept-map") ? aid : path === "/v1/study/concept-maps" ? topic : job);
+  const fake = setup(async (path) => path === `/v1/study/aids/${AID}` ? aid : { items: [], next_cursor: null }, post as never);
+  await fake.controller.open(sid);
+  await fake.controller.generate("concept_map", 10, false, true);
+  expect(post).toHaveBeenLastCalledWith("/v1/study/jobs", { kind: "concept_map", execution: "prefer_cloud", sources: [{ source_id: sid, revision: 1 }] }, expect.stringMatching(/^cli_/), expect.anything());
+  await fake.controller.showAid(AID);
+  await fake.controller.editConceptMap([{ op: "rename", concept_id: "c1", name: "Speed" }]);
+  expect(post).toHaveBeenLastCalledWith(`/v1/study/aids/${AID}/concept-map`, { ops: [{ op: "rename", concept_id: "c1", name: "Speed" }] }, expect.stringMatching(/^cli_/), expect.anything());
+  expect(fake.controller.getView().aid?.concept_map?.edited).toBe(true);
+  // A concept's actions are the same cited jobs: flashcards focused on it.
+  await fake.controller.conceptAction("Speed", "flashcards");
+  expect(post).toHaveBeenLastCalledWith("/v1/study/jobs", expect.objectContaining({ kind: "flashcards", count: 6, settings: { focus: 'Only the concept "Speed" and what the material says about it.' } }), expect.stringMatching(/^cli_/), expect.anything());
+  await fake.controller.makeTopicMap("  Refraction ");
+  expect(post).toHaveBeenLastCalledWith("/v1/study/concept-maps", { topic: "Refraction", execution: "prefer_cloud" }, expect.stringMatching(/^cli_/), expect.anything());
+  expect(fake.controller.getView().conceptTopic?.origin).toBe("model");
+  expect(fake.controller.getView().conceptTopics?.map((m) => m.topic)).toEqual(["Refraction"]);
+});

@@ -242,8 +242,16 @@ class StudyWorkspaceCloudUploadCreate(BaseModel):
     sha256: StudyWorkspaceDigest
 
 
+type StudyWorkspaceConceptRelationType = Annotated[
+    Literal["builds_on", "part_of", "causes", "example_of", "related_to", "contrasts_with"],
+    Field(title="StudyWorkspaceConceptRelationType"),
+]
+
+
 type StudyWorkspaceAidKind = Annotated[
-    Literal["notes", "summary", "chat", "flashcards", "quiz", "audio_overview", "lesson_plan", "chapters"],
+    Literal[
+        "notes", "summary", "chat", "flashcards", "quiz", "audio_overview", "lesson_plan", "chapters", "concept_map"
+    ],
     Field(title="StudyWorkspaceAidKind"),
 ]
 
@@ -462,6 +470,25 @@ class StudyWorkspaceExtractionResponse(BaseModel):
     usage: StudyWorkspaceUsageReceipt | None = None
 
 
+class StudyWorkspaceDraftRelation(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    from_: Annotated[str, Field(alias="from", pattern="^c[0-9]{1,2}$")]
+    to: Annotated[str, Field(pattern="^c[0-9]{1,2}$")]
+    type: StudyWorkspaceConceptRelationType
+    claim: StudyWorkspaceClaim
+
+
+class StudyWorkspaceDraftConcept(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    concept_id: Annotated[str, Field(pattern="^c[0-9]{1,2}$")]
+    name: Annotated[str, Field(max_length=80, min_length=1)]
+    summary: StudyWorkspaceClaim
+
+
 class StudyWorkspaceChapter(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -528,6 +555,14 @@ type StudyProcessingRequest = Annotated[StudyWorkspaceProcessingRequest, Field(t
 type StudyExtractionResponse = Annotated[StudyWorkspaceExtractionResponse, Field(title="StudyExtractionResponse")]
 
 
+class StudyWorkspaceDraftConceptMap(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    concepts: Annotated[list[StudyWorkspaceDraftConcept], Field(max_length=24, min_length=1)]
+    relations: Annotated[list[StudyWorkspaceDraftRelation], Field(max_length=48, min_length=0)]
+
+
 class StudyWorkspaceDraftQuiz(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -547,6 +582,7 @@ class StudyWorkspaceProcessingResponse(BaseModel):
     kind: StudyWorkspaceAidKind
     usage: StudyWorkspaceUsageReceipt | None = None
     chapters: Annotated[list[StudyWorkspaceChapter] | None, Field(max_length=60, min_length=1)] = None
+    concept_map: StudyWorkspaceDraftConceptMap | None = None
 
 
 type StudyProcessingResponse = Annotated[StudyWorkspaceProcessingResponse, Field(title="StudyProcessingResponse")]

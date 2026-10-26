@@ -9,7 +9,7 @@ const source = { source_id: sid, revision: 1, kind: "text", title: "Biology", st
 const cited = (text: string) => ({ text, citations: [{ source_id: sid, revision: 1, chunk_id: `sck_${"0".repeat(26)}`, start: 0, end: 3, quote: "DNA" }] });
 test("returning to curriculum material waits for workspace setup and retains the pinned revision", async () => {
   const loads: Array<() => void> = [];
-  const controller = { subscribe: () => () => {}, getView: () => EMPTY_STUDY,
+  const controller = { subscribe: () => () => {}, getView: () => EMPTY_STUDY, loadTopicMaps: vi.fn(async () => {}),
     load: vi.fn(() => new Promise<void>((resolve) => loads.push(resolve))),
     close: vi.fn(), open: vi.fn(async () => {}) };
   const opened = vi.fn();
@@ -23,7 +23,7 @@ test("returning to curriculum material waits for workspace setup and retains the
 });
 function show(extra: Partial<StudyWorkspaceView>, onReviewAccess?: () => void, onJourneyStarted?: (node: string, subject: string) => void) {
   const view = { ...EMPTY_STUDY, status: "ready", ...extra } as StudyWorkspaceView;
-  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}) };
+  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}), loadTopicMaps: vi.fn(async () => {}) };
   const connected = { ...controller, beginJourney: vi.fn(async () => true) };
   render(<StudyWorkspace controller={connected as unknown as StudyWorkspaceController} {...(onReviewAccess ? { onReviewAccess } : {})} {...(onJourneyStarted ? { onJourneyStarted } : {})} />);
   return connected;
@@ -509,7 +509,7 @@ test("Home's saved activity opens after Study mounting, not during its cleanup",
   let pending: (() => void)[] = [];
   const controller = { subscribe: () => () => {}, getView: () => view,
     load: vi.fn(() => new Promise<void>((resolve) => { pending.push(resolve); })),
-    close: vi.fn(), continueJourney: vi.fn(async () => {}), loadAccess: vi.fn(async () => {}),
+    close: vi.fn(), continueJourney: vi.fn(async () => {}), loadAccess: vi.fn(async () => {}), loadTopicMaps: vi.fn(async () => {}),
   };
   const opened = vi.fn();
   render(<StrictMode><StudyWorkspace controller={controller as unknown as StudyWorkspaceController} initialJourney="lesson" onJourneyOpened={opened} /></StrictMode>);
