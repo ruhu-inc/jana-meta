@@ -1,0 +1,80 @@
+scripts/jana_tools/hackathon_dev.py
+  s_207b3a26495062::t_3fce30eda14015 3,51,55-57,59,67
+services/agent-core/agent_core/router/cloud_models.json
+  s_207b3a26495062::t_f81fb4e779c5a1 2,5-6
+services/cloud-gateway/deploy/meta-dev.toml
+  s_207b3a26495062::t_68afe95640e86e 1-35
+scripts/jana_tools/hackathon_app.py
+  s_207b3a26495062::t_3fce30eda14015 1,28,90,92,97,102,119
+services/cloud-gateway/cloud_gateway/providers/__init__.py
+  s_207b3a26495062::t_2708a65518e18b 14,26
+services/cloud-gateway/tests/test_meta.py
+  s_207b3a26495062::t_5e6be495301b57 80-81,141
+  s_207b3a26495062::t_2e20012e711201 1-16,18-79,82-86,88-140,142-205
+  s_207b3a26495062::t_3f50ce9eff3618 17,87
+services/cloud-gateway/tests/gateway_stubs.py
+  s_207b3a26495062::t_d666d9deb73b66 47,356-360,362-363
+services/cloud-gateway/tests/test_m42_study.py
+  s_207b3a26495062::t_75793bb95c8efc 667-668
+  s_207b3a26495062::t_2e582ecda383e0 9,663,665-666
+  s_207b3a26495062::t_4a08c4ca130770 679,703
+services/cloud-gateway/cloud_gateway/config.py
+  s_207b3a26495062::t_2708a65518e18b 21,83,166-168
+  s_207b3a26495062::t_7275b9d8ce21f7 141-143
+  s_207b3a26495062::t_86ad8c84c74e61 284
+  s_207b3a26495062::t_3f638cc2443d0e 80-82
+  s_207b3a26495062::t_68afe95640e86e 15,278-283
+services/agent-core/agent_core/router/router.yaml
+  s_207b3a26495062::t_f81fb4e779c5a1 3-4
+services/cloud-gateway/cloud_gateway/secret_scan.py
+  s_207b3a26495062::t_2c145e42b312dd 33-34,38
+services/cloud-gateway/tests/test_inference_budget.py
+  s_207b3a26495062::t_4a08c4ca130770 198,205,210,221,227,233
+  s_207b3a26495062::t_4c03f9cf057850 30,263,274-288,290-291
+  s_207b3a26495062::t_9a6d7b6a86bce4 21-24,26,289
+  s_207b3a26495062::t_60692dae4b9b55 292
+services/cloud-gateway/tests/test_m19_gw_gemini.py
+  s_207b3a26495062::t_4a08c4ca130770 188-189
+services/cloud-gateway/cloud_gateway/providers/meta.py
+  s_207b3a26495062::t_b41a25952e06a6 1-24,26-84
+  s_207b3a26495062::t_2708a65518e18b 25
+apps/desktop/dev/sidecar.ts
+  s_207b3a26495062::t_3fce30eda14015 30-31,49
+services/cloud-gateway/tests/test_study_math_format.py
+  s_207b3a26495062::t_4a08c4ca130770 44
+services/cloud-gateway/cloud_gateway/inference_budget.py
+  s_207b3a26495062::t_7275b9d8ce21f7 3-4,71-72,75-81,91-96
+scripts/tests/test_hackathon_app.py
+  s_207b3a26495062::t_3fce30eda14015 111-113
+  s_207b3a26495062::t_f45415c87fc680 58-59,65,90-91
+services/cloud-gateway/cloud_gateway/study.py
+  s_207b3a26495062::t_8fc81cacbbfb38 1047-1048
+  s_207b3a26495062::t_cf7c12e9065a55 1641
+  s_207b3a26495062::t_3f638cc2443d0e 506-507,541-542
+services/cloud-gateway/cloud_gateway/defaults.toml
+  s_207b3a26495062::t_2c145e42b312dd 6,8-9,11-34
+services/cloud-gateway/cloud_gateway/custody.py
+  s_207b3a26495062::t_3f335864265e5e 13-15,137-138,143,145,180
+services/cloud-gateway/tests/test_m19_gw_conformance.py
+  s_207b3a26495062::t_4a08c4ca130770 174
+services/cloud-gateway/tests/test_m19_gw_keys.py
+  s_207b3a26495062::t_4a08c4ca130770 179,181,192
+services/cloud-gateway/tests/test_podcast_speech.py
+  s_207b3a26495062::t_4a08c4ca130770 69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4e299cdc49692eff91a311d607ebfe77ed6359eb",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
