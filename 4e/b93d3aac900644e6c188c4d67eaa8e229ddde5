@@ -1,0 +1,285 @@
+packages/renderers/src/sims/index.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 29,32,35
+packages/ui/gallery/states/visual-viewer.canonical.projectile-sim-predict.json
+  s_87311ffec186a4::t_f276e3f35e0845 1-311
+packages/renderers/test/sims.test.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 107-139,142,148,220-260
+  s_87311ffec186a4::t_ecfc83ef54d08a 261
+content/curriculum/phy/o/misconceptions/mc.phy.o.steeper_launch_goes_further.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 1-32
+packages/ui/test/assessments.test.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 4,11,57-81
+services/agent-core/agent_core/assets/generated/kind_schemas.py
+  s_87311ffec186a4::t_f276e3f35e0845 2,854,860,862-867,871-872,875-878,880-882
+packages/ui/src/learn/Assessment.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 15-16,49-71,77,137,169
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_87311ffec186a4::t_f276e3f35e0845 2,5560-5569,8888-8930
+services/tool-worker/tool_worker/golden/phys_projectile.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 2,10-41
+services/agent-core/agent_core/assets/visuals.py
+  s_87311ffec186a4::t_f276e3f35e0845 182-188
+services/agent-core/agent_core/tools/specs.py
+  s_87311ffec186a4::t_f276e3f35e0845 107-111,662
+content/curriculum/phy/o/misconceptions/mc.phy.o.ohm_law_upside_down.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 20-23
+packages/renderers/test/predict.test.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 11,55,68,162-204
+  s_87311ffec186a4::t_2413089fdcf490 205-206
+services/agent-core/agent_core/contracts/learning/student_records.py
+  s_87311ffec186a4::t_f276e3f35e0845 2,125-146,1095,1102
+content/curriculum/mth/o/worked-examples/wex.mth.o.algebra_and_graphs.0037.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 20-38
+services/pack-builder/pack_builder/figures.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-169
+evals/contracts/api/commands/SimPrediction/valid/minimal.json
+  s_87311ffec186a4::t_f276e3f35e0845 1-7
+services/agent-core/agent_core/api/screening.py
+  s_87311ffec186a4::t_f276e3f35e0845 185-186,196-197
+services/agent-core/agent_core/engine/lessons.py
+  s_87311ffec186a4::t_f276e3f35e0845 22,118-120,129-131
+packages/client-core/src/session.ts
+  s_87311ffec186a4::t_f276e3f35e0845 6,313-319
+  s_87311ffec186a4::t_5a225b19d9d46d 320-321
+services/agent-core/agent_core/engine/figures.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-107
+services/agent-core/tests/test_m16_assessment.py
+  s_87311ffec186a4::t_f276e3f35e0845 72-76
+packages/contracts-ts/src/generated/api/commands.ts
+  s_87311ffec186a4::t_f276e3f35e0845 2,269-273,2164,2174,2185-2190,2553,2583-2588,4401-4411
+content/curriculum/phy/o/items/itm.phy.o.motion.0077.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 73-90
+content/curriculum/phy/o/kcs/motion.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 110-120,174-184,295
+packages/renderers/golden/projectile-sim-predict.light.html
+  s_87311ffec186a4::t_f276e3f35e0845 1-41
+packages/ui/test/figures.test.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 1-57
+services/agent-core/agent_core/assets/resolvers.py
+  s_87311ffec186a4::t_f276e3f35e0845 748-749,759-760,763
+contracts/api/commands.schema.json
+  s_87311ffec186a4::t_f276e3f35e0845 5559-5569,8888-8931,9939-9955,11154-11172
+content/curriculum/phy/o/items/itm.phy.o.motion.0371.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 1-106
+services/agent-core/tests/test_a1_input_routes.py
+  s_87311ffec186a4::t_f276e3f35e0845 263
+services/agent-core/agent_core/contracts/schemas/learning/student-records.schema.json
+  s_87311ffec186a4::t_f276e3f35e0845 2,387-388,487-527,543-568
+services/tool-worker/tool_worker/functions/projectile.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-3,73-80,108-110
+evals/contracts/api/commands/SimPrediction/invalid/unknown_property.json
+  s_87311ffec186a4::t_f276e3f35e0845 1-8
+services/agent-core/agent_core/api/core.py
+  s_87311ffec186a4::t_f276e3f35e0845 1408-1433
+services/agent-core/agent_core/engine/assessment/explain.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-134
+services/agent-core/tests/test_m13g_learn.py
+  s_87311ffec186a4::t_f276e3f35e0845 33,279-282
+packages/renderers/src/sims/scenarios.json
+  s_87311ffec186a4::t_f276e3f35e0845 172-184
+packages/renderers/golden/projectile-sim.dark.html
+  s_87311ffec186a4::t_f276e3f35e0845 16
+packages/renderers/src/sims/SimView.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 11-13,18,49-58,208,213-215,218,220,226-227,235-236,238-239,252-263
+content/curriculum/phy/o/misconceptions/mc.phy.o.rearrange_sign_error.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 19-22
+packages/renderers/src/sims/predict.ts
+  s_87311ffec186a4::t_f276e3f35e0845 7,38-40,82
+packages/ui/src/learn/StepLesson.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 259
+content/curriculum/phy/o/lessons/les.phy.o.circuits.series_and_parallel_circuits.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 17-29
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_87311ffec186a4::t_f276e3f35e0845 2,1021-1037,2236-2254
+services/agent-core/agent_core/contracts/api/commands.py
+  s_87311ffec186a4::t_f276e3f35e0845 2,2254-2267,3127-3131,3200-3212,4998-5009,5018-5025,5266-5268,5280-5282,5299,5309-5312
+packages/renderers/golden/projectile-sim-predict.large.html
+  s_87311ffec186a4::t_f276e3f35e0845 1-41
+packages/ui/src/learn/LessonPlayer.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 102-104,136,139
+content/curriculum/phy/o/misconceptions/mc.phy.o.change_multiplied_by_time.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 20-23
+packages/ui/src/visuals/VisualViewer.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 8,108-119,184
+services/agent-core/tests/test_root_gap.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-165
+content/curriculum/phy/o/kcs/electrical_quantities.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 144-154
+content/curriculum/phy/o/worked-examples/wex.phy.o.light.0010.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 20-24
+services/agent-core/agent_core/engine/learn.py
+  s_87311ffec186a4::t_f276e3f35e0845 45,367-368
+contracts/learning/student-records.schema.json
+  s_87311ffec186a4::t_f276e3f35e0845 386-387,486-529,545-571
+content/curriculum/phy/o/worked-examples/wex.phy.o.forces.0002.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 20-39
+packages/renderers/golden/projectile-sim.light.html
+  s_87311ffec186a4::t_f276e3f35e0845 16
+services/agent-core/agent_core/retrieval/index.py
+  s_87311ffec186a4::t_f276e3f35e0845 90-91,254-255,258-259
+services/agent-core/agent_core/engine/offers.py
+  s_87311ffec186a4::t_f276e3f35e0845 15-19,50-52,111-114,125-126,182-183,186-190,192,203-204,208-228
+  s_87311ffec186a4::t_6c87ed1eccc621 229-230
+content/curriculum/mth/o/kcs/coordinate_geometry.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 84-94
+services/agent-core/agent_core/api/assessment.py
+  s_87311ffec186a4::t_f276e3f35e0845 123-135
+services/agent-core/agent_core/tools/fixtures/phys_projectile.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 3,16-20,24-29
+content/curriculum/phy/o/worked-examples/wex.phy.o.circuits.0001.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 25-42
+services/agent-core/agent_core/engine/assembly.py
+  s_87311ffec186a4::t_f276e3f35e0845 818,907-918
+  s_87311ffec186a4::t_7034df0ea127c8 919
+services/agent-core/agent_core/assets/visual_text.en.json
+  s_87311ffec186a4::t_f276e3f35e0845 348
+services/pack-builder/tests/test_figures.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-113
+packages/renderers/fixtures/sim_fidelity.json
+  s_87311ffec186a4::t_f276e3f35e0845 764-819
+services/agent-core/tests/test_explain_back.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-156
+services/pack-builder/pack_builder/build.py
+  s_87311ffec186a4::t_f276e3f35e0845 39,212,276-277,324
+packages/client-core/test/assessments.test.ts
+  s_87311ffec186a4::t_f276e3f35e0845 5,8-9,59-80
+packages/contracts-ts/src/generated/content/content_pack.ts
+  s_87311ffec186a4::t_f276e3f35e0845 2,65-69,114-118,448-452,462-476,517-522,875,1211,1244-1247
+packages/contracts-ts/src/generated/index.ts
+  s_87311ffec186a4::t_f276e3f35e0845 4,277-979
+scripts/jana_tools/visual_fixtures.py
+  s_87311ffec186a4::t_f276e3f35e0845 421-426,1276-1279,1571-1572
+services/agent-core/agent_core/tools/registry.snapshot.json
+  s_87311ffec186a4::t_f276e3f35e0845 153-155
+services/agent-core/agent_core/engine/assessment/service.py
+  s_87311ffec186a4::t_f276e3f35e0845 23,76,87,93,124,343,460,661,706-707,716-720,731-732,737,755,1077
+services/tool-worker/tool_worker/golden/fingerprints.json
+  s_87311ffec186a4::t_f276e3f35e0845 3101-3102
+content/curriculum/phy/o/misconceptions/mc.phy.o.density_rearranged_wrongly.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 20-23
+services/agent-core/agent_core/assets/generated/sim_scenarios.py
+  s_87311ffec186a4::t_f276e3f35e0845 2,178-195
+  s_87311ffec186a4::t_6606befc17c8b2 196
+packages/contracts-ts/src/generated/validators.d.ts
+  s_87311ffec186a4::t_f276e3f35e0845 866-867
+content/curriculum/phy/o/lessons/les.phy.o.motion.launching_at_an_angle.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 1-62
+evals/contracts/learning/student-records/ExplainBack/invalid/unknown_property.json
+  s_87311ffec186a4::t_f276e3f35e0845 1-6
+services/agent-core/agent_core/contracts/content/content_pack.py
+  s_87311ffec186a4::t_f276e3f35e0845 2,351-359,379,872-879,891,2026-2028,2040-2042,2112-2152
+  s_87311ffec186a4::t_d4fcce6b591eed 2153-2154
+services/tool-worker/tool_worker/schemas/phys_projectile.json
+  s_87311ffec186a4::t_f276e3f35e0845 21-22,33-38,110-133
+services/pack-builder/tests/test_root_gaps.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-48
+packages/contracts-ts/src/generated/learning/student_records.ts
+  s_87311ffec186a4::t_f276e3f35e0845 2,296,306,634-648
+packages/contracts-ts/src/generated/client.ts
+  s_87311ffec186a4::t_f276e3f35e0845 4,251-520
+services/agent-core/agent_core/engine/assessment/items.py
+  s_87311ffec186a4::t_f276e3f35e0845 13,100,301
+packages/i18n/locales/en.json
+  s_87311ffec186a4::t_f276e3f35e0845 895-896,951-956,1897-1904
+services/agent-core/agent_core/contracts/schemas/content/content-pack.schema.json
+  s_87311ffec186a4::t_f276e3f35e0845 2,994-1019,1136-1150,2576-2578,3322-3337
+packages/client-core/src/learn.ts
+  s_87311ffec186a4::t_f276e3f35e0845 107-108,246-247
+packages/renderers/golden/projectile-sim-predict.dark.html
+  s_87311ffec186a4::t_f276e3f35e0845 1-41
+packages/client-core/test/assessmentcore.ts
+  s_87311ffec186a4::t_f276e3f35e0845 16-20,49-51,53-58
+content/curriculum/mth/o/worked-examples/wex.mth.o.coordinate_geometry.0006.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 19-43
+content/agent/templates/engine.en.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 48-52
+packages/client-core/src/assessments.ts
+  s_87311ffec186a4::t_f276e3f35e0845 14,22-23,25-26,47,56-59,136-144
+  s_87311ffec186a4::t_ee201c289dad8c 145
+packages/renderers/src/schemas/projectile_sim.schema.json
+  s_87311ffec186a4::t_f276e3f35e0845 4,16-17,25-30,42,46,48-53,56-74
+content/curriculum/phy/o/kcs/circuits.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 39-49,94-109
+content/curriculum/phy/o/worked-examples/wex.phy.o.motion.0002.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 24-41
+content/curriculum/phy/o/misconceptions/mc.phy.o.gradient_axes_swapped.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 19-22
+services/tool-worker/tool_worker/functions/__init__.py
+  s_87311ffec186a4::t_f276e3f35e0845 56
+packages/renderers/fixtures/visuals/projectile-sim-predict.json
+  s_87311ffec186a4::t_f276e3f35e0845 1-375
+services/agent-core/agent_core/engine/turn.py
+  s_87311ffec186a4::t_f276e3f35e0845 51,105,292,407-408,706-708,723-724,726,756-757,937-938,994-995,2414,2485,2492-2505
+  s_87311ffec186a4::t_18324d1481a2be 2506
+content/curriculum/phy/o/misconceptions/mc.phy.o.pressure_rearranged_wrongly.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 21-24
+packages/renderers/golden/projectile-sim.large.html
+  s_87311ffec186a4::t_f276e3f35e0845 16
+content/curriculum/phy/o/misconceptions/mc.phy.o.q_it_upside_down.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 20-23
+packages/renderers/src/sims/models.ts
+  s_87311ffec186a4::t_f276e3f35e0845 20-26,94-98,109,119-122,131,133
+packages/renderers/src/sims/PredictFlow.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 9,115,231-233,237-238,248-253,272-275
+evals/contracts/index.json
+  s_87311ffec186a4::t_f276e3f35e0845 1784-1795,3176-3187
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_87311ffec186a4::t_f276e3f35e0845 239,243,252-253,338-339,407-408
+packages/renderers/src/schema.ts
+  s_87311ffec186a4::t_f276e3f35e0845 4-5,43-46,59-60
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_87311ffec186a4::t_f276e3f35e0845 2,1013-1029,2228-2246
+evals/contracts/learning/student-records/ExplainBack/valid/minimal.json
+  s_87311ffec186a4::t_f276e3f35e0845 1-5
+packages/ui/test/predict-forward.test.tsx
+  s_87311ffec186a4::t_f276e3f35e0845 1-65
+content/curriculum/phy/o/misconceptions/mc.phy.o.vt_gradient_from_one_point.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 15-18
+content/curriculum/phy/o/worked-examples/wex.phy.o.circuits.0003.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 25-40
+content/curriculum/mth/o/kcs/algebra_and_graphs.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 148-158
+content/curriculum/phy/o/misconceptions/mc.phy.o.gradient_from_one_point.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 18-21
+services/pack-builder/pack_builder/curriculum.py
+  s_87311ffec186a4::t_f276e3f35e0845 182-201
+services/agent-core/agent_core/tools/generated/worker_schemas.py
+  s_87311ffec186a4::t_f276e3f35e0845 2,3355,3357-3362,3392-3398
+services/agent-core/agent_core/engine/predictions.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-122
+services/agent-core/agent_core/api/app.py
+  s_87311ffec186a4::t_f276e3f35e0845 186-192
+  s_87311ffec186a4::t_46c3a9fc8ec702 185
+services/agent-core/agent_core/store/pack_index.py
+  s_87311ffec186a4::t_f276e3f35e0845 95-97,193-194,201-211
+contracts/content/content-pack.schema.json
+  s_87311ffec186a4::t_f276e3f35e0845 993-1019,1136-1152,2578-2581,3325-3342
+content/curriculum/phy/o/items/itm.phy.o.circuits.0001.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 63-82
+services/agent-core/tests/test_predict_live.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-206
+services/agent-core/tests/test_figures_live.py
+  s_87311ffec186a4::t_f276e3f35e0845 1-213
+content/curriculum/phy/o/misconceptions/mc.phy.o.ohm_law_multiplied.yaml
+  s_87311ffec186a4::t_f276e3f35e0845 20-23
+packages/contracts-ts/src/generated/client-validators.js
+  s_87311ffec186a4::t_079970cfcdd282 10
+packages/contracts-ts/src/generated/validators.js
+  s_87311ffec186a4::t_4dfe32a249c29f 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4eb93d3aac900644e6c188c4d67eaa8e229ddde5",
+  "prompts": {},
+  "sessions": {
+    "s_87311ffec186a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02ea0a11-c16d-43dd-9ca0-be1ee039343a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
