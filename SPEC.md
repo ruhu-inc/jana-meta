@@ -25,6 +25,11 @@ depth 20%, Demo 25% (works live, holds up, video quality).
 
 Kept from 2026-10-20: JM-D1 (18+ only), JM-D6 (cascaded voice; every spoken word comes from an accepted engine
 turn), JM-D7 (separate hosting project), JM-D8 (nothing with a non-commercial licence goes back into Jana).
+JM-D1 rests on the Meta Model API Terms of Service (dev.meta.ai/legal/terms-of-service, checked 2026-10-26): "You and
+your End Users must be at least 18 years of age to use the Services and Integrated Products, and you will not create
+Integrated Products targeted at individuals under the age of 18." A parent signing in for a child, or a shared
+parent-and-child account, does not change who the end user is, so it is out of scope for this entry (owner asked,
+2026-10-26). Under-18 learners stay on Jana's own stack.
 
 | # | Decision |
 |---|---|
