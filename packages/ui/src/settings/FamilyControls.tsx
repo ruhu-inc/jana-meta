@@ -1,19 +1,18 @@
 // Settings → Online features and Settings → Profiles (TABLE UXS-46a, UXS-29): two sections, both open, with no PIN or
 // elevation (D86, D87); online features carry the study screen's research consents below them.
 import { useEffect, useState, type ReactNode } from "react";
-import type { ChooseInstallSource, FamilySettings, ProfileController } from "@jana/client-core";
+import { ADULT_BAND, type ChooseInstallSource, type FamilySettings, type ProfileController } from "@jana/client-core";
 import type { CreateProfile, PackList } from "@jana/contracts-ts";
 import { useT } from "../i18n.js";
 import { Button, ConfirmDialog, Disclosure, ErrorState, Notice, useToggle } from "../primitives/index.js";
 import { discOf } from "../profiles/Avatar.js";
 import { useProfiles } from "../profiles/ProfilePicker.js";
+import { BirthDateField, birthDateCheck } from "../setup/BirthDate.js";
 import { OnlineFeatures } from "./OnlineFeatures.js";
 import { Studies } from "./Studies.js";
 
 /** The family sections of TABLE UXS-46a, each its own Settings section: Online features and Profiles (D87). */
 export const FAMILY_GROUPS = ["online", "profiles"] as const;
-/** One choice per answer policy of TABLE PED-09a. */
-const AGE_BANDS = ["under_13", "13_15", "16_17", "18_plus"] as const;
 const LEVELS = ["O", "A"] as const;
 const SUBJECTS = ["mathematics", "physics", "chemistry", "biology", "accounting"] as const;
 
@@ -23,11 +22,11 @@ function AddStudent({ profiles, run }: { profiles: ProfileController; run: Run }
   const t = useT();
   const [open, toggle] = useToggle(false);
   const [name, setName] = useState("");
-  const [ageBand, setAgeBand] = useState<CreateProfile["age_band"]>("13_15");
+  const [birthDate, setBirthDate] = useState("");
   const [level, setLevel] = useState<CreateProfile["level"]>("O");
   const [subjects, setSubjects] = useState<string[]>([]);
   const count = useProfiles(profiles).profiles.length;
-  const ready = name.trim() !== "" && subjects.length > 0;
+  const ready = name.trim() !== "" && subjects.length > 0 && birthDateCheck(birthDate) === "adult";
   const field = "min-h-8 rounded-control border border-line-strong bg-canvas px-3 text-body text-ink";
   return (
     <Disclosure summary={t("settings.profiles.add")} open={open} onToggle={toggle}>
@@ -36,10 +35,11 @@ function AddStudent({ profiles, run }: { profiles: ProfileController; run: Run }
         onSubmit={(event) => {
           event.preventDefault();
           if (!ready) return;
-          const body: CreateProfile = { display_name: name.trim(), avatar: `avatar-${discOf("", count)}`, level, subjects, age_band: ageBand };
+          const body: CreateProfile = { display_name: name.trim(), avatar: `avatar-${discOf("", count)}`, level, subjects, age_band: ADULT_BAND };
           run(async () => {
             await profiles.family.addProfile(body);
             setName("");
+            setBirthDate("");
             setSubjects([]);
           });
         }}
@@ -48,12 +48,7 @@ function AddStudent({ profiles, run }: { profiles: ProfileController; run: Run }
           {t("settings.profiles.name")}
           <input className={field} value={name} maxLength={40} onChange={(event) => setName(event.target.value)} />
         </label>
-        <label className="flex flex-col gap-1 text-ui text-ink">
-          {t("settings.profiles.age_band")}
-          <select className={field} value={ageBand} onChange={(event) => setAgeBand(event.target.value as CreateProfile["age_band"])}>
-            {AGE_BANDS.map((band) => <option key={band} value={band}>{t(`settings.profiles.age.${band}`)}</option>)}
-          </select>
-        </label>
+        <BirthDateField value={birthDate} onChange={setBirthDate} labelClass="flex flex-col gap-1 text-ui text-ink" />
         <label className="flex flex-col gap-1 text-ui text-ink">
           {t("settings.profiles.level")}
           <select className={field} value={level} onChange={(event) => setLevel(event.target.value as CreateProfile["level"])}>

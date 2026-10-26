@@ -414,7 +414,7 @@ export class FakeProfileCore {
       if (this.sectionsStage === null) return error(404, "not_found");
       // As agent_core.config.support.settings_sections lists them.
       const ids = ["online_features", "profiles", "tutor_models", "content", "egress", "accessibility_language", "study", "tutor", "data_export", "licence", "help", "about",
-        ...(this.sectionsStage === "S3" ? ["parent_summary", "alerts", "voice"] : [])];
+        ...(this.sectionsStage === "S3" ? ["voice"] : [])];
       return json(200, { stage: this.sectionsStage, sections: ids.map((id) => ({ id, gate: "open", offline: true, states: ["ready", "empty", "error"] })) });
     }
     if (method === "GET" && path === "/v1/models") return json(200, this.models);

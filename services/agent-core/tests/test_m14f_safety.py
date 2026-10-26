@@ -231,7 +231,7 @@ def prv14_distress_template_only(tmp_path: Path) -> None:
     notices = [f["event"] for f in engine.events.frames if f["event"]["type"] == "notice"]
     assert len(notices) == len(lines) and all(n["code"] == "calm_screen" and n["params"] == {} for n in notices)
     # With no verified entry (the shipped pack), the helpline sentences are left out; the trusted adult stays.
-    assert "{" not in expected and "adult you trust" in expected and "call" not in expected
+    assert "{" not in expected and "someone you trust" in expected and "call" not in expected
 
 
 def prv14_unverified_helplines_hidden() -> None:
@@ -246,7 +246,7 @@ def prv14_unverified_helplines_hidden() -> None:
     assert "000-2222" in text and "000-UNVERIFIED" not in text and "000-1111" not in text
     assert "{emergency_number}" not in text and "call" not in text, "the unverified emergency sentence is omitted"
     nothing = templates().with_verified(SafetyResources.from_data({"entries": []}).values()).render("tpl.distress")
-    assert "adult you trust" in nothing and "000-" not in nothing and "{" not in nothing
+    assert "someone you trust" in nothing and "000-" not in nothing and "{" not in nothing
     shipped = SafetyResources.load(AGENT / "safety" / "resources.yaml")
     assert shipped.entries == (), "the shipped pack holds no entry until the child-protection partner verifies one"
     raw = yaml.safe_load((AGENT / "safety" / "resources.yaml").read_text())

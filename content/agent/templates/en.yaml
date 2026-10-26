@@ -6,7 +6,7 @@
 version: "2026-10-13.1"
 status: draft
 templates:
-  tpl.distress: "Thank you for telling me, and I'm really glad you did. You deserve to be supported. Please speak to an adult you trust today, such as a parent, a teacher or a school counsellor. If you are in danger right now, call {emergency_number}. You can also reach {child_helpline}. I'm here for your schoolwork whenever you want to come back."
+  tpl.distress: "Thank you for telling me, and I'm really glad you did. You deserve to be supported. Please talk to someone you trust today, such as a friend, a family member, a doctor or a counsellor. If you are in danger right now, call {emergency_number}. You can also reach {child_helpline}. I'm here for your studies whenever you want to come back."
   tpl.off_topic: "I can't help with that one. I cover Maths, Physics, Chemistry, Biology and Accounting. Shall we go back to {current_topic}?"
   tpl.beyond_level: "That question is beyond what I teach at {level}. The nearest topic I can help with is {nearest_topic}. Shall we begin there?"
   tpl.graded_work: "I can't do graded work for you, but I can help you learn to do it yourself. Let's begin with question {n}: what is it asking you to find?"
@@ -14,7 +14,7 @@ templates:
   tpl.personal_details: "Please don't share personal details such as your address or phone number here. Let's carry on with {current_topic}."
   tpl.dangerous_request: "I can't help with that, because it could hurt someone. I can explain the syllabus chemistry behind it, such as {safe_topic}."
   tpl.abusive_language: "Let's keep this respectful. I'm here to help when you're ready to carry on."
-  tpl.see_trusted_adult: "I can't give medical or legal advice. Please ask a parent, a teacher or another adult you trust, or a doctor or pharmacist about medicines. I'm here for your schoolwork whenever you're ready."
+  tpl.see_trusted_adult: "I can't give medical or legal advice. Please ask a doctor, a pharmacist or a qualified adviser, or someone you trust. I'm here for your studies whenever you're ready."
   tpl.ai_disclosure: "I'm an AI tutor, not a person. I'm here to help you learn to do your schoolwork yourself."
   tpl.honest_blocker: "I can't check this one fully, so let's work through the method together."
   tpl.entry_question: "Have a go first: write the first line you would try, even a guess. Then I will give you a hint."

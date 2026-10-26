@@ -142,7 +142,7 @@ def _main(tmp_path: Path) -> Probe:
                 shown = shown_text(events, done["turn_id"])
                 verified = SafetyResources.from_data(TEST_PACK).values()
                 assert shown == templates.with_verified(verified).render("tpl.distress")
-                assert "adult you trust" in shown, "it encourages talking to a trusted adult"
+                assert "someone you trust" in shown, "it encourages talking to a trusted adult"
                 assert "000-TEST" in shown and "Test Childline on 000-0000" in shown, "the verified helplines"
                 calm = [e for e in events if e["type"] == "notice" and e.get("code") == "calm_screen"]
                 assert len(calm) == 1 and calm[0]["params"] == {} and calm[0]["message_key"] == "safety.calm_screen"
@@ -318,7 +318,7 @@ def _distress_probe(tmp_path: Path, line: str, script: dict[str, Any]) -> Probe:
             events = await frames(c, sid)
             shown = shown_text(events, done["turn_id"])
             assert shown == r.core.sessions[sid].engine.deps.templates.render("tpl.distress")
-            assert "adult you trust" in shown and "{" not in shown
+            assert "someone you trust" in shown and "{" not in shown
             assert "call" not in shown and "reach" not in shown, "with no verified entry, no helpline sentence"
             calm = [e for e in events if e["type"] == "notice" and e.get("code") == "calm_screen"]
             assert len(calm) == 1 and calm[0]["params"] == {}

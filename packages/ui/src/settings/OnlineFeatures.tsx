@@ -53,7 +53,9 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
   const family: FamilySettings = profiles.family;
   const view = useProfiles(profiles);
   const known = view.profiles;
-  const [adult, setAdult] = useState(false);
+  // Unknown until the profile is read; a failed read counts as a minor (privacy principle 4). Jana makes adult profiles
+  // only (JM-D15), so the guardian wording shows only for a profile an older build made, never while loading.
+  const [adult, setAdult] = useState<boolean | null>(null);
   const [studyConsent, setStudyConsent] = useState<ConsentState | null>(null);
   const [cloudConsent, setCloudConsent] = useState<ConsentState | null>(null);
   const [state, setState] = useState<ConnectivityReply | null>(null);
@@ -66,7 +68,7 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
   }, [family]);
   useEffect(() => {
     let live = true;
-    setAdult(false);
+    setAdult(null);
     setStudyConsent(null);
     setCloudConsent(null);
     if (view.active !== null) {
@@ -77,7 +79,7 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
         } }, () => undefined,
       );
       readProfile(profiles.commands, view.active).then(
-        (profile) => live && setAdult(agreesForItself(profile)), () => undefined,
+        (profile) => live && setAdult(agreesForItself(profile)), () => live && setAdult(false),
       );
     }
     return () => { live = false; };
@@ -89,8 +91,8 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
   const active = subscription !== "loading" && subscription !== "failed" && subscription.state === "active";
   const needed = subscription !== "loading" && subscription !== "failed" ? subscription.profiles.filter((p) => p.consent === "needed").map((p) => p.profile_id) : [];
   const names = needed.map((id) => known.find((p) => p.profile_id === id)?.display_name ?? "").filter((n) => n !== "");
-  const selfConsent = adult && needed.length > 0 && needed.every((id) => id === view.active);
-  const studyNeedsCloud = adult && (!cloudConsent?.effective || cloudConsent.paused || (view.active !== null && needed.includes(view.active)));
+  const selfConsent = adult === true && needed.length > 0 && needed.every((id) => id === view.active);
+  const studyNeedsCloud = adult === true && (!cloudConsent?.effective || cloudConsent.paused || (view.active !== null && needed.includes(view.active)));
   const set = (change: Partial<Record<OnlineFeature, boolean>>) => run(async () => setState(await family.setOnlineFeatures(change)));
   const refresh = async () => setState(await family.connectivity());
   const end = () => run(async () => {
@@ -123,8 +125,8 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
           )}
           <p className="text-meta text-muted">{t("settings.online.leaves_label")} {t(`settings.online.leaves.${feature}`)}</p>
           <p className="text-meta text-muted">{t("settings.online.offline_label")} {t(`settings.online.offline.${feature}`)}</p>
-          {feature === "study_materials" && (!studyConsent?.effective || studyConsent.paused || studyNeedsCloud || (!adult && studyConsent.method !== "checkout_guardian")) && <div className="flex flex-col items-start gap-2">
-            <p className="text-ui text-ink">{t(adult ? "study.access.settings_self" : "study.access.settings_guardian")}</p>
+          {feature === "study_materials" && (!studyConsent?.effective || studyConsent.paused || studyNeedsCloud || (adult === false && studyConsent.method !== "checkout_guardian")) && <div className="flex flex-col items-start gap-2">
+            <p className="text-ui text-ink">{t(adult === false ? "study.access.settings_guardian" : "study.access.settings_self")}</p>
             {adult && <Button onClick={() => setAsking("study_materials")}>{t("study.access.review_consent")}</Button>}
           </div>}
           {feature === "cloud_tier" && <Cloud subscription={subscription} names={names} selfConsent={selfConsent} onConsent={() => setDialog("consent")} onEnd={() => setDialog("end")} />}
@@ -139,7 +141,7 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
         details={asking === null ? [] : [
           t(`settings.online.leaves.${asking}`),
           ...(asking === "study_materials" && studyNeedsCloud ? [t("settings.online.consent.cloud_tier")] : []),
-          ...(CONSENT_FEATURES.has(asking) ? [t(`settings.online.consent.${asking}`), t(adult ? "settings.online.self_attestation" : "settings.online.attestation")] : []),
+          ...(CONSENT_FEATURES.has(asking) ? [t(`settings.online.consent.${asking}`), t(adult === false ? "settings.online.attestation" : "settings.online.self_attestation")] : []),
         ]}
         confirm={t("settings.online.turn_on")}
         cancel={t("action.cancel")}
@@ -151,7 +153,7 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
             // The device switch alone is not profile consent. Adults can grant
             // their own through the existing consent API; minors keep the
             // signed guardian-checkout requirement enforced by the core.
-            if (feature === "study_materials" && adult && view.active !== null) {
+            if (feature === "study_materials" && adult === true && view.active !== null) {
               if (needed.includes(view.active)) {
                 setSubscription(await family.applySubscription({ entitlement: {}, consents: [
                   { profile_id: view.active, notice_version: CONSENT_NOTICE_VERSIONS.cloud_tier },

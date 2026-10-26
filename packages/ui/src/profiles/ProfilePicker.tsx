@@ -1,7 +1,7 @@
 // The profile picker (UXS-09, D86, D87; direction A "Studio"): on paper with the lockup (DSN-25), the students as large
 // avatars with their names; a tap opens that student's isolated learning space, with no PIN anywhere. "Add student" is
-// open to anyone and asks only for a name; everything else takes first run's defaults (TABLE PLT-17b), corrected later
-// in Settings → Profiles. A profile that cannot be opened says so on screen, whatever the reason, and a profile that
+// open to anyone and asks for a name and a date of birth, which only confirms the learner is 18 or over (JM-D15);
+// everything else takes first run's defaults (TABLE PLT-17b), corrected later in Settings → Profiles. A profile that cannot be opened says so on screen, whatever the reason, and a profile that
 // closed after inactivity says why (SEC-19). When the profile store cannot be read, "Show recovery options" opens
 // profile recovery (UXS-47). On a school lab computer the picker says plainly that anyone using it can open these
 // profiles (D102); nothing locks them (D86).
@@ -10,6 +10,7 @@ import { firstRunProfile, readLicence, sharedComputer, type ProfileController, t
 import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
 import { Button, EmptyState, ErrorState, FIELD_LOOK, Loader, Notice } from "../primitives/index.js";
+import { BirthDateField, birthDateCheck } from "../setup/BirthDate.js";
 import { WelcomeCard } from "../setup/Welcome.js";
 import { ProfileRecovery } from "./ProfileRecovery.js";
 import { Avatar, discOf } from "./Avatar.js";
@@ -20,12 +21,14 @@ export function useProfiles(profiles: ProfileController) {
 
 const TILE = "jana-press flex min-w-26 flex-col items-center gap-2.5 rounded-card px-2 py-3 text-ui font-medium text-ink hover:bg-wash disabled:cursor-not-allowed";
 
-/** "Add student": a name, then the student is added with first run's defaults for the installed subjects. */
+/** "Add student": a name and a date of birth (18 or over), then the learner is added with first run's defaults for the
+ * installed subjects. */
 export function AddStudent({ profiles, onAdded }: { profiles: ProfileController; onAdded?: (profileId: string) => void }) {
   const t = useT();
   const count = useProfiles(profiles).profiles.length;
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   if (!open) {
@@ -39,13 +42,14 @@ export function AddStudent({ profiles, onAdded }: { profiles: ProfileController;
   return (
     <form className="flex w-full flex-col gap-3 text-start" onSubmit={(event) => {
       event.preventDefault();
-      if (pending || name.trim() === "") return;
+      if (pending || name.trim() === "" || birthDateCheck(birthDate) !== "adult") return;
       setPending(true);
       setFailed(null);
       void profiles.family.packs().catch(() => [])
         .then((packs) => profiles.family.addProfile(firstRunProfile(name, packs, count)))
         .then((created) => {
           setName("");
+          setBirthDate("");
           setOpen(false);
           onAdded?.(created.profile_id);
         })
@@ -56,8 +60,9 @@ export function AddStudent({ profiles, onAdded }: { profiles: ProfileController;
         {t("first_run.name")}
         <input autoFocus className={FIELD_LOOK} autoComplete="off" maxLength={40} value={name} onChange={(event) => setName(event.target.value)} />
       </label>
+      <BirthDateField value={birthDate} onChange={setBirthDate} disabled={pending} />
       <div className="flex gap-2">
-        <Button type="submit" tone="primary" disabled={pending || name.trim() === ""}>{t("settings.profiles.create")}</Button>
+        <Button type="submit" tone="primary" disabled={pending || name.trim() === "" || birthDateCheck(birthDate) !== "adult"}>{t("settings.profiles.create")}</Button>
         <Button onClick={() => setOpen(false)}>{t("action.cancel")}</Button>
       </div>
       {failed !== null && <ErrorState message={t(`error.${failed}`)} />}

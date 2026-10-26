@@ -6,7 +6,7 @@
 import { describe, expect, test } from "vitest";
 import { ProfileController, type ProfileTimers } from "../src/profiles.js";
 import { SessionController, StoreHolder } from "../src/session.js";
-import { firstRunProfile, installedSubjects, subjectName } from "../src/setup.js";
+import { firstRunProfile, installedSubjects, isAdult, subjectName } from "../src/setup.js";
 import { tutorAnswers, unverifiedSubjects } from "../src/health.js";
 import { FakeProfileCore, PROFILES } from "./profilecore.js";
 
@@ -155,8 +155,8 @@ describe("PLT-17", () => {
     const packs = [pack("pack.phy.o", "phy", "O"), pack("pack.acc.o", "acc", "O"), pack("pack.mth.a", "mth", "A"), pack("pack.chm.o", "chm", "O", false)];
     expect(installedSubjects(packs).map((s) => s.subjectId)).toEqual(["cur.mth.a", "cur.phy.o", "cur.chm.o", "cur.acc.o"]);
     const created = firstRunProfile("  Ada ", packs, 0);
-    // The name is the only thing asked; everything else is TABLE PLT-17b's default.
-    expect(created).toEqual({ display_name: "Ada", avatar: "avatar-1", level: "O", subjects: ["physics", "chemistry", "accounting"], age_band: "13_15" });
+    // The name is the only thing kept from the form; the band is always adult and the rest is TABLE PLT-17b's default.
+    expect(created).toEqual({ display_name: "Ada", avatar: "avatar-1", level: "O", subjects: ["physics", "chemistry", "accounting"], age_band: "18_plus" });
     expect(firstRunProfile("Ben", [pack("pack.mth.a", "mth", "A")], 1)).toMatchObject({ level: "A", subjects: ["mathematics"], avatar: "avatar-2" });
     expect(firstRunProfile("Chi", [], 8).subjects.length).toBeGreaterThan(0);
     expect(subjectName("acc")).toBe("accounting");
@@ -178,5 +178,20 @@ describe("PLT-29", () => {
     expect(tutorAnswers({ health: ready, models: models([]) })).toBe(true); // a runtime is serving all the same
     expect(tutorAnswers({ health: ready, models: models([], "hardware_class.content_only.below_minimum_speed") })).toBe(false);
     expect(tutorAnswers({ health: coreOnly, models: models([], "hardware_class.content_only.below_minimum_ram", { hardware_class: "content_only", shortfalls: [], tutor_path: "online" }) })).toBe(true);
+  });
+});
+
+describe("JM-D15", () => {
+  test("only a real date of birth 18 or more years ago counts as adult", () => {
+    const today = new Date(2026, 9, 26);
+    expect(isAdult("2008-10-26", today)).toBe(true); // the 18th birthday is today
+    expect(isAdult("2008-10-27", today)).toBe(false); // the 18th birthday is tomorrow
+    expect(isAdult("1990-02-28", today)).toBe(true);
+    expect(isAdult("2012-01-01", today)).toBe(false);
+    expect(isAdult("2027-01-01", today)).toBeNull(); // in the future
+    expect(isAdult("2008-02-30", today)).toBeNull(); // not a date
+    expect(isAdult("1890-01-01", today)).toBeNull();
+    expect(isAdult("", today)).toBeNull();
+    expect(isAdult("26/10/2000", today)).toBeNull();
   });
 });

@@ -99,7 +99,7 @@ def voc20_spoken_form_gated(tmp_path):
     async def scenario():
         _, _, said, frames = await spoken_turn(tmp_path / "distress", [tutor(SAFE)], DISTRESS)
         shown = "".join(f["event"].get("delta", "") for f in frames if f["event"]["type"] == "text.delta")
-        assert said == verbalise(shown).text and "adult you trust" in said
+        assert said == verbalise(shown).text and "someone you trust" in said
         _, _, said, frames = await spoken_turn(tmp_path / "ordinary", [tutor(SAFE)])
         shown = "".join(f["event"].get("delta", "") for f in frames if f["event"]["type"] == "text.delta")
         assert said == verbalise(shown).text

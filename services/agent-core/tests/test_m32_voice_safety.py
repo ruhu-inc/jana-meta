@@ -37,7 +37,7 @@ def test_distress_voice_turn_keeps_flag_and_calm_screen_then_rests_idle(tmp_path
                 json=body(instructions, DISTRESS),
             )
             spoken = contents(response)
-            assert "adult you trust" in spoken  # the keyed template only, no model text
+            assert "someone you trust" in spoken  # the keyed template only, no model text
             job = next(iter(runtime.adapter.jobs.values()))
             if ending == "voice_off":
                 await socket.close()
@@ -127,7 +127,7 @@ def test_calm_hold_survives_voice_off_and_on_and_clears_on_profile_lock(tmp_path
                 headers={"authorization": "Bearer adapter-secret"},
                 json=body(instructions, DISTRESS),
             )
-            assert "adult you trust" in contents(response)
+            assert "someone you trust" in contents(response)
             await socket.close()
             async with asyncio.timeout(2):
                 while runtime.adapter.jobs:

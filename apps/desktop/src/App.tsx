@@ -1149,7 +1149,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
           actions={{ onBrowse: () => setScreen("learn"), onPractise: (kcIds, subject) => openPractice(subject, kcIds) }} />
       );
     }
-    if (screen === "settings") return <Settings section={settingsAt} voiceSettings={<VoiceSettings profiles={profiles} />} profiles={profiles} chooseSource={runtime.chooseSource} notices={NOTICES} assets={ASSETS} ideaName={(kc) => known.topics.get(kc) ?? null} onClose={() => {
+    if (screen === "settings") return <Settings section={settingsAt} voiceSettings={<VoiceSettings profiles={profiles} />} profiles={profiles} chooseSource={runtime.chooseSource} notices={NOTICES} assets={ASSETS} onClose={() => {
       const back = studySettingsReturn.current;
       studySettingsReturn.current = null;
       if (back && back.profile === active) {

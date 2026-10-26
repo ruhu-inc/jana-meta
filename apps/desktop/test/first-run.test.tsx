@@ -46,16 +46,12 @@ function start(fake: FakeProfileCore) {
 
 const posts = (fake: FakeProfileCore, path: string) => fake.log.filter((r) => r.method === "POST" && r.path === path).map((r) => r.body as Record<string, unknown>);
 
-async function firstRun(names: string[]) {
+async function firstRun(name: string, birthDate = "1990-05-14") {
   await screen.findByRole("heading", { name: "Who's learning?" });
-  fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: names[0] } });
-  for (const name of names.slice(1)) {
-    fireEvent.click(screen.getByRole("button", { name: "Add another student" }));
-    const fields = screen.getAllByRole("textbox", { name: "Another student's first name or nickname" });
-    fireEvent.change(fields.at(-1)!, { target: { value: name } });
-  }
+  fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: name } });
+  fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: birthDate } });
   fireEvent.click(screen.getByRole("button", { name: "Start learning" }));
-  return screen.findByRole("region", { name: `You're ready, ${names[0]}.` });
+  return screen.findByRole("region", { name: `You're ready, ${name}.` });
 }
 
 async function mapTile() {
@@ -71,7 +67,7 @@ describe("UXS-10 and PLT-17", () => {
     const fake = core((c) => c.profiles.splice(0));
     start(fake);
     await screen.findByRole("heading", { name: "Who's learning?" });
-    // One step: a name, "Add another student", the privacy line and "Start learning". Nothing else is asked.
+    // One step: a name, a date of birth, the privacy line and "Start learning". Nothing else is asked.
     expect(screen.getAllByRole("textbox")).toHaveLength(1);
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
@@ -82,11 +78,11 @@ describe("UXS-10 and PLT-17", () => {
     const area = screen.getByRole("button", { name: "Start learning" }).closest<HTMLElement>("[data-centred]")!;
     expect(area.className).toMatch(/\boverflow-y-auto\b/);
     expect(area.contains(screen.getByRole("complementary", { name: "Status" }))).toBe(false);
-    const handoff = await firstRun(["Ada", "Ben"]);
-    // Each student added with TABLE PLT-17b's defaults: the installed subjects at their level, the minor age band.
+    const handoff = await firstRun("Ada");
+    // The learner is added with TABLE PLT-17b's defaults (the installed subjects at their level) and the adult band;
+    // the date of birth itself is not sent.
     expect(posts(fake, "/v1/profiles")).toEqual([
-      { display_name: "Ada", avatar: "avatar-1", level: "O", subjects: ["physics", "accounting"], age_band: "13_15" },
-      { display_name: "Ben", avatar: "avatar-2", level: "O", subjects: ["physics", "accounting"], age_band: "13_15" },
+      { display_name: "Ada", avatar: "avatar-1", level: "O", subjects: ["physics", "accounting"], age_band: "18_plus" },
     ]);
     expect(handoff.textContent).not.toMatch(/Step \d of \d/);
     fireEvent.click(within(handoff).getByRole("button", { name: "Continue" }));
@@ -96,9 +92,27 @@ describe("UXS-10 and PLT-17", () => {
     // A later launch: the picker, and the hand-off is not said again.
     start(fake);
     await screen.findByRole("heading", { name: "Who's learning?" });
-    fireEvent.click(screen.getByRole("button", { name: /^Ben/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Ada/ }));
     await screen.findByRole("navigation", { name: "Main" });
     expect(screen.queryByRole("region", { name: /You're ready/ })).toBeNull();
+  });
+
+  test("jm_d15_first_run_makes_no_profile_for_someone_under_18", async () => {
+    const fake = core((c) => c.profiles.splice(0));
+    start(fake);
+    await screen.findByRole("heading", { name: "Who's learning?" });
+    fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: "Tobi" } });
+    const begin = screen.getByRole("button", { name: "Start learning" });
+    expect(begin.hasAttribute("disabled")).toBe(true); // no date of birth yet
+    const now = new Date(), year = now.getFullYear() - 16;
+    fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: `${year}-01-01` } });
+    expect(screen.getByText(/this app is for learners aged 18 and over, so a profile cannot be made/)).toBeTruthy();
+    expect(begin.hasAttribute("disabled")).toBe(true);
+    fireEvent.submit(begin.closest("form")!);
+    fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: `${now.getFullYear() + 1}-01-01` } });
+    expect(screen.getByText("Enter your date of birth as it appears on your documents.")).toBeTruthy();
+    expect(begin.hasAttribute("disabled")).toBe(true);
+    expect(posts(fake, "/v1/profiles")).toEqual([]);
   });
 
   test("uxs10_below_minimum_laptop_state", async () => {
@@ -108,7 +122,7 @@ describe("UXS-10 and PLT-17", () => {
       c.health = { status: "ok", components: { core: "ok", runtime: "down" }, readiness: "core_ready" };
     });
     start(fake);
-    const handoff = await firstRun(["Ada"]);
+    const handoff = await firstRun("Ada");
     await waitFor(() => expect(handoff.textContent).toContain("This computer has 4 GB of memory; the tutor needs 8 GB."));
     expect(handoff.textContent).toContain("Lessons, practice and worked solutions work here.");
     expect(handoff.textContent).not.toMatch(/an adult/i);
@@ -138,13 +152,13 @@ describe("PLT-17 and UXS-10, offline and minimal", () => {
     expect(document.querySelector("input[type='password'], input[autocomplete^='cc-'], select")).toBeNull();
     expect(document.body.textContent).not.toMatch(/\bPIN\b|recovery code|activation|licen[cs]e|account|sign in|password/i);
     // The step's actions (TABLE PLT-17a), then the connection status at the foot that says everything stays here.
-    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["Add another student", "Start learning", "On this computer"]);
-    const handoff = await firstRun(["Ada"]);
+    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["Start learning", "On this computer"]);
+    const handoff = await firstRun("Ada");
     expect(handoff.textContent).not.toMatch(/\bPIN\b|recovery code|activation|licen[cs]e|account|sign in|password/i);
     // "Start learning" after one name: one student added with TABLE PLT-17b's defaults and the step recorded as done
     // (`PUT /v1/setup`, so a later launch opens the picker), and nothing else written.
     // No licence, setting, online feature or consent was touched (every online feature stays off).
-    expect(posts(fake, "/v1/profiles")).toEqual([{ display_name: "Ada", avatar: "avatar-1", level: "O", subjects: ["physics", "accounting"], age_band: "13_15" }]);
+    expect(posts(fake, "/v1/profiles")).toEqual([{ display_name: "Ada", avatar: "avatar-1", level: "O", subjects: ["physics", "accounting"], age_band: "18_plus" }]);
     const created = fake.profiles[0]!.profile_id;
     for (const write of writes(fake)) expect(write, write).toMatch(new RegExp(`^POST /v1/profiles(/${created}/(open|unlock))?$|^POST /v1/sessions|^PUT /v1/setup$`));
     await waitFor(() => expect(writes(fake)).toContain("PUT /v1/setup"));
@@ -166,7 +180,7 @@ describe("PLT-17 and UXS-10, offline and minimal", () => {
       start(fake);
       await screen.findByRole("heading", { name: "Who's learning?" });
       expect(document.body.textContent, id).not.toMatch(/download/i);
-      const handoff = await firstRun(["Ada"]);
+      const handoff = await firstRun("Ada");
       await waitFor(() => expect(handoff.getAttribute("data-setup"), id).not.toBe("checking"));
       expect(document.body.textContent, id).not.toMatch(/download/i);
       for (const button of within(handoff).getAllByRole("button")) expect(button.textContent, id).not.toMatch(/download|get the tutor|buy|subscribe/i);
@@ -245,9 +259,14 @@ describe("UXS-09", () => {
     await screen.findByRole("heading", { name: "Who's learning?" });
     fireEvent.click(screen.getByRole("button", { name: "Add student" }));
     fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: "Dee" } });
-    fireEvent.click(screen.getByRole("button", { name: "Add student" }));
+    const add = screen.getAllByRole("button", { name: "Add student" }).at(-1)!;
+    fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "2015-03-01" } });
+    expect(add.hasAttribute("disabled")).toBe(true); // under 18: nothing is added
+    expect(screen.getByText(/this app is for learners aged 18 and over, so a profile cannot be made/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "1988-11-02" } });
+    fireEvent.click(add);
     await screen.findByRole("button", { name: /^Dee/ });
-    expect(posts(fake, "/v1/profiles").at(-1)).toEqual({ display_name: "Dee", avatar: "avatar-4", level: "O", subjects: ["physics", "accounting"], age_band: "13_15" });
+    expect(posts(fake, "/v1/profiles").at(-1)).toEqual({ display_name: "Dee", avatar: "avatar-4", level: "O", subjects: ["physics", "accounting"], age_band: "18_plus" });
   });
 
   test("test_uxs09_open_failure_is_said", async () => {
@@ -336,7 +355,7 @@ describe("UXS-10 hand-off interview and the shared lab (JRN-03 step 3, D102)", (
       ];
     });
     start(fake);
-    const handoff = await firstRun(["Ada"]);
+    const handoff = await firstRun("Ada");
     fireEvent.click(within(handoff).getByRole("button", { name: "Continue" }));
     const card = await screen.findByRole("region", { name: "Two quick questions" });
     expect(card.textContent).toContain("Question 1 of 2");
@@ -363,7 +382,7 @@ describe("UXS-10 hand-off interview and the shared lab (JRN-03 step 3, D102)", (
       .map((r) => r.body as Record<string, unknown>).filter((b) => "tutor_avatar" in b || "tutor_name" in b);
     const fake = withPick();
     start(fake);
-    fireEvent.click(within(await firstRun(["Ada"])).getByRole("button", { name: "Continue" }));
+    fireEvent.click(within(await firstRun("Ada")).getByRole("button", { name: "Continue" }));
     const pick = await screen.findByRole("region", { name: "Choose your tutor" });
     fireEvent.click(await within(pick).findByRole("radio", { name: "Orbit" }));
     expect((within(pick).getByRole("textbox", { name: "Your tutor's name" }) as HTMLInputElement).value).toBe("Orbit");
@@ -374,7 +393,7 @@ describe("UXS-10 hand-off interview and the shared lab (JRN-03 step 3, D102)", (
 
     const kept = withPick();
     start(kept);
-    fireEvent.click(within(await firstRun(["Ada"])).getByRole("button", { name: "Continue" }));
+    fireEvent.click(within(await firstRun("Ada")).getByRole("button", { name: "Continue" }));
     fireEvent.click(within(await screen.findByRole("region", { name: "Choose your tutor" })).getAllByRole("button", { name: "Keep Jana" })[0]!);
     await screen.findByRole("region", { name: "Two quick questions" });
     expect(tutorPatches(kept)).toEqual([]);

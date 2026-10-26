@@ -148,7 +148,7 @@ describe("UXS-44", () => {
       expect(within(sheet).getAllByRole("radio").map((r) => r.parentElement?.textContent)).toEqual(["It isn't right", "It's confusing", "It's unsafe or upsetting"]);
       expect((screen.getByRole("checkbox", { name: "Let this report and note be sent to support" }) as HTMLInputElement).checked).toBe(false);
       fireEvent.click(within(sheet).getByRole("radio", { name: "It's unsafe or upsetting" }));
-      expect(screen.getByText("If you feel unsafe, talk to an adult you trust.")).toBeTruthy();
+      expect(screen.getByText("If you feel unsafe, talk to someone you trust.")).toBeTruthy();
       fireEvent.change(screen.getByRole("textbox", { name: /Note/ }), { target: { value: "The second step looked odd." } });
       fireEvent.click(screen.getByRole("button", { name: "Save report" }));
       await screen.findByText("Thanks. Your report is saved on this computer. You can send it to us from Settings, under Help.");

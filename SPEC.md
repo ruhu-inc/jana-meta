@@ -403,9 +403,10 @@ The project review of 2026-10-26 found these gaps in the plan above; each must b
   request cap, free-trial access only). `voice.py` is tied to Google beyond `voice_google` (`PROVIDER="google"`,
   `google_stack`). Barge-in is a server control: there is no client VAD, so §3's diagram is wrong.
 - **W5 (done in part 2026-10-26)**: `client-core/src/setup.ts` made every profile `13_15`. The app now asks for a date
-  of birth on every create form, checks it on the device without storing or sending it, and creates `18_plus` only;
-  `POST`/`PATCH /v1/profiles` refuse other bands. Profiles an older build made keep their band and their guardian
-  rules. The parent summary and alerts sections are gone. Still to do: `parent_remote_view`, the other guardian copy
+  of birth on every create form, checks it on the device without storing or sending it, and creates `18_plus` only.
+  Still to do: make `POST`/`PATCH /v1/profiles` refuse other bands too; about 100 test profiles in 51 modules are
+  created with minor bands through the API (the `student()` helper defaults to `13_15`) and must move first.
+  Profiles an older build made keep their band and their guardian rules. The parent summary and alerts sections are gone. Still to do: `parent_remote_view`, the other guardian copy
   and `engine/parents.py`, which also serves Progress history through `api/parents.py`, so it cannot be dropped whole.
 - **W6**: §10.1 was already ported (only the core test was missing; added). §10.2: the Diagnoser's free `subject`
   field wins over its topic's subject (`team.py` ~294), and unplaced subjects score as weakest (`planner.py` ~125).

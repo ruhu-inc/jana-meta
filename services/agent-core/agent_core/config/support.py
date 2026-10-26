@@ -246,5 +246,6 @@ def settings_sections(stage: str) -> list[dict[str, Any]]:
         raise ValueError("UXS-46: unknown stage")
     names = list(SECTIONS) if stage >= "S2" else []
     if stage >= "S3":
-        names += ["parent_summary", "alerts", "voice"]
+        # Jana is for learners aged 18 and over (JM-D15): no parent summary or alerts for a parent.
+        names += ["voice"]
     return [{"id": name, "gate": "open", "offline": True, "states": ["ready", "empty", "error"]} for name in names]

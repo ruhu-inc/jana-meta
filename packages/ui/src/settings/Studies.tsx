@@ -102,7 +102,7 @@ export function ResearchExport({ profiles, chooseSource }: { profiles: ProfileCo
 export function Studies({ profiles, chooseSource }: { profiles: ProfileController; chooseSource?: ChooseInstallSource | undefined }) {
   const t = useT();
   const [consents, setConsents] = useState<ConsentState[] | "loading" | "failed">("loading");
-  const [adult, setAdult] = useState(false);
+  const [adult, setAdult] = useState<boolean | null>(null); // unknown until read: no agreement is offered before
   const [asking, setAsking] = useState<string | null>(null);
   const [withdrawing, setWithdrawing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -118,13 +118,13 @@ export function Studies({ profiles, chooseSource }: { profiles: ProfileControlle
       return;
     }
     readConsents(profiles.commands, profileId).then((list) => live && setConsents(list), () => live && setConsents("failed"));
-    setAdult(false);
-    readProfile(profiles.commands, profileId).then((profile) => live && setAdult(agreesForItself(profile)), () => undefined); // unread: a minor
+    setAdult(null);
+    readProfile(profiles.commands, profileId).then((profile) => live && setAdult(agreesForItself(profile)), () => live && setAdult(false)); // unread: a minor
     return () => {
       live = false;
     };
   }, [profiles]);
-  if (consents === "loading") return <Skeleton lines={2} />;
+  if (consents === "loading" || adult === null) return <Skeleton lines={2} />;
   if (consents === "failed") return <ErrorState message={t("settings.study.unavailable")} />;
   const scopes = RESEARCH_SCOPES.filter((scope) => consents.some((c) => c.scope === scope));
   if (scopes.length === 0) return null;

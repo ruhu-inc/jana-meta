@@ -70,7 +70,7 @@ export { PhotoCommands, type Corner } from "./photo.js";
 
 export { checkPhotoHeader } from "./photo-header.js";
 
-export { SUBJECT_CODES, SUBJECT_NAMES, firstRunProfile, installedSubjects, subjectName, type InstalledSubject, type SubjectName } from "./setup.js";
+export { ADULT_BAND, SUBJECT_CODES, SUBJECT_NAMES, firstRunProfile, installedSubjects, isAdult, subjectName, type InstalledSubject, type SubjectName } from "./setup.js";
 export { ProblemReports, type NewProblemReport, type ProblemReport } from "./reports.js";
 export { STAGE_2_SECTIONS, SettingsSections, readSettingsSections, type SettingsSection, type SettingsSectionsReply } from "./settings-sections.js";
 export { ARTICLE_KEY_PREFIX, OfflineHelp, issueArticle, readHelp, searchHelp, type HelpArticle, type KnownIssue, type OfflineHelpReply } from "./help.js";

@@ -35,10 +35,26 @@ export function installedSubjects(packs: PackList["packs"]): InstalledSubject[] 
   return [...found.values()].sort((a, b) => rank(a) - rank(b));
 }
 
-/** A new student as first run adds them (TABLE PLT-17b): the name is the only thing asked; the age band is the minor
- * band "13 to 15"; level and subjects are every installed subject at the level of the installed packs (O level when
- * both are installed). With no pack installed yet, every subject at O level, so content added later fits. The disc
- * follows the order of creation (DSN-24). */
+/** Jana is for learners aged 18 and over (JM-D1, JM-D15): every profile the app creates has this band. */
+export const ADULT_BAND = "18_plus" as const;
+
+/** Whether a date of birth (`yyyy-mm-dd`, as a date field gives it) is 18 or more years before `today`, or null when
+ * it is not a real date in the past. The date is only checked here: it is never stored or sent. */
+export function isAdult(birthDate: string, today: Date = new Date()): boolean | null {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
+  if (parts === null) return null;
+  const [year, month, day] = [Number(parts[1]), Number(parts[2]), Number(parts[3])];
+  const born = new Date(year, month - 1, day);
+  if (born.getFullYear() !== year || born.getMonth() !== month - 1 || born.getDate() !== day) return null;
+  if (year < 1900 || born > today) return null;
+  const birthdayPassed = today.getMonth() > month - 1 || (today.getMonth() === month - 1 && today.getDate() >= day);
+  return today.getFullYear() - year - (birthdayPassed ? 0 : 1) >= 18;
+}
+
+/** A new learner as first run adds them (TABLE PLT-17b): the name is asked, and the date of birth only to confirm
+ * they are 18 or over; the band is always the adult band; level and subjects are every installed subject at the level
+ * of the installed packs (O level when both are installed). With no pack installed yet, every subject at O level, so
+ * content added later fits. The disc follows the order of creation (DSN-24). */
 export function firstRunProfile(name: string, packs: PackList["packs"], order: number): CreateProfile {
   const installed = installedSubjects(packs);
   const level = installed.length === 0 || installed.some((s) => s.level === "O") ? "O" : "A";
@@ -48,6 +64,6 @@ export function firstRunProfile(name: string, packs: PackList["packs"], order: n
     avatar: `avatar-${(order % 8) + 1}`,
     level,
     subjects: subjects.length > 0 ? subjects : [...SUBJECT_NAMES],
-    age_band: "13_15",
+    age_band: ADULT_BAND,
   };
 }

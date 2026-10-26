@@ -75,7 +75,7 @@ export const ICONS = {
   crash: { glyph: Bug, mirrorInRtl: false },
   share: { glyph: Share2, mirrorInRtl: false },
   calm: { glyph: Wind, mirrorInRtl: false },
-  // "Add another student" and the picker's "Add student" (UXS-09, UXS-10).
+  // The picker's "Add student" (UXS-09).
   "add-student": { glyph: UserPlus, mirrorInRtl: false },
   // Mock exams (UXS-25): the place, its clock, the navigator's answered / flagged for review / not seen yet, the
   // calculator note, pause and continue; and the research studies of the study screen (PRV-06).
