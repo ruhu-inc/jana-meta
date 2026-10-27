@@ -696,6 +696,8 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
    1–2 times itself; `background: true` took 36 s, mostly queued, and `?stream=true` retrieval returns plain JSON, so
    the job, already in the background, sends plain requests, up to 4 at once). What comes back is the model's answer
    and the result list: titles and URLs, with **no `url_citation` annotations and empty snippets** in the probes.
+   Left alone Spark searched 9 times for one broad question, so each request sends `max_tool_calls: 1` (and
+   `store: false`), both accepted (§18.11).
 3b. **Fetch the sources**: so claims can be checked against real text, the gateway fetches the distinct result URLs
    the source policy allows (§18.10, up to 30 per job): `https` only, public addresses only (no private, loopback or
    link-local IPs after resolution, no redirects to them), 1 MB and 8 s per page, `text/html` or `text/plain`,
@@ -715,7 +717,8 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
   keeps the draft brief in Study, and nothing is sent until **Start research**.
 - Then in the gateway: `queued`, `researching` (step k of n, with the sub-question titles and the number of sources found),
   `verifying`, `ready`, `waiting_online`, `failed`, `cancelled`.
-- **Cancel** stops the job, cancels in-flight Meta responses (`POST /v1/responses/{id}/cancel`) and releases its holds.
+- **Cancel** stops the job: no new request is sent, and the ones in flight finish and settle (a cancelled response
+  reports no usage, §18.5), so Cancel never cancels a Meta response; the job keeps no pages.
 - One job per learner at a time; others queue. Target 1–5 minutes; hard stop at 15.
 - When the device is back online after the job finished, the pack is fetched and saved; a notice says it is ready.
 
@@ -739,15 +742,15 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
 - A separate consent, **Research on the web**, says what leaves: the topic, and for a photo the photo after the
   on-device privacy pass. Never notes or files the learner did not choose. The device's redaction check applies.
 - Background and stored responses are kept by Meta (`store: true`); Standard mode means no training. This conflicts
-  with zero data retention (§15 item 2).
+  with zero data retention (§15 item 2). The job's plain requests send `store: false` (accepted, 2026-10-27).
 - The gateway keeps a job's data only until the device fetches it, at most 24 hours, under the session pseudonym.
 
 ### 18.7 Changes
 
 | Where | Change |
 |---|---|
-| `cloud_gateway/providers/meta_responses.py` (new) | Responses API client: background create, streamed retrieval, cancel; parses `web_search_call`, `url_citation` and Responses usage (`input_tokens`, `output_tokens`, reasoning inside output) |
-| `cloud_gateway/research.py` (new) | The job runner and stages, checkpoints in the gateway store; `POST /v1/research` (takes the approved brief, plus a photo's confirmed parts and outlines), `GET /v1/research/{id}` (with an event stream), `POST /v1/research/{id}/cancel`, `DELETE /v1/research/{id}` |
+| `cloud_gateway/providers/meta_responses.py` (new, **done** 2026-10-27) | Responses API client: one plain request per search (not background, never cancelled); parses `web_search_call`, `url_citation` and Responses usage (`input_tokens`, `output_tokens`, reasoning inside output) |
+| `cloud_gateway/research.py`, `research_fetch.py` (new, **done** 2026-10-27, §18.11) | The job runner, stages 2–3b, checkpoints in the gateway store; `POST /v1/research` (takes the approved brief and a photo's confirmed part names), `GET /v1/research/{id}` (polled; no event stream), `POST /v1/research/{id}/cancel`, `DELETE /v1/research/{id}` |
 | `agent_core/engine/research_chat.py` (new), `contracts/study/research-brief.schema.json` (new) + codegen | The conversation (§18.1a): one structured Spark call per turn returning the next question with its chips, or the brief; screened like tutoring input; at most three questions; "Skip" goes straight to the brief |
 | Study `concept_map` | Accept the job's verified excerpts as the document of a `concept_map` run, so the pack's map is cited and checked |
 | `cloud_gateway/inference_budget.py`, `config.py` | Search pricing in the ledger; `[research]` settings (searches, rounds, time limits, allowance, source policy) |
@@ -789,3 +792,49 @@ another's job; parallel research respecting the limit of 4.
    Applied as a ranking and exclusion rule on the cited results, never by trusting a page's own claims.
 5. **Scope**: the exam subjects (Mathematics, Physics, Chemistry, Accounting) plus Biology diagrams; other topics get
    a short "not something Jana researches yet".
+
+### 18.11 The gateway job as built (2026-10-27)
+
+Stages 2–3b run in the gateway (`cloud_gateway/research.py`, `research_fetch.py`, `providers/meta_responses.py`,
+`[research]` in `defaults.toml`; tests in `tests/test_research.py`). Stages 4–6 are the device's: it saves the pages
+as Study sources and runs Study's verified jobs on them.
+
+- **Routes**: `POST /v1/research` (`ResearchRequest`) answers **202** with a `ResearchJob` in `queued`
+  (`rsj_<ULID>`); `GET /v1/research/{id}` is polled; `POST …/cancel` replies with the cancelled job once the requests
+  in flight have finished; `DELETE` answers 204. Auth is the Study routes'; a job is bound to its credential, and any
+  other gets 404. A body outside the contract is 400 before anything is sent; 429 `quota` past 5 jobs a day per
+  subscription (UTC day) or the subscription's usual quotas; 503 without a key.
+- **Running**: one job per learner at a time (others stay `queued`); one search per sub-question, at most 4 at once;
+  then each sub-question fetches its share of the 30 pages (ranked by the source policy, further results tried when a
+  page fails, a URL taken once). `pages` is set only when `ready`. Failures: `no_sources` (< 3 pages), `budget` (the
+  $0.30 cap or the deployment budget), `timeout` (15 minutes from creation, checked before each request), `upstream`
+  (every search failed), `interrupted` (a resumed job whose credential is gone). A sub-question past the 12-search cap
+  is `failed` and the job goes on.
+- **Durability**: `research_jobs` in the gateway store, checkpointed when a sub-question's search returns and when
+  its pages are fetched; the gateway resumes unfinished jobs on start. A search in flight at a crash is sent again
+  and its bound counts against the job.
+- **Money**: each request holds 16k input and 2,048 output tokens plus one search (**$0.031**) in the shared ledger
+  and against the job's cap, waits when other holds fill the cap, and settles at tokens plus counted searches; each
+  is a `requests` row (feature `research`). The gateway deletes a `ready` job once it has been fetched, and any job
+  after 24 hours; failed and cancelled jobs keep no pages.
+- **Fetching**: https on port 443 only; every resolved address must be global (IPv4-mapped included) and the
+  connection is pinned to the checked address with the host as TLS name (no DNS rebinding); every redirect hop is
+  checked, at most 3; 8 s and 1 MB per page (decoded); `text/html` or `text/plain`; HTML reduced with `html.parser`
+  to headings, paragraphs and list items; at least 500 characters, at most 60,000; instruction-like blocks withheld
+  (the `inert` pattern). Excluded: social, forum, video and answer-selling hosts, plus `.lat`, `.quest`, `.live` and
+  similar top-level domains that returned only spam.
+
+**Live check, 2026-10-27** (`deploy/meta-dev.toml`, real key, the dev ledger):
+
+| Run | Time | Searches | Tokens in / out | Pages | Cost |
+|---|---|---|---|---|---|
+| 1 broad sub-question, no `max_tool_calls` | 15.1 s request, 26 s job | 9 (4 queries) | 43,689 / 1,287 (12,838 cached) | 18 | $0.068 |
+| 1 sub-question, `max_tool_calls: 1`, `store: false` | 5.1 s request | 1 | 3,224 / 792 | ≥ 3 | $0.0099 |
+| **4 sub-questions about the heart** (the check) | **16.1 s job**, requests 4.8–7.2 s | 4 | ~3,100–3,400 / 680–1,130 each | **22** (3–7 per sub-question) | **$0.042** |
+
+All holds settled; snippets were empty and there were no `url_citation` annotations, as before. **Source quality is
+the open problem**: Spark's queries ("… GCSE O level biology") returned revision and tutoring sites (aleveler,
+testbook, mytutor, tuttee, brainscape) and no encyclopaedia or open-textbook page; gauthmath, brainly, quizlet,
+YouTube and answers.com were excluded as intended, and savemyexams and Britannica pages did not fetch. Next: steer the
+search prompt toward reference sources (name Wikipedia, Britannica, OpenStax, Khan Academy, BBC Bitesize) and
+measure again; then the device import (§18.7).
