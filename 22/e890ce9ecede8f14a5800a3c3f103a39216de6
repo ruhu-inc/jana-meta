@@ -1,0 +1,21 @@
+packages/ui/test/online.test.tsx
+  s_11f8fb97757ad6::t_986e1aefd1c8ef 246-264
+packages/ui/src/settings/OnlineFeatures.tsx
+  s_11f8fb97757ad6::t_9d344aea2b8813 22,24-25,133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "22e890ce9ecede8f14a5800a3c3f103a39216de6",
+  "prompts": {},
+  "sessions": {
+    "s_11f8fb97757ad6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3ed4da93-12cd-4930-a375-0bf68f4e4ba4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}

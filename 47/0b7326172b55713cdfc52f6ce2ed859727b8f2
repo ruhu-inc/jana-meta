@@ -1,0 +1,22 @@
+services/agent-core/agent_core/learner/planner.py
+  s_11f8fb97757ad6::t_456e424d321a10 122-124,126-131,143-150,179
+  s_11f8fb97757ad6::t_0b26174a92b0a3 181-182
+services/agent-core/tests/test_s10_next_up_subject.py
+  s_11f8fb97757ad6::t_31a95f8bc84a49 37-39,41-44,46-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "470b7326172b55713cdfc52f6ce2ed859727b8f2",
+  "prompts": {},
+  "sessions": {
+    "s_11f8fb97757ad6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3ed4da93-12cd-4930-a375-0bf68f4e4ba4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
