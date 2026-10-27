@@ -9,6 +9,9 @@ Model calls (ARC-12, MDL-25, MDL-26, SEC-20, OBS-22):
   POST /v1/chat/completions                         OpenAI chat-completions body, model "<slot>/<alias>"
 Photo segmentation (JM-D10, `cloud_gateway.segment`):
   POST /v1/vision/segment                           a screened photo and boxes, points or one concept -> masks
+Research agent (SPEC §18, `cloud_gateway.research`):
+  POST /v1/research                                 an approved brief -> 202 a queued job (`rsj_<ULID>`)
+  GET /v1/research/{id};  POST /v1/research/{id}/cancel;  DELETE /v1/research/{id}
 Cloud voice (VOC-28, `cloud_gateway.voice`):
   WS /v1/voice/realtime                             the Realtime wire subset (VOC-25) plus the device voice tunnel
 Probes (ARC-08, OBS-22):
@@ -418,7 +421,9 @@ def create_app(
             while True:
                 await asyncio.sleep(15)
                 app.state.study.sweep()
+                app.state.research.sweep()
 
+        app.state.research.resume()  # unfinished research jobs continue from their checkpoints (SPEC §18.3)
         study_task = asyncio.create_task(study_expiry())
         task = asyncio.create_task(objectives())
         probe_task = asyncio.create_task(probe_providers())
@@ -436,6 +441,7 @@ def create_app(
             await app.state.voice.stack.aclose()
             await app.state.podcast_speech.client.aclose()
             await app.state.segment.sam.aclose()
+            await app.state.research.aclose()
             await gw.providers.aclose()
             gw.store.close()
 
@@ -457,6 +463,15 @@ def create_app(
 
     # SAM 3.1 photo segmentation (JM-D10): its own HTTP client, made like a provider's.
     app.state.segment = segment_routes(app, gw, client_factory("sam", config.sam) if config.sam.enabled else None)
+
+    from cloud_gateway.research import add_routes as research_routes
+
+    # The research agent's job (SPEC §18): Muse Spark web search on the Responses API, with its own HTTP client.
+    research_provider = config.providers.get(config.slots.get(config.study_model.split("/")[0], ""))
+    app.state.research = research_routes(
+        app, gw, client_factory("research", research_provider)
+        if research_provider is not None and research_provider.adapter == "meta" else None,
+    )  # fmt: skip
 
     app.add_middleware(_VersionHeader, budget_enabled=gw.inference_budget is not None)
 
