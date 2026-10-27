@@ -1,0 +1,27 @@
+SPEC.md
+  s_0d27c93fb12076::t_cdece8f920efd0 841-862
+services/cloud-gateway/tests/test_research.py
+  s_0d27c93fb12076::t_51555cb26ac9ef 266
+  s_0d27c93fb12076::t_69bf5f01756d60 265
+  s_0d27c93fb12076::t_79e5cc045ab1ae 263-264
+services/cloud-gateway/cloud_gateway/research.py
+  s_0d27c93fb12076::t_2395b6b4c5714e 77,87,91,94,111,116
+  s_0d27c93fb12076::t_69bf5f01756d60 88-90,92-93
+  s_0d27c93fb12076::t_51555cb26ac9ef 78-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4ac78a6ab4e99b6ff0f2f8878e980357a1f0c0a1",
+  "prompts": {},
+  "sessions": {
+    "s_0d27c93fb12076": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2dc3e655-b5ed-429b-9b94-01851545f7b6",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
