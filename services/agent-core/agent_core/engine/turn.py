@@ -66,6 +66,7 @@ from agent_core.engine.gates import (
     untraced_numbers,
     verdict_problems,
     withheld_texts,
+    words_to_numbers,
 )
 from agent_core.engine.gates import surfaces as gate_surfaces
 from agent_core.engine.input import normalise_input, one_line
@@ -1528,10 +1529,12 @@ class Engine(Coordination, Offers, Predictions):
 
     def _given(self, value: str) -> bool:
         """A step that only restates numbers of the problem statement computes nothing: its provenance is the statement
-        (AGT-10, G79). Zero counts as given: "from rest" and "comes to a stop" state it in words. A given may carry the
-        sign of its direction ("220 m south" with north positive is -220)."""
+        (AGT-10, G79). Zero counts as given: "from rest" and "comes to a stop" state it in words, and so do numbers
+        written as words ("in five seconds": how speech to text writes a spoken question). A given may carry the sign
+        of its direction ("220 m south" with north positive is -220)."""
         wanted = numbers_in(value)
-        given = [Fraction(0), *(numbers_in(self.state.problem.statement) if self.state.problem else [])]
+        statement = self.state.problem.statement if self.state.problem else ""
+        given = [Fraction(0), *numbers_in(statement), *words_to_numbers(statement)]
         return bool(wanted) and all(any(_close(abs(w), abs(g)) for g in given) for w in wanted)
 
     def _check_for(self, value: str, cited: str | None) -> str | None:
