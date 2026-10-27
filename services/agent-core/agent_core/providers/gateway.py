@@ -113,6 +113,7 @@ class GatewayProvider:
             "compaction",
             "input_guard",
             "rule_matcher",
+            "research_chat",
         }:
             headers["x-jana-role"] = str(role)
         if self.token is not None:
