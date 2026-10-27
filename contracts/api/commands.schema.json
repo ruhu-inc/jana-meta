@@ -12549,6 +12549,92 @@
    ],
    "stage": "S3",
    "owner": "VSL-42"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/study/research/chat",
+   "request": "https://jana.dev/contracts/study/research#/$defs/ChatRequest",
+   "response": "https://jana.dev/contracts/study/research#/$defs/ChatTurn",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "validation_failed",
+    "feature_disabled",
+    "model_unavailable",
+    "network_unavailable",
+    "tutor_locked"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/study/research",
+   "request": "https://jana.dev/contracts/study/research#/$defs/CreateRequest",
+   "response": "https://jana.dev/contracts/study/research#/$defs/Record",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "validation_failed",
+    "request_conflict",
+    "feature_disabled",
+    "not_found",
+    "tutor_locked"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/study/research",
+   "request": null,
+   "response": "https://jana.dev/contracts/study/research#/$defs/RecordList",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "feature_disabled"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/study/research/{research_id}",
+   "request": null,
+   "response": "https://jana.dev/contracts/study/research#/$defs/Record",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "feature_disabled"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/study/research/{research_id}/cancel",
+   "request": null,
+   "response": "https://jana.dev/contracts/study/research#/$defs/Record",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "feature_disabled",
+    "request_conflict"
+   ],
+   "stage": "S3",
+   "owner": "API-44"
   }
  ]
 }

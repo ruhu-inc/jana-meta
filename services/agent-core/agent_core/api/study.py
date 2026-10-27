@@ -135,7 +135,7 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
                     selections = access_sources if request.method != "DELETE" else []
                 elif isinstance(payload, dict):
                     selections = payload.get("sources", [])
-                    if "source_id" in payload and payload.get("state") != "deleted":
+                    if "source_id" in payload and "revision" in payload and payload.get("state") != "deleted":
                         selections = [{"source_id": payload["source_id"], "revision": payload["revision"]}]
                 d.conn.execute(
                     "INSERT INTO idempotency_responses VALUES (?,?,?,?,?)",
@@ -830,3 +830,7 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
             return card
 
         return await command(request, "CardEdit", run, ("deck", deck_id), atomic_command=False)
+
+    from agent_core.api import research
+
+    research.add_routes(app, core, desk, command, fail, response)  # the research agent's study packs (SPEC §18)

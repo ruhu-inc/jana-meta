@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/study/research.schema.json sha256 f6852389f10b85b9038939f05dfac4360c5f6bb374792eb6b5327452cffb03ab; do not edit",
+ "$comment": "GENERATED from contracts/study/research.schema.json sha256 1b1c6c26f8f823ae1cd61266b16276f2f76d07e01742e4cc505242d9f9749b86; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/study/research",
  "title": "Study research agent",
@@ -325,6 +325,303 @@
     "updated_at": {
      "type": "integer",
      "minimum": 0
+    }
+   }
+  },
+  "RecordId": {
+   "type": "string",
+   "pattern": "^rsr_[0-9A-HJKMNP-TV-Z]{26}$"
+  },
+  "ChatEntry": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "role",
+    "text",
+    "asks"
+   ],
+   "properties": {
+    "role": {
+     "enum": [
+      "jana",
+      "learner"
+     ]
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 400
+    },
+    "asks": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "enum": [
+        "purpose",
+        "known",
+        "outputs"
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "ChatRequest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "start",
+    "history",
+    "answer",
+    "skip"
+   ],
+   "properties": {
+    "start": {
+     "oneOf": [
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "topic"
+       ],
+       "properties": {
+        "topic": {
+         "type": "string",
+         "minLength": 3,
+         "maxLength": 200
+        }
+       }
+      },
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "capture_id"
+       ],
+       "properties": {
+        "capture_id": {
+         "type": "string",
+         "pattern": "^cap_[0-9A-HJKMNP-TV-Z]{26}$"
+        }
+       }
+      }
+     ]
+    },
+    "history": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/research#/$defs/ChatEntry"
+     }
+    },
+    "answer": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 400
+      }
+     ]
+    },
+    "skip": {
+     "type": "boolean"
+    }
+   }
+  },
+  "CreateRequest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "brief",
+    "capture_id"
+   ],
+   "properties": {
+    "brief": {
+     "$ref": "https://jana.dev/contracts/study/research#/$defs/Brief"
+    },
+    "capture_id": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "pattern": "^cap_[0-9A-HJKMNP-TV-Z]{26}$"
+      }
+     ]
+    }
+   }
+  },
+  "PackPart": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "kind",
+    "job_id",
+    "aid_id",
+    "state"
+   ],
+   "properties": {
+    "kind": {
+     "enum": [
+      "concept_map",
+      "notes",
+      "flashcards",
+      "quiz",
+      "audio_overview"
+     ]
+    },
+    "job_id": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/JobId"
+      }
+     ]
+    },
+    "aid_id": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/AidId"
+      }
+     ]
+    },
+    "state": {
+     "enum": [
+      "waiting",
+      "making",
+      "ready",
+      "failed"
+     ]
+    }
+   }
+  },
+  "Record": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "research_id",
+    "status",
+    "brief",
+    "capture_id",
+    "sub_questions",
+    "pages",
+    "failure",
+    "source_id",
+    "parts",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "research_id": {
+     "$ref": "https://jana.dev/contracts/study/research#/$defs/RecordId"
+    },
+    "status": {
+     "enum": [
+      "sending",
+      "researching",
+      "waiting_online",
+      "making",
+      "ready",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "brief": {
+     "$ref": "https://jana.dev/contracts/study/research#/$defs/Brief"
+    },
+    "capture_id": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "pattern": "^cap_[0-9A-HJKMNP-TV-Z]{26}$"
+      }
+     ]
+    },
+    "sub_questions": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/research#/$defs/SubQuestionProgress"
+     }
+    },
+    "pages": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 30
+    },
+    "failure": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "enum": [
+        "no_sources",
+        "budget",
+        "interrupted",
+        "upstream",
+        "timeout",
+        "consent_required",
+        "allowance_exhausted",
+        "import_failed"
+       ]
+      }
+     ]
+    },
+    "source_id": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/SourceId"
+      }
+     ]
+    },
+    "parts": {
+     "type": "array",
+     "maxItems": 5,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/research#/$defs/PackPart"
+     }
+    },
+    "created_at": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "updated_at": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "RecordList": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "items"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 200,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/research#/$defs/Record"
+     }
     }
    }
   }

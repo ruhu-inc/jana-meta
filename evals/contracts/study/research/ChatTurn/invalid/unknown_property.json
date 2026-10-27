@@ -1,0 +1,25 @@
+{
+  "kind": "question",
+  "question": "xxx",
+  "chips": [],
+  "asks": "purpose",
+  "brief": {
+    "title": "xxx",
+    "subject": "mathematics",
+    "level": "o_level",
+    "purpose": "exam",
+    "known": "x",
+    "focus": "x",
+    "sub_questions": [
+      "xxxxxxxx",
+      "xxxxxxxx",
+      "xxxxxxxx",
+      "xxxxxxxx"
+    ],
+    "outputs": [
+      "diagram_drill"
+    ],
+    "length": "short"
+  },
+  "__unknown_field__": 1
+}

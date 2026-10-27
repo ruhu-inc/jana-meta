@@ -1,0 +1,18 @@
+{
+  "title": "xxx",
+  "subject": "mathematics",
+  "level": "o_level",
+  "purpose": "exam",
+  "known": "x",
+  "focus": "x",
+  "sub_questions": [
+    "xxxxxxxx",
+    "xxxxxxxx",
+    "xxxxxxxx",
+    "xxxxxxxx"
+  ],
+  "outputs": [
+    "diagram_drill"
+  ],
+  "length": "short"
+}

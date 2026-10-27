@@ -82,7 +82,9 @@ def test_screened_routes_pass_the_one_wrapper(tmp_path: Path) -> None:
                               "POST /v1/study/quizzes/{quiz_id}/items/{item_id}/help": "JobCreate",
                               "POST /v1/study/concept-maps": "ConceptTopicRequest",
                               "PATCH /v1/study/concept-maps/{map_id}": "ConceptMapEdit",
-                              "PATCH /v1/study/aids/{aid_id}/concept-map": "ConceptMapEdit"}  # fmt: skip
+                              "PATCH /v1/study/aids/{aid_id}/concept-map": "ConceptMapEdit",
+                              "POST /v1/study/research/chat": "study/research#/$defs/ChatRequest",
+                              "POST /v1/study/research": "study/research#/$defs/CreateRequest"}  # fmt: skip
             if key in study_commands:
                 from agent_core.api import study
 
@@ -109,6 +111,14 @@ def _bodies(session: str) -> dict[str, tuple[str, dict[str, Any]]]:
             "/v1/study/jobs", {"kind": "chat", "execution": "local",
                                "sources": [{"source_id": "src_" + "0" * 26, "revision": 1}], "prompt": DISTRESS}),
         "POST /v1/study/concept-maps": ("/v1/study/concept-maps", {"topic": DISTRESS, "execution": "local"}),
+        "POST /v1/study/research/chat": (
+            "/v1/study/research/chat", {"start": {"topic": "the heart"}, "history": [], "answer": DISTRESS,
+                                        "skip": False}),
+        "POST /v1/study/research": (
+            "/v1/study/research", {"capture_id": None, "brief": {
+                "title": "The heart", "subject": "biology", "level": "o_level", "purpose": "exam", "known": "",
+                "focus": DISTRESS, "sub_questions": ["What do the heart valves do?"] * 4,
+                "outputs": ["notes"], "length": "short"}}),
         "PATCH /v1/study/concept-maps/{map_id}": (
             f"/v1/study/concept-maps/ctm_{'0' * 26}", {"ops": [{"op": "add", "name": DISTRESS}]}),
         "PATCH /v1/study/aids/{aid_id}/concept-map": (

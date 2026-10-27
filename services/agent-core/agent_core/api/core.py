@@ -154,7 +154,10 @@ class CoreService:
     ) -> None:
         self.settings = settings
         self._records: SessionRecords | None = None
-        self.reflector: ReflectorQueue | None = None  # the device's Reflector jobs (AGT-26), once the app attaches it
+        self.reflector: ReflectorQueue | None = None
+        # The router the research agent's conversation calls through (SPEC §18.1a), once the app attaches it: the
+        # Study model handle exists only with a local model, and the conversation is online only.
+        self.research_router: Callable[[], Any] | None = None  # the device's Reflector jobs (AGT-26), once the app attaches it
         self.records = records
         self.engine_factory = engine_factory
         self.voice_engines: dict[str, Engine] = {}  # provisional/released voice work, owned by the adapter

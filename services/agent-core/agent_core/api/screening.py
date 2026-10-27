@@ -88,6 +88,22 @@ def _study_request(body: Any) -> list[str]:
     return [*written(body.get("prompt")), *written(chosen.get("focus")), *written(chosen.get("topics"))]
 
 
+def _research_chat(body: Any) -> list[str]:
+    """The research conversation's typed topic and the learner's newest reply (SPEC §18.1a)."""
+    if not isinstance(body, Mapping):
+        return []
+    start = body.get("start")
+    return [*written(start.get("topic") if isinstance(start, Mapping) else None), *written(body.get("answer"))]
+
+
+def _research_brief(body: Any) -> list[str]:
+    """The approved brief's own words: what the job sends to the gateway (the learner may have edited them)."""
+    brief = body.get("brief") if isinstance(body, Mapping) else None
+    if not isinstance(brief, Mapping):
+        return []
+    return [text for key in ("title", "known", "focus", "sub_questions") for text in written(brief.get(key))]
+
+
 ANSWER = frozenset({"distress"})
 # STU-11: the study area's inputs; `off_topic` and `beyond_level` are about requests to the tutor, and a note is not
 # one, so a note in either keeps its text (listed for the spec round).
@@ -149,6 +165,11 @@ ROUTES: dict[str, Rule] = {
     "POST /v1/study/jobs": Screened("study_request", _study_request, NOTE | {"off_topic", "personal_data"}),
     # Concept maps (Study): a typed topic may reach Muse Spark; the learner's concept names stay on the map.
     "POST /v1/study/concept-maps": Screened("study_request", _concept_topic, NOTE | {"off_topic", "personal_data"}),
+    # The research agent (SPEC §18): the conversation's words and the approved brief go online. Off topic is the
+    # tutor's scope, not the pack's (Biology diagrams are in scope); the conversation refuses other subjects itself.
+    "POST /v1/study/research/chat": Screened("study_request", _research_chat, NOTE | {"personal_data"}),
+    "POST /v1/study/research": Screened("study_request", _research_brief, NOTE | {"personal_data"}),
+    "POST /v1/study/research/{research_id}/cancel": _IDS,
     "PATCH /v1/study/concept-maps/{map_id}": Screened("study_request", _concept_edit, NOTE | {"personal_data"}),
     "PATCH /v1/study/aids/{aid_id}/concept-map": Screened("study_request", _concept_edit, NOTE | {"personal_data"}),
     "POST /v1/study/jobs/{job_id}/actions": _IDS,

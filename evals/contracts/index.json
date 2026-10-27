@@ -2394,6 +2394,30 @@
     "origin": "synthesised"
   },
   {
+    "file": "cloud/gateway/ResearchJob/invalid/unknown_property.json",
+    "contract": "cloud/gateway#/$defs/ResearchJob",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "cloud/gateway/ResearchJob/valid/minimal.json",
+    "contract": "cloud/gateway#/$defs/ResearchJob",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "cloud/gateway/ResearchRequest/invalid/unknown_property.json",
+    "contract": "cloud/gateway#/$defs/ResearchRequest",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "cloud/gateway/ResearchRequest/valid/minimal.json",
+    "contract": "cloud/gateway#/$defs/ResearchRequest",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "cloud/gateway/StudyExtractionRequest/invalid/unknown_property.json",
     "contract": "cloud/gateway#/$defs/StudyExtractionRequest",
     "expect": "invalid",
@@ -4106,6 +4130,186 @@
   {
     "file": "skills/skill-frontmatter/valid/minimal.json",
     "contract": "skills/skill-frontmatter",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/Brief/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/Brief",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/Brief/valid/minimal.json",
+    "contract": "study/research#/$defs/Brief",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/ChatEntry/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/ChatEntry",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/ChatEntry/valid/minimal.json",
+    "contract": "study/research#/$defs/ChatEntry",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/ChatRequest/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/ChatRequest",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/ChatRequest/valid/minimal.json",
+    "contract": "study/research#/$defs/ChatRequest",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/ChatTurn/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/ChatTurn",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/ChatTurn/valid/minimal.json",
+    "contract": "study/research#/$defs/ChatTurn",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/CreateRequest/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/CreateRequest",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/CreateRequest/valid/minimal.json",
+    "contract": "study/research#/$defs/CreateRequest",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/Job/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/Job",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/Job/valid/minimal.json",
+    "contract": "study/research#/$defs/Job",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/JobRequest/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/JobRequest",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/JobRequest/valid/minimal.json",
+    "contract": "study/research#/$defs/JobRequest",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/Output/invalid/wrong_type.json",
+    "contract": "study/research#/$defs/Output",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/Output/valid/minimal.json",
+    "contract": "study/research#/$defs/Output",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/PackPart/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/PackPart",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/PackPart/valid/minimal.json",
+    "contract": "study/research#/$defs/PackPart",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/Page/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/Page",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/Page/valid/minimal.json",
+    "contract": "study/research#/$defs/Page",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/Record/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/Record",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/Record/valid/minimal.json",
+    "contract": "study/research#/$defs/Record",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/RecordId/invalid/wrong_type.json",
+    "contract": "study/research#/$defs/RecordId",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/RecordId/valid/minimal.json",
+    "contract": "study/research#/$defs/RecordId",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/RecordList/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/RecordList",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/RecordList/valid/minimal.json",
+    "contract": "study/research#/$defs/RecordList",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/ResearchId/invalid/wrong_type.json",
+    "contract": "study/research#/$defs/ResearchId",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/ResearchId/valid/minimal.json",
+    "contract": "study/research#/$defs/ResearchId",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/research/SubQuestionProgress/invalid/unknown_property.json",
+    "contract": "study/research#/$defs/SubQuestionProgress",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/research/SubQuestionProgress/valid/minimal.json",
+    "contract": "study/research#/$defs/SubQuestionProgress",
     "expect": "valid",
     "origin": "synthesised"
   },
