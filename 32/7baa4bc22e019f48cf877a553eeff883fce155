@@ -1,0 +1,25 @@
+packages/ui/src/board/Board.tsx
+  s_87311ffec186a4::t_5fa51c556c7ed9 232-233
+packages/ui/test/frame.test.tsx
+  s_87311ffec186a4::t_9267dbd91a46b7 241-253
+services/agent-core/agent_core/engine/health.py
+  s_87311ffec186a4::t_3282ef72bc7b9b 113-116
+services/agent-core/tests/test_w3_glimmer.py
+  s_87311ffec186a4::t_7c30e2c6c346a4 99-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "327baa4bc22e019f48cf877a553eeff883fce155",
+  "prompts": {},
+  "sessions": {
+    "s_87311ffec186a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02ea0a11-c16d-43dd-9ca0-be1ee039343a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
