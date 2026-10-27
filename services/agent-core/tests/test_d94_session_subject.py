@@ -239,3 +239,30 @@ def api41_session_topic_from_diagnosis(tmp_path: Path) -> None:
     # The list names the topic, and where the session was opened from (API-23, D94).
     assert listed["topic_id"] == topic and listed["subject"] == "physics" and listed["origin"] == "ask"
     assert contract_errors("api/commands#/$defs/Session", listed) == []
+
+
+def test_s10_2_the_diagnosed_topic_keeps_the_subject(tmp_path: Path) -> None:
+    """SPEC §10.2: a Mathematics question the Diagnoser places in a Mathematics topic while its free `subject` field
+    says physics stays in Mathematics: the topic's subject wins, so the session neither moves nor offers a card, and
+    the Diagnoser runs once."""
+    from agent_core.engine import team
+
+    question = "A car travels 150 km in 3 hours. Find its average speed in km per hour."
+    probe, _, _ = run(make_engine(tmp_path / "probe", {}, "mathematics"))
+    try:
+        topics, _, _ = team.candidates(probe, question)
+    finally:
+        run(close(probe))
+    maths = next(n for n, t in enumerate(topics, 1) if t.startswith("cur.mth.o."))
+    script = {"input_guard": [guard()], "diagnoser": [diagnosis("physics", topic_ref=maths)],
+              "solver": solver_steps(), "coach": [tutor(SAFE)]}  # fmt: skip
+    engine, provider, saved = run(make_engine(tmp_path / "run", script, "mathematics"))
+    try:
+        run(engine.start_problem(question))
+    finally:
+        run(close(engine))
+    assert engine.state.subject == "mathematics"
+    assert not [e for e in events(engine, "session.updated") if "subject" in e]
+    assert subject_cards(engine) == [] and "outside_content" not in saved
+    assert len(diagnoser_tasks(provider)) == 1
+    assert engine.state.topic_id == topics[maths - 1]

@@ -172,7 +172,7 @@ async def new_problem(engine: Any, turn: Any, question: str) -> Any | None:
         return engine._finish_interrupted(turn)
     if diagnosed is None:
         return topic_chooser(engine, turn, question)
-    other = other_subject(engine, diagnosed.output)
+    other = other_subject(engine, diagnosed.output, diagnosed.topic_id)
     if other is not None and may_switch(engine, other):
         # The first question of a session started by asking decides its subject (AGT-15, D94): the candidates and
         # the Diagnoser run again on that subject before the Solver.
@@ -193,7 +193,7 @@ async def new_problem(engine: Any, turn: Any, question: str) -> Any | None:
     engine.title_pending = asyncio.ensure_future(name_session(engine, diagnosed))
     if other is not None:
         offer_subject(engine, turn, other)
-    live_flows.outside_content(engine, diagnosed.topics, diagnosed.output)
+    live_flows.outside_content(engine, diagnosed.topics, diagnosed.output, diagnosed.topic_id)
     if diagnosed.output.get("clarifying_question"):
         live_flows.diagnosed(engine, True)
         engine.clarifying = question  # the student's reply completes the question (`Engine._clarified`)
@@ -293,9 +293,17 @@ def installed(engine: Any, subject: str) -> bool:
     return any(p.subject == code and p.level == level for p in knowledge.index.packs.values())
 
 
-def other_subject(engine: Any, output: dict[str, Any] | None) -> str | None:
+def question_subject(output: dict[str, Any] | None, topic_id: str | None) -> Any:
+    """The subject the Diagnoser placed the question in: its chosen topic's subject, else its free `subject` field.
+    The topic wins (SPEC §10.2): a Mathematics topic labelled "physics" is a Mathematics question."""
+    code = topic_id.split(".")[1] if topic_id is not None and topic_id.count(".") >= 2 else None
+    named = next((name for name, c in SUBJECT_CODES.items() if c == code), None)
+    return named if named is not None else (output or {}).get("subject")
+
+
+def other_subject(engine: Any, output: dict[str, Any] | None, topic_id: str | None = None) -> str | None:
     """The subject the Diagnoser placed the question in when it is one of the five and not the session's."""
-    named = (output or {}).get("subject")
+    named = question_subject(output, topic_id)
     return named if named in SUBJECT_CODES and named != engine.state.subject else None
 
 

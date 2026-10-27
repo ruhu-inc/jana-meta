@@ -118,17 +118,25 @@ def nearest_exam(subjects: Sequence[SubjectInfo]) -> int | None:
     return min(days) if days else None
 
 
+def unstarted(state: PlannerState) -> frozenset[str]:
+    """The subjects with no evidence yet, once some subject has any (a placement, a lesson, an attempt): their prior
+    mastery makes them look weakest, so they rank after the started ones (SPEC §10.2). Empty when nothing is started."""
+    started = {k.subject for k in state.kcs.values() if k.state != "not_started"}
+    return frozenset({k.subject for k in state.kcs.values()} - started) if started else frozenset()
+
+
 def subject_order(state: PlannerState, s: Settings) -> list[str]:
-    """Subjects by days to exam (no exam last), then weakness (mean exam-weighted 1 - P), then name; rotated by the
-    plans already taken today so Keep learning moves on."""
+    """Subjects by days to exam (no exam last), then started before unstarted, then weakness (mean exam-weighted
+    1 - P), then name; rotated by the plans already taken today so Keep learning moves on."""
 
     def weakness(subject: str) -> float:
         rows = [k for k in state.kcs.values() if k.subject == subject]
         total = sum(k.exam_weight for k in rows)
         return sum(k.exam_weight * (1 - k.p_mastery) for k in rows) / total if total else 0.0
 
+    later = unstarted(state)
     ranked = sorted(state.subjects, key=lambda x: (x.days_to_exam if x.days_to_exam is not None else math.inf,
-                                                   -weakness(x.subject), x.subject))  # fmt: skip
+                                                   x.subject in later, -weakness(x.subject), x.subject))  # fmt: skip
     names = [x.subject for x in ranked]
     if names:
         shift = state.plans_taken_today % len(names)
@@ -157,8 +165,9 @@ def main_candidates(state: PlannerState, subjects: Sequence[str], phase: str, s:
     def score(k: KcPlanInfo) -> float:
         return k.exam_weight * (1 - k.p_mastery) * (1 + s.planner_recent_failure_boost * k.failed_recently)
 
+    later = unstarted(state)
     out: list[tuple[str, str]] = [(kc, "revisit_moved_on") for kc in revisits]
-    for k in sorted(pool, key=lambda k: (-round(score(k), 12), k.kc_id)):
+    for k in sorted(pool, key=lambda k: (k.subject in later, -round(score(k), 12), k.kc_id)):
         weak = [state.kcs[j] for j in k.prerequisites if j in state.kcs
                 and state.kcs[j].p_mastery < s.planner_prerequisite_ready]  # fmt: skip
         if weak and phase not in ("final", "exam_day"):

@@ -3,6 +3,7 @@
 // hardware class and why, the models and the model pack's version), `GET /v1/packs` and `GET /v1/connectivity`. Each
 // read may fail on its own; the panel shows what arrived.
 import type { ConnectivityState, Health, ModelCatalogue, PackList } from "@jana/contracts-ts";
+import type { ConnectivitySlice } from "./connectivity.js";
 import { subjectName } from "./setup.js";
 import type { CommandClient } from "./stream/commands.js";
 
@@ -215,4 +216,23 @@ export function tutorAnswers(report: Pick<HealthReport, "health" | "models">): b
   if (tutorCannotRun(report.health)) return false;
   if (setup.kind === "no_model") return report.health?.readiness === "ready" || report.health?.readiness === "model_loading";
   return true;
+}
+
+/** Whether a tutor can answer a question now (SPEC §10.3): `available`; `checking` while the core has not said;
+ * `switched_off` when the online tutor is off and there is no tutor model on this computer; `offline` when the online
+ * tutor is on but cannot be reached (no network, or the core marks it unavailable) and there is no model here. Read from
+ * the core's models and health and the connectivity slice only. A model on this computer, a school server, or a build
+ * that does not list the online tutor leaves the answer to `tutorAnswers`. */
+export type TutorReach = "available" | "checking" | "switched_off" | "offline";
+
+export function tutorReach(report: Pick<HealthReport, "health" | "models">, connectivity: ConnectivitySlice): TutorReach {
+  if (report.models === null) return "checking";
+  if (hardwareReport(report.models)?.tutorPath === "school_server") return "available";
+  if (installedModels(report.models).length > 0 && !tutorCannotRun(report.health)) return "available";
+  if (connectivity.status !== "ready") return "checking";
+  const cloud = connectivity.features.find((f) => f.feature === "cloud_tier");
+  if (cloud === undefined) return "available";
+  if (!cloud.enabled) return "switched_off";
+  const reachable = (connectivity.network === "online" || connectivity.network === "metered" || connectivity.network === "unknown") && cloud.state !== "unavailable";
+  return reachable ? "available" : "offline";
 }

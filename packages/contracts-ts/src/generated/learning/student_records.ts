@@ -369,6 +369,7 @@ export interface ApiCommandsItemInputOneOf2OptionsItem {
 export interface ApiCommandsItemInputOneOf3 {
   kind: "numeric";
   unit_prompt: string | null;
+  unit_expected?: boolean;
 }
 export interface ApiCommandsItemInputOneOf4 {
   kind: "algebraic";

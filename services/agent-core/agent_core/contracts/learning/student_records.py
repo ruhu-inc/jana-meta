@@ -582,6 +582,7 @@ class ApiCommandsItemInputOneOf3(BaseModel):
     )
     kind: Literal["numeric"]
     unit_prompt: UnitPrompt | None
+    unit_expected: bool | None = None
 
 
 type Variable = Annotated[str, Field(max_length=32)]

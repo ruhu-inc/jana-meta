@@ -36,11 +36,11 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import {
   AskController, StudyWorkspaceController, SessionNotesController, SavedQuestionsController, AssessmentController, CLIENT_KEYS, ExamDateController, HistoryController, KnowsController, LessonController, LOCKED_STATES, MockController, PastPaperController, PlanController, PracticeController, ProfileController, ProgressController, SUBJECT_CODES, SUBJECT_NAMES,
   SearchController, SessionController, StoreHolder, SubjectMapController, ConceptMapController, clientId, examLock, groupSessions, installedSubjects, finishSetup, kcSubjectCode, nextBlock,
-  parseAssets, parseNotices, readDegraded, readLicence, readProfile, readSetup, readSubjectMap, subjectName, tutorAnswers, tutorSetup, typedCapture, helpTurn, type HelpKind, DailyGoal, goalProgress,
+  parseAssets, parseNotices, readDegraded, readLicence, readProfile, readSetup, readSubjectMap, subjectName, tutorAnswers, tutorReach, tutorSetup, typedCapture, helpTurn, type HelpKind, DailyGoal, goalProgress,
   type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
 } from "@jana/client-core";
 import {
-  AskAnswer, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
+  AskAnswer, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
   ConceptMapRendererProvider, GapLinkProvider, ResearchLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
@@ -414,6 +414,11 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   // Whether a tutor answers here: null until the core has said (PLT-29, ARC-26).
   const answers = tutorAnswers(degraded);
   const tutorOffered = answers !== false;
+  // No tutor can answer now, though one may later (SPEC §10.3): the online tutor is off or out of reach and there is no
+  // model on this computer. The composer then says so and offers practice and mock exams instead of taking questions.
+  const connectivity = useSyncExternalStore(profiles.connectivity.subscribe, profiles.connectivity.getView, profiles.connectivity.getView);
+  const reach = tutorReach(degraded, connectivity);
+  const noTutor = answers !== false && (reach === "offline" || reach === "switched_off") ? reach : null;
   const installed = installedSubjects(degraded.packs);
   // The subjects on this computer, from the installed packs (UXS-22).
   const subjects: SubjectChoice[] = installed.map((s) => ({ subjectId: s.subjectId, name: t(`settings.profiles.subject.${s.subject}`) }));
@@ -861,6 +866,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     if (lock === null && pick !== undefined && (kcIds.length > 0 || current.status !== "ready" || current.subject !== pick)) void runtime.practice.start(pick, kcIds);
     setScreen("practice");
   };
+  /** In place of the composer when no tutor can answer now (SPEC §10.3): what still works without one. */
+  const noTutorNotice = (reason: "offline" | "switched_off") => <NoTutor reason={reason} onPractice={() => openPractice()} onMock={openMock} />;
   /** A help chip (ASM-28): the tutor opens with the item loaded and is asked for that help at once (a hint is the
    * ladder's next rung), and its header leads back to the same question (UXS-24, UXS-01). */
   const openHelp = (reason: "help" | "why_right", first: { content: { type: "text"; text: string }[]; intent: "stuck" | "answer" }) => {
@@ -1055,6 +1062,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       return false;
     };
     const ask = lock !== null || protectedCheck !== undefined ? null : answers === false ? <SearchBox onSearch={(query) => { void runtime.search.search(query); setScreen("search"); }} />
+      : noTutor !== null ? noTutorNotice(noTutor)
       : session === null || session === "failed" ? waiting
       : withSpeech(<Composer sessionId={session.sessionId} asking placement="inline" onSent={() => { setFromLesson(null); setFromPractice(false); setFromReport(false); setScreen("tutor"); }} route={routeHome} {...warmingProps} />,
         session, ASK_PLACE, (answer) => runtime.ask.voiced(answer));
@@ -1246,7 +1254,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       return withSpeech(<LessonPlayer controller={runtime.lessons} lessonId={lessonId} teaching={journeyView.journey?.lesson_id === lessonId && journeyView.journey.lesson_opened} onClose={() => setScreen("learn")} onPractise={practiseAfterLesson} {...(askLesson !== undefined ? { onAsk: askLesson } : {})} />);
     }
     return session === null || session === "failed" ? <Opening failed={session === "failed"} /> : withSpeech(
-      <FollowUpProvider value={followUpHandlers}><TutorScreen sessionId={session.sessionId} subjectControl={chooser}
+      <FollowUpProvider value={followUpHandlers}><TutorScreen sessionId={session.sessionId} subjectControl={chooser} noTutor={noTutor !== null ? noTutorNotice(noTutor) : undefined}
         onEnd={async () => { const ok = await runtime.sessionNotes.end(session.sessionId); if (ok) setScreen("notes"); return ok; }}
         {...(fromReport ? { back: { label: t("tutor.back_to_report"), onClick: () => setScreen("mock") }, note: t("mock.review_note") }
           : fromLesson ? { back: { label: t("journey.back_lesson"), onClick: () => { setLessonId(fromLesson); setScreen("lesson"); } } }

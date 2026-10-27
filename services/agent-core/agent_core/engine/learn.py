@@ -190,7 +190,9 @@ def _input(item_type: str, answer: Mapping[str, Any], item_id: str = "") -> dict
     if item_type == "numeric":
         # The unit is named only when the answer must be given in exactly that unit.
         exact = answer.get("unit_policy") == "exact" and answer.get("unit")
-        return {"kind": "numeric", "unit_prompt": str(answer["unit"]) if exact else None}
+        # Whether the answer has a unit at all: the client shows a unit field only then (SPEC §10.7).
+        expected = bool(answer.get("unit")) and answer.get("unit_policy") != "none"
+        return {"kind": "numeric", "unit_prompt": str(answer["unit"]) if exact else None, "unit_expected": expected}
     if item_type == "ordering":
         # A fixed order that is never the key's: by a hash of the item and element ids.
         def mixed(e: Mapping[str, Any]) -> str:

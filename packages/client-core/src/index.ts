@@ -42,8 +42,8 @@ export { readEnvelope, UNKNOWN, type ReadResult } from "./tolerant.js";
 export { CLIENT_KEYS } from "./generated/keys.js";
 export {
   CLASS_BASES, HARDWARE_CLASSES, HEALTH_PROBLEMS, NO_CLASS_REASONS, hardwareReason, hardwareReport, healthProblems, installedModels, readDegraded,
-  readHealthReport, savingPower, tutorAnswers, tutorCannotRun, tutorSetup, unverifiedSubjects, type HardwareReason, type HardwareReport, type HealthProblem, type HealthReport,
-  type RuntimeBuild, type Shortfall, type TutorSetup,
+  readHealthReport, savingPower, tutorAnswers, tutorCannotRun, tutorReach, tutorSetup, unverifiedSubjects, type HardwareReason, type HardwareReport, type HealthProblem, type HealthReport,
+  type RuntimeBuild, type Shortfall, type TutorReach, type TutorSetup,
 } from "./health.js";
 export {
   CLOUD_FALLBACK_NOTICES, CONSENT_FEATURES, CONSENT_NOTICE_VERSIONS, ConnectivityController, INDICATOR_ALIAS, INDICATOR_ICON, INDICATOR_STATES,

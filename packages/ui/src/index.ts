@@ -17,6 +17,7 @@ export { TurnView, PartView } from "./transcript/Turn.js";
 export { Bubble, StudentMessage } from "./transcript/Message.js";
 export { Transcript } from "./transcript/Transcript.js";
 export { Composer } from "./composer/Composer.js";
+export { NoTutor, type NoTutorReason } from "./composer/NoTutor.js";
 export { VoiceBarView, type VoiceBarActions } from "./voice/VoiceBar.js";
 export { CalmScreen, type Helpline } from "./safety/CalmScreen.js";
 export { HintDock, useOpenHintRequest } from "./composer/HintDock.js";
