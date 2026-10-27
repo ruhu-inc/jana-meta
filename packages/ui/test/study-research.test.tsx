@@ -1,6 +1,7 @@
 // SPEC §18: the research agent's study packs in Study. A short conversation with quick replies and "Skip", a plan the
 // learner edits before anything is searched, then the pack's progress and "Open the pack". Every reply is synthetic.
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { StrictMode } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { ResearchContracts as R, StudyWorkspaceController } from "@jana/client-core";
 import { StudyResearch } from "../src/learn/StudyResearch.js";
@@ -92,5 +93,17 @@ describe("SPEC §18 research agent", () => {
     await screen.findByText("That isn't something I research yet.");
     fireEvent.click(screen.getByRole("button", { name: "Try another topic" }));
     await screen.findByLabelText("What do you want to learn about?");
+  });
+  test("research_a_handed_over_photo_starts_its_conversation_once", async () => {
+    const { fake, as } = controller([QUESTION, QUESTION]);
+    const used = vi.fn();
+    const cap = `cap_${"3".repeat(26)}`;
+    // StrictMode runs effects twice, as the development build that showed the double turn did.
+    const view = render(<StrictMode><LocaleProvider locale="en"><StudyResearch controller={as} initialCapture={cap} onCaptureUsed={used} onOpenSource={vi.fn()} /></LocaleProvider></StrictMode>);
+    await screen.findByText("What is this pack for?");
+    view.rerender(<StrictMode><LocaleProvider locale="en"><StudyResearch controller={as} initialCapture={cap} onCaptureUsed={used} onOpenSource={vi.fn()} /></LocaleProvider></StrictMode>);
+    expect(fake.researchChat).toHaveBeenCalledTimes(1);
+    expect(fake.researchChat.mock.calls[0]?.[0].start).toEqual({ capture_id: cap });
+    expect(screen.getByRole("heading", { name: "Make a study pack" })).toBeTruthy();
   });
 });

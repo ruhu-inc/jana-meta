@@ -58,8 +58,12 @@ export function StudyResearch({ controller, initialCapture, onCaptureUsed, onOpe
       setPhase({ kind: "talking", start, turn, history: said }); // out of scope: Jana's own words, then start again
     } catch (err) { failed(err); } finally { if (alive.current) setBusy(false); }
   };
+  // A capture handed over from the diagram drill starts its conversation once, however often this effect runs (a
+  // development build runs effects twice; a second turn at once would collide with the first).
+  const handedOver = useRef<string | null>(null);
   useEffect(() => {
-    if (!initialCapture) return;
+    if (!initialCapture || handedOver.current === initialCapture) return;
+    handedOver.current = initialCapture;
     onCaptureUsed?.();
     void ask({ capture_id: initialCapture }, [], null);
   }, [initialCapture]);
@@ -95,7 +99,7 @@ export function StudyResearch({ controller, initialCapture, onCaptureUsed, onOpe
   if (phase.kind === "talking") {
     const turn = phase.turn, out = turn?.kind === "out_of_scope";
     return <section className="flex flex-col gap-3" aria-labelledby="study-research" data-research-talk>
-      <h2 id="study-research" className="text-ui font-semibold text-ink">{t("study.research.heading")}</h2>
+      <h2 id="study-research" className="text-ui font-semibold text-ink">{t("capture_id" in phase.start ? "diagram.study_pack" : "study.research.heading")}</h2>
       <ol className="flex flex-col gap-2" aria-live="polite">
         {phase.history.map((entry, i) => <li key={i} data-said={entry.role} className={entry.role === "jana" ? "self-start rounded-card bg-panel p-2 text-ui" : "self-end rounded-card border border-line p-2 text-ui"}>{entry.text}</li>)}
         {out && <li data-said="jana" className="self-start rounded-card bg-panel p-2 text-ui">{turn?.question}</li>}
