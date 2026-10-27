@@ -273,7 +273,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
     <Dialog open={confirm !== null} heading={t("study.private_source")} closeLabel={t("action.cancel")} onClose={() => setConfirm(null)}><p className="text-ui">{t("study.private_confirm")}</p><Button onClick={() => { const id = confirm; setConfirm(null); if (id) void controller.open(id); }}>{t("study.open_private")}</Button></Dialog>
     {/* Before any material the tools show what they will do, greyed (STU-21). */}
     {view.sources.length === 0 && view.status === "ready" && <GenerateTools disabled empty onPick={() => undefined} />}
-    <StudyResearch controller={controller} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.open(id); }} />
+    <StudyResearch controller={controller} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
     {topicMaps}
     {jobs(view.jobs.filter((job) => ["running", "queued", "waiting_online", "paused"].includes(job.state)))}
   </section>{activityDialog}<Dialog open={allSetsOpen} heading={t("study.all_sets")} closeLabel={t("action.close")} onClose={() => setAllSetsOpen(false)} wide><MySets sets={view.sets} busy={view.busy} heading={false} onOpen={(set) => { setAllSetsOpen(false); void controller.openSet(set); }} /></Dialog></>;
