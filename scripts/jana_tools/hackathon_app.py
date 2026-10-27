@@ -13,6 +13,7 @@ import os
 import secrets
 import time
 from pathlib import Path
+from typing import Any
 
 import httpx
 from agent_core.api.__main__ import main
@@ -21,6 +22,11 @@ from agent_core.config import Settings
 from agent_core.engine.assembly import AppRuntime
 from agent_core.net.credentials import ID_REF
 from agent_core.net.layer import OnlineLayer
+from agent_core.net.voice import VoiceTransportError
+from agent_core.net.voice_cloud import FEATURE as VOICE_FEATURE
+from agent_core.net.voice_cloud import PATH as VOICE_PATH
+from agent_core.net.voice_cloud import PAYLOAD as VOICE_PAYLOAD
+from agent_core.net.voice_cloud import CloudRealtimeConnection, CloudVoice
 from agent_core.router.hardware import TutorPath
 from agent_core.store import subscription as subscriptions
 from agent_core.store.keystore import FileKeyStore, KeyStore, MemoryKeyStore
@@ -80,6 +86,53 @@ class GatewayHop(httpx.AsyncBaseTransport):
         await self.inner.aclose()
 
 
+class LoopbackCloudVoice(CloudVoice):
+    """Cloud voice to the local gateway's `/v1/voice/realtime`, as `GatewayHop` is for its HTTP routes: the same
+    admission, credential, first-use notice, egress announcement and ledger as `CloudVoice.open`, then a plain
+    WebSocket to the literal loopback port (the gateway serves HTTP locally; its Voice Transcribe connection is TLS).
+    Development host only."""
+
+    def __init__(self, *args: Any, port: int, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if not 1 <= port <= 65535:
+            raise ValueError("invalid local gateway port")
+        self.port = port
+
+    async def open(self, session_id: str) -> CloudRealtimeConnection:
+        from agent_core.net.policy import EgressRefused
+        from websockets.asyncio.client import connect as websocket_connect
+
+        profile = self.profile()
+        if not self.effective() or self.host() != HOST:
+            raise VoiceTransportError("cloud_voice_refused")
+        try:
+            current, host = self.layer.client.admit(VOICE_FEATURE, f"https://{HOST}{VOICE_PATH}", VOICE_PAYLOAD,
+                                                    credential=True, profile_id=profile)  # fmt: skip
+            token = await self.layer.credential.token(VOICE_FEATURE, host)
+        except EgressRefused:
+            raise VoiceTransportError("cloud_voice_refused") from None
+        except Exception:
+            raise VoiceTransportError("voice_endpoint_unavailable") from None
+        row = current.features[VOICE_FEATURE]
+        notice = {"type": "egress.notice", "feature": VOICE_FEATURE, "destination_label": row.destination_label,
+                  "data_classes": list(row.data_classes)}  # fmt: skip
+        self.announce(session_id, {**notice, "state": "started"})
+        self.layer.client._ledger(VOICE_FEATURE, host, len(VOICE_PATH), VOICE_PAYLOAD, profile)
+        try:
+            socket = await websocket_connect(
+                f"ws://127.0.0.1:{self.port}{VOICE_PATH}", additional_headers={"Authorization": "Bearer " + token},
+                proxy=None, compression=None, max_size=1_000_000, max_queue=64, close_timeout=2,
+                open_timeout=self.layer.settings.net_connect_timeout_s, ping_interval=1.0,
+                ping_timeout=3.0)  # fmt: skip
+        except Exception:
+            self.announce(session_id, {**notice, "state": "ended"})
+            self.layer.network_failure()
+            raise VoiceTransportError("voice_endpoint_unavailable") from None
+        return CloudRealtimeConnection(
+            socket, self.respond, lambda: self.announce(session_id, {**notice, "state": "ended"})
+        )
+
+
 def gateway_config() -> GatewayConfig:
     path = os.environ.get("JANA_META_GATEWAY_CONFIG")
     if not path:
@@ -111,13 +164,21 @@ class SponsoredRuntime(AppRuntime):
             raise ValueError("The local hackathon adapter is not a release deployment")
         self.gateway = gateway_config()
         self.gateway_port = int(os.environ.get("JANA_META_GATEWAY_PORT", "8081"))
-        layer.hosts = {service: HOST for service in ("gateway",)}
+        layer.hosts = {service: HOST for service in ("gateway", "voice")}
         # Downloads/updates/voice keep their original implementations, but no such
         # external service is connected by this local inference adapter.
         layer.client._client = httpx.AsyncClient(
             transport=GatewayHop(self.gateway_port), trust_env=False, follow_redirects=False, timeout=180
         )
         return layer
+
+    def prepare_cloud_voice(self, announce: Any, respond: Any) -> CloudVoice | None:
+        voice = super().prepare_cloud_voice(announce, respond)
+        if voice is None or self.online is None:
+            return voice
+        return LoopbackCloudVoice(self.online, self.public_profile,
+                                  lambda: self.stores.learner if self.stores is not None else None, announce, respond,
+                                  port=self.gateway_port)  # fmt: skip
 
     def tutor_path(self) -> TutorPath:
         # Before first-use acceptance the original engine must be able to show its
@@ -145,7 +206,8 @@ def settings_for_browser(settings: Settings) -> Settings:
             "study_neural_speech_enabled": True,
             "study_batch_char_limit": 16000,
             "consent_dpia_ref": "local-synthetic-hackathon-notice",
-            "cloud_voice_enabled": False,
+            # Spoken turns online (SPEC §6): Muse Voice Transcribe and Kokoro behind the local gateway's voice route.
+            "cloud_voice_enabled": True,
         }
     )
 

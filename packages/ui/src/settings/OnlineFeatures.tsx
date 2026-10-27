@@ -162,6 +162,11 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
               setStudyConsent(await switchConsent(profiles.commands, view.active, feature, "on"));
               if (studyNeedsCloud) setCloudConsent(await switchConsent(profiles.commands, view.active, "cloud_tier", "on"));
             }
+            // Cloud voice is a profile feature too (VOC-28): the adult's "Turn on" above, with the consent line, is
+            // their own consent for the open profile, or voice stays on this computer.
+            if (feature === "cloud_voice" && adult === true && view.active !== null) {
+              await switchConsent(profiles.commands, view.active, feature, "on");
+            }
             setState(await family.setOnlineFeatures({ [feature]: true }));
           });
         }}

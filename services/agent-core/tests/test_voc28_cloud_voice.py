@@ -392,6 +392,17 @@ def test_cloud_voice_first_use_card_keeps_voice_local_until_ok(tmp_path):
     asyncio.run(scenario())
 
 
+def test_cloud_voice_answer_is_announced_so_voice_is_offered_at_once(tmp_path):
+    """Accepting the first-use card is what makes cloud voice ready (VOC-28): the layer announces it, so the core's
+    voice offer (refreshed on every announcement) does not wait for a switch or the network to change."""
+    online = layer(tmp_path, settings=Settings(cloud_voice_enabled=True))
+    heard: list[dict[str, Any]] = []
+    online.publish.append(heard.append)
+    online.record_notice(PROFILE, "cloud_voice", True)
+    assert online.notice_answer(PROFILE, "cloud_voice") == "accepted"
+    assert [event["type"] for event in heard] == ["connectivity.status"]
+
+
 def test_cloud_voice_consent_scope_exists_only_with_the_capability():
     conn = learner_db()
     assert "cloud_voice" not in consents.shipped_scopes()
