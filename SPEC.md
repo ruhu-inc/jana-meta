@@ -537,6 +537,37 @@ recorded car question):
 - Spend for this round: Voice Transcribe $0.003, one Spark turn; the ledger showed $8.76 of today's $10 afterwards
   (spent and held, parallel sessions included).
 
+**Measured 2026-10-27 (afternoon), why a spoken tutor turn took ~15 s in the browser against 7.2 s in
+`turn_latency`** (the car question; browser timings from the turn traces in the dev data folder, harness timings from
+`turn_latency`'s engine and in-process gateway run the same hour):
+- *Per hop, browser spoken turn before the fixes* (end of speech = 0): Voice Transcribe's end of speech 0.76 s, the
+  gateway's hold 0.60 s, request → filler words 1.32 s (filler audio 2.6–2.7 s); then the engine turn 15.6 s: input
+  guard 3.0 s (timed out), Diagnoser ∥ speculative Solver 3.9 s, Coach 8.0 s in three calls (a schema correction
+  retry, then a second iteration for a refused graph); Kokoro first audio 0.4 s after the accepted words, browser
+  playback start 0.55 s after that; first answer audio 18.4 s.
+- *The same hour in the harness*: typed 11.8 s, spoken wording 10.6 s, spoken in voice mode 13.2 s (every Spark call
+  slower than the morning's 7.2 s run, and the guard timed out at 3 s on one of them): so about 4 s of the gap was
+  that afternoon's Spark, not the browser.
+- *Causes found and fixed*: (1) a spoken question writes small numbers as words ("in five seconds"), so a Solver plan
+  restating the givens was refused as untraced and the Solver ran a second round (6.7 s); spelled-out numbers in the
+  statement now count as given. (2) Only the browser host gives the engine the installed packs' visual sources, so
+  only there does the Coach draw the velocity-time graph, and it was refused twice over: its points written as JSON
+  numbers where the kind keeps exact strings (now repaired to the exact string), and a given (t = 5) left out of its
+  citations (now traced to the problem's own known). Each refusal cost a whole second Coach iteration (2–6 s).
+  (3) The filler waits for the provisional engine to be built (about 1 s, measured: the engine assembly alone is
+  0.61–0.65 s), so it plays at 2.1–2.6 s rather than 1.5 s; being fixed in its own session.
+- *Not browser-only*: the input guard runs first and alone (1.1–3.0 s, timing out at 3 s when Spark is slow), and
+  the browser session's `high` class gives the Coach a `full` prompt (4.6–4.9k input tokens against 3.4k on `mid`)
+  and, with the graph and `say_spoken`, about 500–800 output tokens against ~200, about 1–2 s per Coach call. The
+  Coach's first reply failed its schema in 3 of 4 browser turns (a correction retry each, 1.5–2.4 s); the rule it
+  broke was not caught (no failure in the instrumented run).
+- *Browser after fixes (1) and (2)*: first answer audio 14.3 s and 13.7 s (from 18.4 s), filler 2.1–2.3 s; the engine
+  turn 11.3–12.2 s. One run between them took 21.4 s (two schema retries and a graph refused for the missing
+  citation, the case fix (2b) then addressed). The reply in one run said it had drawn a graph that the screen said it
+  could not draw: the Coach's words do not yet follow the engine's visual outcome.
+- Spend for this investigation: about $0.50 of Spark (three harness variants, two replays, three browser turns); the
+  ledger showed $9.39 of the day's $10 afterwards, parallel sessions included.
+
 ## 13. Workstreams and plan
 
 Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter lands; W5 and W6 any time):
