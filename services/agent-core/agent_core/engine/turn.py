@@ -1204,6 +1204,10 @@ class Engine(Coordination, Offers, Predictions):
                 "in their own words and say a similar question will come back in a few days"
             )
         self._learn(turn, events)
+        if source.source != "generic_template" and source.text and self._offline_lean():
+            # W3 (SPEC §7): offline the authored hint is shown as written, at once: the Coach would only rephrase it,
+            # and on the device's model that costs tens of seconds.
+            return self._finish_text(turn, source.text, None, "completed")
         if source.source != "generic_template":  # authored content the Coach only rephrases (PED-04)
             note += f"; rephrase this authored hint: {source.text}"
         if practice and practice.get("completed_mastery"):
@@ -3130,6 +3134,7 @@ class Engine(Coordination, Offers, Predictions):
         self._voice_unheard, self.voice_unheard = self.voice_unheard, None
         self.cancelled.clear()
         self.availability.reset()
+        self._class_for_turn()
         ids = ids or TurnIds()
         turn_id = ids.turn_id
         self.events.begin_turn(turn_id)
@@ -3347,6 +3352,24 @@ class Engine(Coordination, Offers, Predictions):
 
     def _lean(self) -> bool:
         return self.state.hardware_class in self.deps.settings.lean_classes
+
+    def _offline_lean(self) -> bool:
+        """The device's class is in `offline_lean_classes` and the Coach would be served on the device now (W3)."""
+        return (self.deps.router.hardware_class in self.deps.settings.offline_lean_classes
+                and self.deps.router.serves_locally("coach"))  # fmt: skip
+
+    def _class_for_turn(self) -> None:
+        """W3 (SPEC §7): on a device class in `offline_lean_classes`, a turn the Coach's local model serves (the cloud
+        unreachable, or off) runs as the low class, with its short prompts, lean shapes and fewer calls; the
+        session's own class returns once the cloud can serve again. A session on another class is left alone."""
+        device = self.deps.router.hardware_class
+        if device not in self.deps.settings.offline_lean_classes:
+            return
+        local = self.deps.router.serves_locally("coach")
+        if local and self.state.hardware_class == device:
+            self.state.hardware_class = "low"
+        elif not local and self.state.hardware_class == "low":
+            self.state.hardware_class = device
 
     def _output_schema(self, schema_name: str, tolerant: bool = False) -> dict[str, Any] | None:
         """The contract a role decodes and its prompt shows: on a lean class its lean shape (D128, `lean.py`), or with

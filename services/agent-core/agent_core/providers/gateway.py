@@ -129,15 +129,17 @@ class GatewayProvider:
         self.requests.append(body)
         return body, headers, EffortRecord(settings.get("effort_requested", effort), effort)
 
-    @staticmethod
-    def _failure(reply: Response) -> ProviderError:
-        if (
-            reply.status == 503
-            and isinstance(reply.body, dict)
-            and isinstance(reply.body.get("error"), dict)
-            and reply.body["error"].get("code") == "provider_unavailable"
-        ):
+    def _failure(self, reply: Response) -> ProviderError:
+        error = reply.body.get("error") if isinstance(reply.body, dict) else None
+        code = error.get("code") if isinstance(error, dict) else None
+        if reply.status == 503 and code == "provider_unavailable":
             return ProviderError("network_unavailable", "OPS-12: cloud path disabled; use local fallback")
+        if reply.status == 502 and code == "upstream_unreachable":
+            # The gateway answered but could not reach the model provider: on the laptop's own gateway that is the
+            # power cut itself (W3). The call is served locally at once, and the connectivity layer re-probes before
+            # the cloud is tried again, instead of each call retrying a dead route with backoff.
+            self._report("offline")
+            return ProviderError("network_unavailable", "the gateway cannot reach the model provider")
         return provider_error(reply.status, reply.body, _detail(reply.body), reply.headers)
 
     def _refused(self, refused: EgressRefused) -> ProviderError:

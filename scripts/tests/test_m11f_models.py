@@ -65,10 +65,11 @@ def mdl27_bakeoff_record_required() -> None:
         "models": [_entry("gemma-4-31b", {"low": {"tiers": ["fast"], "bakeoff": "bko_test"}})],
     }
     assert any("did not run it on this class" in e for e in bakeoff_errors(excluded, recorded))
-    # The shipped file today: D6's assignments rest on a provisional bake-off with no complete record, so the
-    # release check refuses every one of them.
+    # The shipped file today: D6's assignments and Muse Glimmer's (JM-D11) rest on no complete bake-off record, so
+    # the release check refuses every one of them.
     shipped = release_errors()
-    assert {e.split(":")[0] for e in shipped} == {"qwen3-vl-8b@low", "gemma-4-12b@mid", "gemma-4-12b@high"}
+    assert {e.split(":")[0] for e in shipped} == {"qwen3-vl-8b@low", "gemma-4-12b@mid", "gemma-4-12b@high",
+                                                 "muse-glimmer-30b@high"}
     assert all("no bake-off record" in e for e in shipped)
 
 

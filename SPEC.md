@@ -18,11 +18,11 @@ Work landed on `main` today, from this session and from parallel sessions merged
 |---|---|---|
 | W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, the Google stack still registered (§8.1), turn latency (§12: speculative Solver done, ~4 s off a new question) |
 | W2 Vision | **Done**: SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed (parallel session); the diagram drill (§5.2, 2026-10-26) | Read time of a diagram (~15–20 s) |
-| W3 Glimmer | Downloaded and verified (with the DFlash draft); measured (§7) | Launcher and router entries, the lean offline path, power-cut switch timing and recovery |
+| W3 Glimmer | **Built 2026-10-27** (§7): launcher with projector and DFlash, router and recommendations entries, reasoning strength per request, lean offline turns, authored hints offline, power-cut fallback in seconds and return to the cloud; practice and mock papers measured offline | A typed question's first words in ≤ 8 s (now 30–48 s on a loaded machine; needs the owner's call on streaming before the gates, §7); the Wi-Fi-off run on the demo laptop |
 | W4 Speech | **Online done**: Muse Voice Transcribe in the gateway (paced, silence between turns, budgeted, per-turn re-checks; branch `claude/bold-bardeen-60a405`), Kokoro served by the gateway (Magpie development only), a 600 ms end-of-speech hold, a spoken checked turn in the browser host (§12) | The engine turn (the 4 s target), offline (§6.3), self-hosted Magpie (§15 item 3), spoken unit names |
 | W5 Adult | Sign-up with date of birth, adult copy, parent sections removed, safety wording | Engine-side band check, remaining guardian copy (§17) |
 | W6 Bugs | #1, #4, #6 done; #5 partly (parallel session) | #2, #3, #7 |
-| W7 Research agent | Specified (§18) | All |
+| W7 Research agent | **Built 2026-10-27, end-to-end check next**: the conversation and plan on the device (§18.1a), the gateway job (search, safe fetch, checkpoints, source steering; 4 questions → 16 s, 22 pages, $0.04), import into Study as one cited material with Study's verified parts, the Study UI and "Make a study pack" from the diagram drill | A full pack from the browser, timed; the podcast read by Kokoro on the device |
 | Standout features (parallel session) | Checked figures, gap tracing, explain-back, predict-before-you-see sims merged | — |
 | Glimmer-free check | `phys_circuit`'s recursive schema unrolled for Spark (§16) | — |
 
@@ -274,6 +274,44 @@ low-class prompts, make fewer calls per offline turn, and stream the Coach. Repl
 
 Power cut: when the gateway is unreachable the router falls to `local:muse-glimmer-30b` and the offline speech pack
 (§6.3, §6.4); the UI shows "Working offline".
+
+**Built 2026-10-27 (W3).** `hackathon_dev --local-model <Glimmer GGUF>` checks the GGUF, projector and draft
+against pinned SHA-256s and starts llama-server with `--jinja`, `--alias muse-glimmer-30b,muse-glimmer`, the
+projector, DFlash (`--spec-type draft-dflash --spec-draft-n-max 4`) and four 8,192-token slots (Coach, Solver,
+Diagnoser, auxiliary: each role's prompt stays cached in its own slot); `--reasoning off` is gone. The adapter sends
+the router's effort as `reasoning_strength` (its lowest, `low`, where other models' thinking is off), and a local
+model that always reasons gets 1,024 output tokens of room on top of the role's cap (a 24-token auxiliary cap had
+ended inside the reasoning). With `offline_lean_classes` (on for the browser host) a turn the Coach's local model
+serves runs as the low class (short prompts, lean shapes, no guard or title call), and a practice hint is the
+authored rung shown at once instead of the Coach's rephrase. Power cut: the gateway's 502 `upstream_unreachable`
+now counts as the network gone (served locally at once, no retries with backoff); a cloud call still unanswered
+after 5 s has the network probed and is dropped to the local model when the probe fails; `cloud_offline` resets once
+a probe succeeds, and a turn the cloud would have served asks for a probe while offline. The browser host's probe
+asks its own gateway `GET /v1/ping?upstream=1` (Meta's host takes a TCP connection), since a gateway on the same
+laptop answers its own ping with Wi-Fi off.
+
+**Measured 2026-10-27** (M4 Max, the browser host as above). Caveats: the machine was not quiet (load average
+30–200 from other sessions' test runs and a Docker VM; Glimmer generated 12–20 tokens/s against 27–33 idle), and the
+power cut was simulated by pointing the gateway at a Meta host that does not resolve, the failure Wi-Fi off gives,
+because switching Wi-Fi off would have cut the measuring session off. Repeat on the demo laptop with Wi-Fi off.
+
+| Check | Result |
+|---|---|
+| Practice: answer → mark | 47 ms and 206 ms, no model call ✔ |
+| Practice hint offline | 1.2 s including opening the tutor, the authored rung, no model call ✔ (the Coach's rephrase took 38.6 s) |
+| Mock paper (Mathematics Paper 1, set 1) | opened in 60 ms; submitted and marked in 230 ms, with marks by topic ✔ |
+| Cloud on, gateway cannot reach Meta | the turn skipped the cloud at once ("Cloud tutor unavailable. Using the tutor on this computer."), the probe having found Meta unreachable ✔; a stalled call falls back at the first probe after 5 s (tests) |
+| Network back | a turn started 12 s after Meta was reachable again ran its first call on Glimmer and its Coach on Muse Spark (3.6 s): its own probe request brought the cloud back mid-turn ✔ |
+| Typed free-form question on Glimmer | 29.6 s, 39.9 s, 47.7 s to the reply ✘: Diagnoser 7.6–17.9 s (140–300 output tokens), then Coach 15.3–21.9 s (240–490 output tokens, about 250 of them reasoning); the slowest had a second Coach call when the `verified` gate refused a number. Replies properly guiding |
+
+Why 8 s is not met, and what would meet it: even on an idle machine one Coach call is ~13–15 s (cached prefix,
+~250 reasoning tokens, then the reply at ~30 tokens/s), and the engine shows nothing before the release gates pass
+(API-10), so the first words arrive with the whole reply. Meeting 8 s needs both (a) one model call for a
+definition-style question offline, with the Diagnoser replaced by the pack index's best topic (a deterministic
+step; the guess already matches 90–97% of items, §12), and (b) streaming the Coach's `say` with each sentence
+gated as it completes (leak and number checks per sentence; one-ask and length at the end), which changes API-10
+and is the owner's decision (§12 left streaming to the owner). Also seen: the Reflector's background job ran 28 s on
+Glimmer after a turn, competing with the next turn for memory bandwidth.
 
 **Done when:** with Wi-Fi off on the demo laptop, practice keeps marking instantly from the packs (authored hints
 served without a model), a mock paper opens and marks, and a typed free-form question gets a streamed, checked
@@ -588,8 +626,8 @@ The project review of 2026-10-26 found these gaps in the plan above; each must b
 Status 2026-10-26: W1's holds, output cap, device caps and `calls_per_turn` are fixed; W2's items were fixed by the
 parallel session (verified: cloud reading of working after the privacy pass, the vision slot's cloud fallback,
 `photo_region`, the base64 false positive); W3's auxiliary roles now fall back to Spark (the Reflector stays local,
-JM-D9); §3's diagram is corrected. Still open: the voice config (W1/W4), "from your course" answers (dropped from the
-demo, §8.1), health probes, W3's timeout, reset and launcher, W4, the rest of W5, W6 #2, #3, #7, §9, Identity.
+JM-D9); §3's diagram is corrected; W3's timeout, reset and launcher are done (2026-10-27, §7). Still open: the voice config (W1/W4), "from your course" answers (dropped from the
+demo, §8.1), health probes, W4, the rest of W5, W6 #2, #3, #7, §9, Identity.
 
 - **W1**: `config.py` refuses a budget together with `voice_enabled` (~379–388) and requires a Live voice price
   (~389), so §6.1's config cannot load as written; the default `tier.calls_per_turn` names `small-model`, so removing

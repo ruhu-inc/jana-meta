@@ -56,7 +56,8 @@ def test_devlab_gate_logic() -> None:
 
 # --- EVL-15 ---------------------------------------------------------------------------------------------------------
 
-PARAMS = {"qwen3-vl-8b": 8.0, "gemma-4-12b": 12.0, "gemma-4-26b-a4b": 26.0, "qwen3-vl-30b": 30.0, "gemma-4-31b": 31.0}
+PARAMS = {"muse-glimmer-30b": 30.0, "qwen3-vl-8b": 8.0, "gemma-4-12b": 12.0, "gemma-4-26b-a4b": 26.0, "qwen3-vl-30b": 30.0,
+          "gemma-4-31b": 31.0}
 
 
 def _results() -> dict[str, dict[str, Any]]:

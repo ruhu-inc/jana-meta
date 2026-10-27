@@ -38,6 +38,11 @@ def _free(_: object) -> float:
 PINNED_ROLES = ("coach", "solver", "diagnoser")
 
 
+# A model that always reasons and takes its amount as `reasoning_strength` (Muse Glimmer, JM-D11): the router's effort
+# maps onto it, and "none" is its lowest level, since its reasoning cannot be turned off (SPEC §7).
+STRENGTH = {"none": "low", "low": "low", "medium": "medium", "high": "high"}
+
+
 def role_slot(role: str, slots: int) -> int | None:
     """The slot a role's calls go to (D123), or None to let llama-server choose."""
     if slots < len(PINNED_ROLES) + 1:
@@ -54,6 +59,7 @@ class LlamaServerProvider:
         self._caps: dict[str, ModelCapabilities] = {}
         self.used: set[str] = set()  # models this core has prompted, whose slots may hold a profile's tokens
         self._slots: dict[str, int] = {}  # a model's slot count, from /props (MDL-22)
+        self._strength: set[str] = set()  # models whose template takes `reasoning_strength` (Muse Glimmer)
         self._real = 0  # real calls in flight; the warm-up waits for none (D128)
         self._idle = asyncio.Event()
         self._idle.set()
@@ -131,9 +137,15 @@ class LlamaServerProvider:
     # --- models ---------------------------------------------------------------------------------------
 
     async def installed(self) -> list[str]:
-        """Model ids the server can load (router mode lists every model in its models directory)."""
+        """Model ids the server can load (router mode lists every model in its models directory), with each model's
+        aliases: a server started with `--alias a,b` lists one of them as the id and answers to both."""
         reply = await self._call(self.client.get("/v1/models", 10))
-        return sorted(m["id"] for m in (reply.body or {}).get("data", []) if isinstance(m, dict) and "id" in m)
+        names: set[str] = set()
+        for m in (reply.body or {}).get("data", []):
+            if isinstance(m, dict) and "id" in m:
+                names.add(str(m["id"]))
+                names.update(str(a) for a in m.get("aliases") or [] if isinstance(a, str))
+        return sorted(names)
 
     async def capabilities(self, model: str) -> ModelCapabilities:
         if model in self._caps:
@@ -143,6 +155,7 @@ class LlamaServerProvider:
         settings = props.get("default_generation_settings") or {}
         context = int(settings.get("n_ctx") or props.get("n_ctx") or 0)
         template = str(props.get("chat_template") or "")
+        strength = "reasoning_strength" in template
         thinking = "enable_thinking" in template or "<think>" in template
         result = ModelCapabilities(
             tools=bool(caps.get("supports_tools", caps.get("supports_tool_calls", False))),
@@ -151,8 +164,8 @@ class LlamaServerProvider:
             json_schema=True,  # llama-server converts JSON Schema to a grammar at decode time
             json_object=True,
             grammar=True,
-            reasoning="toggle" if thinking else "none",
-            reasoning_default="on" if thinking else "none",
+            reasoning="effort" if strength else "toggle" if thinking else "none",
+            reasoning_default="low" if strength else "on" if thinking else "none",
             context_window=context,
             context_for_agents=context,
             max_output=context,
@@ -161,6 +174,8 @@ class LlamaServerProvider:
         )
         self._caps[model] = result
         self._slots[model] = int(props.get("total_slots") or 0)
+        if strength:
+            self._strength.add(model)
         return result
 
     async def ready(self, model: str) -> bool:
@@ -220,7 +235,10 @@ class LlamaServerProvider:
         # budget is fixed at launch with the context and slots (MDL-18); none of them is re-negotiated per request.
         effort = settings.get("effort", "none")
         control = (settings.get("reasoning") or {}).get("control")
-        body["chat_template_kwargs"] = {"enable_thinking": control != "off" if control else effort != "none"}
+        if model in self._strength:
+            body["chat_template_kwargs"] = {"reasoning_strength": STRENGTH.get(str(effort), "low")}
+        else:
+            body["chat_template_kwargs"] = {"enable_thinking": control != "off" if control else effort != "none"}
         body["cache_prompt"] = True
         slot = role_slot(str(settings.get("role") or ""), self._slots.get(model, 0))
         if slot is not None:
