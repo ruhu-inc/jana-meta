@@ -200,7 +200,21 @@ status=0
 pnpm install --frozen-lockfile
 uv sync --locked --all-packages
 cargo build --locked --workspace
-uv run --frozen pytest -q -p no:cacheprovider services || status=1
+# The Python suite takes hours in one process, so its test files run in VERIFY_JOBS parallel shards (default 6).
+jobs="${VERIFY_JOBS:-6}"
+find services -path '*/tests/*' -name 'test_*.py' | sort > .verify-files
+pids=()
+for i in $(seq 0 $((jobs - 1))); do
+  awk -v n="$jobs" -v i="$i" 'NR % n == i' .verify-files > ".verify-shard$i"
+  # shellcheck disable=SC2046  # one argument per test file
+  uv run --frozen pytest -q -p no:cacheprovider -rfE $(cat ".verify-shard$i") > ".verify-pytest$i.log" 2>&1 &
+  pids+=("$!")
+done
+for i in "${!pids[@]}"; do
+  wait "${pids[$i]}" || status=1
+  grep -hE '^(FAILED|ERROR) ' ".verify-pytest$i.log" || true
+  tail -n 1 ".verify-pytest$i.log"
+done
 pnpm test || status=1
 cargo test --locked --workspace || status=1
 echo "verify: $([[ $status == 0 ]] && echo passed || echo FAILED) in $work"
