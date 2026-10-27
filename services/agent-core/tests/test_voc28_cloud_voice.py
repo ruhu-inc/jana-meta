@@ -134,7 +134,9 @@ async def device(tmp: Path, port: int, pki: Any, *, switched: bool = True, notic
 
 async def core_with_voice(tmp: Path, online: Any, learner: Any, announced: list[str], pack: bool = False):
     live, factory = await prepared(tmp)
-    core = CoreService(live.deps.settings, factory, SessionStore(tmp / "sessions"), epoch="0000000000000001")
+    # These turns check routing and egress, not the filler: their scripted turn is accepted long before it is due.
+    settings = live.deps.settings.model_copy(update={"voice_cloud_filler_after_ms": 10_000})
+    core = CoreService(settings, factory, SessionStore(tmp / "sessions"), epoch="0000000000000001")
     sid = core.create_session({"client_session_id": "cli_01JZ0000000000000000000001", "mode": "guided",
                                "subject": "physics", "level": "O", "origin": {"kind": "ask", "ref": None}}
                               )["session_id"]  # fmt: skip

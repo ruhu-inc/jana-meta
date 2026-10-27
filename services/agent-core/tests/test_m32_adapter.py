@@ -246,7 +246,8 @@ def voc05_reopen_merges_utterance(tmp_path):
         runtime.adapter.keep_alive_s = 0.01
         first = runtime.adapter.stream(AdapterRequest.model_validate(body(instructions, "Please explain this.")))
         try:
-            assert await anext(first) == ": keep-alive\n\n"
+            while not runtime.adapter.jobs:  # keep-alives while the turn's engine is assembled (VOC-12)
+                assert await anext(first) == ": keep-alive\n\n"
             old = next(iter(runtime.adapter.jobs.values()))
             response = await client.post(
                 "/v1/voice/llm/chat/completions",
@@ -258,6 +259,48 @@ def voc05_reopen_merges_utterance(tmp_path):
             assert old.turn.finished and old.turn.task.done()
             assert new.turn.text == "Please explain this.\nStart with the diagram."
             assert not core.sessions[sid].engine_state.transcript
+        finally:
+            await first.aclose()
+            await socket.close()
+            await runtime.close()
+            await client.aclose()
+
+    asyncio.run(scenario())
+
+
+def test_voc05_reopen_while_the_turns_engine_is_assembled_merges_utterance(tmp_path):
+    """A newer utterance that comes while the first turn's engine is still being assembled (VOC-12) supersedes it as
+    it would the evaluating turn: the first stream ends silent and the words are merged into the new turn."""
+    import time
+
+    async def scenario():
+        core, sid, runtime, socket, _, client, instructions = await setup_adapter(tmp_path, replies=[tutor(SAFE)])
+        core._engine(core.sessions[sid])
+        factory, built = core.engine_factory, []
+
+        def assemble(state):
+            built.append(state)
+            if len(built) == 1:
+                time.sleep(0.5)  # only the first turn's engine is slow to assemble
+            return factory(state)
+
+        core.engine_factory = assemble
+        runtime.adapter.keep_alive_s = 0.01
+        first = runtime.adapter.stream(AdapterRequest.model_validate(body(instructions, "Please explain this.")))
+        try:
+            assert await anext(first) == ": keep-alive\n\n"
+            assert runtime.adapter.assembling and not runtime.adapter.jobs
+            response = await client.post(
+                "/v1/voice/llm/chat/completions",
+                headers={"authorization": "Bearer adapter-secret"},
+                json=body(instructions, "Start with the diagram."),
+            )
+            assert contents(response) == SAFE
+            new = next(iter(runtime.adapter.jobs.values()))
+            assert new.turn.text == "Please explain this.\nStart with the diagram."
+            rest = [json.loads(line[6:]) for line in [line async for line in first] if line.startswith("data: {")]
+            assert "".join(frame["choices"][0]["delta"].get("content", "") for frame in rest) == ""
+            assert not runtime.adapter.assembling and not core.sessions[sid].engine_state.transcript
         finally:
             await first.aclose()
             await socket.close()

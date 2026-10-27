@@ -76,12 +76,22 @@ class _SpillOverlay(SpillStore):
 
 
 class ProvisionalVoiceTurn:
-    def __init__(self, live: Engine, factory: Callable[[SessionState], Engine], text: str) -> None:
+    def __init__(
+        self,
+        live: Engine,
+        factory: Callable[[SessionState], Engine],
+        text: str,
+        *,
+        ids: TurnIds | None = None,
+        before: dict[str, Any] | None = None,
+        engine: Engine | None = None,
+    ) -> None:
+        """`before` and `engine` come from `assemble`: the snapshot taken, and the fork's engine built from it."""
         self.live = live
-        self.before = state_to_json(live.state)
+        self.before = before if before is not None else state_to_json(live.state)
         self.text = text
-        self.ids = TurnIds(client_message_id=new_id("cli"))
-        self.engine = factory(copy.deepcopy(live.state))
+        self.ids = ids or TurnIds(client_message_id=new_id("cli"))
+        self.engine = engine if engine is not None else factory(copy.deepcopy(live.state))
         self.engine.voice_mode = True
         self.engine.profile_ref = live.profile_ref
         for name in (
@@ -154,6 +164,19 @@ class ProvisionalVoiceTurn:
         self.carried_forward = False
         self.fallbacks: tuple[str, ...] = ()
         self._salvaged_calm = False
+
+    @classmethod
+    async def assemble(
+        cls, live: Engine, factory: Callable[[SessionState], Engine], text: str, ids: TurnIds
+    ) -> ProvisionalVoiceTurn:
+        """The fork with its engine assembled off the event loop (its files and stores take most of a second), so
+        the turn's filler clock keeps running meanwhile (VOC-12). The snapshot is taken on the loop, before."""
+        started = time.monotonic()
+        before, state = state_to_json(live.state), copy.deepcopy(live.state)
+        engine = await asyncio.to_thread(factory, state)
+        turn = cls(live, factory, text, ids=ids, before=before, engine=engine)
+        turn.started = started
+        return turn
 
     async def evaluate(self) -> TurnResult:
         if self.task is not None or self.finished:
