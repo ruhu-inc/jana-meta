@@ -112,6 +112,27 @@ def test_practice_hint_is_the_authored_one(tmp_path: Path, hint_rung: int) -> No
     assert "rephrase this authored hint" in str(last_request), "the Coach is given the authored rung to rephrase"
 
 
+def test_offline_on_a_listed_class_the_authored_hint_is_shown_as_written_with_no_model_call(tmp_path: Path) -> None:
+    """W3 (SPEC §7): with the Coach served on the device and the class in `offline_lean_classes`, a practice hint is
+    the item's authored rung, shown at once; the Coach (tens of seconds on Muse Glimmer) is not called for it."""
+    from agent_core.config import Settings
+    from agent_core.engine.tutor_flows import rung_source
+
+    item = next(i for i in _items() if i["id"] == "itm.phy.o.motion.0001")
+    coach = [tutor(SAFE), tutor("Not quite yet. Which quantity is asked for?")]
+    settings = Settings(worker_pool_size=1, worker_respawn_backoff_s=(0.0,), offline_lean_classes=("mid",))
+    engine, provider = run(make_engine(tmp_path, {"solver": [], "checker": [], "coach": coach}, settings=settings))
+    run(engine.start_practice(item))
+    run(engine.student_turn("150 m/s"))
+    calls = len(provider.requests)
+    hint = run(engine.student_turn("I'm stuck"))
+    run(close(engine))
+    authored = rung_source(1, item=item, part_id=engine.state.practice["part"]).text
+    assert len(provider.requests) == calls, "no model call for the hint"
+    shown = "".join(f["event"]["delta"] for f in engine.events.frames if f["event"]["type"] == "text.delta")
+    assert hint.status == "complete" and authored and shown.endswith(authored)
+
+
 def test_practice_pushes_the_topic_teaching_skill(tmp_path: Path) -> None:
     """SKL-08 subset: the engine, not the model, pushes the reviewed (in dev builds, draft) teaching skill whose KCs
     contain the item's KC and whose levels include the session level; with it the first pedagogy skill it names
