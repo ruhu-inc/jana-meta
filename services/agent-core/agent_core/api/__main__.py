@@ -240,7 +240,7 @@ async def main(
         core.study.checker = runtime.study_check
         core.study.content = runtime.content
         core.reflector = runtime.reflector()  # the background Reflector, started with the core (AGT-26)
-        core.research_router = runtime._router  # the research agent's conversation (SPEC §18.1a), online only
+        core.research_router = runtime.research_router  # the research conversation (SPEC §18.1a), online only
         core.components["worker"] = "ok"
         runtime.probe = await asyncio.to_thread(runtime.read_probe)  # MDL-16: once per start, offline
         runtime.epoch = core.epoch

@@ -21,7 +21,8 @@ BRIEF = {"title": "How the heart pumps blood", "subject": "biology", "level": "o
          "known": "the four chambers", "focus": "the valves",
          "sub_questions": ["What do the heart valves do?", "How does the left ventricle pump blood?",
                            "What is the cardiac cycle?", "Why is the left ventricle wall thicker?"],
-         "outputs": ["concept_map", "flashcards", "quiz", "diagram_drill"], "length": "short"}  # fmt: skip
+         "outputs": ["concept_map", "flashcards", "quiz", "audio_overview", "diagram_drill"],
+         "length": "short"}  # fmt: skip
 PAGES = [
     {"url": "https://example.org/heart-valves", "title": "Heart valves", "site": "example.org", "sub_question": 0,
      "text": "The heart valves open and close to keep blood flowing one way. " * 20, "fetched_at": 1},
@@ -139,7 +140,7 @@ def test_the_conversation_then_a_pack_made_from_the_web(tmp_path: Any) -> None:
         assert still["status"] == "researching" and still["sub_questions"][0]["state"] == "searching"
         making = (await get(f"/v1/study/research/{record['research_id']}")).json()
         assert making["status"] == "making" and making["pages"] == 3 and gateway.forgotten == [GATEWAY_ID]
-        assert [p["kind"] for p in making["parts"]] == ["concept_map", "flashcards", "quiz"]
+        assert [p["kind"] for p in making["parts"]] == ["concept_map", "flashcards", "quiz", "audio_overview"]
         assert all(p["state"] == "making" and p["job_id"] for p in making["parts"])
 
         conn = r.core.study.desk().conn
@@ -152,14 +153,14 @@ def test_the_conversation_then_a_pack_made_from_the_web(tmp_path: Any) -> None:
         assert body["request"]["settings"]["question_types"] == ["choice", "true_false", "multi_select",
                                                                  "fill_blank", "numeric"]  # fmt: skip
 
-        for part, state in zip(making["parts"], ("completed", "completed", "failed"), strict=True):
+        for part, state in zip(making["parts"], ("completed", "completed", "failed", "completed"), strict=True):
             jid = part["job_id"]
             row = json.loads(conn.execute("SELECT body FROM study_jobs WHERE job_id=?", (jid,)).fetchone()[0])
             row.update(state=state, result_ids=[f"aid_{ULID}"] if state == "completed" else [])
             conn.execute("UPDATE study_jobs SET state=?,body=? WHERE job_id=?", (state, json.dumps(row), jid))
         done = (await get(f"/v1/study/research/{record['research_id']}")).json()
         assert done["status"] == "ready"
-        assert [p["state"] for p in done["parts"]] == ["ready", "ready", "failed"]
+        assert [p["state"] for p in done["parts"]] == ["ready", "ready", "failed", "ready"]
         assert done["parts"][0]["aid_id"] == f"aid_{ULID}"
         listed = (await get("/v1/study/research")).json()
         assert [x["research_id"] for x in listed["items"]] == [record["research_id"]]
@@ -202,3 +203,20 @@ def test_a_diagram_pack_needs_a_confirmed_diagram_capture(tmp_path: Any) -> None
         assert missing.status_code == 404 and gateway.started == []
 
     scenario(tmp_path, play)
+
+
+def test_the_pack_material_keeps_the_passages_that_bear_on_the_plan() -> None:
+    from agent_core.api.research import SOURCE_CHARS, page_sections, relevant
+
+    page = "\n\n".join([
+        "Cookie settings and newsletter sign-up for this website, with links to our shop and careers pages.",
+        "The tricuspid valve stops blood flowing back into the right atrium when the right ventricle contracts.",
+        "The aortic valve is a semilunar valve; it closes when the left ventricle relaxes, stopping backflow.",
+        "Our editorial team reviews every article for accuracy and readability before it is published here.",
+    ])  # fmt: skip
+    kept = relevant(page, "How do heart valves stop backflow?", 400)
+    assert "tricuspid valve" in kept and "aortic valve" in kept
+    assert "Cookie" not in kept and "editorial" not in kept
+    assert relevant(page, "How do heart valves stop backflow?", 120).count("valve") >= 1, "the budget keeps the best"
+    big = [{**PAGES[0], "text": "\n\n".join(["The heart valves open and close to keep blood flowing one way."] * 4000)}]
+    assert len(page_sections("Heart", BRIEF, big)) <= SOURCE_CHARS + 500

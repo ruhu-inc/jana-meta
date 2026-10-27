@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -24,6 +25,8 @@ from agent_core.engine import job_scope
 from agent_core.engine.events import new_id
 from agent_core.prompts.untrusted import escape
 from agent_core.router import Message
+
+log = logging.getLogger(__name__)
 
 ROLE = "research_chat"
 MAX_QUESTIONS = 3
@@ -143,6 +146,7 @@ async def next_turn(router: Any, start: Start, history: Sequence[dict[str, Any]]
             result = await router.complete(ROLE, [Message("user", prompt)], output=("ResearchChatTurn", decode, check),
                                            temperature=0.3, effort="low")  # fmt: skip
         except Exception as error:  # the router's failures, offline included
+            log.warning("research_chat.failed kind=%s reason=%s", type(error).__name__, getattr(error, "reason", ""))
             raise ChatError("model_unavailable") from error
     turn = result.structured if result.schema_valid else None
     if not isinstance(turn, dict) or list(check.iter_errors(turn)):

@@ -16,6 +16,7 @@ is read (the app polls while it shows one), so a restart or an offline spell onl
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -31,28 +32,66 @@ from agent_core.engine.study import StudyDesk, StudyError
 from agent_core.net.study import StudyCloudError
 
 RESEARCH = "study/research#/$defs/"
-SOURCE_CHARS = 195_000  # within a Study text source's 200,000 characters, with room for the headings
+SOURCE_CHARS = 20_000  # what Study processes per part: a few batches, not dozens (see `relevant`)
+STOPWORDS = frozenset({"what", "which", "when", "where", "does", "with", "from", "that", "this", "their", "they",
+                       "into", "each", "your", "about", "level", "there", "these", "those", "have", "been"})
 PART_KINDS = ("concept_map", "notes", "flashcards", "quiz", "audio_overview")
 CODE_MARKED = ["choice", "true_false", "multi_select", "fill_blank", "numeric"]  # SPEC §18.1: no worded answers
 LIVE = ("sending", "waiting_online", "researching", "making")
 
 
+def _stem(word: str) -> str:
+    """Enough of a stem to match "valves" with "valve" and "stops" with "stop"."""
+    if word.endswith("ies") and len(word) > 5:
+        return word[:-3] + "y"
+    if word.endswith("ing") and len(word) > 6:
+        return word[:-3]
+    if word.endswith("ed") and len(word) > 5:
+        return word[:-2]
+    if word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    return word
+
+
+def _words(text: str) -> set[str]:
+    return {_stem(w) for w in re.findall(r"[a-z][a-z-]{3,}", text.lower()) if w not in STOPWORDS}
+
+
+def relevant(text: str, question: str, budget: int) -> str:
+    """The page's paragraphs that share most words with the question it was found for, in page order, within
+    `budget` characters: Study processes every character it is given, so the pack's material is what bears on the
+    plan, not whole pages (measured 2026-10-27: 17 whole pages were 195,000 characters, 39 batches and ~$0.40 for one
+    concept map)."""
+    wanted = _words(question)
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if len(p.strip()) >= 60]
+    scored = sorted(range(len(paragraphs)),
+                    key=lambda i: (-len(wanted & _words(paragraphs[i])), i))  # fmt: skip
+    kept: list[int] = []
+    used = 0
+    for i in scored:
+        if not wanted & _words(paragraphs[i]):
+            break
+        if used + len(paragraphs[i]) > budget:
+            continue
+        kept.append(i)
+        used += len(paragraphs[i]) + 2
+    return "\n\n".join(paragraphs[i] for i in sorted(kept))
+
+
 def page_sections(title: str, brief: dict[str, Any], pages: list[dict[str, Any]]) -> str:
-    """The researched pages as one Study source: each page keeps its title, site and URL above its text, so every
-    citation shows where it came from; long pages share what room is left after the short ones."""
-    head = (f"Web research: {title}\nFound by Jana's research agent for these questions:\n"
+    """The researched pages as one Study source: each page keeps its title, site and URL above the passages that bear
+    on its question and the plan's focus, so every citation shows where it came from; a page with none is left out."""
+    head = (f"Web research: {title}\nFound by the research agent for these questions:\n"
             + "\n".join(f"- {q}" for q in brief["sub_questions"]))  # fmt: skip
-    room = SOURCE_CHARS - len(head)
-    order = sorted(range(len(pages)), key=lambda i: len(pages[i]["text"]))
-    share = [0] * len(pages)
-    for left, i in enumerate(order):
-        share[i] = min(len(pages[i]["text"]), max(0, room // (len(pages) - left)))
-        room -= share[i]
-    sections = [
-        f"## {n}. {page['title']}\nSource URL: {page['url']}\nSite: {page['site']}\n\n{page['text'][:share[n - 1]]}"
-        for n, page in enumerate(pages, 1)
-        if share[n - 1] > 0
-    ]
+    budget = max(600, (SOURCE_CHARS - len(head)) // max(1, len(pages)))
+    sections = []
+    for page in pages:
+        index = page["sub_question"]
+        question = brief["sub_questions"][index] if index < len(brief["sub_questions"]) else brief["title"]
+        passages = relevant(page["text"], f"{question} {brief['focus']} {brief['title']}", budget)
+        if passages:
+            sections.append(f"## {len(sections) + 1}. {page['title']}\nSource URL: {page['url']}\n"
+                            f"Site: {page['site']}\n\n{passages}")  # fmt: skip
     return "\n\n".join([head, *sections])
 
 
@@ -62,7 +101,7 @@ def part_request(kind: str, source: dict[str, Any], brief: dict[str, Any]) -> di
     body: dict[str, Any] = {"kind": kind, "sources": [selection], "execution": "prefer_cloud"}
     long = brief["length"] == "long"
     settings: dict[str, Any] = {}
-    if brief["focus"] and kind != "concept_map":
+    if brief["focus"] and kind in ("notes", "flashcards", "quiz"):  # the kinds whose settings take a focus
         settings["focus"] = brief["focus"][:500]
     if kind == "flashcards":
         body["count"] = 20 if long else 10

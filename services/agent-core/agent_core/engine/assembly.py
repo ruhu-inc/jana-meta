@@ -917,14 +917,26 @@ class AppRuntime:
         judged, fallback = await auxiliary.judge(criteria, words)
         return None if fallback else judged
 
-    def _router(self) -> Router:
+    def research_router(self) -> Router | None:
+        """The router for the research agent's conversation (SPEC §18.1a), online only: the open profile's cloud tier
+        (its gateway provider, connectivity view, re-checks and budget) as a session's router has them; None without
+        the connectivity layer or an open profile."""
+        cloud = self.cloud_for_session()
+        if cloud is None:
+            return None
+        router = self._router(cloud.providers)
+        router.network, router.recheck, router.recheck_soon = cloud.network, cloud.recheck, cloud.recheck_soon
+        router.budget = cloud.budget
+        return router
+
+    def _router(self, extra: dict[str, Any] | None = None) -> Router:
         if self._router_data is None:
             self._router_data = yaml.safe_load((CORE / "router" / "router.yaml").read_text())
         data = json.loads(json.dumps(self._router_data))
         if self.model:
             _pin(data, self.model)
         hardware = self.hardware_class()
-        router = Router(load_router(data), self.settings, self.providers,
+        router = Router(load_router(data), self.settings, {**self.providers, **(extra or {})},
                         hardware_class=hardware if hardware in ("low", "mid", "high", "content_only") else None,
                         shared=self.router_shared, cloud_on=lambda role: self.cloud_tier_on(),
                         power=self.power_plan)  # fmt: skip
