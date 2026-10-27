@@ -64,7 +64,7 @@ export function useConceptRenderer(): ConceptMapRenderer | null {
 }
 
 export interface ConceptActions {
-  /** "Ask Jana about this" on a skill. */
+  /** "Ask the tutor about this" on a skill. */
   onAskKc?: (node: ConceptNode) => void;
   /** An open question taken to the tutor, in the learner's own words. */
   onAskQuestion?: (text: string) => void;

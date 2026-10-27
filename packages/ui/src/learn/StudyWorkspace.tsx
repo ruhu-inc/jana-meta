@@ -13,6 +13,7 @@ import { StudyInline as PackInline, StudyText as PackText, StudySourceText } fro
 import { useOpenLesson, useOpenTopic } from "./link.js";
 import { defaultRequest, GenerateDialog, GenerateTools, MySets, RecordingPlayer, type GenerateRequest } from "./StudyGenerate.js";
 import { StudyConceptMap } from "./StudyConceptMap.js";
+import { StudyResearch } from "./StudyResearch.js";
 import { StudyLibrary, materialGroups } from "./StudyLibrary.js";
 import { StudyJourney } from "./StudyJourney.js";
 import { citationKey, StudyCitations } from "./StudyCitation.js";
@@ -28,7 +29,7 @@ const tabOf = (kind: string): Tab => (kind === "chat" ? "chat" : "generate");
 const picked = (answer: string | undefined) => (answer ?? "").split(",").filter(Boolean);
 
 /** `onTab` hears which tab is open: the voice conversation lives in Chat (VOC-53, D130). */
-export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened }: { controller: StudyWorkspaceController; onPractice?: (subject: string, kcIds: string[]) => void; onTab?: (tab: Tab) => void; onReviewAccess?: () => void; initialAdd?: "paste" | null; onJourneyStarted?: (node: string, subject: string) => void; initialJourney?: "next" | "lesson" | "quiz" | null; onJourneyOpened?: () => void; initialSource?: Pick<W.Source, "source_id" | "revision"> | null; onSourceOpened?: () => void }) {
+export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened }: { controller: StudyWorkspaceController; /** A practised diagram's capture: Study's research starts from it (SPEC §18). */ initialResearch?: string | null; onResearchOpened?: () => void; onPractice?: (subject: string, kcIds: string[]) => void; onTab?: (tab: Tab) => void; onReviewAccess?: () => void; initialAdd?: "paste" | null; onJourneyStarted?: (node: string, subject: string) => void; initialJourney?: "next" | "lesson" | "quiz" | null; onJourneyOpened?: () => void; initialSource?: Pick<W.Source, "source_id" | "revision"> | null; onSourceOpened?: () => void }) {
   const openLesson = useOpenLesson(), openTopic = useOpenTopic();
   const view = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView), t = useT();
   const [journeyChoices, setJourneyChoices] = useState<Record<string, string>>({});
@@ -272,6 +273,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
     <Dialog open={confirm !== null} heading={t("study.private_source")} closeLabel={t("action.cancel")} onClose={() => setConfirm(null)}><p className="text-ui">{t("study.private_confirm")}</p><Button onClick={() => { const id = confirm; setConfirm(null); if (id) void controller.open(id); }}>{t("study.open_private")}</Button></Dialog>
     {/* Before any material the tools show what they will do, greyed (STU-21). */}
     {view.sources.length === 0 && view.status === "ready" && <GenerateTools disabled empty onPick={() => undefined} />}
+    <StudyResearch controller={controller} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.open(id); }} />
     {topicMaps}
     {jobs(view.jobs.filter((job) => ["running", "queued", "waiting_online", "paused"].includes(job.state)))}
   </section>{activityDialog}<Dialog open={allSetsOpen} heading={t("study.all_sets")} closeLabel={t("action.close")} onClose={() => setAllSetsOpen(false)} wide><MySets sets={view.sets} busy={view.busy} heading={false} onOpen={(set) => { setAllSetsOpen(false); void controller.openSet(set); }} /></Dialog></>;

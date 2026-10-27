@@ -41,7 +41,7 @@ import {
 } from "@jana/client-core";
 import {
   AskAnswer, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
-  ConceptMapRendererProvider, GapLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
+  ConceptMapRendererProvider, GapLinkProvider, ResearchLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
   useProfiles, useRecentSessions, useT, type AskContext, type StudyTab, type FramePlace, type LessonInProgress, type LockedPlace, type ReportNames, type SidebarContent, type SubjectChoice,
@@ -349,6 +349,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   const [studyAdd, setStudyAdd] = useState<"paste" | null>(null);
   const [studyResume, setStudyResume] = useState<"next" | "lesson" | "quiz" | null>(null);
   const [studySource, setStudySource] = useState<{ source_id: string; revision: number } | null>(null);
+  const [studyResearch, setStudyResearch] = useState<string | null>(null); // a practised diagram's capture (SPEC §18)
   // The student menu (D115): Settings at a section, the keyboard help, and what it says about the student.
   const [settingsAt, setSettingsAt] = useState<{ id: string; at: number } | null>(null);
   const studySettingsReturn = useRef<{ profile: string | null; source: string | null } | null>(null);
@@ -421,7 +422,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   // The tutor's subject once a profile is open: the one the student last worked on, if it is installed, otherwise the
   // first installed subject (every subject at O level when no pack is installed yet).
   const active = view.active;
-  useEffect(() => { setStudyResume(null); setStudySource(null); }, [active]);
+  useEffect(() => { setStudyResume(null); setStudySource(null); setStudyResearch(null); }, [active]);
   useEffect(() => { if (screen !== "study") { setStudyResume(null); setStudySource(null); } }, [screen]);
   useEffect(() => { if (active && studyAvailable && screen === "home") void runtime.studyWorkspace.load(); }, [active, studyAvailable, screen, runtime.studyWorkspace]);
   const journey = useMemo(() => new LearningJourneyController(profiles), [profiles]);
@@ -1174,7 +1175,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       return <KnowsPage knows={runtime.knows} onClose={() => setScreen(back)} onOpenSettings={() => setScreen("settings")} />;
     }
     if (screen === "study") {
-      const workspace = <StudyWorkspace controller={runtime.studyWorkspace} initialAdd={studyAdd} initialJourney={studyResume} onJourneyOpened={() => setStudyResume(null)} initialSource={studySource} onSourceOpened={() => setStudySource(null)} onJourneyStarted={() => {
+      const workspace = <StudyWorkspace controller={runtime.studyWorkspace} initialAdd={studyAdd} initialJourney={studyResume} onJourneyOpened={() => setStudyResume(null)} initialSource={studySource} onSourceOpened={() => setStudySource(null)} initialResearch={studyResearch} onResearchOpened={() => setStudyResearch(null)} onJourneyStarted={() => {
         void journey.load().then((next) => { if (next) void journeyStep(nextJourneyAction(next)); });
       }} onTab={setStudyTab} onPractice={(subject, kcIds) => {
         const objective = kcIds[0] ? objectiveForKc(Object.values(maps), kcIds[0]) : null;
@@ -1332,6 +1333,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     : null;
   return (
     <KnowsLinkProvider open={() => setScreen("knows")}>
+      <ResearchLinkProvider open={(captureId) => { setStudyResearch(captureId); setScreen("study"); }}>
       <GapLinkProvider open={(gap) => {
         const subjectId = `cur.${gap.kc_id.split(".").slice(1, 3).join(".")}`;
         runtime.conceptMap.showGapOn(subjectId, { misconceptionId: gap.misconception_id, rootKcId: gap.root_kc_id, kcId: gap.kc_id });
@@ -1341,6 +1343,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         <FasterTutorProvider use={fasterTutor}><TutorLookProvider avatar={tutorAvatarOf(view.settings)} name={tutorNameOf(view.settings)}><SavedQuestionsProvider controller={runtime.savedQuestions} onOpen={() => setScreen("saved-questions")}>{frame}</SavedQuestionsProvider></TutorLookProvider></FasterTutorProvider>
       </LessonLinkProvider>
       </GapLinkProvider>
+      </ResearchLinkProvider>
     </KnowsLinkProvider>
   );
 }

@@ -257,7 +257,10 @@ function StudyFixture({ state }: { state: GalleryState }) {
       startExtraction: noop, selectExtra: noop, loadNotes: noop, importNote: noop, loadTopics: noop,
       playOverview: noop, stopReading: () => undefined, saveDraft: noop, loadMaterialTopics: noop, openSet: noop,
       hideAid: () => undefined, clearResult: () => undefined, loadMedia: async () => null, seek: () => undefined,
-      readCitation: async () => true } as unknown as StudyWorkspaceController;
+      readCitation: async () => true,
+      // Concept maps of typed topics and the research agent's study packs: none saved in the gallery.
+      loadTopicMaps: noop, openTopicMap: noop, makeTopicMap: noop, editTopicMap: noop,
+      researchPacks: async () => [] } as unknown as StudyWorkspaceController;
   }, [state]);
   return <div ref={root} className="contents"><StudyWorkspace controller={controller} /></div>;
 }

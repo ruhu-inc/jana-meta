@@ -43,3 +43,15 @@ export function GapLinkProvider({ open, children }: { open: (gap: GapOnMap) => v
 export function useOpenGap(): ((gap: GapOnMap) => void) | null {
   return useContext(GapLink);
 }
+
+/** The diagram drill's way to the research agent (SPEC §18): the app opens Study's research with this photographed
+ * diagram as its start; without a provider the drill shows no "Make a study pack". */
+const ResearchLink = createContext<((captureId: string) => void) | null>(null);
+
+export function ResearchLinkProvider({ open, children }: { open: (captureId: string) => void; children: ReactNode }) {
+  return <ResearchLink.Provider value={open}>{children}</ResearchLink.Provider>;
+}
+
+export function useOpenResearch(): ((captureId: string) => void) | null {
+  return useContext(ResearchLink);
+}

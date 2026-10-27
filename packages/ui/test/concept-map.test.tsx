@@ -66,7 +66,7 @@ describe("concept map view", () => {
     const open = document.querySelector("[data-open-question]")!;
     expect(within(open as HTMLElement).getByText("What does this circuit symbol mean?")).toBeTruthy();
     expect(within(open as HTMLElement).getByText("Open question · From a photo")).toBeTruthy();
-    fireEvent.click(within(open as HTMLElement).getByRole("button", { name: "Ask Jana" }));
+    fireEvent.click(within(open as HTMLElement).getByRole("button", { name: "Ask the tutor" }));
     expect(asked).toHaveBeenCalledWith("What does this circuit symbol mean?");
   });
 

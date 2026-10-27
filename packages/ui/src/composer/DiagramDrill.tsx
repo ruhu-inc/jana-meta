@@ -9,6 +9,7 @@ import { drillOrder, drillParts, markTap, MIN_PARTS, partAt, PhotoCommands, type
 import { useSession } from "../store.js";
 import { useT } from "../i18n.js";
 import { Button } from "../primitives/index.js";
+import { useOpenResearch } from "../learn/link.js";
 
 const REFETCH_MS = 1500, REFETCHES = 8, TRIES = 2;
 /** Each printed label is covered with this margin (a share of the photo), so no stroke of a letter shows. */
@@ -23,7 +24,7 @@ function centre(outline: readonly DrillPoint[]): DrillPoint {
 }
 
 export function DiagramDrill({ sessionId, capture: initial, onClose }: { sessionId: string; capture: CapturedQuestion; onClose: () => void }) {
-  const session = useSession(), t = useT();
+  const session = useSession(), t = useT(), openResearch = useOpenResearch();
   const [capture, setCapture] = useState(initial);
   const [url, setUrl] = useState<string | null>(null);
   const [mode, setMode] = useState<"learn" | "drill" | "done">("learn");
@@ -108,6 +109,7 @@ export function DiagramDrill({ sessionId, capture: initial, onClose }: { session
       <div className="flex flex-wrap gap-2">
         {mode !== "learn" && <Button onClick={() => { setMode("learn"); setFeedback(null); setLit(null); }}>{t("diagram.learn")}</Button>}
         {mode === "learn" && parts.length >= MIN_PARTS && <Button onClick={() => start(seed)}>{t("diagram.practise")}</Button>}
+        {openResearch !== null && parts.length >= MIN_PARTS && <Button onClick={() => openResearch(capture.capture_id)}>{t("diagram.study_pack")}</Button>}
         <Button onClick={onClose}>{t("action.close")}</Button>
       </div>
     </div>

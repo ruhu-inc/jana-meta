@@ -62,7 +62,7 @@ describe("study concept map", () => {
     show(<StudyConceptMap map={DOC} claim={claim} onEdit={onEdit} actions={{ onAsk, onQuiz, onFlashcards }} />);
     fireEvent.click(document.querySelector('[data-node="c2"]')!);
     const sheet = document.querySelector<HTMLElement>('[data-study-concept="c2"]')!;
-    fireEvent.click(within(sheet).getByRole("button", { name: "Ask Jana" }));
+    fireEvent.click(within(sheet).getByRole("button", { name: "Ask the tutor" }));
     fireEvent.click(within(sheet).getByRole("button", { name: "Quiz me" }));
     fireEvent.click(within(sheet).getByRole("button", { name: "Make flashcards" }));
     expect([onAsk.mock.calls[0], onQuiz.mock.calls[0], onFlashcards.mock.calls[0]]).toEqual([["Acceleration"], ["Acceleration"], ["Acceleration"]]);

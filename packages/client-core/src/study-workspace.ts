@@ -1,5 +1,5 @@
 /** M42: profile-bound source library and study aids, using the local API rather than a browser provider. */
-import { isValid, type study_workspace as W } from "@jana/contracts-ts/client";
+import { isValid, type study_research as R, type study_workspace as W } from "@jana/contracts-ts/client";
 import { clientId } from "./ids.js";
 import type { ProfileController } from "./profiles.js";
 import { CommandClient, CommandError } from "./stream/commands.js";
@@ -7,7 +7,7 @@ import type { LocalSpeech } from "./speech.js";
 import { readSessionNote } from "./session-notes.js";
 import { agreesForItself, readConsents, readProfile } from "./studies.js";
 
-export type { W as StudyContracts };
+export type { W as StudyContracts, R as ResearchContracts };
 export interface PodcastAudio {
   available(): boolean;
   activate(): void;
@@ -51,6 +51,10 @@ export const GENERATE_TOOLS = ["summary", "quiz", "flashcards", "notes", "audio_
 export type GenerateTool = (typeof GENERATE_TOOLS)[number];
 /** Kinds that draw on every selected source rather than the open one alone. */
 const MULTI_SOURCE: readonly string[] = ["notes", "summary", "chat", "lesson_plan"];
+function research<T>(name: string, value: unknown): T {
+  if (!isValid(`study/research#/$defs/${name}`, value)) throw new CommandError(200, "invalid_reply", false, undefined);
+  return value as T;
+}
 function valid<T>(name: string, value: unknown): T {
   if (!isValid(`study/workspace#/$defs/${name}`, value)) throw new CommandError(200, "invalid_reply", false, undefined);
   return value as T;
@@ -357,6 +361,22 @@ export class StudyWorkspaceController {
   }
   /** A concept map of a typed topic with no document: the pack's when it names a pack topic, else Muse Spark's
    * (no source, labelled so). */
+  // --- the research agent's study packs (SPEC §18): the conversation, the approved brief, then the pack ---------------
+  async researchChat(body: R.ChatRequest): Promise<R.ChatTurn> {
+    return research<R.ChatTurn>("ChatTurn", await this.mutate("POST", "/v1/study/research/chat", body));
+  }
+  async startResearch(brief: R.Brief, captureId: string | null): Promise<R.Record> {
+    return research<R.Record>("Record", await this.mutate("POST", "/v1/study/research", { brief, capture_id: captureId }));
+  }
+  async researchPacks(): Promise<R.Record[]> {
+    return research<R.RecordList>("RecordList", await this.commands().get("/v1/study/research", this.headers())).items;
+  }
+  async researchPack(id: string): Promise<R.Record> {
+    return research<R.Record>("Record", await this.commands().get(`/v1/study/research/${id}`, this.headers()));
+  }
+  async cancelResearch(id: string): Promise<R.Record> {
+    return research<R.Record>("Record", await this.mutate("POST", `/v1/study/research/${id}/cancel`, {}));
+  }
   async makeTopicMap(topic: string, preferCloud = true): Promise<void> {
     const asked = topic.trim();
     if (!asked) return;
