@@ -295,7 +295,8 @@ MODEL_ENTRY_POINTS = {
     ("engine/research_chat.py", "next_turn", "complete"): "the research conversation (SPEC §18.1a): the topic and "
     "each learner reply screened by the route first (POST /v1/study/research/chat), delimited as data; no tools",
     ("router/__init__.py", "complete", "complete"): "the router's module entry, inside an engine turn or job scope",
-    ("router/core.py", "_call", "complete"): "the router itself: the provider call every site above goes through",
+    ("router/core.py", "_request", "complete"): "the router itself: the provider call every site above goes through "
+    "(`_call` wraps it with the online re-check)",
 }
 
 
