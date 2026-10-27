@@ -101,6 +101,54 @@ UNITS = {
     "mol": ("mole", "moles"),
     "L": ("litre", "litres"),
 }
+# A quantity's unit is spoken in words (VOC-08): every unit the Maths and Physics packs answer in, by its symbol.
+SPOKEN_UNITS = {
+    **UNITS,
+    "nm": ("nanometre", "nanometres"),
+    "dm": ("decimetre", "decimetres"),
+    "min": ("minute", "minutes"),
+    "h": ("hour", "hours"),
+    "kN": ("kilonewton", "kilonewtons"),
+    "kJ": ("kilojoule", "kilojoules"),
+    "MJ": ("megajoule", "megajoules"),
+    "kW": ("kilowatt", "kilowatts"),
+    "MW": ("megawatt", "megawatts"),
+    "kWh": ("kilowatt hour", "kilowatt hours"),
+    "kPa": ("kilopascal", "kilopascals"),
+    "mmHg": ("millimetre of mercury", "millimetres of mercury"),
+    "kHz": ("kilohertz", "kilohertz"),
+    "mV": ("millivolt", "millivolts"),
+    "kV": ("kilovolt", "kilovolts"),
+    "mA": ("milliampere", "milliamperes"),
+    "C": ("coulomb", "coulombs"),
+    "nC": ("nanocoulomb", "nanocoulombs"),
+    "Ω": ("ohm", "ohms"),
+    "kΩ": ("kilohm", "kilohms"),
+    "K": ("kelvin", "kelvin"),
+    "°C": ("degree Celsius", "degrees Celsius"),
+    "°": ("degree", "degrees"),
+    "Bq": ("becquerel", "becquerels"),
+    "kBq": ("kilobecquerel", "kilobecquerels"),
+    "MBq": ("megabecquerel", "megabecquerels"),
+    "counts": ("count", "counts"),
+}
+_SYMBOL = (
+    r"(?:\\Omega|" + "|".join(re.escape(s) for s in sorted(SPOKEN_UNITS, key=len, reverse=True)) + r")(?![A-Za-z])"
+)
+_POWER = r"(?:\^\{-?[123]\}|\^-?[123](?![0-9])|[²³]|⁻[¹²³])"
+_TERM = rf"{_SYMBOL}{_POWER}?"
+_JOIN = r"(?:\s*(?:\\[,;]|\\cdot|·)\s*|\s+)"
+_PRODUCT = rf"{_TERM}(?:{_JOIN}{_TERM})*"
+_UNIT = rf"{_PRODUCT}(?:\s*/\s*(?:{_TERM}|\(\s*{_PRODUCT}\s*\)))?"
+_WRAPPED = rf"\\(?:text|mathrm)\{{\s*{_UNIT}\s*\}}{_POWER}?"
+# A number, then a unit: spaced from it (TeX spaces count), or glued when the unit is more than one letter or a sign.
+_QUANTITY = re.compile(
+    rf"(?:(?<![A-Za-z_\\])|(?<=\d[eE])|(?<=\d[eE][-+]))(?P<number>(?:\d{{1,3}}(?:,\d{{3}})+|\d+)(?:\.\d+)?)"
+    rf"(?P<close>\}}?)(?P<space>(?:\s|~|\\[,;: ]|\\quad)*)(?P<unit>{_WRAPPED}|{_UNIT})(?![\^⁻²³0-9A-Za-z])"
+)
+_ALONE = re.compile(rf"{_WRAPPED}(?![\^⁻²³0-9A-Za-z])")
+_PIECE = re.compile(rf"/|\(|\)|(?P<symbol>{_SYMBOL})(?P<power>{_POWER})?")
+_POWERS = {"²": 2, "³": 3, "⁻¹": -1, "⁻²": -2, "⁻³": -3}
 _NUMBER = re.compile(r"(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?")
 _TOKEN = re.compile(
     r"\\(?:[a-zA-Z]+|[,;:! ])|(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?|"
@@ -162,6 +210,63 @@ def _number(token: str) -> str:
         raise _Unreadable("number_too_large")
     result = _integer(int(whole))
     return result + (" point " + " ".join(ONES[int(d)] for d in decimal) if dot else "")
+
+
+def _power(text: str | None) -> int:
+    if not text:
+        return 0
+    return _POWERS[text] if text in _POWERS else int(text.strip("^{}"))
+
+
+def _unit_words(unit: str, singular: bool) -> str:
+    """A unit in words: "m/s^2" is "metres per second squared", "J/(kg °C)" is "joules per kilogram per degree
+    Celsius". Only the last unit above the line is plural, as in "newton metres"; one of anything is singular."""
+    outer = 0
+    wrapped = re.fullmatch(rf"\\(?:text|mathrm)\{{\s*(?P<inner>.*?)\s*\}}(?P<power>{_POWER})?", unit, re.S)
+    if wrapped:
+        unit, outer = wrapped["inner"], _power(wrapped["power"])  # a power after the group is its last unit's
+    terms: list[tuple[str, int]] = []
+    below = False
+    for piece in _PIECE.finditer(unit):
+        if piece[0] == "/":
+            below = True
+        elif piece["symbol"]:
+            power = _power(piece["power"]) or 1
+            terms.append(("Ω" if piece["symbol"] == r"\Omega" else piece["symbol"], -power if below else power))
+    if outer:
+        symbol, power = terms[-1]
+        terms[-1] = (symbol, outer if power > 0 else -outer)
+    ending = {1: "", 2: " squared", 3: " cubed"}
+    above = [(s, p) for s, p in terms if p > 0]
+    words = [SPOKEN_UNITS[s][0 if singular or i < len(above) - 1 else 1] + ending[p] for i, (s, p) in enumerate(above)]
+    words += ["per " + SPOKEN_UNITS[s][0] + ending[-p] for s, p in terms if p < 0]
+    return " ".join(words)
+
+
+def _say_units(text: str, maths: bool) -> str:
+    """Each quantity's unit as words in a `\\text{}` group, which the reader speaks as it stands (VOC-08). A letter
+    glued to a number is a unit only outside maths and when it cannot be a variable: 5cm and 30° are units, the m of
+    2m and the s of 1990s are not."""
+
+    def quantity(match: re.Match[str]) -> str:
+        unit = match["unit"]
+        wrapped = unit.startswith(("\\text", "\\mathrm"))
+        if not match["space"] and not wrapped:
+            first = re.match(_SYMBOL, unit)
+            sign = first is not None and first[0] in ("°", "°C", "Ω", r"\Omega")
+            if not sign and (maths or first is None or len(first[0]) == 1):
+                return match[0]
+        before = text[match.start() - 1] if match.start() else ""
+        singular = match["number"] == "1" and not match["close"] and before not in "^{-.eE"
+        return f"{match['number']}{match['close']} \\text{{{_unit_words(unit, singular)}}}"
+
+    def alone(match: re.Match[str]) -> str:
+        symbols = [p["symbol"] for p in _PIECE.finditer(match[0]) if p["symbol"]]
+        if len(symbols) == 1 and symbols[0] not in UNITS and len(symbols[0]) == 1:
+            return match[0]  # a lone \text{C} or \text{K} may be a label, not a unit
+        return f"\\text{{{_unit_words(match[0], False)}}}"
+
+    return _ALONE.sub(alone, _QUANTITY.sub(quantity, text))
 
 
 def _clean(text: str) -> str:
@@ -380,7 +485,7 @@ def _render(text: str, failures: list[str], maths: bool = False) -> str:
             raise _Unreadable("unsupported_notation")
         if re.search(r"<\s*/?\s*[A-Za-z][^>]*>", text):
             raise _Unreadable("unsupported_markup")
-        rendered = _Math(text, maths).read()
+        rendered = _Math(_say_units(text, maths), maths).read()
         if _FORBIDDEN.search(rendered):
             raise _Unreadable("unsafe_speech_text")
         return rendered
