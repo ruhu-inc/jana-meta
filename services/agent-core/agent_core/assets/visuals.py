@@ -313,6 +313,7 @@ def _params(spec: dict[str, Any], kind: dict[str, Any], repairs: list[str], ctx:
         params = {**json.loads(json.dumps(preset.get("params", {}))), **(params if isinstance(params, dict) else {})}
     params = _scenario_start(spec["type"], params)
     params = _repair_units(params, repairs)
+    params = _repair_numbers(spec["type"], params, repairs)
     spec = {**spec, "params": params}
     problems = kind_param_errors(spec["type"], params)
     if problems:
@@ -361,6 +362,53 @@ def kind_param_errors(kind: str, params: Any) -> list[str]:
     if kind in KIND_SCHEMAS:
         return sorted(f"{e.json_path}: {e.message}" for e in _renderer_validator(kind).iter_errors(params))
     return []
+
+
+def _kind_validator(kind: str) -> Any:
+    schema_name = f"visuals/kinds/{kind}"
+    if f"https://jana.dev/contracts/{schema_name}" in schema_ids() or schema_name in schema_ids():
+        from agent_core.contracts._validation import validator
+
+        return validator(schema_name)
+    return _renderer_validator(kind) if kind in KIND_SCHEMAS else None
+
+
+def _repair_numbers(kind: str, params: Any, repairs: list[str]) -> Any:
+    """A JSON number where the kind takes an exact number as a string (`"t": 0` for `"t": "0"`) is the same value
+    written another way: it becomes its string when that string fits the field's pattern. Models write numbers; the
+    kinds keep exact values as strings. Only a number changes, so anything else that does not fit is still refused."""
+    check = _kind_validator(kind)
+    if check is None or not isinstance(params, dict):
+        return params
+    for _ in range(64):  # one field per pass: each repair can only remove an error
+        for error in check.iter_errors(params):
+            value = error.instance
+            if (error.validator != "type" or error.validator_value != "string" or isinstance(value, bool)
+                    or not isinstance(value, int | float) or "pattern" not in error.schema):  # fmt: skip
+                continue
+            text = _exact(value)
+            if text is None or re.search(str(error.schema["pattern"]), text) is None:
+                continue
+            node = params
+            *parents, last = list(error.absolute_path)
+            for key in parents:
+                node = node[key]
+            node[last] = text
+            repairs.append(f"number:{error.json_path}->{text}")
+            break
+        else:
+            return params
+    return params
+
+
+def _exact(value: int | float) -> str | None:
+    """A JSON number as an exact decimal string ("20" for 20.0, "2.5" for 2.5), or None when it is not finite."""
+    if isinstance(value, int):
+        return str(value)
+    if value != value or value in (float("inf"), float("-inf")):
+        return None
+    text = format(Decimal(repr(value)).normalize(), "f")
+    return text[:-2] if text.endswith(".0") else text
 
 
 def _repair_units(node: Any, repairs: list[str]) -> Any:

@@ -13,7 +13,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from agent_core.assets.visuals import VisualContext, validate
+from agent_core.assets.visuals import VisualContext, VisualError, validate
 from agent_core.engine import figures
 from agent_core.engine.pointing import Targets, resolve
 from agent_core.retrieval.index import KnowledgeIndex
@@ -211,3 +211,27 @@ def test_a_pack_question_shows_its_own_figure_before_the_coach_speaks(tmp_path: 
     first_text = next(i for i, k in enumerate(kinds) if k in ("text.delta", "text"))
     assert kinds.index("visual.spec") < first_text  # on screen before any model speaks
     assert f"the question's figure is on screen ({resolved['visual_id']}" in notes[0] and "slope" in notes[0]
+
+
+def test_a_motion_graph_with_numbers_for_its_points_is_repaired_not_refused() -> None:
+    """The Coach writes a graph's points as JSON numbers (`"t": 0`) where the kind takes exact numbers as strings
+    (`"t": "0"`). Refusing it cost a whole second Coach iteration on the demo question in the browser host
+    (2026-10-27: "the params do not fit the kind ($.points[0].t: 0 is not of type 'string')"). A plain number is
+    the same value written another way: it is repaired to its string and the repair recorded."""
+    params = {"graph": "velocity_time", "points": [{"id": "A", "t": 0, "value": 0}, {"id": "B", "t": 5, "value": 20.0}],
+              "gradient": [{"id": "slope", "from": "A", "to": "B"}], "units": {"t": "s", "value": "m/s"}}  # fmt: skip
+    context = VisualContext("physics", "O", "S2", knowns={"kn_01": Fraction(0), "kn_02": Fraction(20),
+                                                          "kn_03": Fraction(5)})  # fmt: skip
+    resolved, repairs = validate({"spec_version": 1, "type": "motion_graph", "params": params,
+                                  "numbers_from": ["kn_01", "kn_02", "kn_03"]}, context)  # fmt: skip
+    points = resolved["params"]["points"]
+    assert [(p["t"], p["value"]) for p in points] == [("0", "0"), ("5", "20")]
+    assert any(r.startswith("number:") for r in repairs)
+    # Only a number becomes a string: anything else that does not fit is still refused.
+    bad = {**params, "points": [{"id": "A", "t": True, "value": "0"}, {"id": "B", "t": "5", "value": "x"}]}
+    try:
+        validate({"spec_version": 1, "type": "motion_graph", "params": bad, "numbers_from": ["kn_01"]}, context)
+    except VisualError as error:
+        assert error.code == "visual_param_invalid"
+    else:
+        raise AssertionError("a boolean or a word is not a number")
