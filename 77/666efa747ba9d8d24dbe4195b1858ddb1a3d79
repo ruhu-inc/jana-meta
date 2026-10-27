@@ -1,0 +1,23 @@
+services/agent-core/VOICE.md
+  s_565e164e996844::t_3d2ff88426670f 46-48,53-58,63-64,76-77,80-82,84-85,88-91
+scripts/jana_tools/voice_latency.py
+  s_565e164e996844::t_5b798ee2c02db4 254-259,428-430
+SPEC.md
+  s_565e164e996844::t_141078415a1971 22,211-213,441-472
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "77666efa747ba9d8d24dbe4195b1858ddb1a3d79",
+  "prompts": {},
+  "sessions": {
+    "s_565e164e996844": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4041a6fd-1e40-46bd-8cc7-3b563b912d77",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
