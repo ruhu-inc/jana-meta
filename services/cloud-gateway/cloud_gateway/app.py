@@ -473,7 +473,6 @@ def create_app(
             for connection in list(app.state.voice.live.values()):
                 await connection.close()
             await app.state.voice.stack.aclose()
-            await app.state.podcast_speech.client.aclose()
             await app.state.segment.sam.aclose()
             await app.state.research.aclose()
             await gw.providers.aclose()
@@ -484,9 +483,6 @@ def create_app(
     from cloud_gateway.study import add_routes as study_routes
 
     app.state.study = study_routes(app, gw)
-    from cloud_gateway.podcast_speech import add_routes as podcast_routes
-
-    app.state.podcast_speech = podcast_routes(app, gw)
     from cloud_gateway.voice import add_routes as voice_routes
 
     app.state.voice = voice_routes(app, gw, speech)

@@ -176,7 +176,7 @@ def test_keychain_lookup_commands() -> None:
     assert ChainedSecrets((missing,)).get("meta_api_key") is None
 
 
-@pytest.mark.parametrize("name", ["meta_api_key", "nvidia_api_key"])
+@pytest.mark.parametrize("name", ["meta_api_key"])
 def test_hackathon_keychain_uses_dedicated_service_without_environment(name: str) -> None:
     config = load_config(REPO / "services/cloud-gateway/deploy/meta-dev.toml")
     calls = []

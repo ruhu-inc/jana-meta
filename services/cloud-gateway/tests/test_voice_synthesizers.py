@@ -1,26 +1,18 @@
-"""Cloud voice's verbatim voices (SPEC §6.2, §6.4): Kokoro through its worker process (a scripted stand-in here; the
-real worker runs only with `JANA_LIVE_KOKORO=1`), and Magpie, development only, resampled to 24 kHz."""
+"""Cloud voice's verbatim voice (SPEC §6.4): Kokoro through its worker process (a scripted stand-in here; the real
+worker runs only with `JANA_LIVE_KOKORO=1`)."""
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
-import io
-import itertools
-import json
 import os
-import struct
 import sys
-import wave
 from pathlib import Path
 
-import httpx
 import pytest
 from cloud_gateway.config import VoiceTts
-from cloud_gateway.custody import Secret
 from cloud_gateway.providers.base import UpstreamError
 from cloud_gateway.providers.kokoro_speech import KokoroSynthesizer, worker_command, worker_env
-from cloud_gateway.providers.magpie_speech import MagpieSynthesizer, resample
 
 # A worker speaking the real one's frames: ready, then for each request the text's bytes as two even "PCM" chunks.
 WORKER = r"""
@@ -139,64 +131,3 @@ def test_kokoro_live_worker_speaks_24khz_pcm():
 
     audio = b"".join(asyncio.run(run()))
     assert len(audio) % 2 == 0 and 48_000 * 2 < len(audio) < 48_000 * 10  # 2 to 10 s of 24 kHz PCM16
-
-
-# --- Magpie (development only) ---------------------------------------------------------------------------------------
-
-
-def wav(seconds: float = 0.5, rate: int = 22_050) -> bytes:
-    buffer = io.BytesIO()
-    with wave.open(buffer, "wb") as out:
-        out.setnchannels(1)
-        out.setsampwidth(2)
-        out.setframerate(rate)
-        out.writeframes(struct.pack(f"<{int(rate * seconds)}h", *range(int(rate * seconds))))
-    return buffer.getvalue()
-
-
-def test_magpie_reads_each_sentence_once_resampled_to_24khz():
-    sent: list[dict[str, str]] = []
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        body = request.content.decode(errors="ignore")
-        fields = {name: body.split(f'name="{name}"\r\n\r\n', 1)[1].split("\r\n", 1)[0]
-                  for name in ("text", "voice", "sample_rate_hz")}  # fmt: skip
-        sent.append(fields)
-        if fields["voice"].endswith("Calm"):
-            return httpx.Response(400)  # the preferred voice is not offered: the fallback reads it
-        return httpx.Response(200, content=wav())
-
-    tts = MagpieSynthesizer(VoiceTts(engine="magpie"), Secret("nvapi-not-real"),
-                            httpx.AsyncClient(transport=httpx.MockTransport(handler)))  # fmt: skip
-
-    async def run() -> bytes:
-        try:
-            return b"".join([chunk async for chunk in tts.synthesize("Good start.")])
-        finally:
-            await tts.aclose()
-
-    audio = asyncio.run(run())
-    assert [s["voice"] for s in sent] == ["Magpie-Multilingual.EN-US.Aria.Calm",
-                                          "Magpie-Multilingual.EN-US.Aria.Neutral"]  # fmt: skip
-    assert {s["text"] for s in sent} == {"Good start."} and {s["sample_rate_hz"] for s in sent} == {"22050"}
-    assert len(audio) == 2 * 12_000  # half a second at 24 kHz
-
-
-def test_magpie_refusals_are_reason_codes():
-    refused = httpx.MockTransport(lambda r: httpx.Response(401))
-    tts = MagpieSynthesizer(VoiceTts(engine="magpie"), Secret("nvapi-not-real"), httpx.AsyncClient(transport=refused))
-    with pytest.raises(UpstreamError) as raised:
-        asyncio.run(anext(tts.synthesize("Hello.")))
-    assert raised.value.reason == "upstream_auth"
-    with pytest.raises(UpstreamError) as missing:
-        asyncio.run(anext(MagpieSynthesizer(VoiceTts(engine="magpie"), None).synthesize("Hello.")))
-    assert missing.value.reason == "upstream_auth"
-
-
-def test_resample_keeps_duration_and_shape():
-    ramp = struct.pack("<2205h", *range(0, 22_050, 10))
-    out = struct.unpack(f"<{len(resample(ramp)) // 2}h", resample(ramp))
-    assert len(out) == 2400  # 0.1 s at 24 kHz
-    assert out[0] == 0 and all(b >= a for a, b in itertools.pairwise(out))
-    assert abs(out[-1] - 22_040) < 20
-    assert resample(b"") == b"" and json.dumps(len(resample(b"\1\0"))) == "2"

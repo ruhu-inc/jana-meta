@@ -1,6 +1,6 @@
 # Local development configuration for Jana on Meta. No key belongs in this file.
-# Put the Meta Model API key in the login keychain: service jana-meta.cloud-gateway, account meta_api_key
-# (and nvidia_api_key for Podcast narration). A gateway-only META_API_KEY environment variable also works.
+# Put the Meta Model API key in the login keychain: service jana-meta.cloud-gateway, account meta_api_key.
+# A gateway-only META_API_KEY environment variable also works.
 # The same key opens Muse Voice Transcribe streams for cloud voice (SPEC §6.1).
 environment = "dev"
 audience_host = "localhost"
@@ -29,13 +29,3 @@ deployment_max_output_tokens = 16384
 # Sponsored development access shares the deployment's inference allocation above.
 [tier]
 allowance_usd_per_student_month = 15.00
-
-# NVIDIA API catalog trial, for development only: anything judges hear uses self-hosted Magpie or Kokoro (§6.4).
-[podcast_speech]
-enabled = true
-access = "free_prototyping"
-daily_characters = 20000
-total_characters = 100000
-daily_requests = 100
-total_requests = 500
-expires_at = "2026-11-05T02:00:00Z"

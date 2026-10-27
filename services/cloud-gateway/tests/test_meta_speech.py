@@ -501,9 +501,8 @@ def test_speech_start_barges_in(tmp_path: Path) -> None:
 
 
 def test_default_stack_is_voice_transcribe_and_kokoro(tmp_path: Path) -> None:
-    """Voice Transcribe hears and Kokoro reads (SPEC §6.4), with no Live voice; Magpie only when configured, in dev."""
+    """Voice Transcribe hears and Kokoro reads (SPEC §6.4), with no Live voice."""
     from cloud_gateway.providers.kokoro_speech import KokoroSynthesizer
-    from cloud_gateway.providers.magpie_speech import MagpieSynthesizer
 
     config = gateway_config(tmp_path, voice_enabled=True)
     app = create_app(config, secrets=FakeSecrets({"meta_api_key": KEY}))
@@ -511,12 +510,7 @@ def test_default_stack_is_voice_transcribe_and_kokoro(tmp_path: Path) -> None:
     assert isinstance(stack.recognizer, MetaRecognizer) and stack.live is None
     assert isinstance(stack.tts, KokoroSynthesizer) and stack.tts.voice == "kokoro-82m/af_heart"
     with pytest.raises(ImportError):
-        import cloud_gateway.providers.google_speech  # noqa: F401 -- JM-D14: no Google voice remains
-    config = gateway_config(tmp_path / "dev", environment="dev", voice_enabled=True, voice_tts={"engine": "magpie"})
-    stack = create_app(config, secrets=FakeSecrets({"meta_api_key": KEY})).state.voice.stack
-    assert isinstance(stack.tts, MagpieSynthesizer)
-    with pytest.raises(ValueError, match="development voice only"):
-        gateway_config(tmp_path / "staging", voice_enabled=True, voice_tts={"engine": "magpie"})
+        import cloud_gateway.providers.google_speech
     stack = create_app(
         gateway_config(tmp_path / "nokey", voice_enabled=True), secrets=FakeSecrets({})
     ).state.voice.stack
