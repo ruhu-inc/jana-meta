@@ -1,0 +1,57 @@
+packages/ui/src/learn/link.tsx
+  s_207b3a26495062::t_2ee0c7d39433c7 46-57
+packages/contracts-ts/src/generated/client.ts
+  s_207b3a26495062::t_09f0544bb66567 4,374-388
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_207b3a26495062::t_09f0544bb66567 261-275
+packages/ui/src/index.ts
+  s_207b3a26495062::t_71683254a14109 99-100
+packages/ui/src/learn/ConceptMap.tsx
+  s_207b3a26495062::t_67286d382ed608 67
+packages/client-core/src/study-workspace.ts
+  s_207b3a26495062::t_fe2fa3337b54e5 2,10,54-57,364-379
+packages/i18n/locales/en.json
+  s_207b3a26495062::t_2ee0c7d39433c7 2867-2869,2871-2872,2874-2884,2886-2930,2933-2935
+  s_207b3a26495062::t_65c3a4bcae4cb8 2870,2873,2885,2932
+  s_207b3a26495062::t_014c4398ef022a 2059,2931
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_207b3a26495062::t_71683254a14109 16,32,276
+scripts/codegen/contracts-ts.mjs
+  s_207b3a26495062::t_09f0544bb66567 108
+apps/desktop/src/App.tsx
+  s_207b3a26495062::t_71683254a14109 44,352,425,1178,1336,1346
+packages/ui/src/learn/StudyResearch.tsx
+  s_207b3a26495062::t_4be3e0d8fba643 1-27,29-39,42-146,148-164,166-186
+  s_207b3a26495062::t_960c82b2484bc6 28,147,165
+  s_207b3a26495062::t_718f56860911ee 40-41
+packages/ui/src/composer/DiagramDrill.tsx
+  s_207b3a26495062::t_71683254a14109 12,27,112
+packages/ui/test/study-research.test.tsx
+  s_207b3a26495062::t_51af4f4a006c90 1-96
+packages/client-core/src/index.ts
+  s_207b3a26495062::t_fe2fa3337b54e5 114
+packages/ui/test/study-concept-map.test.tsx
+  s_207b3a26495062::t_67286d382ed608 65
+packages/ui/test/concept-map.test.tsx
+  s_207b3a26495062::t_67286d382ed608 69
+packages/contracts-ts/src/generated/client-validators.js
+  s_207b3a26495062::t_a4fed9239d1043 10
+packages/ui/gallery/GalleryView.tsx
+  s_207b3a26495062::t_fc43220ffe84a3 260-263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2ee3b300d01f78362c12570e4b621b2aa999da23",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
