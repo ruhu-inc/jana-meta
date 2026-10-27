@@ -914,6 +914,17 @@ found 12 pages in ~30 s and all five parts were made, the quiz included, ~2½ mi
 diagram read). The concept map's 10 boxes say "From the web". Fixed on the way: the hand-over started its
 conversation twice in the development build (the second turn collided and failed with a storage error).
 
+**Concept map as a knowledge tree** (2026-10-27, owner's request): a pack's map had 10 ideas and one link (made batch
+by batch, links kept only when a passage states them, nothing joining the ideas), so the layered layout drew a list.
+Now: the pack's outline (topic → its questions → each idea under the question whose pages cited it; `outline`
+concepts and `includes` links with no claim, labelled "Your pack's plan"), near-duplicates merged across batches
+("… phases"), and a whole-map pass that proposes up to 12 links citing the summaries' own passages, kept only when a
+second call confirms the passages state them. Live: 22 boxes and 32 links (11 checked, e.g. pulmonary and systemic
+circulation → part of double circulation; sinus node → part of the conduction system), drawn in six columns from the
+topic; pack ~$0.30. Seen: the heartbeat question's pages brought in disease ideas (arrhythmia, ventricular
+fibrillation, cardiomyopathy, sudden cardiac death) beyond the O level focus; nothing yet keeps a pack's ideas to its
+level and focus.
+
 Still open: "Practise the diagram" does not show on a photo pack in Study (the drill needs the tutor session's
 photo; Study has no way to open it yet); two research chat turns at once on one profile fail with a storage error
 (the UI no longer sends them); the podcast is voiced by the system voice, not Kokoro on the device (§18.1); the
