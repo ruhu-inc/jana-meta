@@ -212,7 +212,7 @@ def test_notes_are_in_profile_archive_without_transcripts(tmp_path):
     conn.executescript(V9_LEARNER)
     conn.execute(
         "INSERT INTO profile (profile_id,display_name,avatar,age_band,level,subjects,locale,created_at,updated_at) "
-        "VALUES ('test','Synthetic','owl','16_17','O','[\"physics\"]','en',0,0)"
+        "VALUES ('test','Synthetic','owl','18_plus','O','[\"physics\"]','en',0,0)"
     )
     identity = new_id("nt")
     conn.execute(
@@ -239,7 +239,7 @@ def test_real_profile_notes_and_voice_preferences_are_local_and_isolated(tmp_pat
             api = Api(running)
             first = await running.post(
                 "/v1/profiles",
-                {"display_name": "Ada", "avatar": "disc", "level": "O", "subjects": ["physics"], "age_band": "13_15"},
+                {"display_name": "Ada", "avatar": "disc", "level": "O", "subjects": ["physics"], "age_band": "18_plus"},
             )
             profile = first.json()["profile_id"]
             token = (await running.post(f"/v1/profiles/{profile}/open", {})).json()["profile_token"]
@@ -278,7 +278,7 @@ def test_real_profile_notes_and_voice_preferences_are_local_and_isolated(tmp_pat
             assert (await api.call("GET", "/v1/study/notes")).status_code == 401
             second = await running.post(
                 "/v1/profiles",
-                {"display_name": "Ben", "avatar": "disc", "level": "O", "subjects": ["physics"], "age_band": "16_17"},
+                {"display_name": "Ben", "avatar": "disc", "level": "O", "subjects": ["physics"], "age_band": "18_plus"},
             )
             other_profile = second.json()["profile_id"]
             other_token = (await running.post(f"/v1/profiles/{other_profile}/open", {})).json()["profile_token"]

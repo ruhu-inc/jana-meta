@@ -91,7 +91,7 @@ def prv03_onboarding_minimal_fields(tmp_path: Path):
     profile, index, listed = LOOP.run_until_complete(scenario())
 
     assert profile["display_name"] == index["display_name"] == DISPLAY_NAME
-    assert profile["age_band"] == "13_15" and profile["level"] == "O"
+    assert profile["age_band"] == "18_plus" and profile["level"] == "O"
     assert "physics" in str(profile["subjects"]) and str(profile["exam_date"]).startswith("2027-06")
     # Nothing else in either row repeats the name or holds a calendar date other than the exam date: every other
     # value is an id, a picture token, a fixed choice, a JSON setting, a hash or a timestamp.

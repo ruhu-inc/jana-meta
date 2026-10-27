@@ -31,7 +31,7 @@ from agent_core.store.exports import (
     seal_with_passphrase,
 )
 from agent_core.store.ids import new_ulid
-from agent_core.store.profiles import ProfileDirectory, ProfileError, internal_id
+from agent_core.store.profiles import ProfileDirectory, ProfileError, internal_id, require_adult
 from agent_core.store.settings import PREFERENCES, tutor_avatar
 from agent_core.store.sqlite import transaction
 
@@ -222,6 +222,7 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
         withdrawn history; never touches an existing profile."""
         d = directory()
         fields = archive.manifest["profile"]
+        guarded(lambda: require_adult(fields["age_band"]))  # an archive from an older build's minor profile (W5)
         taken = {p["display_name"] for p in d.summaries()["profiles"]}
         name = display_name or fields["display_name"]
         suffix = 2

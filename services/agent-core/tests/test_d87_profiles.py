@@ -62,7 +62,7 @@ def test_family_profile_and_consent_flow(tmp_path: Path) -> None:
         try:
             reply = await r.post(
                 "/v1/profiles",
-                {"display_name": "Ada", "avatar": "disc", "level": "O", "subjects": ["physics"], "age_band": "13_15"},
+                {"display_name": "Ada", "avatar": "disc", "level": "O", "subjects": ["physics"], "age_band": "18_plus"},
             )
             assert reply.status_code == 200, reply.text
             profile = reply.json()["profile_id"]
@@ -77,10 +77,8 @@ def test_family_profile_and_consent_flow(tmp_path: Path) -> None:
             api = Api(r)
             token = headers["x-profile-token"]
             switch = f"/v1/profiles/{profile}/consents/research_use"
-            denied = await api.call("PUT", switch, {"action": "on"}, profile=token)
-            assert denied.status_code == 422, denied.text
-            on = await api.call("PUT", switch, {"action": "on", "guardian_agreed": True}, profile=token)
-            assert on.status_code == 200 and on.json()["method"] == "in_app_guardian", on.text
+            on = await api.call("PUT", switch, {"action": "on"}, profile=token)  # an adult agrees for themself (W5)
+            assert on.status_code == 200 and on.json()["method"] == "in_app_notice", on.text
             paused = await api.call("PUT", switch, {"action": "pause"}, profile=token)
             assert paused.json()["granted"] and paused.json()["paused"] and not paused.json()["effective"]
             resumed = await api.call("PUT", switch, {"action": "on"}, profile=token)

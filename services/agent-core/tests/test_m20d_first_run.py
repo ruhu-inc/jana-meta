@@ -42,7 +42,7 @@ async def done(api: Api) -> Any:
 def by_name(name: str) -> dict[str, Any]:
     """What the app sends for a student added by name: the name and the defaults of TABLE PLT-17b for a computer with
     the physics O level pack (every installed subject at its level, a minor age band, no exam month)."""
-    return {"display_name": name, "avatar": "avatar-1", "level": "O", "age_band": "13_15", "subjects": ["physics"]}
+    return {"display_name": name, "avatar": "avatar-1", "level": "O", "age_band": "18_plus", "subjects": ["physics"]}
 
 
 async def scripted_first_run(api: Api) -> list[str]:
@@ -91,7 +91,7 @@ def plt17_minimal_first_run(tmp_path: Path) -> None:
             token = await api.token(ama["profile_id"])
             settings = (await api.call("GET", f"/v1/profiles/{ama['profile_id']}/settings", profile=token)).json()
             assert "solution_policy" not in settings  # on request, not a setting (D26, D87)
-            assert r.runtime.directory.age_band(ama["profile_id"]) == "13_15"  # a minor band
+            assert r.runtime.directory.age_band(ama["profile_id"]) == "18_plus"  # adults only (W5)
             features = (await api.call("GET", "/v1/connectivity")).json()["features"]
             assert not any(f["enabled"] for f in features.values())
             models = (await api.call("GET", "/v1/models")).json()

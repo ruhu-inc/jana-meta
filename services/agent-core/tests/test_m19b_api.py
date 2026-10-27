@@ -107,39 +107,21 @@ async def _token(api: Api, profile: str) -> str:
 
 
 def arc11_minor_needs_checkout_consent(tmp_path: Path) -> None:
-    """No call on a profile under 18 makes a profile-data feature effective without the guardian's consent from the
-    subscription checkout: not the device switches, not the consent switch, not a subscription that lists no consent
-    for it, not a corrected age band (D70, D86, PRV-06)."""
+    """No profile under 18 can be made, so none can reach a profile-data feature by any route: the band is refused,
+    and a band under 18 is refused on an existing profile too, leaving its consents as they were (D70, PRV-06, W5)."""
 
     async def scenario(api: Api, r: Any, online: Any, _: Any) -> Any:
-        minor = await api.add(student("Ama"))
-        every = {f: True for f in online.shown()}
-        kid = await _token(api, minor)
-        steps: list[Any] = [(await api.call("PATCH", "/v1/connectivity", {"features": every})).status_code]
-        steps.append(code(await api.call("PUT", f"/v1/profiles/{minor}/consents/cloud_tier",
-                                         {"action": "on", "notice_version": NOTICE}, profile=kid)))  # fmt: skip
-        waiting = await api.call("POST", "/v1/subscription", {"entitlement": entitlement([minor]), "consents": []})
-        steps.append(waiting.json()["profiles"])
-
-        def effective() -> bool:
-            with r.runtime.directory.open_learner(minor) as conn:
-                return bool(online.cloud_effective(minor, conn))
-
-        steps.append(effective())
-        await api.call("PATCH", f"/v1/profiles/{minor}", {"age_band": "16_17"}, profile=kid)
-        steps.append(effective())
-        given = await api.call("POST", "/v1/subscription", {"entitlement": entitlement([minor]),
-                                                             "consents": [{"profile_id": minor,
-                                                                           "notice_version": NOTICE}]})  # fmt: skip
-        steps.append((given.json()["state"], effective()))
-        state = (await api.call("GET", f"/v1/profiles/{minor}/consents", profile=kid)).json()
-        steps.append(next((c["granted_by_role"], c["method"]) for c in state if c["scope"] == "cloud_tier"))
+        steps: list[Any] = [code(await api.call("POST", "/v1/profiles", student("Ama", age_band=band)))
+                            for band in ("under_13", "13_15", "16_17")]  # fmt: skip
+        adult = await api.add(student("Esi"))
+        token = await _token(api, adult)
+        steps.append(code(await api.call("PATCH", f"/v1/profiles/{adult}", {"age_band": "16_17"}, profile=token)))
+        with r.runtime.directory.open_learner(adult) as conn:
+            steps.append(bool(online.cloud_effective(adult, conn)))
         return steps
 
     steps = with_online(tmp_path, scenario)
-    assert steps[:2] == [200, "guardian_consent_required"]
-    assert steps[2] == [{"profile_id": steps[2][0]["profile_id"], "consent": "needed"}]
-    assert steps[3:] == [False, False, ("active", True), ("guardian", "checkout_guardian")]
+    assert steps == ["validation_failed"] * 4 + [False]
 
 
 def arc11_off_always_allowed(tmp_path: Path) -> None:
@@ -147,27 +129,29 @@ def arc11_off_always_allowed(tmp_path: Path) -> None:
     one step with no PIN (D86, D87)."""
 
     async def scenario(api: Api, r: Any, online: Any, _: Any) -> Any:
-        grown = await api.add(student("Esi", age_band="18_plus"))
-        minor = await api.add(student("Ama"))
+        grown = await api.add(student("Esi"))
+        other = await api.add(student("Ama"))
         await api.call(
             "POST",
             "/v1/subscription",
             {
-                "entitlement": entitlement([grown, minor]),
+                "entitlement": entitlement([grown, other]),
                 "consents": [
-                    {"profile_id": minor, "notice_version": NOTICE},
+                    {"profile_id": other, "notice_version": NOTICE},
                     {"profile_id": grown, "notice_version": NOTICE},
                 ],
             },
         )
         every = {f: True for f in online.shown()}
         assert (await api.call("PATCH", "/v1/connectivity", {"features": every})).status_code == 200
-        # The checkout records the minor's guardian consent; the 18+ student grants their own (D43, API-28).
-        own = await api.call("PUT", f"/v1/profiles/{grown}/consents/cloud_tier",
-                             {"action": "on", "notice_version": NOTICE}, profile=await _token(api, grown))  # fmt: skip
-        assert own.status_code == 200 and own.json()["granted_by_role"] == "student_18_plus", own.text
+        # Each 18+ student grants their own (D43, API-28, W5).
+        for profile in (other, grown):
+            token = await _token(api, profile)
+            own = await api.call("PUT", f"/v1/profiles/{profile}/consents/cloud_tier",
+                                 {"action": "on", "notice_version": NOTICE}, profile=token)  # fmt: skip
+            assert own.status_code == 200 and own.json()["granted_by_role"] == "student_18_plus", own.text
         results = []
-        for profile in (minor, grown):
+        for profile in (other, grown):
             token = await _token(api, profile)
             off = await api.call("PATCH", "/v1/connectivity", {"features": {f: False for f in every}}, profile=token)
             results.append((off.status_code, online.features_on()))
@@ -221,38 +205,34 @@ def arc11_consent_required(tmp_path: Path) -> None:
 
 
 def biz07_consent_gate(tmp_path: Path) -> None:
-    """The cloud tier cannot be on without a recorded consent: a subscription that names a minor without the
-    guardian's consent waits (`pending_consent`), the tier stays off, and it turns on only when the consent is
-    recorded; ending the subscription turns it off and withdraws the consent."""
+    """The cloud tier cannot be on without a recorded consent: a subscription alone leaves it off for the adult until
+    they give their own consent; ending the subscription turns it off and withdraws the consent. No guardian waits:
+    every profile is 18 or over (W5)."""
 
     async def scenario(api: Api, r: Any, online: Any, _: Any) -> Any:
-        minor = await api.add(student("Ama"))
+        adult = await api.add(student("Ama"))
         steps = []
-        waiting = await api.call("POST", "/v1/subscription", {"entitlement": entitlement([minor]), "consents": []})
-        steps.append((waiting.json()["state"], "cloud_tier" in online.features_on()))
-        with r.runtime.directory.open_learner(minor) as conn:
-            steps.append(online.cloud_effective(minor, conn))
-        given = await api.call(
-            "POST",
-            "/v1/subscription",
-            {"entitlement": {}, "consents": [{"profile_id": minor, "notice_version": NOTICE}]},
-        )
+        given = await api.call("POST", "/v1/subscription", {"entitlement": entitlement([adult]), "consents": []})
         steps.append((given.json()["state"], "cloud_tier" in online.features_on()))
-        with r.runtime.directory.open_learner(minor) as conn:
-            steps.append((online.cloud_effective(minor, conn), consent_store.active(conn, "cloud_tier")[1]))
+        with r.runtime.directory.open_learner(adult) as conn:
+            steps.append(online.cloud_effective(adult, conn))
+        await api.call("PUT", f"/v1/profiles/{adult}/consents/cloud_tier", {"action": "on", "notice_version": NOTICE},
+                       profile=await _token(api, adult))  # fmt: skip
+        with r.runtime.directory.open_learner(adult) as conn:
+            steps.append((online.cloud_effective(adult, conn), consent_store.active(conn, "cloud_tier")[1]))
         ended = await api.call("DELETE", "/v1/subscription")
-        with r.runtime.directory.open_learner(minor) as conn:
-            steps.append((ended.json()["state"], online.cloud_effective(minor, conn),
+        with r.runtime.directory.open_learner(adult) as conn:
+            steps.append((ended.json()["state"], online.cloud_effective(adult, conn),
                           consent_store.active(conn, "cloud_tier")))  # fmt: skip
-        forged = dict(entitlement([minor]), allowance_tokens=10**12)
+        forged = dict(entitlement([adult]), allowance_tokens=10**12)
         refused = await api.call("POST", "/v1/subscription", {"entitlement": forged, "consents": []})
         steps.append(code(refused))
         steps.append(contract_errors("api/commands#/$defs/CloudSubscription", given.json()))
         return steps
 
     steps = with_online(tmp_path, scenario)
-    assert steps == [("pending_consent", False), False, ("active", True), (True, "guardian"), ("ended", False, None),
-                     "validation_failed", []]  # fmt: skip
+    assert steps == [("active", True), False, (True, "student_18_plus"), ("ended", False, None), "validation_failed",
+                     []]  # fmt: skip
 
 
 def test_subscription_apply_validates_its_entitlement_against_the_contract(tmp_path: Path) -> None:
@@ -388,7 +368,7 @@ def dat18_feature_requires_consent(tmp_path: Path, feature: str) -> None:
     """Audit each declared online row at the shipped boundary; no future-stage transport is enabled.
 
     Downloads/updates carry no learner scope. A device switch is itself the device consent action. Profile
-    switches never manufacture consent, and an under-18 profile gets the guardian-consent response.
+    switches never manufacture consent; only the 18+ learner's own grant does (W5).
     """
     row = load_policy().features[feature]
 
@@ -413,7 +393,9 @@ def dat18_feature_requires_consent(tmp_path: Path, feature: str) -> None:
                 {"action": "on", "notice_version": NOTICE},
                 profile=token,
             )
-            assert code(asked) == "guardian_consent_required"
+            # The 18+ learner's own grant is the only way on (W5); the switch above granted nothing.
+            assert asked.status_code == 200 and asked.json()["granted_by_role"] == "student_18_plus", asked.text
+            await api.call("PUT", f"/v1/profiles/{profile}/consents/{feature}", {"action": "withdraw"}, profile=token)
             assert not any(
                 c["effective"]
                 for c in (await api.call("GET", f"/v1/profiles/{profile}/consents", profile=token)).json()

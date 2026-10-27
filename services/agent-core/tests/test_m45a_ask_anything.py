@@ -124,7 +124,7 @@ def stu20_homework_routes_to_tutor(tmp_path: Path) -> None:
     with_api(tmp_path, scenario)
 
 
-def stu20_minor_sources_allowlisted(tmp_path: Path) -> None:
+def stu20_minor_sources_allowlisted() -> None:
     """Under 18: only allow-listed sources are searched and shown, Teach me is the mode whatever was asked, and an
     instruction inside a fetched page changes neither the mode, the sources nor the citations."""
     config = source_config()
@@ -154,22 +154,7 @@ def stu20_minor_sources_allowlisted(tmp_path: Path) -> None:
         assert not minor.allows(url, config), url
     assert minor.allows("https://www.bbc.co.uk/bitesize/guides/zx", config)
     assert adult.allows("https://example.org/page", config) and not adult.allows("https://www.reddit.com/r/x", config)
-
-    async def scenario(api: Any, r: Any) -> None:
-        cloud = FakeCloud(reply())
-        ask_app(r, cloud)
-        token = await api.token(await api.add(student("Ama", "13_15")))
-        got = await api.call("POST", "/v1/ask", {"question": "What is the capital of France?", "mode": "explain",
-                                                 "reach": "wider_web"}, profile=token)  # fmt: skip
-        assert got.status_code == 200, got.text
-        body = got.json()
-        assert body["state"] == "answered" and body["answer"]["mode"] == "teach"
-        sent = cloud.sent[0]
-        assert (sent["audience"], sent["mode"], sent["reach"]) == ("under_18", "teach", "allow_list")
-        assert sent["allow_list"] == config.domains()
-        assert [s["domain"] for s in body["answer"]["sources"]] == ["britannica.com"]
-
-    with_api(tmp_path, scenario)
+    # No profile under 18 can be made or opened (W5), so there is no under-18 request to send over the API.
 
 
 def stu20_unsupported_labelled(tmp_path: Path) -> None:

@@ -156,31 +156,27 @@ def tch13_removed_keys_rejected(tmp_path: Path):
 
 
 def tch13_off_always_on_needs_consent(tmp_path: Path):
-    """From an open profile every switch and consent goes off in one step; a paused consent comes back on with no
-    guardian step; a minor's first switch-on of a data-sending feature without checkout consent stays off (D86, D87)."""
+    """From an open profile every switch and consent goes off in one step; a paused consent comes back on in one step;
+    switching on a data-sending feature grants nothing until the 18+ learner consents (D86, D87, W5)."""
     settings = _settings().model_copy(update={"consent_dpia_ref": "dpia-test-1"})
 
     async def scenario(api: Api, r):
-        minor = await api.add(student("Ama"))
-        token = (await api.unlock(minor)).json()["profile_token"]
+        learner = await api.add(student("Ama"))
+        token = (await api.unlock(learner)).json()["profile_token"]
         on = await api.call("PATCH", "/v1/connectivity", {"features": {"cloud_tier": True, "downloads": True}},
                             profile=token)  # fmt: skip
         assert on.status_code == 200, on.text
-        first = await api.call("PUT", f"/v1/profiles/{minor}/consents/cloud_tier",
-                               {"action": "on", "notice_version": NOTICE}, profile=token)  # fmt: skip
-        assert first.status_code == 403 and code(first) == "guardian_consent_required"
-        consents = (await api.call("GET", f"/v1/profiles/{minor}/consents", profile=token)).json()
-        assert next(c for c in consents if c["scope"] == "cloud_tier")["effective"] is False
-        # The research study: the guardian agrees on the study screen; then the student pauses and resumes it.
-        granted = await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use",
-                                 {"action": "on", "notice_version": NOTICE, "guardian_agreed": True},
-                                 profile=token)  # fmt: skip
-        assert granted.json()["method"] == "in_app_guardian" and granted.json()["effective"] is True
-        paused = await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use", {"action": "pause"},
+        consents = (await api.call("GET", f"/v1/profiles/{learner}/consents", profile=token)).json()
+        assert next(c for c in consents if c["scope"] == "cloud_tier")["effective"] is False  # switch only
+        # The research study: the learner agrees on the study screen; then pauses and resumes it.
+        granted = await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use",
+                                 {"action": "on", "notice_version": NOTICE}, profile=token)  # fmt: skip
+        assert granted.json()["method"] == "in_app_notice" and granted.json()["effective"] is True
+        paused = await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use", {"action": "pause"},
                                 profile=token)  # fmt: skip
         assert paused.json()["paused"] is True and paused.json()["granted"] is True
         assert paused.json()["effective"] is False
-        resumed = await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use", {"action": "on"},
+        resumed = await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use", {"action": "on"},
                                  profile=token)  # fmt: skip
         assert resumed.json()["paused"] is False and resumed.json()["effective"] is True
         assert resumed.json()["granted_at"] == granted.json()["granted_at"]  # the same consent, not a new grant
@@ -188,12 +184,12 @@ def tch13_off_always_on_needs_consent(tmp_path: Path):
         off = await api.call("PATCH", "/v1/connectivity", {"features": {"cloud_tier": False, "downloads": False}},
                              profile=token)  # fmt: skip
         assert off.status_code == 200 and not any(f["enabled"] for f in off.json()["features"].values())
-        withdrawn = await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use", {"action": "withdraw"},
+        withdrawn = await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use", {"action": "withdraw"},
                                    profile=token)  # fmt: skip
         assert withdrawn.json()["granted"] is False
-        again = await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use",
+        again = await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use",
                                {"action": "on", "notice_version": NOTICE}, profile=token)  # fmt: skip
-        assert code(again) in ("guardian_consent_required", "validation_failed")  # a new grant needs the guardian
+        assert again.status_code == 200 and again.json()["granted_at"] != granted.json()["granted_at"]  # a new grant
 
     with_api(tmp_path, scenario, worker=False, settings=settings)
 

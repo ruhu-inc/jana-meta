@@ -694,7 +694,7 @@ def plt21_bulk_install_student_only(tmp_path: Path) -> None:
                             "avatar": "a1",
                             "level": "O",
                             "subjects": ["physics"],
-                            "age_band": "13_15",
+                            "age_band": "18_plus",
                             "exam_date": None,
                         },
                     )

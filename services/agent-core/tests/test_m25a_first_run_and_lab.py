@@ -34,7 +34,7 @@ from jana_tools.fakes import models as fake_models
 from jana_tools.journeys.runner import Probe as JourneyProbe
 from jana_tools.journeys.runner import Run
 from journey_harness import MODELS, branches, play, restart, session, start, turn
-from licence_harness import DAY_MS, attach, lesson_items, subscribe
+from licence_harness import DAY_MS, NOTICE, attach, lesson_items, subscribe
 from m20_fixtures import content_pack, model_pack
 from signing_service.hierarchy import dev_trust
 from signing_service.licences import issue_licence_file
@@ -106,7 +106,7 @@ def by_name(name: str, packs: list[dict[str, Any]]) -> dict[str, Any]:
     """What "Who's learning?" sends for a student added by name: the name and the defaults of TABLE PLT-17b (every
     installed subject at its level, a minor age band, no exam month)."""
     names = sorted({SUBJECTS[p["subject"]] for p in packs if p["subject"] in SUBJECTS and p["signature_ok"]})
-    return {"display_name": name, "avatar": "avatar-1", "level": "O", "age_band": "13_15", "subjects": names}
+    return {"display_name": name, "avatar": "avatar-1", "level": "O", "age_band": "18_plus", "subjects": names}
 
 
 async def add_by_name(r: Running, name: str) -> str:
@@ -304,9 +304,9 @@ def _first_run(tmp_path: Path) -> JourneyProbe:
                 assert (shown["level"], shown["subjects"], shown["age_band"], shown["exam_date"]) == (
                     "O",
                     ["physics"],
-                    "13_15",
+                    "18_plus",
                     None,
-                )  # the defaults of TABLE PLT-17b: installed subjects, a minor
+                )  # the defaults of TABLE PLT-17b: installed subjects, an adult (W5)
                 assert (await c.ok("GET", "/v1/licence"))["state"] == "none"  # nothing activated (PLT-19, D84)
                 features = (await c.ok("GET", "/v1/connectivity"))["features"]
                 assert features and not any(f["enabled"] for f in features.values())  # PRV-02
@@ -482,9 +482,9 @@ def _f4_skip_diagnostic(tmp_path: Path) -> JourneyProbe:
 
 
 def _f5_cloud_tier(tmp_path: Path) -> JourneyProbe:
-    """ARC-11, PRV-05, PRV-06, MDL-24, D70: the subscription the parent bought online is applied with the guardian's
-    consent given at the checkout; applying it records the consent and switches the tier on; offline, the tutor runs
-    on the local tier and nothing is sent."""
+    """ARC-11, PRV-05, PRV-06, MDL-24, D70, W5: the subscription the learner bought online is applied and switches the
+    tier on; the 18+ learner gives their own consent in the app; offline, the tutor runs on the local tier and
+    nothing is sent."""
     provider = timed(question_script())
     started = first_run_core(tmp_path, provider)
 
@@ -506,13 +506,15 @@ def _f5_cloud_tier(tmp_path: Path) -> JourneyProbe:
             applied = await subscribe(api, [profile])
             assert applied.status_code == 200, applied.text
             assert applied.json()["state"] == "active"
+            await api.call("PUT", f"/v1/profiles/{profile}/consents/cloud_tier",
+                           {"action": "on", "notice_version": NOTICE}, profile=c.token)  # fmt: skip
             consents = (await api.call("GET", f"/v1/profiles/{profile}/consents", profile=c.token)).json()
             (cloud,) = [s for s in consents if s["scope"] == "cloud_tier"]
             assert (cloud["granted"], cloud["granted_by_role"], cloud["method"]) == (
                 True,
-                "guardian",
-                "checkout_guardian",
-            )  # the guardian's consent from the checkout (PRV-06, D70)
+                "student_18_plus",
+                "in_app_notice",
+            )  # the learner's own consent (PRV-06, W5)
             features = (await c.ok("GET", "/v1/connectivity"))["features"]
             assert features["cloud_tier"]["enabled"], "applying the subscription switched the tier on (D70)"
             with r.runtime.directory.open_learner(profile) as conn:
