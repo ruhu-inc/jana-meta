@@ -34,7 +34,7 @@ files = ["services/tool-worker/tool_worker/golden/*.yaml", "services/tool-worker
 owner = "Engine engineer"
 cadence = "every commit"
 stage = "S1"
-version = "2026-10-26.1"
+version = "2026-10-27.1"
 files = ["evals/prompt-snapshots/*/*.txt"]
 
 [suites.ui_gallery]

@@ -44,6 +44,7 @@ WIRED = (
     "release",
     "knowledge",
     "ask_cloud",
+    "research_router",
 )
 
 
@@ -67,6 +68,7 @@ async def start(data_dir: Path, *, provider: Any = None, subjects: tuple[str, ..
     r.core.retention = r.runtime.retention_pass
     r.core.start_benchmark = lambda: r.runtime.start_benchmark(r.runtime.providers.get("local"))
     r.core.knowledge = r.runtime.knowledge  # the one Home input routes against the installed packs (UXS-67)
+    r.core.research_router = r.runtime.research_router  # the research conversation (SPEC §18.1a), as the app wires it
     if online:  # the connectivity layer (ARC-06): zero egress until a feature is switched on (PRV-02)
         layer = r.runtime.attach_online()
         r.core.online, r.core.release = layer, False
