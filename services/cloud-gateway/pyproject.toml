@@ -14,17 +14,12 @@ dependencies = [
     "cryptography>=46,<47",
     # The generated contract bindings validate request bodies against the bundled schemas (D39).
     "jsonschema>=4.25,<5",
-    # Cloud voice's Gemini Live reader (VOC-28, D124).
+    # Cloud voice's Muse Voice Transcribe streams (VOC-28, SPEC §6.1).
     "websockets>=15,<16",
     "youtube-transcript-api>=1.2,<2",
     # SAM 3.1 replies: Meta's reference decoder for its range-coded masks (JM-D10).
     "meta-sam-parser==0.1.0",
 ]
-
-[project.optional-dependencies]
-# Cloud voice's gRPC-only streaming services (D124): Speech-to-Text v2 (Chirp) and Text-to-Speech (Chirp 3 HD).
-# Installed where cloud voice is switched on; tests use fakes and never import them.
-google-voice = ["google-cloud-speech>=2.33,<3", "google-cloud-texttospeech>=2.29,<3"]
 
 [dependency-groups]
 # The tests check the gateway's replies with the device's own request builder and error classifier.

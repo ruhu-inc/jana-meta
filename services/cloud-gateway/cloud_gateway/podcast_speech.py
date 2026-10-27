@@ -114,42 +114,49 @@ class NvidiaPodcast:
         async with self.lock:
             identity = self.reserve(owner, body)
             assert self.key is not None
-            try:
-                async with self.client.stream(
-                    "POST",
-                    BASE + "/v1/audio/synthesize",
-                    headers={"authorization": "Bearer " + self.key.reveal()},
-                    files={
-                        k: (None, v)
-                        for k, v in {
-                            "text": body["text"],
-                            "language": "en-US",
-                            "voice": VOICES[body["voice_index"]],
-                            "encoding": "LINEAR_PCM",
-                            "sample_rate_hz": "22050",
-                        }.items()
-                    },
-                ) as reply:
-                    if reply.status_code in (401, 403):
-                        raise SpeechError("neural_speech_key_rejected")
-                    if reply.status_code == 429:
-                        raise SpeechError("neural_speech_limit")
-                    if reply.status_code != 200:
-                        raise SpeechError("neural_speech_unavailable")
-                    data, size = [], 0
-                    async for part in reply.aiter_bytes():
-                        size += len(part)
-                        if size > MAX_AUDIO:
-                            raise SpeechError("neural_speech_invalid_audio")
-                        data.append(part)
-                    audio = b"".join(data)
-                validate_audio(audio)
-                self.gw.store._db.execute(
-                    "UPDATE podcast_speech_receipts SET state='completed' WHERE identity=?", (identity,)
-                )
-                return audio
-            except httpx.HTTPError:
-                raise SpeechError("neural_speech_unavailable") from None
+            audio = await magpie_wav(self.client, self.key.reveal(), body["text"], VOICES[body["voice_index"]])
+            self.gw.store._db.execute(
+                "UPDATE podcast_speech_receipts SET state='completed' WHERE identity=?", (identity,)
+            )
+            return audio
+
+
+async def magpie_wav(client: httpx.AsyncClient, key: str, text: str, voice: str) -> bytes:
+    """One Magpie synthesis on the API-catalog function: a validated 22.05 kHz mono PCM16 WAV of exactly `text`.
+    Shared by Podcast narration and cloud voice's development voice (`providers/magpie_speech.py`)."""
+    try:
+        async with client.stream(
+            "POST",
+            BASE + "/v1/audio/synthesize",
+            headers={"authorization": "Bearer " + key},
+            files={
+                k: (None, v)
+                for k, v in {
+                    "text": text,
+                    "language": "en-US",
+                    "voice": voice,
+                    "encoding": "LINEAR_PCM",
+                    "sample_rate_hz": "22050",
+                }.items()
+            },
+        ) as reply:
+            if reply.status_code in (401, 403):
+                raise SpeechError("neural_speech_key_rejected")
+            if reply.status_code == 429:
+                raise SpeechError("neural_speech_limit")
+            if reply.status_code != 200:
+                raise SpeechError("neural_speech_unavailable")
+            data, size = [], 0
+            async for part in reply.aiter_bytes():
+                size += len(part)
+                if size > MAX_AUDIO:
+                    raise SpeechError("neural_speech_invalid_audio")
+                data.append(part)
+            audio = b"".join(data)
+    except httpx.HTTPError:
+        raise SpeechError("neural_speech_unavailable") from None
+    validate_audio(audio)
+    return audio
 
 
 def add_routes(app: FastAPI, gw: Any) -> NvidiaPodcast:

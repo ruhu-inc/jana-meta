@@ -30,6 +30,12 @@
       "version": "2026-10.d1",
       "status": "draft",
       "text": "Use the online study service for material you choose. Selected files or passages and your question are sent to our service to extract text and make cited notes, flashcards and quizzes. Service copies are deleted when processing ends, or after at most 15 minutes without activity. Your material stays on this device until you delete it. It is never used to train a model. This switch is separate from the online tutor; a parent or guardian must consent at checkout for anyone under 18."
+    },
+    {
+      "id": "cloud_voice",
+      "version": "2026-10.d1",
+      "status": "draft",
+      "text": "Talk with the tutor using the online voice service. While you talk, your voice is sent to our online voice service to be turned into text, and the tutor's words to be turned into speech. Neither is stored there, and your learning record stays on this computer."
     }
   ]
 }

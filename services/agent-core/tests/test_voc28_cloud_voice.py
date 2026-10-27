@@ -81,7 +81,6 @@ async def gateway(tmp: Path, pki: Any, speech: Speech, events: list[str]):
                          slots={"primary": "gemini"},
                          providers={"gemini": {"adapter": "gemini", "base_url": "https://gemini.stub/v1beta",
                                                "secret": "gemini_api_key", "models": models}},
-                         voice_google={"live_model": "voice-test-model"},
                          prices={m: {"input": 1.0, "cached_input": 0.1, "output": 4.0}
                                  for m in [*(model["id"] for model in models.values()), "voice-test-model"]},
                          quotas={"device_burst": 1000, "licence_burst": 10000})  # fmt: skip
@@ -391,6 +390,17 @@ def test_cloud_voice_first_use_card_keeps_voice_local_until_ok(tmp_path):
         assert answers == {"cloud_voice": "accepted"}
 
     asyncio.run(scenario())
+
+
+def test_cloud_voice_answer_is_announced_so_voice_is_offered_at_once(tmp_path):
+    """Accepting the first-use card is what makes cloud voice ready (VOC-28): the layer announces it, so the core's
+    voice offer (refreshed on every announcement) does not wait for a switch or the network to change."""
+    online = layer(tmp_path, settings=Settings(cloud_voice_enabled=True))
+    heard: list[dict[str, Any]] = []
+    online.publish.append(heard.append)
+    online.record_notice(PROFILE, "cloud_voice", True)
+    assert online.notice_answer(PROFILE, "cloud_voice") == "accepted"
+    assert [event["type"] for event in heard] == ["connectivity.status"]
 
 
 def test_cloud_voice_consent_scope_exists_only_with_the_capability():

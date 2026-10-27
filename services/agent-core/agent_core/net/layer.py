@@ -274,6 +274,7 @@ class OnlineLayer:
 
     def record_notice(self, profile_id: str | None, feature: str, accepted: bool) -> None:
         egress_store.record_first_use(self.device, profile_id, feature, accepted, self.clock_ms())
+        self.announce()  # the answer changes what is offered (cloud voice is offered only after it, VOC-28)
 
     # --- background work ----------------------------------------------------------------------------------
 

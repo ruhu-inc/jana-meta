@@ -108,33 +108,60 @@ class Price(_Strict):
     output: float = Field(ge=0)
 
 
-class GoogleVoice(_Strict):
-    """Google's speech services for cloud voice (D124). Ids, locales, voices and prices were checked against Google's
-    documentation on 2026-10-21 (defaults.toml records the sources) and are proposals until the pilot confirms them.
-    Speech-to-Text and Text-to-Speech take the attached service identity (no API key path is documented); Live takes
-    the Gemini API key named by `live_secret`, or the attached identity on Vertex AI."""
+class MetaVoice(_Strict):
+    """Muse Voice Transcribe, cloud voice's realtime speech to text (JM-D12, SPEC §6.1). Checked against
+    dev.meta.ai/docs (api-reference/voice/realtime, speech-to-text, pricing-rate-limits) on 2026-10-27. The Meta Model
+    API key named by `secret` goes in the stream's first frame only: the endpoint ignores the Authorization header and
+    has no key parameter."""
 
-    project: str = Field(default="", pattern=r"^([a-z][a-z0-9-]{4,61}[a-z0-9])?$")
-    # Speech-to-Text v2 streaming recognition. `chirp_3` streams in the `us` and `eu` locations only.
-    stt_model: str = "chirp_3"
-    stt_location: Literal["us", "eu"] = "eu"
-    # The recognizer locale for each transcription language the bridge sends (VOC-25). Nigerian English is not
-    # offered (2026-10-21); add "en-NG" first in the list when it is.
-    stt_locales: dict[str, list[str]] = Field(default_factory=lambda: {"en": ["en-GB"]})
-    # The recognizer's end of speech (speech_end_timeout, at least 500 ms); the session's silence holds on from it.
-    stt_end_timeout_ms: int = key(500, serves="VOC-28", unit="ms", ge=500, le=60_000)
-    stt_minute_usd: float = key(0.016, serves="BIZ-08", unit="USD/minute", ge=0)
-    # Gemini Live (native audio): "gemini" is the Gemini API with `live_secret`; "vertex" is Vertex AI with the
-    # attached identity in `live_location`.
-    live_api: Literal["gemini", "vertex"] = "vertex"
-    live_model: str = "gemini-live-2.5-flash-native-audio"
-    live_voice: str = Field(default="Kore", pattern=r"^[A-Za-z][A-Za-z0-9_-]{0,63}$")
-    live_secret: str = "gemini_api_key"  # noqa: S105 -- the secret's name in the secret source, not a key
-    live_location: str = Field(default="europe-west4", pattern=r"^[a-z]+-[a-z]+[0-9]$")
-    # Cloud Text-to-Speech streaming synthesis, Chirp 3 HD (verbatim): the voice for each transcription language.
-    tts_location: Literal["global", "us", "eu"] = "eu"
-    tts_voices: dict[str, str] = Field(default_factory=lambda: {"en": "en-GB-Chirp3-HD-Kore"})
-    tts_million_chars_usd: float = key(30.0, serves="BIZ-08", unit="USD/1M characters", ge=0)
+    url: str = Field(default="wss://api.meta.ai/v1/asr/realtime", pattern=r"^wss://[^?#\s]+$")
+    secret: str = "meta_api_key"  # noqa: S105 -- the secret's name in the secret source, not a key
+    model: str = "muse-voice-transcribe-1.0"
+    # The language names (not codes) biasing recognition for each transcription language the bridge sends. English
+    # only (JM-D18).
+    language_bias: dict[str, list[str]] = Field(default_factory=lambda: {"en": ["English"]})
+    # Terms that bias recognition (they do not guarantee spelling). None is the packaged list made from the course
+    # glossary (`voice_keywords.txt`). Meta refuses more than 500 (measured 2026-10-27: "Too many ASR keywords:
+    # received 1368, maximum is 500", an `invalid_request_error`), so the list is trimmed to `keywords_max`.
+    keywords: list[str] | None = None
+    keywords_max: int = key(500, serves="VOC-28", unit="terms", ge=0, le=500)
+    # The acknowledgement must follow the first frame; Meta closes a stream whose first frame is later than 10 s.
+    handshake_timeout_s: float = key(5.0, serves="VOC-28", unit="s", ge=0.5, le=10)
+    # Audio is paced at real time: at most this far ahead of the stream's clock (Meta allows 5 s), and a gap longer
+    # than `pad_after_ms` in the device's audio is filled with silence (falling behind real time closes the stream).
+    ahead_ms: int = key(4000, serves="VOC-28", unit="ms", ge=500, le=5000)
+    pad_after_ms: int = key(1000, serves="VOC-28", unit="ms", ge=100, le=4000)
+    # The recognizer's own end-of-speech silence in ENDPOINTING mode (not documented: measure); the session's
+    # silence holds on from it.
+    end_ms: int = key(500, serves="VOC-28", unit="ms", ge=0, le=10_000)
+    # Voice Transcribe ends a turn about 0.6 s into a pause, which a pause between two sentences of one question can
+    # reach (measured 2026-10-27: "... through a resistor. What is its resistance?" became two turns). Speech that
+    # resumes within this hold of its end continues the utterance; it adds this much to every turn's transcript.
+    min_hold_ms: int = key(600, serves="VOC-28", unit="ms", ge=0, le=5000)
+    # $0.18 per hour of audio, billed in whole seconds (Meta rounds down; the ledger rounds up, per stream).
+    hour_usd: float = key(0.18, serves="BIZ-08", unit="USD/audio hour", ge=0)
+
+
+class VoiceTts(_Strict):
+    """Cloud voice's verbatim voice (JM-D13, SPEC §6.4): Kokoro-82M (Apache-2.0, the speech pack's own voice, run here)
+    so the audio judges hear is licence-clean. NVIDIA Magpie through the API-catalog trial is for development only:
+    its audio may not be distributed, so the configuration refuses it outside the dev environment."""
+
+    engine: Literal["kokoro", "magpie"] = "kokoro"
+    # Kokoro runs in a worker under the speech runtime's interpreter (torch, kokoro, misaki), from local files only.
+    kokoro_python: str = "~/.cache/jana-speech/venv/bin/python"
+    kokoro_model_dir: str = "~/.cache/jana-speech/packs/sp.en.0_1/models/kokoro-82m"
+    kokoro_speaker: str = Field(default="af_heart", pattern=r"^[ab][fm]_[a-z]+$")
+    kokoro_threads: int = key(0, serves="VOC-28", ge=0, le=64)
+    # The first sentence is split once at its first clause when this many words come before it: first audio sooner.
+    kokoro_first_clause_words: int = key(4, serves="VOC-28", unit="words", ge=0, le=40)
+    kokoro_start_timeout_s: float = key(120.0, serves="VOC-28", unit="s", ge=5, le=600)
+    # Engine-owned keyed phrases (no learner content: the VOC-12 filler) read once at startup and replayed, so the
+    # filler's audio starts the moment it is accepted. Any other text is synthesised when it is given and not kept.
+    fixed_phrases: tuple[str, ...] = ("Let me work that out.",)
+    magpie_secret: str = "nvidia_api_key"  # noqa: S105 -- the secret's name in the secret source, not a key
+    magpie_voice: str = "Magpie-Multilingual.EN-US.Aria.Calm"
+    magpie_fallback_voice: str = "Magpie-Multilingual.EN-US.Aria.Neutral"
 
 
 class Quotas(_Strict):
@@ -337,24 +364,27 @@ class GatewayConfig(_Strict):
     study_model: str = Field(default="primary/fast-model", pattern=r"^[a-z][a-z0-9_-]*/[a-z][a-z0-9_-]*$")
     # Trusted deployment command, including its OS sandbox wrapper. Never supplied by a device request.
     study_worker_command: tuple[str, ...] = ()
-    # Cloud voice (VOC-28, D124): our hosted Realtime endpoint. Speech to text, the Live voice and the verbatim voice
-    # are Google's (`voice_google`); the tutor's words come from the device's own engine through the connection, never
-    # from a model here. Audio and transcripts stay in memory for the length of one utterance or one spoken reply.
+    # Cloud voice (VOC-28, D124): our hosted Realtime endpoint. Speech to text is Muse Voice Transcribe
+    # (`voice_meta`, JM-D12); the verbatim voice is `voice_tts` (Kokoro; Magpie in development). The tutor's words come
+    # from the device's own engine through the connection, never from a model here. Audio and transcripts stay in
+    # memory for the length of one utterance or one spoken reply.
     voice_enabled: bool = False
     # The voice service's own host name, accepted as a token audience beside `audience_host` (SEC-21).
     voice_audience_host: str | None = None
-    voice_google: GoogleVoice = Field(default_factory=lambda: GoogleVoice())
+    voice_meta: MetaVoice = Field(default_factory=lambda: MetaVoice())
+    voice_tts: VoiceTts = Field(default_factory=lambda: VoiceTts())
     voice_max_utterance_s: float = key(30.0, serves="VOC-28", unit="s", ge=1, le=120)
     voice_max_session_s: float = key(3600.0, serves="VOC-28", unit="s", ge=60)
     # Prewarm (D124): `session.created`, which opens the device's microphone, waits this long for the recognition
     # stream and the Live session to open; audio sent before they are open is held, up to `voice_first_words_ms`.
     voice_prewarm_s: float = key(2.0, serves="VOC-28", unit="s", ge=0, le=10)
     voice_connect_timeout_s: float = key(5.0, serves="VOC-28", unit="s", ge=0.5, le=30)
-    voice_first_words_ms: int = key(10_000, serves="VOC-28", unit="ms", ge=1000, le=30_000)
+    # Held audio reaches a new stream at once, so it stays within what Voice Transcribe takes ahead of real time.
+    voice_first_words_ms: int = key(4000, serves="VOC-28", unit="ms", ge=1000, le=30_000)
     # Sound kept while the upstream sessions are released for idleness, sent first when a sound reopens them.
     voice_preroll_ms: int = key(500, serves="VOC-28", unit="ms", ge=100, le=2000)
-    # A recognition stream is replaced at a quiet moment after this long (the provider's limit is 5 minutes).
-    voice_stt_rotate_s: float = key(240.0, serves="VOC-28", unit="s", ge=30, le=290)
+    # A recognition stream is replaced at a quiet moment after this long (Voice Transcribe closes it at 60 minutes).
+    voice_stt_rotate_s: float = key(3300.0, serves="VOC-28", unit="s", ge=30, le=3540)
     # After speech stops, how long the final transcript of the last words may take to arrive.
     voice_final_wait_ms: int = key(1500, serves="VOC-28", unit="ms", ge=100, le=10_000)
     # Adaptive idle timeout: factor x the longest quiet stretch seen before the student spoke, within these bounds;
@@ -403,10 +433,13 @@ class GatewayConfig(_Strict):
             for amount in (self.quotas.deployment_daily_spend_usd, self.quotas.deployment_total_spend_usd):
                 if amount is not None and not math.isfinite(amount):
                     raise ValueError("deployment spend limits must be finite")
-            if self.voice_enabled or self.ask_search is not None:
-                raise ValueError("the inference budget does not cover voice or search service charges; disable them")
-        if self.voice_enabled and self.voice_google.live_model not in self.prices:
-            raise ValueError("the Live voice model has no price: cost must be computable (MDL-29)")
+            # Cloud voice reserves its speech charges against the budget (`cloud_gateway.voice`); search does not.
+            if self.ask_search is not None:
+                raise ValueError("the inference budget does not cover search service charges; disable search")
+        if self.voice_enabled and self.voice_tts.engine == "magpie" and self.environment != "dev":
+            raise ValueError("Magpie trial audio may not be distributed: it is a development voice only (SPEC §6.4)")
+        if self.voice_enabled and self.voice_first_words_ms > self.voice_meta.ahead_ms:
+            raise ValueError("held first words must fit within what speech to text takes ahead of real time")
         return self
 
 

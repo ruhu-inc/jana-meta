@@ -1,7 +1,7 @@
-"""Cloud voice endpoint (VOC-28, D124): the Realtime subset, the device tunnel, Google's speech services, zero
-retention.
+"""Cloud voice endpoint (VOC-28, D124): the Realtime subset, the device tunnel, the speech services, zero retention.
 
-Cloud Speech-to-Text, Gemini Live and Cloud Text-to-Speech are fakes (`cloud_gateway.speech_fakes`): the recognizer
+The speech services are fakes (`cloud_gateway.speech_fakes`; `test_meta_speech.py` drives the Voice Transcribe
+recognizer itself against a scripted server): the recognizer
 hears tone and silence by energy and returns a scripted transcript, Live reads sentences word by word (or departs on
 cue), and the verbatim voice returns tone. The device is this test, answering forwarded chat-completions requests the
 way the core's adapter does."""
@@ -19,8 +19,6 @@ from typing import Any
 import httpx
 import pytest
 from cloud_gateway.app import create_app
-from cloud_gateway.providers.base import UpstreamError
-from cloud_gateway.providers.gemini_live import setup_message, turn_message, voiced_of
 from cloud_gateway.speech_fakes import FakeLive, FakeRecognizer, FakeTts, fake_stack, tone
 from cloud_gateway.store import GatewayStore
 from cloud_gateway.voice import Reading, sentences
@@ -300,6 +298,45 @@ def test_voc28_hold_to_think_keeps_one_utterance(tmp_path):
     assert [e["type"] for e in seen].count("input_audio_buffer.speech_started") == 1
 
 
+def test_voc28_releasing_hold_to_dictate_ends_the_utterance_at_once(tmp_path):
+    """Held, the bridge configures ten seconds of silence; its release sends the short silence. An utterance already
+    held after its end of speech then ends with the new length, not after the ten seconds it started with."""
+    import time
+
+    client, device, _, _ = setup(tmp_path)
+    with client, connect(client, device) as ws:
+        opened(ws)
+        hold = {"type": "session.update", "session": {"type": "realtime", "audio": {"input": {
+            "turn_detection": {"type": "server_vad", "silence_duration_ms": 10_000}}}}}  # fmt: skip
+        ws.send_json(hold)
+        ws.receive_json()
+        seen: list[dict[str, Any]] = []
+        speak(ws, 300, 400)
+        until(ws, "conversation.item.input_audio_transcription.delta", seen)  # the recognizer's end of speech
+        released = time.monotonic()
+        hold["session"]["audio"]["input"]["turn_detection"]["silence_duration_ms"] = 160
+        ws.send_json(hold)
+        until(ws, "input_audio_buffer.speech_stopped", seen)
+    assert time.monotonic() - released < 2.0  # the gateway's minimum hold, not the ten seconds
+
+
+def test_voc28_a_question_in_two_sentences_stays_one_turn(tmp_path):
+    """Voice Transcribe ends a turn at a pause between sentences; speech resuming within the gateway's hold continues
+    the same utterance (measured: "... through a resistor. What is its resistance?" had become two turns)."""
+    stack = fake_stack(recognizer=FakeRecognizer(["A 12 volt battery drives a current through a resistor.",
+                                                  "What is its resistance?"]))  # fmt: skip
+    client, device, _, _ = setup(tmp_path, stack)
+    with client, connect(client, device) as ws:
+        opened(ws)
+        pause = tone(400) + tone(350, loud=False) + tone(400) + tone(500, loud=False)  # the recognizer ends at 300 ms
+        for frame in frames(pause):
+            ws.send_json(frame)
+        seen: list[dict[str, Any]] = []
+        heard = until(ws, "conversation.item.input_audio_transcription.completed", seen)
+    assert heard["transcript"] == "A 12 volt battery drives a current through a resistor. What is its resistance?"
+    assert [e["type"] for e in seen].count("input_audio_buffer.speech_started") == 1
+
+
 def test_voc28_endpoint_zero_retention(tmp_path):
     """After a scripted session, nothing in storage or the log holds audio, a transcript or the spoken words."""
     client, device, (_, _, live, _), log = setup(tmp_path)
@@ -313,12 +350,14 @@ def test_voc28_endpoint_zero_retention(tmp_path):
         for secret in (b"CANARYHEARD", b"CANARYSAID", MARK, base64.b64encode(MARK)[:12],
                        BINDING.encode()):  # fmt: skip
             assert secret not in blob
-    # Metadata is kept, as for every gateway call (OBS-22): each service is metered as cloud_voice, with a cost.
+    # Metadata is kept, as for every gateway call (OBS-22): each service is metered as cloud_voice, with its cost:
+    # Voice Transcribe by the second, Kokoro (on our own machine) at nothing.
     with sqlite3.connect(GatewayStore(tmp_path / "store").path) as db:
         rows = db.execute("SELECT feature, model, status, cost_usd FROM requests").fetchall()
     models = {model for feature, model, status, _ in rows if feature == "cloud_voice" and status == 200}
-    assert {"chirp_3", "gemini-live-2.5-flash-native-audio", "en-GB-Chirp3-HD-Kore"} <= models
-    assert all(cost > 0 for _, model, _, cost in rows if model in ("chirp_3", "en-GB-Chirp3-HD-Kore"))
+    assert {"muse-voice-transcribe-1.0", "gemini-live-2.5-flash-native-audio", "kokoro-82m/af_heart"} <= models
+    assert all(cost > 0 for _, model, _, cost in rows if model == "muse-voice-transcribe-1.0")
+    assert all(cost == 0 for _, model, _, cost in rows if model == "kokoro-82m/af_heart")
 
 
 def test_voc28_recognition_failure_ends_the_connection_for_fallback(tmp_path):
@@ -422,24 +461,6 @@ def test_sentences_split_whole_and_concatenate_back():
     assert done == ["Good thinking. ", "What next? "] and rest == "Try x = 3"
     assert "".join(done) + rest == "Good thinking. What next? Try x = 3"
     assert sentences("e.g.") == ([], "e.g.")
-
-
-def test_live_messages_are_checked():
-    assert setup_message("models/m", "Kore")["setup"]["outputAudioTranscription"] == {}
-    assert "realtimeInputConfig" in setup_message("models/m", "Kore")["setup"]
-    assert turn_message("Hi.")["clientContent"]["turnComplete"] is True
-    pcm = base64.b64encode(b"\1\0\2\0").decode()
-    voiced = voiced_of({"serverContent": {"modelTurn": {"parts": [{"inlineData": {
-        "mimeType": "audio/pcm;rate=24000", "data": pcm}}]}, "outputTranscription": {"text": "Hi"}}})  # fmt: skip
-    assert voiced is not None and voiced.audio == b"\1\0\2\0" and voiced.transcript == "Hi" and not voiced.done
-    assert voiced_of({"serverContent": {"turnComplete": True}}).done  # type: ignore[union-attr]
-    assert voiced_of({"setupComplete": {}}) is None
-    for bad in ({"serverContent": {"modelTurn": {"parts": [{"inlineData": {"mimeType": "audio/pcm;rate=16000",
-                                                                           "data": pcm}}]}}},
-                {"serverContent": {"modelTurn": {"parts": [{"inlineData": {"mimeType": "audio/pcm",
-                                                                           "data": "%%"}}]}}}, []):  # fmt: skip
-        with pytest.raises(UpstreamError):
-            voiced_of(bad)
 
 
 def test_tts_fake_is_verbatim():

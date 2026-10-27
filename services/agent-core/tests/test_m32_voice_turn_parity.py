@@ -221,3 +221,20 @@ def test_voc05_thinking_extension_while_the_tutor_awaits_worked_input(tmp_path):
             await client.aclose()
 
     asyncio.run(scenario())
+
+
+def test_voc12_cloud_voice_filler_waits_for_the_recognizer_less():
+    """On cloud voice the adapter is asked only after Voice Transcribe's final transcript (about 0.6 s after the
+    student stops), so its filler starts sooner and still plays about 1.5 s after the speech (SPEC §12)."""
+    from types import SimpleNamespace
+
+    from agent_core.api.voice_adapter import VoiceTutorAdapter
+    from agent_core.config import Settings
+
+    settings = Settings()
+    expected = {"cloud_voice": settings.voice_cloud_filler_after_ms, "local_sidecar": settings.voice_filler_after_ms}
+    for path, after_ms in expected.items():
+        runtime = SimpleNamespace(path_of=lambda binding, path=path: path)
+        adapter = SimpleNamespace(core=SimpleNamespace(settings=settings), runtime=runtime)
+        assert VoiceTutorAdapter._filler_after_s(adapter, object()) == after_ms / 1000  # type: ignore[arg-type]
+    assert settings.voice_cloud_filler_after_ms < settings.voice_filler_after_ms

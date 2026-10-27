@@ -373,7 +373,7 @@ def create_app(
     speech: Any = None,
 ) -> FastAPI:
     """`speech` is cloud voice's `SpeechStack` (or a factory taking the gateway); by default it is built from
-    `voice_google` when voice is switched on."""
+    `voice_meta` and `voice_tts` when voice is switched on."""
     _file_logging(config)
     gw = Gateway(config, secrets if secrets is not None else secret_source(config), clock, client_factory, alerts)
 
@@ -422,13 +422,16 @@ def create_app(
         study_task = asyncio.create_task(study_expiry())
         task = asyncio.create_task(objectives())
         probe_task = asyncio.create_task(probe_providers())
+        # The voice loads before the first student speaks (Kokoro takes about 10 s), never blocking startup.
+        warm_task = asyncio.create_task(app.state.voice.stack.warm())
         try:
             yield
         finally:
             task.cancel()
             study_task.cancel()
             probe_task.cancel()
-            await asyncio.gather(task, probe_task, study_task, return_exceptions=True)
+            warm_task.cancel()
+            await asyncio.gather(task, probe_task, study_task, warm_task, return_exceptions=True)
             for key in list(app.state.study.buffers):
                 app.state.study.drop(key)
             for connection in list(app.state.voice.live.values()):

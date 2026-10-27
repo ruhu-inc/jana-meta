@@ -210,6 +210,20 @@ describe("Online Study profile consent", () => {
     expect(core.consents.get(BEN.profile_id)?.find((c) => c.scope === "study_materials")?.granted_by_role).toBe("student_18_plus");
   });
 
+  test("an adult turning on cloud voice gives their own profile consent with the switch", async () => {
+    const { core } = await adultControls((c) => {
+      c.adults.add(BEN.profile_id);
+      c.features.cloud_voice = false;
+    });
+    await waitFor(() => expect(core.log.some((r) => r.method === "GET" && r.path === `/v1/profiles/${BEN.profile_id}`)).toBe(true));
+    fireEvent.click(within(row("cloud_voice")).getByRole("checkbox"));
+    await waitFor(() => expect(dialog()!.textContent).toContain(BASE["settings.online.consent.cloud_voice"]!));
+    expect(dialog()!.textContent).toContain(BASE["settings.online.self_attestation"]!);
+    fireEvent.click(within(dialog()!).getByRole("button", { name: "Turn on" }));
+    await waitFor(() => expect(core.features.cloud_voice).toBe(true));
+    expect(core.consentSwitches).toEqual([{ scope: "cloud_voice", action: "on" }]);
+  });
+
   test("a device switch never fabricates guardian checkout consent", async () => {
     const { core } = await adultControls((c) => { c.features.study_materials = false; });
     fireEvent.click(within(row("study_materials")).getByRole("checkbox"));
