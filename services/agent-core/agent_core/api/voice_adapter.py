@@ -27,7 +27,7 @@ from agent_core.contracts.voice.engine_llm_adapter import Request as AdapterRequ
 from agent_core.engine.events import new_id
 from agent_core.engine.safety import calm_screen_notice, redact_blocks
 from agent_core.engine.study import StudyError
-from agent_core.engine.turn import TurnResult
+from agent_core.engine.turn import TurnIds, TurnResult
 from agent_core.engine.voice_bindings import BindingRejected, VoiceBinding
 from agent_core.engine.voice_bridge import VoiceProtocolError
 from agent_core.engine.voice_place import FAILED as CHAT_FAILED
@@ -52,6 +52,17 @@ class _Job:
     solved_before: bool = False  # only a turn that solves the problem ends it (MEM-06), as for typed turns
     # A question in an installed subject spoken in Ask anything (VOC-53): announced as `voice.answer` on release.
     asked: str | None = None
+
+
+@dataclass(repr=False)
+class _Assembly:
+    """A tutor turn whose fork's engine is still being assembled, off the event loop (VOC-12): until it is a job, a
+    newer utterance, a cancel or the binding's end supersede it as they would the job."""
+
+    binding: VoiceBinding
+    turn_id: str
+    text: str
+    task: asyncio.Task[ProvisionalVoiceTurn]
 
 
 @dataclass(repr=False)
@@ -98,6 +109,7 @@ class VoiceTutorAdapter:
         self.route: Callable[[str], str] = lambda text: str(route_of(core, text)["route"])
         self.chat_timeout_s = 180.0  # proposal: the longest a spoken study question waits for its chat job (VOC-53)
         self.jobs: dict[str, _Job] = {}
+        self.assembling: dict[str, _Assembly] = {}
         self.chats: dict[str, _Chat] = {}
         self.carried: dict[str, str] = {}
         self._lock = asyncio.Lock()
@@ -143,16 +155,23 @@ class VoiceTutorAdapter:
             self.core.persist(job.entry)
 
     async def transport_failed(self, binding: VoiceBinding) -> None:
-        job = self.jobs.get(binding.binding_id)
-        if job is None or job.turn.released or not self._valid(job):
-            return
-        self._preserve_safety(job)
-        if job.turn.safety_preserved:
+        assembly = self.assembling.pop(binding.binding_id, None)
+        if assembly is not None:  # nothing ran yet: the words alone become the typed turn
+            assembly.task.cancel()
+            text = assembly.text
+            if self.core.sessions.get(binding.session_id) is None or not self.runtime.bindings.contains(binding):
+                return
+        else:
+            job = self.jobs.get(binding.binding_id)
+            if job is None or job.turn.released or not self._valid(job):
+                return
+            self._preserve_safety(job)
+            if job.turn.safety_preserved:
+                await self._discard(job, carry=False)
+                return
+            pending = job.turn.engine.steering.end_of_turn()
+            text = "\n".join([job.turn.text, *[message.text for message in pending]])
             await self._discard(job, carry=False)
-            return
-        pending = job.turn.engine.steering.end_of_turn()
-        text = "\n".join([job.turn.text, *[message.text for message in pending]])
-        await self._discard(job, carry=False)
         context = CURRENT_PROFILE.set(binding.profile_id)
         try:
             accepted = self.core.start_turn(
@@ -244,6 +263,14 @@ class VoiceTutorAdapter:
         self._forget(job)
 
     async def cancel(self, turn_id: str) -> bool:
+        assembly = next((item for item in self.assembling.values() if item.turn_id == turn_id), None)
+        if assembly is not None:
+            await self.runtime.stop(assembly.binding)  # the filler may be playing already
+            if self.assembling.get(assembly.binding.binding_id) is assembly:
+                del self.assembling[assembly.binding.binding_id]
+                assembly.task.cancel()
+                self.carried[assembly.binding.binding_id] = assembly.text
+            return True
         job = next((job for job in self.jobs.values() if job.turn.ids.turn_id == turn_id), None)
         chat = next((chat for chat in self.chats.values() if chat.turn_id == turn_id), None)
         if chat is not None:
@@ -329,6 +356,9 @@ class VoiceTutorAdapter:
         return state_to_json(entry.engine_state)
 
     async def close(self) -> None:
+        for assembly in self.assembling.values():
+            assembly.task.cancel()
+        self.assembling.clear()
         for job in list(self.jobs.values()):
             await self._discard(job, carry=False)
         for chat in list(self.chats.values()):
@@ -336,6 +366,9 @@ class VoiceTutorAdapter:
         self.carried.clear()
 
     async def binding_closed(self, binding: VoiceBinding) -> None:
+        assembly = self.assembling.pop(binding.binding_id, None)
+        if assembly is not None:
+            assembly.task.cancel()
         job = self.jobs.get(binding.binding_id)
         if job is not None:
             await self._discard(job, carry=False)
@@ -523,6 +556,7 @@ class VoiceTutorAdapter:
             await self._drop_chat(chat)
 
     async def stream(self, request: AdapterRequest) -> AsyncIterator[str]:
+        arrived = time.monotonic()
         activities = self.runtime.activities
         lines = [
             line
@@ -579,8 +613,34 @@ class VoiceTutorAdapter:
             return
         job: _Job | None = None
         chat: _Chat | None = None
+        assembly: _Assembly | None = None
         evaluation: asyncio.Task[TurnResult] | None = None
         delivered = False
+        # VOC-12: the filler's time counts from the request, not from when the turn's engine is ready.
+        filler_at = arrived + self._filler_after_s(binding)
+        filled = False
+
+        async def waiting(work: asyncio.Future[Any], turn_id: str) -> AsyncIterator[str]:
+            """Keep-alives while `work` runs, and the turn's one keyed filler once its time has come (VOC-12)."""
+            nonlocal filled
+            while not work.done():
+                wait = self.keep_alive_s if filled else max(0.0, min(self.keep_alive_s, filler_at - time.monotonic()))
+                done, _ = await asyncio.wait({work}, timeout=wait)
+                if done:
+                    break
+                if not filled and time.monotonic() >= filler_at:
+                    filled = True
+                    # VOC-12: no accepted spoken form yet. The one honest filler is the only speech allowed before
+                    # every gate passes (VOC-33); it never carries model text and never releases the turn.
+                    try:
+                        self.runtime.authorise_filler(binding, turn_id, FILLERS[0])
+                    except VoiceProtocolError:
+                        pass
+                    else:
+                        yield _chunk(turn_id, FILLERS[0] + " ")
+                        continue
+                yield ": keep-alive\n\n"
+
         try:
             async with self._lock:
                 entry = self.core.entry(binding.session_id)
@@ -596,7 +656,11 @@ class VoiceTutorAdapter:
                 old_chat = self.chats.get(binding.binding_id)
                 if old_chat is not None:
                     await self._drop_chat(old_chat)
-                replaced = old is not None or old_chat is not None
+                superseded = self.assembling.pop(binding.binding_id, None)
+                if superseded is not None:
+                    superseded.task.cancel()
+                    self.carried[binding.binding_id] = superseded.text  # merged into this utterance, as for a job
+                replaced = old is not None or old_chat is not None or superseded is not None
                 # Redact before the words go anywhere: a typed turn's steering queue included (PRV-03, VOC-20).
                 blocks = redact_blocks([{"type": "text", "text": utterance.text}])
                 text = str(blocks[0]["text"]).strip()
@@ -637,9 +701,8 @@ class VoiceTutorAdapter:
                     live = self.core._engine(entry)
                     if self.core.reflector is not None:
                         self.core.reflector.pause()
-                    provisional = ProvisionalVoiceTurn(live, self.core.engine_factory, text)
-                    provisional.path = self.runtime.path_of(binding)
-                    if not self.runtime.begin_turn(binding, provisional.ids.turn_id, replace=replaced):
+                    ids = TurnIds(client_message_id=new_id("cli"))
+                    if not self.runtime.begin_turn(binding, ids.turn_id, replace=replaced):
                         active = self.runtime._active
                         if active is not None and active.bridge.thinking:
                             self.carried[binding.binding_id] = text
@@ -647,39 +710,60 @@ class VoiceTutorAdapter:
                             yield line
                         return
                     self.runtime.await_work(binding, False)  # the next turn has started: back to the normal silence
-                    if self.runtime._active is not None:
-                        provisional.talk_mode = self.runtime._active.bridge.mode
-                    job = _Job(binding, entry, provisional, solved_before=bool(entry.engine_state.solved))
-                    self.jobs[binding.binding_id] = job
-                    self.core.voice_engines[entry.session_id] = provisional.engine
-                    entry.active_turn = provisional.ids.turn_id
-                    evaluation = asyncio.create_task(provisional.evaluate())
-                    if place is not None and place.kind == "ask":
-                        job.asked = text
+                    # Assembling the fork's engine takes most of a second: off the event loop and outside the lock, so
+                    # the filler still plays on time (VOC-12) and a newer utterance can supersede it meanwhile.
+                    assembly = _Assembly(binding, ids.turn_id, text, asyncio.create_task(
+                        ProvisionalVoiceTurn.assemble(live, self.core.engine_factory, text, ids)))  # fmt: skip
+                    self.assembling[binding.binding_id] = assembly
             if chat is not None:
                 async for line in self._chat_reply(chat):
                     yield line
                 return
-            assert evaluation is not None and job is not None
-            filler_at = time.monotonic() + self._filler_after_s(binding)
-            filled = False
-            while not evaluation.done():
-                wait = self.keep_alive_s if filled else max(0.0, min(self.keep_alive_s, filler_at - time.monotonic()))
-                done, _ = await asyncio.wait({evaluation}, timeout=wait)
-                if done:
-                    break
-                if not filled and time.monotonic() >= filler_at:
-                    filled = True
-                    # VOC-12: no accepted spoken form yet. The one honest filler is the only speech allowed before
-                    # every gate passes (VOC-33); it never carries model text and never releases the turn.
-                    try:
-                        self.runtime.authorise_filler(binding, provisional.ids.turn_id, FILLERS[0])
-                    except VoiceProtocolError:
-                        pass
-                    else:
-                        yield _chunk(provisional.ids.turn_id, FILLERS[0] + " ")
-                        continue
-                yield ": keep-alive\n\n"
+            assert assembly is not None
+            async for line in waiting(assembly.task, assembly.turn_id):
+                yield line
+            async with self._lock:
+                if self.assembling.get(binding.binding_id) is not assembly:
+                    # Superseded while assembled: a newer utterance carried these words, or voice ended.
+                    async for line in _fixed(""):
+                        yield line
+                    return
+                del self.assembling[binding.binding_id]
+                provisional = assembly.task.result()
+                # What the event loop did meanwhile, as if it had come just after the request.
+                if (
+                    not self.runtime.bindings.contains(binding)
+                    or self.core.sessions.get(binding.session_id) is not entry
+                    or entry.profile_id != binding.profile_id
+                    or entry.meta.get("archived")
+                    or (self.core.mock_active is not None and self.core.mock_active())
+                ):
+                    raise VoiceTurnConflict("voice_binding_ended")
+                if entry.task is not None and not entry.task.done():
+                    self.core.steer(
+                        entry.active_turn or "",
+                        {"client_message_id": new_id("cli"), "content": [{"type": "text", "text": text}]},
+                    )
+                    async for line in _fixed("", entry.active_turn or "unbound"):
+                        yield line
+                    return
+                if not self.runtime.turn_pending(binding, assembly.turn_id):
+                    self.carried[binding.binding_id] = text  # interrupted before evaluation (VOC-05): said again later
+                    async for line in _fixed(""):
+                        yield line
+                    return
+                provisional.path = self.runtime.path_of(binding)
+                if self.runtime._active is not None:
+                    provisional.talk_mode = self.runtime._active.bridge.mode
+                job = _Job(binding, entry, provisional, solved_before=bool(entry.engine_state.solved))
+                self.jobs[binding.binding_id] = job
+                self.core.voice_engines[entry.session_id] = provisional.engine
+                entry.active_turn = provisional.ids.turn_id
+                evaluation = asyncio.create_task(provisional.evaluate())
+                if place is not None and place.kind == "ask":
+                    job.asked = text
+            async for line in waiting(evaluation, provisional.ids.turn_id):
+                yield line
             evaluation.result()
             self._preserve_safety(job)
             if not self._valid(job) or self.jobs.get(binding.binding_id) is not job:
@@ -722,6 +806,9 @@ class VoiceTutorAdapter:
                 async for line in _fixed(FAILED):
                     yield line
         finally:
+            if assembly is not None and self.assembling.get(binding.binding_id) is assembly:
+                del self.assembling[binding.binding_id]  # the stream was closed while the engine was assembled
+                assembly.task.cancel()
             if job is not None and not delivered and self.jobs.get(binding.binding_id) is job:
                 if evaluation is not None and not evaluation.done():
                     evaluation.cancel()

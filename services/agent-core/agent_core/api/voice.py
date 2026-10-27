@@ -138,6 +138,17 @@ class VoiceRuntime:
             return False
         return active.bridge.begin_provisional(turn_id, replace=replace)
 
+    def turn_pending(self, binding: VoiceBinding, turn_id: str) -> bool:
+        """The bridge still waits for this provisional turn: no barge-in, stop or close since `begin_turn`."""
+        active = self._active
+        return (
+            active is not None
+            and active.bridge.binding is binding
+            and self.bindings.contains(binding)
+            and not active.bridge.closed
+            and active.bridge._pending_turn == turn_id
+        )
+
     def authorise_turn(self, binding: VoiceBinding, turn_id: str, spoken_text: str, cues: tuple[Cue, ...] = ()) -> None:
         active = self._active
         if active is None or active.bridge.binding is not binding or not self.bindings.contains(binding):

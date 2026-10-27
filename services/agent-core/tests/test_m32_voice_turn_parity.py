@@ -148,11 +148,14 @@ def test_voc12_one_honest_filler_plays_before_acceptance_and_never_releases_the_
                 lines.append(await anext(stream))
             first = json.loads(lines[-1][6:])
             assert first["choices"][0]["delta"]["content"].strip() == FILLERS[0]
-            job = next(iter(runtime.adapter.jobs.values()))
             await endpoint.incoming.put(audio())  # the filler's audio plays...
             assert "bytes" in await socket.receive()
-            assert not job.turn.released and not core.sessions[sid].engine_state.transcript  # ...but releases nothing
+            # ...but releases nothing (the turn may still be assembling its engine: VOC-12)
+            assert not any(job.turn.released for job in runtime.adapter.jobs.values())
+            assert not core.sessions[sid].engine_state.transcript
             rest = [line async for line in stream]
+            job = next(iter(runtime.adapter.jobs.values()))
+            assert not job.turn.released
             spoken = "".join(json.loads(line[6:])["choices"][0]["delta"].get("content", "")
                              for line in rest if line.startswith("data: {"))  # fmt: skip
             assert spoken == SAFE and sum(FILLERS[0] in line for line in [*lines, *rest]) == 1
@@ -162,6 +165,58 @@ def test_voc12_one_honest_filler_plays_before_acceptance_and_never_releases_the_
                 while not job.turn.released:
                     await asyncio.sleep(0.01)
             assert core.sessions[sid].engine_state.transcript[-1]["content"] == SAFE
+        finally:
+            await stream.aclose()
+            await socket.close()
+            await runtime.close()
+            await client.aclose()
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize(("after_ms", "filler"), [(100, True), (3000, False)])
+def test_voc12_filler_time_counts_from_the_request_while_the_turns_engine_is_assembled(tmp_path, after_ms, filler):
+    """Assembling the fork's engine takes most of a second on a real device. The filler's time counts from the
+    request and the filler plays while the engine is still being assembled; a turn accepted before its time comes
+    plays none (VOC-12)."""
+    import json
+    import time
+
+    from agent_core.api.voice_adapter import FILLERS
+    from agent_core.contracts.voice.engine_llm_adapter import Request as AdapterRequest
+
+    assembly_s = 0.8
+
+    async def scenario():
+        core, sid, runtime, socket, _, client, instructions = await setup_adapter(tmp_path)
+        core._engine(core.sessions[sid])  # the live engine exists before the spoken turn, as on a device
+        factory = core.engine_factory
+
+        def slow(state):
+            time.sleep(assembly_s)
+            return factory(state)
+
+        core.engine_factory = slow
+        core.settings = core.settings.model_copy(
+            update={"voice_filler_after_ms": after_ms, "voice_cloud_filler_after_ms": after_ms}
+        )
+        runtime.adapter.keep_alive_s = 0.02
+        asked = time.monotonic()
+        stream = runtime.adapter.stream(AdapterRequest.model_validate(body(instructions, QUESTION)))
+        try:
+            lines, heard = [], None
+            async for line in stream:
+                lines.append(line)
+                if heard is None and FILLERS[0] in line:
+                    heard = time.monotonic() - asked
+                    assert not runtime.adapter.jobs  # the turn's engine is still being assembled
+            spoken = "".join(json.loads(line[6:])["choices"][0]["delta"].get("content", "")
+                             for line in lines if line.startswith("data: {"))  # fmt: skip
+            if filler:
+                assert heard is not None and heard < assembly_s / 2
+                assert spoken == FILLERS[0] + " " + SAFE and sum(FILLERS[0] in line for line in lines) == 1
+            else:
+                assert heard is None and spoken == SAFE
         finally:
             await stream.aclose()
             await socket.close()
