@@ -350,18 +350,37 @@ SAM: ≤ 300 images over the event (~$0.75).
 
 ## 9. Submission scope (JM-D17, owner signs off)
 
-The Official Rules grant the organisers a perpetual, irrevocable, royalty-free licence to the Submission. Submit only:
+The Official Rules grant the organisers a perpetual, irrevocable, royalty-free licence to the Submission. Submit only
+what `scripts/build-submission.sh` puts in the tree (revised 2026-10-27 after a trial install, §17 "§9 does not
+install"; **the owner signs off this list**):
 
 - the engine (`services/agent-core`, `services/tool-worker`, `services/perception-worker`), the cloud gateway (with
-  the research agent, §18), the desktop app and shared packages, and `services/study-worker` (Study stays: study packs
-  are saved into it);
-- **Mathematics and Physics** content packs (proposal); **Chemistry** only if the demo shows a chemistry moment (owner
-  decision); Accounting stays out;
-- not: Studio and authoring tools (`apps/studio`, `services/pack-builder`), `services/signing-service`,
-  `services/ingest`, private specs, evals with licensed material, and the files listed in §17 (§9 does not install).
+  the research agent, §18) and `services/study-worker` (agent-core and the gateway depend on it), the desktop app
+  (`apps/desktop`), the shared packages and `assets/`;
+- `services/pack-builder` and `services/signing-service`: the browser host builds and development-signs the packs
+  from their sources on first launch (`apps/desktop/dev/seed_packs.py`), so the entry does not install without them.
+  Only the published development key is used; no release key or signing record ships;
+- **Mathematics and Physics** content packs with their shared `ref/common` lists; **Chemistry** with `--chemistry`
+  (owner decision: the renderers ship a titration predict-before-you-see sim tied to a Chemistry misconception, so
+  without the pack one renderers test fails and that sim has no lesson behind it); Accounting stays out;
+- `contracts/`, `content/agent/`, `skills/`, `evals/` without `evals/held-out` (the tests read the corpora and
+  fixtures; every eval image is synthetic and `LicenseRef-Own`), and the tooling the app and its tests run:
+  `scripts/jana_tools` (codegen, the browser host), `scripts/codegen`, `scripts/ci` (browser test drivers) and
+  `scripts/governance/shipped-assets.toml` (the app imports this asset licence register);
+- from the gateway's `deploy/` folder only `meta-dev.toml`;
+- not: `apps/studio`, `apps/prototype-s0`, `services/ingest`, `SPEC.md`, `FEATURE_IMPORT.md`,
+  `contract-additions-*.json`, the rest of `scripts/governance/`, `scripts/tests`, `scripts/packaging`,
+  `scripts/release`, `.github/`, `AGENTS.md`, `.env.example`, `CONTRIBUTING.md` (it says the packs are CC BY 4.0,
+  which contradicts the licence below) and `evals/held-out`.
 
-The submission repository is built from this one at the end with only the parts above (same `git archive` method,
-no history). Licence: Apache-2.0 for code; content packs under the owner's licence (`LicenseRef-Own`).
+The tree is built from one commit with `git archive` and committed as the first and only commit of a new repository
+(no history; the author is this repository's git user). pnpm, uv and Cargo workspaces drop Studio and the ingest;
+the lockfiles are regenerated for that workspace without changing any pinned version; `skills/teaching` holds only
+the shipped subjects (`skills/counts.toml` follows). Build it with
+`scripts/build-submission.sh [--chemistry] --verify <empty folder>`; `--verify` installs a copy from its lockfiles
+and runs the Python, TypeScript and Rust suites there. Tests that read the private contract additions, or a pack
+the tree leaves out, skip there or are deselected in the tree's pytest configuration (the list is in the script).
+Licence: Apache-2.0 for code; content packs under the owner's licence (`LicenseRef-Own`).
 
 ## 10. Demo-visible bugs to fix (from the 2026-10-25 review)
 
@@ -632,7 +651,8 @@ checks every step with code, keeps working without power or internet, and uses M
 9. Budget dates: resolved (valid until 2026-11-09; ledger in `~/.jana-meta/gateway`).
 10. Research agent decisions: settled (§18.10).
 11. Before submission: rewrite the README as a Meta project (JM-D19), rename the app identifier and keychain prefix
-    (§17 Identity), and a trial `git archive` install and test of the §9 scope by Nov 1.
+    (§17 Identity), and a trial `git archive` install and test of the §9 scope by Nov 1. Done 2026-10-27; still the
+    owner's: sign off the §9 list (pack-builder and signing-service now ship; Chemistry or not).
 
 ## 16. Meta facts confirmed from the docs (2026-10-26)
 
@@ -721,9 +741,18 @@ demo, §8.1), health probes, W4, the rest of W5, W6 #2, #3, #7, §9, Identity.
   packs with `pack_builder` and `signing_service`; the lockfiles must be regenerated. Do a trial archive, install and
   test run by Nov 1. Also leave out `contract-additions-*.json` (private-spec material), `SPEC.md`,
   `FEATURE_IMPORT.md`, `evals/held-out`, `scripts/governance/` and `services/cloud-gateway/deploy/` (internal hosts,
-  project ids and an email address).
+  project ids and an email address). Done 2026-10-27: §9 now lists what installs and `scripts/build-submission.sh`
+  builds it. The trial tree installed from its frozen lockfiles; its Python suite passed except 10 tests that fail
+  on `main` too (`tol17`, `sec07`–`sec09`, `arc28`, `lrn43`, `tol05`, two `d95` speech-pack signing tests, and one
+  deselected); TypeScript and Rust passed; the browser host ran from it (packs built and signed from the tree,
+  practice marked).
 - **Identity**: the desktop app shares Jana's identifier `app.jana.desktop` and keychain prefix `jana.`; rename both
-  (JM-D7, JM-D19).
+  (JM-D7, JM-D19). Done 2026-10-27: the identifier is `app.jana-meta.desktop` (so the keychain service is too), the
+  key fallback folder `jana-meta`, the gateway's default keychain service `jana-meta.cloud-gateway`, and the Windows
+  installer's folders follow. The first start copies, never moves, the core's data and the device keys from the
+  former names when the new ones hold none (`src-tauri/src/identity.rs`), since Jana's own install may still use
+  them. The key references inside a service keep their contract prefix `jana.` (`$defs/KeyRef`); they no longer
+  collide, because the service differs.
 - **Claims**: the packs follow Cambridge 5054/5070, not WAEC; JAMB is a university-entry exam, not O level. Word the
   pitch and §1 accordingly.
 - **Budget arithmetic**: $10 a day over about 9.4 days is $94, so the $120 total never binds and the $30 kept for
