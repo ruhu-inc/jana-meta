@@ -66,7 +66,7 @@ test("flashcards continue into their own quiz using the existing settings and ex
 test("missing Study permission offers a next step while saved materials remain available", () => {
   const review = vi.fn();
   const controller = show({ sources: [source], access: { status: "consent_required", needsGuardian: true }, error: "consent_required" }, review);
-  expect(screen.getByText("A parent or guardian needs to approve online Study for this student. You can still add files and read saved material here.")).toBeTruthy();
+  expect(screen.getByText("Online Study needs your consent before it processes new material. You can still add files and read saved material here.")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Review Study access" }));
   expect(review).toHaveBeenCalledOnce();
   fireEvent.click(screen.getByRole("button", { name: "Biology Ready to study" }));
