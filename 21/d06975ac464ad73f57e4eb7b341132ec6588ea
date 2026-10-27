@@ -1,0 +1,23 @@
+evals/lock.json
+  s_207b3a26495062::t_c3e8d860b8de60 14986-14997,15047
+evals/suites.toml
+  s_207b3a26495062::t_fa2837a96742d9 37
+services/agent-core/tests/journey_harness.py
+  s_207b3a26495062::t_8458913e9a42c9 47,71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "21d06975ac464ad73f57e4eb7b341132ec6588ea",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
