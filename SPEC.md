@@ -876,10 +876,17 @@ fill in the blank, true/false at medium: the wider set failed on biology, the de
 chambers, tricuspid valve → heart valves, chordae tendineae, pressure gradient, ventricular pressure → one-way flow),
 notes, 10 flashcards and the podcast, each cited.
 
-Still open: the concept map's boxes say "From your document" (should say the web for a pack); the pack quiz with the
-new types and the photo start ("Make a study pack" from the drill) are untested live; the podcast is voiced by the
-system voice, not Kokoro on the device (§18.1); the material's text includes boilerplate a page shares with its
-question's words.
+Third live pack, from a photo (2026-10-27): the plant diagram read and confirmed in the drill, "Make a study pack"
+opened Study's conversation with "That looks like a flowering plant with its main parts labelled…", Skip gave a plan
+built on the photo's parts (petal, stigma, leaf, stem, root) with "Diagram practice on your photo" ticked; research
+found 12 pages in ~30 s and all five parts were made, the quiz included, ~2½ min and ~$0.25 (plus ~$0.04 per
+diagram read). The concept map's 10 boxes say "From the web". Fixed on the way: the hand-over started its
+conversation twice in the development build (the second turn collided and failed with a storage error).
+
+Still open: "Practise the diagram" does not show on a photo pack in Study (the drill needs the tutor session's
+photo; Study has no way to open it yet); two research chat turns at once on one profile fail with a storage error
+(the UI no longer sends them); the podcast is voiced by the system voice, not Kokoro on the device (§18.1); the
+material's text can include boilerplate a page shares with its question's words.
 
 ### 18.8 Done when
 
