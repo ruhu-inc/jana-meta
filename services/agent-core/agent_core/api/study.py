@@ -357,11 +357,12 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
     async def podcast_voice(request: Request) -> Response:
         d = desk()
         enabled = core.settings.study_neural_speech_enabled
-        status = {"enabled": enabled, "configured": False, "provider": "nvidia_magpie"}
+        status = {"enabled": enabled, "configured": False, "provider": "kokoro"}
         if enabled and core.study.cloud is not None:
             try:
                 remote = await core.study.cloud.send(d.conn, "GET", "/v1/podcast/voice")
-                if isinstance(remote, dict) and remote.get("provider") == "nvidia_magpie":
+                if isinstance(remote, dict) and remote.get("provider") in ("kokoro", "magpie"):
+                    status["provider"] = remote["provider"]
                     status["configured"] = remote.get("enabled") is True and remote.get("configured") is True
             except ValueError:
                 pass  # Status never grants consent or silently selects the system voice.
@@ -378,8 +379,7 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
             body = await request.json()
             if (
                 not isinstance(body, dict)
-                or set(body) != {"claim", "offset", "text_sha256", "nvidia_consent"}
-                or body.get("nvidia_consent") is not True
+                or set(body) != {"claim", "offset", "text_sha256"}
                 or type(body.get("claim")) is not int
                 or type(body.get("offset")) is not int
                 or not isinstance(body.get("text_sha256"), str)

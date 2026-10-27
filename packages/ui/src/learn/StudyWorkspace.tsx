@@ -412,7 +412,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
             {!view.canSpeak && <Notice message={t(view.podcastVoice?.enabled ? view.podcastVoice.configured ? "study.neural_audio_unsupported" : "study.neural_voice_unavailable" : "study.voice_unavailable")} />}
             <p role="status" className="text-meta text-muted">{view.reading ? view.audioPaused ? t("study.audio_paused", { number: view.spokenClaim + 1, total: shown.claims.length }) : view.audioPreparing ? t("study.preparing_neural") : t("study.audio_progress", { number: view.spokenClaim + 1, total: shown.claims.length }) : view.audioCompleted ? t("study.audio_complete", { total: shown.claims.length }) : null}</p>
             {(view.reading || view.audioCompleted) && <ProgressBar bare label={t("study.tool.audio_overview")} max={shown.claims.length} value={view.audioCompleted ? shown.claims.length : view.spokenClaim} valueText={`${view.audioCompleted ? shown.claims.length : view.spokenClaim} / ${shown.claims.length}`} />}
-            <p className="text-meta text-muted">{t(view.podcastVoice?.enabled ? "study.audio_nvidia" : "study.audio_local")}</p>
+            <p className="text-meta text-muted">{t(view.podcastVoice?.enabled ? "study.audio_online" : "study.audio_local")}</p>
           </>}
           {shown.status === "stale" && <Notice message={t("study.stale_help")} />}
           {shown.kind === "concept_map" && shown.concept_map && <StudyConceptMap map={shown.concept_map} fromWeb={shown.sources.some((x) => webSources.has(x.source_id))} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editConceptMap(ops); }}

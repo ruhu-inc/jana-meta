@@ -273,7 +273,7 @@ test.each(["chat", "summary", "flashcards", "quiz"])("a newly requested %s opens
 });
 
 
-test.each(["finish", "stop_pending", "profile_clear"])("NVIDIA Podcast %s never uses system synthesis or plays a late response", async (mode) => {
+test.each(["finish", "stop_pending", "profile_clear"])("Podcast voice %s never uses system synthesis or plays a late response", async (mode) => {
   const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", title: "Overview", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA")], status: "ready", created_at: now };
   let release: ((value: Blob) => void) | undefined;
   const pendingAudio = new Promise<Blob>((resolve) => { release = resolve; });
@@ -281,7 +281,7 @@ test.each(["finish", "stop_pending", "profile_clear"])("NVIDIA Podcast %s never 
   const audio: PodcastAudio = { available: () => true, activate: vi.fn(), play: vi.fn((_blob, _rate, callbacks) => { void Promise.resolve().then(callbacks.end); return vi.fn(); }) };
   const post = vi.fn(async () => mode === "finish" ? new Blob([new Uint8Array(52)], { type: "audio/wav" }) : pendingAudio);
   const fake = setup(async (path) => {
-    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "nvidia_magpie" };
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
     if (path.includes("/speech?")) return { aid_id: AID, claim_index: 0, text: "DNA", next_offset: null, last_claim: true };
     return aid;
   }, post as never, local, audio);
@@ -299,21 +299,21 @@ test.each(["finish", "stop_pending", "profile_clear"])("NVIDIA Podcast %s never 
   expect(audio.play).toHaveBeenCalledTimes(mode === "finish" ? 1 : 0);
   expect(fake.controller.getView().reading).toBe(false);
   if (mode === "finish") expect(fake.controller.getView().audioCompleted).toBe(true);
-  const request = post.mock.calls[0] as unknown as [string, { text?: string; nvidia_consent: boolean; text_sha256: string }];
+  const request = post.mock.calls[0] as unknown as [string, { text?: string; text_sha256: string } & Record<string, unknown>];
   expect(request[0]).toContain("/neural-speech");
-  expect(request[1].nvidia_consent).toBe(true);
+  expect(Object.keys(request[1]).sort()).toEqual(["claim", "offset", "text_sha256"]);
   expect(request[1].text_sha256).toHaveLength(64);
   expect(request[1].text).toBeUndefined(); // script is selected again by the native core
 });
 
 
-test("NVIDIA failure is visible and never silently falls back to an available robotic system voice", async () => {
+test("Podcast voice failure is visible and never silently falls back to an available robotic system voice", async () => {
   const { CommandError } = await import("../src/stream/commands.js");
   const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", title: "Overview", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA")], status: "ready", created_at: now };
   const local: LocalSpeech = { available: () => true, subscribe: () => () => {}, speak: vi.fn() };
   const audio: PodcastAudio = { available: () => true, activate: vi.fn(), play: vi.fn() };
   const fake = setup(async (path) => {
-    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "nvidia_magpie" };
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
     if (path.includes("/speech?")) return { aid_id: AID, claim_index: 0, text: "DNA", next_offset: null, last_claim: true };
     return aid;
   }, vi.fn(async () => { throw new CommandError(503, "validation_failed", false, { reason: "neural_speech_unavailable" }); }) as never, local, audio);
@@ -324,13 +324,13 @@ test("NVIDIA failure is visible and never silently falls back to an available ro
   expect(fake.controller.getView()).toMatchObject({ reading: false, audioPreparing: false, error: "neural_speech_unavailable" });
 });
 
-test("NVIDIA buffers only one passage ahead; Pause holds the next passage and Stop drops it", async () => {
+test("Podcast voice buffers only one passage ahead; Pause holds the next passage and Stop drops it", async () => {
   const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", title: "Overview", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA"), cite("RNA"), cite("Enzymes")], status: "ready", created_at: now };
   const ended: (() => void)[] = [], cancelled = vi.fn();
   const audio: PodcastAudio = { available: () => true, activate: vi.fn(), pause: vi.fn(), resume: vi.fn(), play: vi.fn((_blob, _rate, cb) => { ended.push(cb.end); return cancelled; }) };
   const post = vi.fn(async () => new Blob([new Uint8Array(52)], { type: "audio/wav" }));
   const fake = setup(async (path) => {
-    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "nvidia_magpie" };
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
     if (path.includes("/speech?")) { const n = Number(new URL(path, "http://core.test").searchParams.get("claim")); return { aid_id: AID, claim_index: n, text: ["DNA", "RNA", "Enzymes"][n], next_offset: null, last_claim: n === 2 }; }
     return aid;
   }, post as never, undefined, audio);
@@ -371,7 +371,7 @@ test("a failed speculative speech request is observed, never retried, and report
   const audio: PodcastAudio = { available: () => true, activate: vi.fn(), play: vi.fn((_blob, _rate, cb) => { end = cb.end; return vi.fn(); }) };
   const post = vi.fn(async () => { if (post.mock.calls.length > 1) throw new CommandError(503, "validation_failed", false, { reason: "neural_speech_unavailable" }); return new Blob([new Uint8Array(52)], { type: "audio/wav" }); });
   const fake = setup(async (path) => {
-    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "nvidia_magpie" };
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
     if (path.includes("/speech?")) { const n = Number(new URL(path, "http://core.test").searchParams.get("claim")); return { aid_id: AID, claim_index: n, text: n ? "RNA" : "DNA", next_offset: null, last_claim: n === 1 }; }
     return aid;
   }, post as never, undefined, audio);
@@ -389,7 +389,7 @@ test("Resume rechecks native permission and cancels buffered audio if Study cons
   let allowed = true;
   const cancelled = vi.fn(), audio: PodcastAudio = { available: () => true, activate: vi.fn(), pause: vi.fn(), resume: vi.fn(), play: vi.fn(() => cancelled) };
   const fake = setup(async (path) => {
-    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "nvidia_magpie" };
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
     if (path.includes("/speech?")) {
       if (!allowed) throw new CommandError(403, "validation_failed", false, { reason: "consent_required" });
       const n = Number(new URL(path, "http://core.test").searchParams.get("claim"));

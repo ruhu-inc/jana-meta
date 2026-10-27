@@ -52,11 +52,10 @@ class AskSearch(_Strict):
     secret: str  # the API key's name in the secret source, never the key itself (SEC-20)
 
 
-class NvidiaPodcastSpeech(_Strict):
-    """NVIDIA's free API-catalog prototype endpoint only; no GPU rental or paid speech billing path."""
+class PodcastSpeech(_Strict):
+    """Podcast narration by cloud voice's own verbatim voice (`voice_tts`, Kokoro-82M; JM-D13), bounded on its own."""
 
     enabled: bool = False
-    access: Literal["free_prototyping"] = "free_prototyping"
     daily_characters: int = Field(default=20000, ge=1, le=100000)
     total_characters: int = Field(default=100000, ge=1, le=1000000)
     daily_requests: int = Field(default=100, ge=1, le=500)
@@ -440,7 +439,7 @@ class GatewayConfig(_Strict):
     # Ask anything (STU-20, D117): the model that writes the cited answer and the search backend it reads from.
     ask_model: str = Field(default="primary/fast-model", pattern=r"^[a-z][a-z0-9_-]*/[a-z][a-z0-9_-]*$")
     ask_search: AskSearch | None = None
-    podcast_speech: NvidiaPodcastSpeech = Field(default_factory=NvidiaPodcastSpeech)
+    podcast_speech: PodcastSpeech = Field(default_factory=PodcastSpeech)
     sam: Sam = Field(default_factory=Sam)
     research: Research = Field(default_factory=Research)
     ask_search_results: int = key(6, serves="STU-20", unit="sources", ge=1, le=10)
@@ -460,8 +459,6 @@ class GatewayConfig(_Strict):
         for alias in self.tier.calls_per_turn:
             if primary is not None and alias not in primary.models:
                 raise ValueError(f"the tier's usage mix names {alias!r}, not a model of the primary provider (BIZ-08)")
-        if self.podcast_speech.enabled and self.podcast_speech.expires_at is None:
-            raise ValueError("NVIDIA prototype Podcast speech requires an expiry")
         if self.open_registration and self.environment != "dev":
             raise ValueError("open registration is for the dev environment only")
         if (

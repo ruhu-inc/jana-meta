@@ -1,98 +1,86 @@
-"""No-network neural speech contract, durable limits and key custody; not a voice-quality evaluation."""
+"""Podcast narration (JM-D13, SPEC §6.4): the gateway's own verbatim voice (Kokoro-82M, Apache-2.0) reads each
+passage, never a hosted trial. No-network contract, durable limits and no content in storage; not a quality check."""
 
 import asyncio
 import base64
 import io
 import wave
+from pathlib import Path
 
-import httpx
 import pytest
-from cloud_gateway.custody import NvidiaEnvironmentSecrets
-from cloud_gateway.podcast_speech import BASE, NvidiaPodcast, SpeechError, validate_audio
-from cloud_gateway.secret_scan import scan_bytes
-from gateway_stubs import FAKE_KEYS, Device, FakeSecrets, gateway_config, harness
+from cloud_gateway.podcast_speech import PodcastSpeech, SpeechError, validate_audio
+from cloud_gateway.speech_fakes import FakeTts
+from gateway_stubs import Device, gateway_config, harness
 
 TEXT = "CANARY: Enzymes are biological catalysts."
-KEY = "nvapi-test-not-a-real-key"
+DEPLOY = Path(__file__).resolve().parents[1] / "deploy"
 
 
-def wav():
+def wav(frames=2400):
     output = io.BytesIO()
     with wave.open(output, "wb") as audio:
-        audio.setparams((1, 2, 22050, 0, "NONE", "not compressed"))
-        audio.writeframes(b"\x01\x00" * 2205)
+        audio.setparams((1, 2, 24000, 0, "NONE", "not compressed"))
+        audio.writeframes(b"\x01\x00" * frames)
     return output.getvalue()
 
 
-def setup(tmp, **limits):
-    h = harness(
-        gateway_config(
-            tmp,
-            podcast_speech={
-                "enabled": True,
-                "expires_at": "2026-11-02T00:46:01Z",
-                **limits,
-            },
-        ),
-        secrets=FakeSecrets({**FAKE_KEYS, "nvidia_api_key": KEY}),
-    )
+class FailingTts(FakeTts):
+    async def synthesize(self, text):
+        self.texts.append(text)
+        raise RuntimeError("synthetic worker failure")
+        yield b""
+
+
+def setup(tmp, tts=None, **limits):
+    h = harness(gateway_config(tmp, podcast_speech={"enabled": True, **limits}))
     service = h.client._transport.app.state.podcast_speech
-    sent = []
-
-    def handle(request):
-        sent.append(request)
-        assert str(request.url) == BASE + "/v1/audio/synthesize"
-        assert request.headers["authorization"] == "Bearer " + KEY
-        assert "x-profile-token" not in request.headers
-        assert b'name="text"' in request.content and TEXT.encode() in request.content
-        assert any(
-            v in request.content
-            for v in (
-                b"Magpie-Multilingual.EN-US.Aria",
-                b"Magpie-Multilingual.EN-US.Jason",
-            )
-        )
-        assert b"22050" in request.content
-        return httpx.Response(200, content=wav(), headers={"content-type": "audio/wav"})
-
-    service.client = httpx.AsyncClient(transport=httpx.MockTransport(handle))
-    return h, service, sent
+    voice = FakeTts() if tts is None else tts
+    service.tts = lambda: voice
+    return h, service, voice
 
 
 def body(index=0):
-    return {"request_id": "cli_" + str(index) * 26, "text": TEXT, "voice_index": 0, "nvidia_consent": True}
+    return {"request_id": "cli_" + str(index) * 26, "text": TEXT, "voice_index": 0}
 
 
-def test_nvidia_key_source_and_scanner_do_not_expose_or_cross_providers():
-    source = NvidiaEnvironmentSecrets({"NVIDIA_API_KEY": KEY})
-    assert source.get("nvidia_api_key").reveal() == KEY
-    assert source.get("meta_api_key") is None and KEY not in repr(source)
-    canary = b"nv" + b"api-" + b"A7" * 22
-    finding = scan_bytes(canary, "fixture")[0]
-    assert finding.pattern == "nvidia_api_key" and canary.decode() not in str(finding)
-
-
-def test_neural_narration_auth_audio_minimisation_and_no_content_in_storage(tmp_path):
+def test_podcast_is_read_by_the_gateways_own_voice_with_no_content_in_storage(tmp_path):
     async def run():
-        h, _, sent = setup(tmp_path)
+        h, _, voice = setup(tmp_path)
         assert (await h.client.get("/v1/podcast/voice")).status_code == 401
         device = Device()
         await device.login(h.client)
         status = await h.client.get("/v1/podcast/voice", headers=device.headers())
-        assert status.json() == {"enabled": True, "configured": True, "provider": "nvidia_magpie"}
+        assert status.json() == {"enabled": True, "configured": True, "provider": "kokoro"}
         reply = await h.client.post("/v1/podcast/speech", json=body(), headers=device.headers())
         assert reply.status_code == 200, reply.text
-        assert base64.b64decode(reply.json()["audio_base64"]) == wav()
+        audio = base64.b64decode(reply.json()["audio_base64"])
+        validate_audio(audio)
+        with wave.open(io.BytesIO(audio)) as read:
+            assert read.getframerate() == 24000 and read.getnframes() == 2 * 24 * 150
+        assert reply.json()["voice"] == "kokoro-82m/af_heart"
         assert reply.headers["cache-control"] == "no-store"
-        assert len(sent) == 1
+        assert voice.texts == [TEXT]
         gw = h.client._transport.app.state.gateway
         assert gw.store._db.execute("SELECT characters,state FROM podcast_speech_receipts").fetchone() == (
             len(TEXT),
             "completed",
         )
         for line in gw.store._db.iterdump():
-            assert TEXT not in line and KEY not in line and "RIFF" not in line
-        assert not any("NVIDIA" in r.model for stub in h.stubs.values() for r in stub.seen)
+            assert TEXT not in line and "RIFF" not in line
+
+    asyncio.run(run())
+
+
+def test_without_a_voice_the_podcast_says_it_is_not_configured(tmp_path):
+    async def run():
+        h, service, _ = setup(tmp_path)
+        service.tts = lambda: None
+        device = Device()
+        await device.login(h.client)
+        status = await h.client.get("/v1/podcast/voice", headers=device.headers())
+        assert status.json()["configured"] is False
+        reply = await h.client.post("/v1/podcast/speech", json=body(), headers=device.headers())
+        assert reply.status_code == 503 and reply.json()["error"]["code"] == "neural_speech_not_configured"
 
     asyncio.run(run())
 
@@ -100,7 +88,7 @@ def test_neural_narration_auth_audio_minimisation_and_no_content_in_storage(tmp_
 @pytest.mark.parametrize(
     "change",
     [
-        {"nvidia_consent": False},
+        {"nvidia_consent": True},
         {"voice_index": 2},
         {"voice_index": True},
         {"text": ""},
@@ -109,26 +97,25 @@ def test_neural_narration_auth_audio_minimisation_and_no_content_in_storage(tmp_
         {"request_id": "invalid"},
     ],
 )
-def test_invalid_requests_never_reach_nvidia(tmp_path, change):
+def test_invalid_requests_never_reach_the_voice(tmp_path, change):
     async def run():
-        h, _, sent = setup(tmp_path)
+        h, _, voice = setup(tmp_path)
         device = Device()
         await device.login(h.client)
         reply = await h.client.post("/v1/podcast/speech", json={**body(), **change}, headers=device.headers())
-        assert reply.status_code != 200 and sent == []
+        assert reply.status_code != 200 and voice.texts == []
 
     asyncio.run(run())
 
 
-def test_limits_and_duplicate_protection_survive_service_restart_and_expiry(tmp_path):
+def test_limits_and_duplicate_protection_survive_service_restart(tmp_path):
     async def run():
-        h, service, sent = setup(tmp_path, daily_characters=len(TEXT), total_characters=2 * len(TEXT))
+        h, service, voice = setup(tmp_path, daily_characters=len(TEXT), total_characters=2 * len(TEXT))
         device = Device()
         await device.login(h.client)
-        headers = device.headers()
-        assert (await h.client.post("/v1/podcast/speech", json=body(), headers=headers)).status_code == 200
+        assert (await h.client.post("/v1/podcast/speech", json=body(), headers=device.headers())).status_code == 200
         gw = h.client._transport.app.state.gateway
-        restarted = NvidiaPodcast(gw, service.client)
+        restarted = PodcastSpeech(gw, service.tts)
         with pytest.raises(SpeechError, match="already_sent"):
             await restarted.synthesize(device.credential_id, body())
         with pytest.raises(SpeechError, match="limit"):
@@ -138,30 +125,20 @@ def test_limits_and_duplicate_protection_survive_service_restart_and_expiry(tmp_
         h.clock.now += 86400
         with pytest.raises(SpeechError, match="limit"):
             await service.synthesize(device.credential_id, body(2))
-        h.clock.now += 40 * 86400
-        with pytest.raises(SpeechError, match="limit"):
-            await service.synthesize(device.credential_id, body(3))
-        assert len(sent) == 2
+        assert len(voice.texts) == 2
 
     asyncio.run(run())
 
 
-def test_failed_or_uncertain_send_remains_counted_and_cannot_repeat(tmp_path):
+def test_a_failed_reading_remains_counted_and_cannot_repeat(tmp_path):
     async def run():
-        h, service, _ = setup(tmp_path, daily_requests=1)
+        h, _, voice = setup(tmp_path, tts=FailingTts(), daily_requests=1)
         device = Device()
         await device.login(h.client)
-        calls = []
-
-        def fail(request):
-            calls.append(request)
-            raise httpx.ReadTimeout("synthetic timeout")
-
-        service.client = httpx.AsyncClient(transport=httpx.MockTransport(fail))
         for item in (body(), body(), body(1)):
             result = await h.client.post("/v1/podcast/speech", json=item, headers=device.headers())
             assert result.status_code != 200
-        assert len(calls) == 1
+        assert len(voice.texts) == 1
         gw = h.client._transport.app.state.gateway
         assert gw.store._db.execute("SELECT characters,state FROM podcast_speech_receipts").fetchone() == (
             len(TEXT),
@@ -177,14 +154,7 @@ def test_invalid_audio_is_withheld(audio):
         validate_audio(audio)
 
 
-def test_two_voice_podcast_can_use_the_second_nvidia_voice(tmp_path):
-    async def run():
-        h, _, sent = setup(tmp_path)
-        device = Device()
-        await device.login(h.client)
-        result = await h.client.post("/v1/podcast/speech", json={**body(), "voice_index": 1}, headers=device.headers())
-        assert result.status_code == 200
-        assert result.json()["voice"] == "Magpie-Multilingual.EN-US.Jason"
-        assert b"Magpie-Multilingual.EN-US.Jason" in sent[0].content
-
-    asyncio.run(run())
+def test_the_development_config_never_turns_on_a_hosted_podcast_trial():
+    text = (DEPLOY / "meta-dev.toml").read_text()
+    assert "free_prototyping" not in text and "NVIDIA" not in text
+    assert 'engine = "magpie"' not in text
