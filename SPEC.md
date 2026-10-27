@@ -609,19 +609,48 @@ take minutes per aid here.
 ### 18.1 What the learner gets
 
 In Study, **Learn from a picture** (a photo of a diagram, a textbook figure, a whiteboard) or **Research a topic**
-(typed, e.g. "how the heart pumps blood", with a level: O level or first year). Jana researches in the background,
-for minutes if it needs to, and the learner may close the app; when it is done Study shows a **study pack** (the agent's output; "pack" below means this, not a curriculum pack):
+(typed, e.g. "how the heart pumps blood"). Jana first **talks it through with the learner** (§18.1a) and shows a
+research plan to approve; then it researches in the background, for minutes if it needs to, and the learner may close
+the app; when it is done Study shows a **study pack** (the agent's output; "pack" below means this, not a curriculum
+pack):
 
 | Part | What it is |
 |---|---|
 | Tap-to-learn diagram | The learner's own picture with SAM outlines: tap a part for its name and role; drill mode asks "tap the part that…" and checks the tap against the outline. With a typed topic, the closest of Jana's own drawn visuals (packages/renderers) when one fits. Never a generated anatomy image. |
 | Key concepts | Short explanations at the chosen level, each statement citing the sources that support it |
+| Concept map | Study's existing `concept_map` kind (merged 2026-10-26, `e4b7e74`) run on the agent's verified source excerpts as its document: concepts and the relations the sources state, each cited and checked by the same verifier, anchored to the pack's curated skills where they match; editable like any concept map. Not the uncited "From Muse Spark, no source" topic map |
 | Flashcards | Saved to Study with spaced repetition |
 | Quiz | Only question types marked by code (multiple choice, true/false, numeric with tolerance, tap the part): Study's worded-answer marker needs the local model (`engine/study.py`, `model.local_ready()`), so worded answers would go unmarked on most laptops |
 | Podcast | A verified script read on the device by Kokoro (Apache-2.0), so it plays offline and may appear in the video |
 | Sources | Every page used, each opening the original |
 
 Everything is saved on the device and opens offline afterwards.
+
+### 18.1a Talking it through first
+
+Before any research, a short conversation in Study (the learner asked for it, 2026-10-27), so the pack is about what
+this learner needs rather than everything about the topic:
+
+1. **Jana opens with what it has.** For a photo: what it sees, in its own words, after the photo is read
+   (e.g. "a labelled diagram of the heart with 8 parts"). For a typed topic: the topic restated.
+2. **Up to three short questions**, one at a time, each with quick-reply chips and free text:
+   - what it is for (an exam or course, a lesson coming up, curiosity) and the level (O level, first year);
+   - what the learner already knows or finds hard ("I know the four chambers but not the valves");
+   - what to make (all parts by default; chips to drop any: diagram drill, concept map, flashcards, quiz, podcast)
+     and how long they have (a 5-minute or a 20-minute pack).
+   Jana skips a question the learner already answered. **"Skip, just research it"** is always there.
+3. **The plan.** Jana shows a **research brief**: a title, the level, the focus, the 4–8 sub-questions it will look
+   up, and what it will make. The learner can remove a sub-question, add one in their own words, or change the
+   level, then presses **Start research**. Nothing is searched before this press.
+
+How it is built: the conversation is the device engine's, through the gateway's ordinary chat route on Spark
+(`fast-model`, effort low), not part of the gateway job: it is interactive, short (~$0.01) and needs no web. Each
+learner message passes the input guard and distress screening like a tutoring message. One structured call per
+turn returns the next question or the finished brief (`contracts/study/research-brief.schema.json`: title, level,
+purpose, known, focus, sub_questions[4..8], outputs[], length). The approved brief, not the chat, is what the
+gateway job receives: the chat's free text never leaves the device again, and the job's prompts are built from the
+brief's fields only. The job asks nothing later: the learner may have closed the app; anything it had to narrow is
+said in the pack ("Focused on the valves, as you asked").
 
 **Limits of one pack**: 4–8 sub-questions, at most 12 searches, at most 30 sources kept, 6–12 concepts, 10–30
 flashcards, 10 quiz questions, a podcast of 3–5 minutes (about 450–750 words), one photo of at most 1600 px.
@@ -652,25 +681,30 @@ The agent runs **in the gateway as a durable job**, so the learner's laptop can 
 submits the request, follows progress when online, and fetches the finished pack, which the gateway then deletes.
 Each stage writes a checkpoint; a restarted gateway resumes from the last finished stage.
 
+0. **Talk it through** (on the device, before the job; §18.1a): the conversation produces the approved research
+   brief. A photo is read before the conversation (the diagram drill's reading, §5.2), so Jana can say what it sees.
 1. **Understand**: a photo has already passed the perception worker's privacy pass on the device (faces and people
-   screened, masked, ≤1600 px); the gateway reads it with Spark (topic, labels, regions) and outlines it with SAM
-   through the same code as `/v1/vision/segment` (W2); a typed topic is turned into a scoped title and level.
-2. **Plan**: Spark writes 4–8 focused sub-questions at the learner's level. Meta's docs warn that complex multi-hop
-   research "is less dependable today" and advise narrower requests, so each sub-question is one search; sub-questions
-   are researched in parallel (at most 4 at once).
+   screened, masked, ≤1600 px) and been read and outlined by the diagram drill's capture (W2); the job receives its
+   confirmed part names and outlines with the brief, so the photo is not read twice.
+2. **Plan**: the brief's approved sub-questions (4–8, at the learner's level and focus). Meta's docs warn that complex
+   multi-hop research "is less dependable today" and advise narrower requests, so each sub-question is one search;
+   sub-questions are researched in parallel (at most 4 at once).
 3. **Research**: one Responses API request per sub-question, `tools: [{"type": "web_search"}]`,
    `include: ["web_search_call.results"]`, `background: true`, progress by streamed retrieval
    (`GET /v1/responses/{id}?stream=true`). Findings keep their `url_citation`s and bounded source excerpts; any text
    with instruction-like spans is withheld (the gateway's existing `inert` rule).
-4. **Synthesise**: one structured-output call writes the pack (concepts, diagram part map, flashcards, quiz, podcast
-   script), every claim citing evidence ids from stage 3.
+4. **Synthesise**: one structured-output call writes the parts the brief asked for (concepts, diagram part map and
+   roles, flashcards, quiz, podcast script), every claim citing evidence ids from stage 3; the concept map is Study's
+   `concept_map` job on the kept excerpts (§18.1).
 5. **Verify**: one call checks each claim against only its cited excerpts; unsupported claims are dropped. If too little
    survives, at most one more research round for the gaps, then stop.
 6. **Assemble**: map each diagram label to its SAM mask, verbalise the podcast script, return the pack.
 
 ### 18.4 Long-running behaviour
 
-- States: `queued`, `researching` (step k of n, with the sub-question titles and the number of sources found),
+- On the device first: `talking` (the conversation, §18.1a) and `awaiting_approval` (the brief shown); leaving
+  keeps the draft brief in Study, and nothing is sent until **Start research**.
+- Then in the gateway: `queued`, `researching` (step k of n, with the sub-question titles and the number of sources found),
   `verifying`, `ready`, `waiting_online`, `failed`, `cancelled`.
 - **Cancel** stops the job, cancels in-flight Meta responses (`POST /v1/responses/{id}/cancel`) and releases its holds.
 - One job per learner at a time; others queue. Target 1–5 minutes; hard stop at 15.
@@ -702,18 +736,22 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
 | Where | Change |
 |---|---|
 | `cloud_gateway/providers/meta_responses.py` (new) | Responses API client: background create, streamed retrieval, cancel; parses `web_search_call`, `url_citation` and Responses usage (`input_tokens`, `output_tokens`, reasoning inside output) |
-| `cloud_gateway/research.py` (new) | The job runner and stages, checkpoints in the gateway store; `POST /v1/research`, `GET /v1/research/{id}` (with an event stream), `POST /v1/research/{id}/cancel`, `DELETE /v1/research/{id}` |
+| `cloud_gateway/research.py` (new) | The job runner and stages, checkpoints in the gateway store; `POST /v1/research` (takes the approved brief, plus a photo's confirmed parts and outlines), `GET /v1/research/{id}` (with an event stream), `POST /v1/research/{id}/cancel`, `DELETE /v1/research/{id}` |
+| `agent_core/engine/research_chat.py` (new), `contracts/study/research-brief.schema.json` (new) + codegen | The conversation (§18.1a): one structured Spark call per turn returning the next question with its chips, or the brief; screened like tutoring input; at most three questions; "Skip" goes straight to the brief |
+| Study `concept_map` | Accept the job's verified excerpts as the document of a `concept_map` run, so the pack's map is cited and checked |
 | `cloud_gateway/inference_budget.py`, `config.py` | Search pricing in the ledger; `[research]` settings (searches, rounds, time limits, allowance, source policy) |
 | `contracts/cloud/` and `contracts/study/` + codegen | The research request, job and pack contracts; a `research` source kind and web citations in Study |
 | `agent_core/api/study.py`, `net/study.py` | Start, follow, cancel and import a pack into Study's stores: concepts become notes with web citations, flashcards and the quiz become Study cards and items, the podcast becomes an `audio_overview` aid, the sources are kept with the pack |
 | `contracts/study/` aid kinds | A new `diagram` aid kind (the photo, its SAM outlines and the part map) for the tap-to-learn view, since Study has no aid that holds masks |
 | Study podcast | Read `audio_overview` scripts with Kokoro on the device instead of NVIDIA's trial |
-| `packages/ui` Study | Entry points, the progress view, the pack view (diagram, concepts, cards, quiz, podcast, sources) |
+| `packages/ui` Study | Entry points, the conversation with its chips and "Skip, just research it", the brief to approve and edit, the progress view, the pack view (diagram, concept map, concepts, cards, quiz, podcast, sources) |
 | W2 dependency | SAM client, `photo_region` overlay and diagram drill (done, §5.2); the pack view reuses `DiagramDrill` with the pack's own photo and part map |
 
 ### 18.8 Done when
 
-- From our own photo of a labelled diagram, a pack arrives within about 5 minutes with: a tap-to-learn diagram with at
+- From our own photo of a labelled diagram: Jana says what it sees, asks at most three questions (each skippable),
+  shows a brief whose sub-questions the learner can edit, and searches nothing before **Start research**; then a pack
+  arrives within about 5 minutes with: a concept map whose every concept and relation is cited and verified; a tap-to-learn diagram with at
   least 80% of its labels mapped to SAM outlines; at least 6 key concepts, each with at least one verified citation;
   at least 10 flashcards; a 10-question quiz; a podcast that plays with the network off; and its sources.
 - Closing the app mid-research and reopening shows progress or the finished pack; Cancel stops all further spend.
@@ -721,7 +759,9 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
 
 ### 18.9 Tests
 
-A fake Responses server (background create, streamed retrieval, cancel, `web_search_call`, `url_citation`); stage
+The conversation: at most three questions, a skipped or already-answered question not asked, distress screening on
+each message, the brief validating against its contract, the job receiving the brief's fields and never the chat's
+text, nothing sent before approval. A fake Responses server (background create, streamed retrieval, cancel, `web_search_call`, `url_citation`); stage
 checkpoints, resume and cancel; budget reservation including searches; verification dropping unsupported claims;
 withholding of instruction-like source text; import into Study's stores; the UI states; topic screening refusing
 before any request leaves; a pack failing the release gates publishing nothing; a second session getting 404 for
