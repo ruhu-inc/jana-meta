@@ -33,20 +33,22 @@ FAILED = "Sorry, I could not answer that just now. Please try again."
 
 @dataclass(frozen=True)
 class Place:
-    kind: str  # "ask" or "study"
+    kind: str  # "ask", "study" or "tutor" (the tutor screen's own conversation, with Cloud voice on)
     source_id: str | None = None
     revision: int | None = None
     grant: str = ""  # the study source's open grant (x-study-open), held in memory only
 
 
 def parse_place(control: Mapping[str, Any]) -> Place | None:
-    """`{"type":"place","place":null}`, `{"type":"place","place":"ask"}` or
+    """`{"type":"place","place":null}`, `{"type":"place","place":"ask"}`, `{"type":"place","place":"tutor"}` or
     `{"type":"place","place":"study","source_id":"src_…","revision":n,"open":"…"}` (`open` may be empty)."""
     kind = control.get("place")
     if kind is None and set(control) == {"type", "place"}:
         return None
     if kind == "ask" and set(control) == {"type", "place"}:
         return Place("ask")
+    if kind == "tutor" and set(control) == {"type", "place"}:
+        return Place("tutor")
     if (
         kind == "study"
         and set(control) == {"type", "place", "source_id", "revision", "open"}

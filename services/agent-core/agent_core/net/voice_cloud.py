@@ -39,6 +39,9 @@ PAYLOAD = "voice_stream"
 PATH = "/v1/voice/realtime"
 REQUEST_ID = re.compile(r"^vlr_[0-9a-f]{24}$")
 MAX_TUNNEL = 8  # forwarded requests in flight at once
+# The session subjects the endpoint may be told (`?subject=`): curriculum names only, never learner data. They order
+# speech to text's vocabulary bias (the subject's glossary terms first).
+SUBJECTS = ("mathematics", "physics", "chemistry", "accounting")
 # The adapter's reply to one forwarded request: (status, a JSON body) or (200, the SSE lines it streams).
 Respond = Callable[[Any], Awaitable[tuple[int, dict[str, Any] | AsyncIterator[str]]]]
 
@@ -54,6 +57,13 @@ class CloudVoice:
         self.layer, self.profile, self.learner = layer, profile, learner
         self.announce, self.respond = announce, respond
         self.context = context
+        # The session's current subject, by session id (set by the app): named in the URL for the vocabulary bias.
+        self.subject_of: Callable[[str], str | None] | None = None
+
+    def url(self, host: str, session_id: str) -> str:
+        """The endpoint's address for this session: the path, and the session's subject when it is a curriculum one."""
+        subject = self.subject_of(session_id) if self.subject_of is not None else None
+        return f"wss://{host}{PATH}" + (f"?subject={subject}" if subject in SUBJECTS else "")
 
     def effective(self) -> bool:
         """Switched on, covered by the subscription and consented for the open profile (ARC-11, PRV-05, D70). The
@@ -114,7 +124,7 @@ class CloudVoice:
         dial = (self.layer.connect or {}).get(host)
         try:
             socket = await connect(
-                f"wss://{host}{PATH}",
+                self.url(host, session_id),
                 additional_headers={"Authorization": "Bearer " + token},
                 create_connection=Pinned,
                 ssl=self.context or self.layer.context or tls_context(),

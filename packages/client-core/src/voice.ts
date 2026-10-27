@@ -86,9 +86,10 @@ const EMPTY: VoiceView = { connected: false, state: "idle", mode: "push_to_talk"
   student: "", tentative: "", tutor: "", words: [], playedMs: 0, captionItem: null, pointer: null, writing: null, pen: { target: null, since_ms: 0 } };
 const hex = (bytes: Uint8Array): string => [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
 
-/** The open chat a voice conversation lives in (VOC-53, D130): Ask anything on Home, or a study set's Chat with the
- * open source and its grant. With none the socket serves read-aloud and dictation only. */
-export type VoicePlace = { place: "ask" } | { place: "study"; source_id: string; revision: number; open: string };
+/** The open chat a voice conversation lives in (VOC-53, D130): Ask anything on Home, a study set's Chat with the
+ * open source and its grant, or the tutor screen (with Cloud voice on: the owner's choice for this entry, replacing
+ * D130 there). With none the socket serves read-aloud and dictation only. */
+export type VoicePlace = { place: "ask" } | { place: "tutor" } | { place: "study"; source_id: string; revision: number; open: string };
 
 export class VoiceController {
   private view: VoiceView = EMPTY;

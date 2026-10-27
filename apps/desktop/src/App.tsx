@@ -99,6 +99,9 @@ export interface AppRuntime {
 
 /** VOC-53, D130: the Ask anything place on Home (one value, so the voice socket hears it once). */
 const ASK_PLACE: VoicePlace = { place: "ask" };
+// The tutor screen's voice conversation, offered while Cloud voice is switched on (the owner's choice for this entry,
+// replacing D130 there): spoken turns go through the whole tutor turn, filler and accepted words only (JM-D6).
+const TUTOR_PLACE: VoicePlace = { place: "tutor" };
 
 /** The study set's Chat tab as the voice conversation's place: the open source with its grant, or none. */
 function StudyPlace({ controller, chat, children }: { controller: StudyWorkspaceController; chat: boolean; children: (place: VoicePlace | null) => ReactNode }) {
@@ -1020,7 +1023,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
           } } : {})}
           onStep={(action) => { void journeyStep(action); }} onSource={journeySource} onTopic={journeyTopic} onRetry={() => { void journey.load(); }} />;
   // Read-aloud and dictation everywhere; the voice conversation only where `place` names an open chat: Ask anything on
-  // Home or a study set's Chat tab (VOC-53, D130). The tutor, lessons and notes have no voice bar.
+  // Home, a study set's Chat tab (VOC-53, D130), or the tutor while Cloud voice is on. Lessons and notes have no bar.
+  const cloudVoiceOn = connectivity.features.some((f) => f.feature === "cloud_voice" && f.enabled);
   const withSpeech = (children: React.ReactNode, target = session, place: VoicePlace | null = null, onAnswer?: (answer: VoiceAnswer) => void) => target === null || target === "failed" ? <Opening failed={target === "failed"} /> :
     <SpeechTools key={`${target.sessionId}:${screen}`} profiles={profiles} sessionId={target.sessionId} launch={profiles.launch} holder={runtime.holder} voice={voiceOffer} automatic={screen === "tutor"} place={place} {...(onAnswer !== undefined ? { onAnswer } : {})}>{children}</SpeechTools>;
   const me = view.profiles.findIndex((p) => p.profile_id === active);
@@ -1258,7 +1262,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         onEnd={async () => { const ok = await runtime.sessionNotes.end(session.sessionId); if (ok) setScreen("notes"); return ok; }}
         {...(fromReport ? { back: { label: t("tutor.back_to_report"), onClick: () => setScreen("mock") }, note: t("mock.review_note") }
           : fromLesson ? { back: { label: t("journey.back_lesson"), onClick: () => { setLessonId(fromLesson); setScreen("lesson"); } } }
-          : fromPractice && practiceView.status === "ready" ? { back: { label: t("tutor.back_to_practice", { number: practiceView.number }), onClick: () => setScreen("practice") } } : {})} /></FollowUpProvider>, session);
+          : fromPractice && practiceView.status === "ready" ? { back: { label: t("tutor.back_to_practice", { number: practiceView.number }), onClick: () => setScreen("practice") } } : {})} /></FollowUpProvider>, session,
+      cloudVoiceOn ? TUTOR_PLACE : null);
   };
   // The place's one header, as every other place has: its name, then the switch between its two lists (and, in a
   // narrow window, the menu button ScreenHeader adds).

@@ -42,10 +42,43 @@ KEYWORD_CHARS = 30  # Meta's longest keyword
 CAPPED = "max session duration"  # the 1011 reason that asks for a new session, not a backoff
 
 
-def glossary_keywords() -> list[str]:
-    """The packaged keywords: the course glossary's terms, one per line (`voice_keywords.txt`)."""
+SUBJECTS = ("mathematics", "physics", "chemistry", "accounting")  # a session's subject, as the device names it
+DEMO = ("mathematics", "physics")  # the entry's demo subjects (SPEC §14): their terms fill Meta's 500 first
+
+
+def glossary_sections() -> dict[str, list[str]]:
+    """The packaged keywords by subject (`voice_keywords.txt`: a `[subject]` line, then that subject's glossary
+    terms, in glossary order)."""
     text = resources.files("cloud_gateway").joinpath("voice_keywords.txt").read_text(encoding="utf-8")
-    return [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
+    sections: dict[str, list[str]] = {}
+    current: list[str] | None = None
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            current = sections.setdefault(line[1:-1], [])
+        elif current is not None:
+            current.append(line)
+    return sections
+
+
+def glossary_keywords(subject: str | None = None) -> list[str]:
+    """The keywords in the order they fill Meta's 500: the session's subject when it is Mathematics or Physics, then
+    the other of the two; then the session's own subject if it is another; then Chemistry and terms of no subject;
+    Accounting last, so it is never first. Each term once (case-insensitive)."""
+    sections = glossary_sections()
+    order = [subject] if subject in DEMO else []
+    order += [s for s in DEMO if s not in order]
+    if subject in sections and subject not in order:
+        order.append(subject)
+    order += [s for s in ("chemistry", "other", "accounting") if s not in order]
+    order += [s for s in sections if s not in order]
+    words: dict[str, str] = {}
+    for section in order:
+        for word in sections.get(section, []):
+            words.setdefault(word.casefold(), word)
+    return list(words.values())
 
 
 def handshake(voice: MetaVoice, key: Secret, language: str, keywords: list[str]) -> dict[str, Any]:
@@ -207,14 +240,19 @@ class MetaRecognizer:
     def __init__(self, voice: MetaVoice, key: Secret, *, connect: Callable[..., Awaitable[Any]] | None = None,
                  clock: Callable[[], float] | None = None) -> None:  # fmt: skip
         self.voice, self.key = voice, key
-        keywords = voice.keywords if voice.keywords is not None else glossary_keywords()
-        # Meta refuses a keyword longer than 30 characters (measured 2026-10-27), so those are left out first.
-        fitting = [word for word in dict.fromkeys(keywords) if len(word) <= KEYWORD_CHARS]
-        self.keywords = fitting[: voice.keywords_max]
+        self.keywords = self.keywords_for(None)
         self._connect = connect
         self._clock = clock
         self.retry_at = 0.0  # no stream opens before this (a backoff after 1011 or 1013)
         self.retries = 0
+
+    def keywords_for(self, subject: str | None) -> list[str]:
+        """The handshake's keywords for a session in `subject`: `voice.keywords` if configured, else the glossary's,
+        its subject first (`glossary_keywords`). Meta refuses more than 500, or one longer than 30 characters
+        (measured 2026-10-27), so longer ones are left out and the list is capped at `keywords_max`."""
+        keywords = self.voice.keywords if self.voice.keywords is not None else glossary_keywords(subject)
+        fitting = [word for word in dict.fromkeys(keywords) if len(word) <= KEYWORD_CHARS]
+        return fitting[: self.voice.keywords_max]
 
     def minute_usd(self) -> float:
         return self.voice.hour_usd / 60
@@ -228,7 +266,7 @@ class MetaRecognizer:
         self.retry_at = self.clock() + RETRY_S[min(self.retries, len(RETRY_S) - 1)]
         self.retries += 1
 
-    async def open(self, language: str) -> MetaRecognition:
+    async def open(self, language: str, subject: str | None = None) -> MetaRecognition:
         wait = self.retry_at - self.clock()
         if wait > 0:
             await asyncio.sleep(wait)
@@ -243,7 +281,8 @@ class MetaRecognizer:
         except Exception:
             raise UpstreamError("network_unavailable", "recognition connect failed") from None
         try:
-            await socket.send(json.dumps(handshake(self.voice, self.key, language, self.keywords)))
+            keywords = self.keywords_for(subject)
+            await socket.send(json.dumps(handshake(self.voice, self.key, language, keywords)))
             reply = json.loads(await asyncio.wait_for(socket.recv(), self.voice.handshake_timeout_s))
         except Exception:
             code, reason = _closed(socket)

@@ -321,7 +321,10 @@ class VoiceBridge:
 
     def _rest(self, effects: Effects) -> None:
         hands_free = self.mode == "hands_free" or self.pressed
-        listening = self.ready and self.tutoring and not self.calm and hands_free
+        # A held dictation listens wherever it is (the tutor screen offers no conversation): reporting `idle` here
+        # would tell the client the dictation ended, and it would never send the release.
+        dictating = self.dictation_id is not None and self.pressed
+        listening = self.ready and not self.calm and ((self.tutoring and hands_free) or dictating)
         self._state("listening" if listening else "idle", effects)
 
     def offer_conversation(self, offered: bool) -> Effects:

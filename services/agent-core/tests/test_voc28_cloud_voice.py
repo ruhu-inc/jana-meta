@@ -172,12 +172,20 @@ async def in_ask_chat(sock: Socket, runtime: Any) -> None:
     await sock.send({"type": "mode", "mode": "hands_free"})
 
 
-async def talk(sock: Socket, runtime: Any) -> bytes:
+async def on_tutor_screen(sock: Socket, runtime: Any) -> None:
+    """The tutor screen's own conversation, offered with Cloud voice on (the owner's choice for this entry, replacing
+    D130 there): every spoken turn is a tutor turn, whatever the router would say."""
+    runtime.adapter.route = lambda _text: "ask"
+    await sock.send({"type": "place", "place": "tutor"})
+    await sock.send({"type": "mode", "mode": "hands_free"})
+
+
+async def talk(sock: Socket, runtime: Any, place: Any = None) -> bytes:
     """Hands-free speech, then the tutor's audio until the reply ends; playback is reported as fully heard."""
     async with asyncio.timeout(30):  # generous: the full suite runs shards in parallel
         while runtime._active is None or not runtime._active.bridge.ready:
             await asyncio.sleep(0.01)
-    await in_ask_chat(sock, runtime)
+    await (place or in_ask_chat)(sock, runtime)
     pcm = tone(500) + tone(2500, loud=False)
     for at in range(0, len(pcm), 4800):
         await sock.incoming.put({"type": "websocket.receive", "bytes": pcm[at : at + 4800]})
@@ -193,6 +201,37 @@ async def talk(sock: Socket, runtime: Any) -> bytes:
     response_id = runtime._active.bridge._response.response_id
     await sock.send({"type": "playback", "response_id": response_id, "played_ms": len(heard) // 48, "ended": True})
     return heard
+
+
+def test_voc28_the_tutor_screen_holds_a_spoken_tutor_turn(tmp_path):
+    """On the tutor screen with Cloud voice on, a spoken question gets the whole tutor turn spoken back: the engine
+    writes it, every gate runs, and only its accepted words reach the voice; nothing is shown as an Ask answer."""
+
+    async def scenario() -> None:
+        pki = make_pki(sorted(set(HOSTS.values())))
+        speech, order = Speech(), []
+        async with gateway(tmp_path, pki, speech, order) as (port, _):
+            online, learner = await device(tmp_path, port, pki)
+            core, sid, runtime, app, local, _ = await core_with_voice(tmp_path, online, learner, order)
+            sock = Socket(app, sid, profile=None)
+            try:
+                assert (await asyncio.wait_for(sock.outgoing.get(), 10))["type"] == "websocket.accept"
+                heard = await talk(sock, runtime, on_tutor_screen)
+                assert heard and not local
+                async with asyncio.timeout(5):
+                    while runtime.adapter.jobs:
+                        await asyncio.sleep(0.01)
+                state = core.sessions[sid].engine_state
+                assert state.transcript[-1]["content"] == SAFE and state.transcript[-1]["heard_text"] == SAFE
+                frames = [f["event"] for f in core._engine(core.sessions[sid]).events.frames]
+                assert not any(f["type"] == "voice.answer" for f in frames)  # a tutor turn, not an Ask answer
+            finally:
+                await sock.close()
+                await runtime.close()
+                await online.stop()
+        assert " ".join(speech.live.sentences + speech.tts.texts) == " ".join(SAFE.split())
+
+    asyncio.run(scenario())
 
 
 def voc28_egress_announced(tmp_path):
@@ -492,3 +531,15 @@ def test_bridge_holds_microphone_audio_while_the_endpoint_is_replaced():
     assert kinds == ["session.update", "input_audio_buffer.append", "input_audio_buffer.append"]
     assert [base64.b64decode(e["audio"]) for e in effects.upstream[1:]] == words
     assert bridge.ready
+
+
+def test_cloud_voice_names_the_session_subject_and_nothing_else():
+    """The endpoint is told the session's subject (it orders speech to text's vocabulary bias), and only a curriculum
+    subject: anything else leaves the address as it was."""
+    voice = CloudVoice(None, lambda: PROFILE, lambda: None, lambda *_: None, lambda _body: None)  # type: ignore[arg-type]
+    assert voice.url("voice.test", "ses_1") == "wss://voice.test/v1/voice/realtime"
+    subjects = {"ses_1": "physics", "ses_2": "mathematics", "ses_3": "Ada's notes"}
+    voice.subject_of = subjects.get
+    assert voice.url("voice.test", "ses_1") == "wss://voice.test/v1/voice/realtime?subject=physics"
+    assert voice.url("voice.test", "ses_2").endswith("?subject=mathematics")
+    assert voice.url("voice.test", "ses_3") == voice.url("voice.test", "ses_9") == "wss://voice.test/v1/voice/realtime"

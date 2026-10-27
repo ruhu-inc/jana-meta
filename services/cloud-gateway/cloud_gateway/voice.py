@@ -59,6 +59,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from cloud_gateway.auth import AuthError, Session
 from cloud_gateway.config import ModelSpec
 from cloud_gateway.providers.base import UpstreamError, Usage
+from cloud_gateway.providers.meta_speech import SUBJECTS
 from cloud_gateway.providers.speech import Heard, LiveSession, Recognition, SpeechStack
 
 FEATURE = "cloud_voice"
@@ -350,7 +351,8 @@ class Listener:
                 await self.c.fail("quota_exceeded")
                 return
             try:
-                stream = await asyncio.wait_for(recognizer.open(self.language), self.config.voice_connect_timeout_s)
+                stream = await asyncio.wait_for(recognizer.open(self.language, self.c.subject),
+                                                self.config.voice_connect_timeout_s)  # fmt: skip
             except (UpstreamError, TimeoutError) as failure:
                 self.c.service.release(hold)  # a stream that never opened bills nothing
                 self.failures += 1
@@ -499,6 +501,9 @@ class VoiceConnection:
         self.live_off = self.stack.live is None or self.gw.inference_budget is not None
         self.authorization = socket.headers.get("authorization")
         self.refused: int | None = None  # the close code when a turn's re-check refused the connection
+        # The session's subject, when the device named it (`?subject=`): it orders speech to text's vocabulary bias.
+        subject = socket.query_params.get("subject") if hasattr(socket, "query_params") else None
+        self.subject: str | None = subject if subject in SUBJECTS else None
         self.prewarm_s = 0.0
         # The adaptive idle timeout: the longest quiet stretch before the student spoke, times a factor.
         self.last_active = self.gw.clock()

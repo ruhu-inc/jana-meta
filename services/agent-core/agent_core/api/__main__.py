@@ -268,6 +268,13 @@ async def main(
             return await voice_reply(voice.adapter, body)
 
         cloud = runtime.prepare_cloud_voice(core._announce, respond)
+        if cloud is not None:  # the session's current subject orders speech to text's vocabulary bias
+
+            def subject_of(session_id: str) -> str | None:
+                entry = core.sessions.get(session_id)
+                return entry.engine_state.subject if entry is not None else None
+
+            cloud.subject_of = subject_of
 
         def online_voice() -> bool:
             return cloud is not None and cloud.ready()
@@ -286,6 +293,10 @@ async def main(
         if cloud is not None:
             voice.route = runtime.voice_route(cloud, link.connect, lambda: link.selected is not None)
             online.publish.append(voice_offered)  # the switch or the network changed (ARC-11)
+            # Cloud voice is ready only for an open profile with its consent and first-use answer: opening or closing
+            # one re-checks, so after a restart voice is offered at once, not at the next network change.
+            core.on_preferences.append(voice_offered)
+            core.on_profile_forgotten.append(voice_offered)
         core.pack_desk.speech, core.pack_desk.on_speech = link.store, link.rescan
         core.pack_desk.before_speech_remove = link.release
         core.closers.insert(1, link.close)

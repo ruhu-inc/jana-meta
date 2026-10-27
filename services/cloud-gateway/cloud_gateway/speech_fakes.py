@@ -96,6 +96,7 @@ class FakeRecognizer:
         self.opened_at: list[float] = []
         self.fail_open = False
         self.fail_on_begin = False
+        self.subjects: list[str | None] = []  # the session subject each stream was opened for
 
     def next_transcript(self) -> str:
         return self.transcripts.pop(0) if len(self.transcripts) > 1 else self.transcripts[0]
@@ -103,7 +104,8 @@ class FakeRecognizer:
     def minute_usd(self) -> float:
         return 0.016
 
-    async def open(self, language: str) -> FakeRecognition:
+    async def open(self, language: str, subject: str | None = None) -> FakeRecognition:
+        self.subjects.append(subject)
         if self.open_delay:
             await asyncio.sleep(self.open_delay)
         if self.fail_open:
