@@ -1,7 +1,42 @@
 {
   "version": 2,
-  "note": "The bundled recommendations file (MDL-28): the signed model pack carries its own copy, which wins; offline installs without one use this. D6 decided 2026-10-12: Gemma 4 12B for the high and mid hardware classes, Qwen3-VL 8B for the low class, on a provisional high-class bake-off; each class names the bake-off record that chose it, and none is recorded yet, so the release check refuses these assignments until the full EVL-15 record exists (MDL-27). Every model is 7B or larger (D58). Context per class is TABLE MDL-16a's (null: the model does not fit that class). Thinking is off by default on every class (router_thinking_budget; D6 condition). Sampling presets are the router configuration's role temperatures. Model ids are the ids the local runtime lists.",
+  "note": "The bundled recommendations file (MDL-28): the signed model pack carries its own copy, which wins; offline installs without one use this. D6 decided 2026-10-12: Gemma 4 12B for the high and mid hardware classes, Qwen3-VL 8B for the low class, on a provisional high-class bake-off; each class names the bake-off record that chose it, and none is recorded yet, so the release check refuses these assignments until the full EVL-15 record exists (MDL-27). Every model is 7B or larger (D58). Context per class is TABLE MDL-16a's (null: the model does not fit that class). Thinking is off by default on every class (router_thinking_budget; D6 condition). Sampling presets are the router configuration's role temperatures. Muse Glimmer 30B (JM-D11) leads the high class; it always reasons, so its thinking is budgeted per request rather than turned off. Model ids are the ids the local runtime lists.",
   "models": [
+    {
+      "model": "muse-glimmer-30b",
+      "family": "muse_glimmer",
+      "licence": "Apache-2.0",
+      "params_b": 30,
+      "status": "Meta's open-weights local model (JM-D11), high class only (32 GB+): official GGUF meta-models/Muse-Glimmer-30B-GGUF, Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf (16.8 GB), with its vision projector and DFlash draft",
+      "context_for_agents": {"low": null, "mid": null, "high": 16384},
+      "max_output": 8192,
+      "thinking": {"available": true, "default": "on"},
+      "sampling": {
+        "coach": {"temperature": 1.0, "top_p": 0.95, "top_k": 64},
+        "diagnoser": {"temperature": 1.0, "top_p": 0.95, "top_k": 64},
+        "solver": {"temperature": 1.0, "top_p": 0.95, "top_k": 64},
+        "checker": {"temperature": 1.0, "top_p": 0.95, "top_k": 64},
+        "reflector": {"temperature": 1.0, "top_p": 0.95, "top_k": 64}
+      },
+      "template_quirks": [
+        "always reasons: chat_template_kwargs.reasoning_strength (low, medium, high, xhigh; default high) sets how much, and it cannot be turned off",
+        "reasoning arrives in message.reasoning_content and shares the output budget with the reply",
+        "one tool call per turn"
+      ],
+      "feature_rejections": [],
+      "classes": {
+        "high": {"tiers": ["fast", "strong", "judge"], "bakeoff": null}
+      },
+      "capabilities": {
+        "tools": true,
+        "parallel_tools": false,
+        "vision": true,
+        "reasoning": "effort",
+        "reasoning_default": "low",
+        "max_output": 8192,
+        "family": "muse_glimmer"
+      }
+    },
     {
       "model": "qwen3-vl-8b",
       "family": "qwen3",

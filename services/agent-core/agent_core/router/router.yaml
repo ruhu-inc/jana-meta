@@ -1,22 +1,26 @@
 # Router configuration shipped with the agent core (validated against agents/router-config at load).
 # Local model ids are the D58 candidates, provisional until the M7 bake-off decides D6: every local model is 7B or
 # larger, and the fast tier leads with the 8B class the minimum laptop runs. An enabled, consented online tier prefers
-# Meta's Muse Spark through the gateway for every role (JM-D9); offline candidates remain available. Retry and backoff values
+# Meta's Muse Spark through the gateway for every role (JM-D9); offline, Muse Glimmer 30B leads the local candidates on
+# the high class (JM-D11), and the others remain for smaller machines. Retry and backoff values
 # must equal the configuration keys router_retry_same_model and router_backoff_* (test: router_yaml_matches_keys).
 version: 1
 tiers:
   fast:
+  - local:muse-glimmer-30b
   - local:qwen3-vl-8b
   - local:gemma-4-12b
   - cloud:primary/fast-model
   strong:
   - cloud:primary/strong-model
+  - local:muse-glimmer-30b
   - local:gemma-4-26b-a4b
   - local:qwen3-vl-30b
   - local:gemma-4-12b
   - local:qwen3-vl-8b
   judge:
   - cloud:primary/strong-model
+  - local:muse-glimmer-30b
   - local:qwen3-vl-8b
   - local:gemma-4-12b
 roles:
@@ -164,6 +168,8 @@ local:
     low: 1
     mid: 1
     high: 2
+  # 0 is the lowest reasoning the model allows: off where it can be turned off; Muse Glimmer always reasons, so it runs
+  # at reasoning_strength low (SPEC §7: ~150-250 tokens per call).
   thinking_budget:
     low: 0
     mid: 0
