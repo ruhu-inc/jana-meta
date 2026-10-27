@@ -1,0 +1,62 @@
+services/cloud-gateway/tests/test_m42_study.py
+  s_c811fae2ae1a5a::t_5ba555db539583 366
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 53,79,113,116,179,187,244,259,308,316,348,360,397,406,422,430,432,454,462,565,579,585,588,615,620,642,649,733,740-741,760,766,769,794,808,848,854,978,988,995,997,1007,1013,1042,1058,1066,1110,1131,1133,1169,1174,1223,1239,1274,1292,1422,1459,1511,1527,1530-1532
+  s_c811fae2ae1a5a::t_68ece507c0a9a9 82
+services/cloud-gateway/tests/test_m19_gw_keys.py
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 209
+  s_c811fae2ae1a5a::t_5edebd00fc8a68 138,142,144,146,152,154,156,214
+services/cloud-gateway/tests/test_m19_gw_conformance.py
+  s_c811fae2ae1a5a::t_79103227621393 174,176,184-187
+services/cloud-gateway/tests/test_m42_recordings.py
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 55,76
+services/cloud-gateway/tests/test_m24_operations.py
+  s_c811fae2ae1a5a::t_5ba555db539583 24,73-74,76,78,84,86-87,89,103-104,107
+services/cloud-gateway/tests/test_m19_gw_auth.py
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 26,41,104,156,160
+services/cloud-gateway/tests/test_m45a_ask.py
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 61,69,72,86,100,126,130,132
+services/cloud-gateway/tests/gateway_stubs.py
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 3-5,112,115,298,327
+services/cloud-gateway/tests/test_m19_gw_observability.py
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 109
+  s_c811fae2ae1a5a::t_5ba555db539583 119
+services/agent-core/tests/test_d133_study_online_e2e.py
+  s_c811fae2ae1a5a::t_611fd6f73b0127 2,74,82-84,91-95,100,106,109-111
+services/cloud-gateway/cloud_gateway/speech_fakes.py
+  s_c811fae2ae1a5a::t_c26ab3db4cc0f8 2,153
+services/cloud-gateway/tests/test_gateway_study_concept_map.py
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 103,120,133,162,170,178
+services/cloud-gateway/tests/test_gateway_voc28_cloud_voice.py
+  s_c811fae2ae1a5a::t_c26ab3db4cc0f8 38,358
+services/agent-core/tests/test_voc28_cloud_voice.py
+  s_c811fae2ae1a5a::t_611fd6f73b0127 70,77
+  s_c811fae2ae1a5a::t_c26ab3db4cc0f8 2-3,59,81-83
+  s_c811fae2ae1a5a::t_68ece507c0a9a9 241-242
+services/cloud-gateway/cloud_gateway/config.py
+  s_c811fae2ae1a5a::t_3b77412cc0e4b8 21
+services/cloud-gateway/tests/test_m19_gw_subscription.py
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 73,84
+services/cloud-gateway/cloud_gateway/study.py
+  s_c811fae2ae1a5a::t_79103227621393 484
+services/cloud-gateway/tests/test_m19_gw_guards.py
+  s_c811fae2ae1a5a::t_5ba555db539583 60-61,73,213,216,232
+  s_c811fae2ae1a5a::t_a2fbde05e0ae42 38,55,228,246
+services/cloud-gateway/tests/test_meta_speech.py
+  s_c811fae2ae1a5a::t_68ece507c0a9a9 513
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e9c89bf050b52455198161fb9b0794eea9e954a3",
+  "prompts": {},
+  "sessions": {
+    "s_c811fae2ae1a5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59bedd8f-e027-4722-b546-6260ce5ebe63",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
