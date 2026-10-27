@@ -1,230 +1,166 @@
-# Jana — Nebius × NVIDIA
+# Jana: an exam-prep tutor for adult learners, built on Meta's models
 
-An offline-first secondary school sciences tutor for Mathematics, Physics, Chemistry, Biology and Accounting.
-This monorepo contains the local tutor, checking worker, desktop shell, curriculum tooling and S2 implementations.
-Desktop installation controls and typed input are being integrated. This fork preserves the original implementation; passing development tests does not constitute release acceptance.
+Jana helps adults (18 and over) prepare for O level Mathematics and Physics, or refresh those foundations before
+university entry and first-year study. The content packs follow the Cambridge O level topic structure (5054, 5070),
+written in our own words, and cover the core O level topics that WAEC, NECO and GCE syllabuses share.
 
-## Layout
+Jana is a tutor, not a chatbot. It never just hands over an answer: it asks where the learner is stuck, works from
+their own steps and gives the next hint. Every number it says is checked by code first (a sandboxed maths and units
+worker), and anything it could not check is labelled as such. It reads photos of handwritten working and points at
+the exact line that went wrong, listens and speaks, researches a topic into a cited study pack, and keeps teaching
+when the internet goes away.
+
+## The Meta models and what each does
+
+| Model | Where it runs | What it does in Jana |
+| --- | --- | --- |
+| **Muse Spark** (`muse-spark-1.3`, Standard mode) | Meta Model API, through Jana's gateway | The tutor's reasoning: the input guard, the Diagnoser (what the learner is stuck on), the Solver and Checker (which call the maths tools) and the Coach (the next hint). Also reads photos of working and diagrams, writes and verifies Study aids, and runs the research agent: web search on the Responses API, every statement checked against the page it cites. |
+| **SAM 3.1** | Meta Model API, through the gateway | Turns the regions Muse Spark finds on a photo into exact outlines, so Jana can highlight the line of working where a sign changed on the learner's own photo, and drill the parts of a labelled diagram ("tap the condenser"), marking each tap against the outline. |
+| **Muse Voice Transcribe** | Meta Model API (realtime), through the gateway | Hears the learner in cloud voice conversation: endpointing, live partial transcripts and the curriculum's keywords as hints. Every spoken reply still comes from an accepted, checked tutor turn. |
+| **Muse Glimmer 30B** | On the laptop (open weights, Apache-2.0), with llama.cpp | The tutor offline: when the network drops, the same engine falls back to Glimmer within seconds, with its vision projector for photos and its DFlash draft model for faster generation. Machines with 32 GB of memory or more. |
+
+Muse Spark is used in Standard mode only; Contributor mode is never configured. Meta's Model API terms require every
+end user to be 18 or over, so Jana asks for a date of birth at sign-up and creates adult profiles only.
+
+Meta offers no text-to-speech model licensed for commercial use, so spoken replies and study-pack podcasts are read by
+Kokoro-82M (Apache-2.0).
+
+## How it fits together
+
+```
+ Learner (browser host or desktop app)
+   │ typed question, photo, voice
+   ▼
+ Jana engine (services/agent-core, on the device)
+   input guard → Diagnoser → Solver + tools → Checker → Coach → release gates
+   tool worker (sandboxed maths, units, marking) · perception worker (local privacy pass on every photo)
+   │                                                   │ network gone
+   ▼                                                   ▼
+ Jana gateway (services/cloud-gateway)               Muse Glimmer 30B on llama.cpp
+   holds the Meta key, enforces the spending budget,
+   minimises what leaves the device, logs no payloads
+   ├─ chat and tools     → Muse Spark (api.meta.ai/v1)
+   ├─ photos             → Muse Spark reads ⇄ SAM 3.1 outlines (/v1/vision/segment)
+   ├─ voice              → Muse Voice Transcribe hears · Kokoro reads accepted replies
+   └─ research agent     → Muse Spark on the Responses API with web search, then verification
+```
+
+Offline on any laptop, the signed content packs keep working: lessons, practice with code-checked marking and
+authored hints, mock papers and saved study packs.
+
+## Run it
+
+Requirements (tested on macOS on Apple silicon): Node 24 (`.nvmrc`) with pnpm 10, uv 0.10 (it installs Python
+3.12), Rust (`rust-toolchain.toml`) for the desktop shell, and Tesseract for the photo privacy pass
+(`brew install tesseract`).
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+```bash
+uv sync --locked --all-packages
+```
+
+### 1. Put your Meta Model API key in the keychain
+
+The gateway is the only process that reads the key; the app, its engine and the local model never see it. On macOS,
+add a generic password to the login keychain with service `jana-meta.cloud-gateway` and account `meta_api_key`:
+
+```bash
+security add-generic-password -s jana-meta.cloud-gateway -a meta_api_key -w
+```
+
+(It prompts for the key, so the key never appears in your shell history.) On Linux the gateway reads the Secret
+Service entry with the same service and account. A gateway-only `META_API_KEY` environment variable also works.
+
+### 2. Start the gateway
+
+```bash
+uv run python -m cloud_gateway --config services/cloud-gateway/deploy/meta-dev.toml --port 8081
+```
+
+`meta-dev.toml` is a local development configuration: a hard spending budget (per day, in total and an expiry date),
+a ledger kept in `~/.jana-meta/gateway` across restarts, and cloud voice switched on. Set its `[quotas]` to your own
+limits and dates before you use it with your own key; the ledger reserves each call's full cost before sending it and
+refuses once a limit is reached.
+
+### 3. Start the app
+
+```bash
+uv run python -m jana_tools.hackathon_dev
+```
+
+Open **http://127.0.0.1:5187/**. The first launch builds and verifies the Mathematics and Physics packs from
+`content/curriculum` and signs them with the published development key (a few minutes; later launches reuse them).
+Create a profile, then in Settings → Online features give your consent to the cloud tutor.
+
+To keep tutoring offline on a machine with 32 GB or more, download Muse Glimmer 30B's GGUF files from
+[meta-models/Muse-Glimmer-30B-GGUF](https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF)
+(`Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf`, and beside it `mmproj-Muse-Glimmer-30B-Q4_K_M.gguf` for photos and
+`dflash-Muse-Glimmer-30B-Q4_K_M.gguf` for speed), install llama.cpp, and pass the model:
+
+```bash
+uv run python -m jana_tools.hackathon_dev --local-model /path/to/Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf
+```
+
+The launcher checks each file against a pinned SHA-256, never downloads weights itself, and keeps the Meta key out of
+the model runtime's environment.
+
+Cloud voice reads replies with Kokoro-82M from a local speech pack (`apps/desktop/dev/speech_pack.py` assembles one;
+the gateway's `[voice_tts]` settings say where it is). Without it, typed tutoring, photos, Study and research all
+work.
+
+### The desktop app
+
+`apps/desktop` is the same interface in a Tauri shell, which supervises the engine and the local model and keeps the
+device's secrets in the OS keychain (service `app.jana-meta.desktop`). `pnpm --filter @jana/desktop dev` starts its
+interface in scripted development mode; scripted replies are never presented as Muse Spark or Glimmer output.
+
+## Tests
+
+```bash
+uv run pytest services
+```
+
+```bash
+pnpm test
+```
+
+```bash
+cargo test --locked --workspace
+```
+
+The tests need no network and no Meta key, so they spend no credit; the few live checks skip themselves unless asked
+for.
+
+## Repository layout
 
 | Path | Holds |
 | --- | --- |
-| `apps/desktop/` | Desktop app: `src-tauri/` (Rust shell) and `src/` (React entry) |
-| `apps/prototype-s0/` | The S0 prototype, frozen and excluded from releases |
-| `packages/` | `ui`, `client-core`, `renderers`, `contracts-ts` (generated), `i18n` |
-| `services/` | `agent-core`, `tool-worker`, `perception-worker`, `pack-builder` and, later, online services |
-| `content/`, `skills/` | Authored agent content, curriculum sources and skills |
-| `evals/` | Evaluation suites, fixtures and contract corpora |
-| `scripts/` | Repository tooling (`jana_tools`), git hooks and CI scripts |
-| `docs/` | Private specification; deliberately absent from this hackathon copy |
+| `apps/desktop/` | The app: `src/` (React), `src-tauri/` (Rust shell), `dev/` (the browser host's engine and pack seeding) |
+| `packages/` | `ui`, `client-core`, `renderers` (interactive science visuals), `i18n`, `contracts-ts` (generated) |
+| `services/agent-core/` | The tutoring engine: roles, release gates, learner model, Study, research and vision on the device |
+| `services/cloud-gateway/` | The gateway: Meta adapters (`providers/meta.py`, `meta_responses.py`, `sam.py`, `meta_speech.py`), budget, research agent |
+| `services/tool-worker/` | Sandboxed maths, units and marking that every number is checked with |
+| `services/perception-worker/`, `services/study-worker/` | Sandboxed photo privacy pass, and document extraction for Study |
+| `services/pack-builder/`, `services/signing-service/` | Build, verify and development-sign the content packs |
+| `content/`, `skills/` | The tutor's authored rules and prompts, and the curriculum sources of the packs |
+| `contracts/` | Public wire contracts; the TypeScript and Python bindings are generated from them |
+| `evals/` | Synthetic scenarios, recorded model fixtures and contract corpora the tests use |
 
-An unknown directory fails the layout check. Every package declares its layer in its manifest
-(`jana` in `package.json`, `[tool.jana]` in `pyproject.toml`, `[package.metadata.jana]` in `Cargo.toml`).
+## Licences
 
-## Hackathon copy
+- Code: [Apache License 2.0](LICENSE). See [NOTICE](NOTICE).
+- Content packs (`content/curriculum`): the owner's own licence (`LicenseRef-Own` in each record); not Apache-2.0.
+- Third-party components keep their own licences: [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES).
 
-This is a fresh source copy of Jana for the Nebius × NVIDIA Global AI Hackathon. The original desktop app,
-shared UI, themes, navigation, feature implementations and authored curriculum are preserved. The separate
-custom browser demo from the previous attempt is not part of this checkout. No upstream Git history, remote,
-secrets, private specification or internal deployment evidence was copied.
+## Built with
 
-The cloud provider now routes Coach and Diagnoser to NVIDIA Nemotron Super and Solver and Checker to
-Nemotron Ultra through Nebius Token Factory. The gateway alone reads `NEBIUS_API_KEY`; the UI does not receive it.
-The browser host reuses the original app and native runtime, profile isolation, consent gates, maths checking,
-Study workspace and signed curriculum packs. It sends authenticated requests to the owner's local gateway; no
-scripted provider is installed in this mode. Study generation is **online-only**. Saved material and study aids
-remain on the device. Cloud voice is not connected by this host.
-
-Saved source learning journeys connect a lesson, its flashcards and its quiz through durable profile-local links, including existing linked sets. Home and Study show the same next step, using actual card reviews, saved quiz drafts and submitted results. Completed quiz feedback survives reopening; questions needing another look lead back to the lesson before an explicit retry. Reading or revealing content never counts as a card review or O-level mastery. Journey links survive job cleanup and follow the source’s existing private-access, archive and erasure rules.
-
-The [25 October feature import](FEATURE_IMPORT.md) adds Jana's tutor pen, annotations, diagram manipulation,
-sketches and additional science visuals. Parent summaries and alerts are in Settings; retained session history is
-under Progress. Authoring analytics are in Studio. The browser development host exposes these imported screens
-at stage S3 while retaining this fork's provider and learning-journey integration.
-
-Ask anything can retrieve public evidence with Tavily Search and Extract, then use Nemotron to draft an answer
-and check its cited support. Each question requires the existing web-search confirmation. Study can also import
-a public HTTPS page after a separate confirmation; uploaded files and private notes are never sent to Tavily.
-The gateway alone reads `TAVILY_API_KEY`. Live browser checks verified Search and Extract using existing credits,
-followed by Nemotron generation and a separate support check. Web source rows open the original public pages.
-
-File extraction also uses the online Study gateway (up to 300 PDF pages). Study checks profile access before
-processing, keeps uploads locally while approval is pending, and links to the relevant consent settings. Returning
-from those settings restores the selected source; no consent or file transmission is automatic.
-
-Study processes whole documents in automatic 16,000-character batches and combines their checked results.
-Keeping all detected topics selected includes the whole document, including chapters beyond the heading preview.
-Verified batches are checkpointed so interrupted work can resume without repeating them; an unfinished batch
-cannot publish a partial aid as complete. Search answers and their sources appear above Home's message input.
-Summary, Notes and Podcast verification checks each claim independently; flashcards and quizzes check complete cards and
-question/key pairs, keeping only supported items while requiring safety approval for the entire batch.
-Model requests preserve all source text but use short citation references instead
-of repeating quoted passages. Citation links scroll directly to the highlighted excerpt, including in long PDFs.
-
-Live Study checks extracted all 69 pages of `notes.pdf`. A fresh whole-document Nemotron Ultra run with every
-topic included and no focus restriction completed six automatic batches (81/81 processing steps), producing
-24 supported summary points with 44 exact source citations. Every citation matched the stored PDF text;
-browser checks opened highlighted passages on pages 9, 37 and 68. Interrupted runs also resumed verified batches.
-Whole-document flashcards completed the same six batches and produced 10 cards with 24 exact citations.
-Browser checks revealed card backs, opened the cited PDF passage and saved a Good review, leaving nine cards due.
-Reviewed PDF extraction does not require a second confirmation to rate its saved cards; revision checks still apply.
-Two whole-document quizzes also completed 81/81 steps. The fresh default quiz has 10 questions (six choice,
-three fill-in blanks and one true/false) with 28 exact question/explanation citations, including late chapters.
-Browser checks submitted all 10 source-worded answers successfully, and separately exercised wrong-answer
-feedback, explanation reveal, skipped answers and PDF source links. The queue preserves deterministic marking
-for choices, multiple selections, true/false and literal blanks instead of replacing it with a fallback verdict.
-Blank answers keep normalized exact matches fast. Other wording uses the local NVIDIA marker on the question's
-cited passages, then a separate source-entailment check of the completed sentence without the first verdict or
-answer key. Both passes must agree before accepting or rejecting an answer; unavailable models, ambiguity or
-disagreement leave it unverifiable. The saved explanation keeps its original verified citations. These judgments
-retain the “Judged, not checked” label and never alter syllabus mastery. Live browser checks accepted “exponentially,”
-“the input depth,” “at an exponential rate” and “the matrix V” in the whole-PDF quiz, while rejecting a changed quantity,
-reversed negation and instructions embedded in a wrong answer. No extra Nebius inference was needed.
-Generated blanks prefer words and short concepts rather than formulas; semantic grading is not a deterministic
-mathematical proof. Saved quiz keys stay out of the pre-submission public view.
-Whole-document Notes and standard Podcast also completed six batches (81/81 steps). Notes produced 46 cited
-points with 65 exact citations; Podcast produced 20 spoken passages with 51 exact citations. The browser opened
-highlighted Notes and Podcast source passages on pages 66 and 65, and Podcast playback advanced through six
-passages before Stop returned it to Play. Verified Podcast batches resumed without being regenerated.
-Podcast Play/Stop supports NVIDIA Magpie neural narration through the gateway, using its free API-catalog
-prototype endpoint. Only the verified, verbalised script is sent in bounded passages; the browser never receives
-a provider key. NVIDIA’s trial can retain inputs and audio, as disclosed beside Play, so private-marked sources
-are refused and confidential material should not be used with the trial. Audio remains in memory in Jana.
-The live browser check on October 23 read the NVIDIA key from Keychain, played successive passages of the
-whole-PDF Podcast with Magpie, and verified Stop during playback and while a cloud response was pending.
-The subsequent uninterrupted UI run completed all 20 passages: 20 new NVIDIA responses completed, with no held
-speech requests or playback error, and Play returned automatically at the end. Loading gaps between passages
-remain; this establishes automatic completion, not gapless playback. Recorded inference stayed at $2.492448.
-Study now offers quick generation with separate settings, duplicate-set reuse, summary presets with source-page
-sections, and focused quiz navigation with native single-question feedback; the all-questions view remains available.
-Old failed and paused jobs stay in collapsed history below results, while a newly failed request stays actionable.
-Podcast buffers at most one passage ahead in memory and provides Pause/Resume, Jana's existing progress bar and
-an explicit finished state. Stop/profile changes discard late audio; playback and Resume recheck native access.
-The updated UI completed all 20 Podcast passages after Pause/Resume. A whole-PDF Cheat sheet completed 81/81 steps,
-with 30 points and 56 exact source citations. Recorded inference reached $2.601053; existing unresolved holds remain.
-Existing Voice controls are now available inside Accessibility settings
-when the core does not advertise a separate Voice section; later-stage builds keep the single original section.
-A public documentation page imported through Tavily produced two cited flashcards in an earlier live check.
-Some websites refuse extraction; use a file or pasted text when that happens. These checks do not establish that
-every aid, recording or YouTube URL works.
-
-The approved budget is **$25 total for ten days**: $15 inference and $10 reserved for hosting. The gateway's
-persistent ledger at `/tmp/jana-nebius-gateway` is retained across this reset. The supplied configuration limits
-inference to $4 per UTC day and $15 total, ending November 2, 2026 at 00:46:01 UTC. The daily ceiling allows
-live qualification within that same total; subsequent days share the remaining allowance. It reserves in-flight costs
-and retains failed or unresolved reservations. Do not delete or reset that ledger. Tavily has a separate durable
-limit of 50 existing credits per UTC day and 500 total, with the same expiry. It uses basic Search/Extract only,
-checks the account's available prepaid credits and refuses requests when paid overage is enabled or usage cannot
-be verified. It never purchases credits. Conversational cloud voice remains disabled. Podcast narration uses
-NVIDIA’s free prototyping access, with a separate durable limit of 20,000 characters/100 requests per UTC day
-and 100,000 characters/500 requests total through the same expiry. Unknown sends remain counted. It never
-provisions a GPU, purchases credits or selects a paid speech endpoint.
-
-For local development, save the provider keys once in **macOS Keychain Access**, in the login keychain:
-
-| Keychain Item Name (service) | Account Name | Password |
-| --- | --- | --- |
-| `jana-nebius.cloud-gateway` | `nebius_api_key` | Your Nebius Token Factory key |
-| `jana-nebius.cloud-gateway` | `tavily_api_key` | Your Tavily key |
-| `jana-nebius.cloud-gateway` | `nvidia_api_key` | Your free NVIDIA API catalog key |
-
-Choose **File → New Password Item** for each row and enter the actual key only in its Password field.
-This dedicated service name keeps the hackathon's credentials separate from other Jana installations.
-The gateway already reads these items directly; no key file, shell export or frontend change is needed.
-macOS may ask you to approve Keychain access when the gateway starts. Only approve a lookup you initiated.
-If that lookup times out, open that specific item’s Access Control and permit `/usr/bin/security` for the item;
-do not allow all applications. Restart the gateway after changing access. No key needs to be copied to chat.
-
-Start the gateway from any Terminal:
-
-```bash
-uv run --offline python -m cloud_gateway --config services/cloud-gateway/deploy/nebius-dev.toml --port 8081
-```
-
-Gateway-only environment variables remain supported as a temporary alternative. They take precedence over
-Keychain items. After saving the items, clear old exports in the gateway Terminal with
-`unset NEBIUS_API_KEY TAVILY_API_KEY NVIDIA_API_KEY` before starting it to use Keychain.
-
-For GCP deployment, use Google Secret Manager and mount the secrets into the gateway's configured
-`secrets_dir` as `nebius_api_key`, `tavily_api_key` and `nvidia_api_key`; the gateway supports this source already.
-See [Cloud Run secret configuration](https://docs.cloud.google.com/run/docs/configuring/services/secrets).
-
-Do not paste provider keys into chat, a repository file, browser storage or frontend configuration.
-Provider adapters load keys at startup, so replacing a key or changing gateway code still requires a restart;
-Keychain removes the need to re-enter keys or keep a particular Terminal session alive.
-
-Start the full app's live hackathon browser host in a second Terminal:
-
-```bash
-uv run --offline python -m jana_tools.hackathon_dev
-```
-
-Open **http://127.0.0.1:5187/**. The separate port avoids another app already using 5173 on the development machine.
-The first launch builds and verifies all four original signed subject packs; later launches reuse the cache.
-Create a synthetic demo profile. In Settings → Online features, give the cloud tutor consent. Accept its native
-first-use notice when asking a question. For online Study, an adult profile can give its own material consent in
-the same settings section. Minors retain the existing signed guardian-checkout requirement; the sponsor never
-invents that consent. A device switch alone does not grant a minor permission to transmit material.
-
-The host provisions only a native device public key for the sponsored development access. Its private device key
-stays outside the app data directory, under a private file keystore; the gateway issues short-lived device tokens.
-Normal restarts reuse that credential, respect the existing device limit and never revoke other credentials.
-Ending sponsored access is sticky. This local host is development-only; public deployment still needs a reviewed
-hosting and authentication configuration. No cloud deployment or video publication has been performed.
-
-### NVIDIA offline tutor
-
-The optional local tutor uses NVIDIA's official [Nemotron Nano 4B Q4_K_M](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF)
-with the installed llama.cpp runtime. The launcher verifies the published SHA-256 before loading, binds the runtime
-to literal loopback, creates a private per-launch key and connects it through the original native control protocol.
-Readiness requires a real tool-template generation. Local calls have no API cost. Its quality and performance still
-need broader evaluation; loading a model does not qualify a release.
-
-After downloading NVIDIA's official GGUF to a local path, use:
-
-```bash
-uv run --offline python -m jana_tools.hackathon_dev --local-model /path/to/NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
-```
-
-The expected SHA-256 is `be5d9a656a51922f24f1f09a759cebb694e1f5d9728bf0ef9f8c972c5a0b5ef2`.
-Model use is governed by the [NVIDIA Nemotron Open Model License](https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-nemotron-open-model-license/).
-The launcher never downloads weights automatically and removes both provider keys from its child environments.
-Cloud routes remain available after attaching the local model, subject to the original consent and budget gates.
-
-Plain `pnpm --filter @jana/desktop dev` retains the original scripted UI-development mode. Use the launcher above
-for the real hackathon integration. Scripted replies must never be presented as live NVIDIA inference.
-
-The [hackathon rules](https://nebiusglobalaihackathon.devpost.com/rules) allow substantially updated existing projects.
-The submission should distinguish the preserved Jana foundation from the NVIDIA, Nebius and hackathon work.
-
-## The specification
-
-The original private specification is excluded from this fork, together with its pin and internal run evidence.
-Never copy it into this repository. Public wire contracts and generation inputs live in `contracts/`; the unchanged
-UI token values live in `packages/ui/tokens.json`. CI regenerates the bindings and checks for drift. Governance-tool
-tests use explicitly synthetic fixtures in `scripts/tests/fixtures/governance`, while release gates refuse missing
-owner decisions and evidence. A passing test run does not grant release approval.
-The existing guard hooks can still prevent accidental inclusion:
-
-```bash
-git config core.hooksPath scripts/git-hooks
-```
-
-## Checks
-
-Run every installed toolchain without network access:
-
-```bash
-./scripts/ci/run-all-tests.sh
-uv run --frozen --offline python -m jana_tools codegen --check
-uv run --frozen --offline python -m jana_tools fixtures --check
-```
-
-Focused hackathon integration checks:
-
-```bash
-uv run pytest services/cloud-gateway/tests/test_nebius.py services/cloud-gateway/tests/test_inference_budget.py -q
-pnpm --filter @jana/desktop typecheck
-pnpm --filter @jana/desktop build
-```
-
-Acceptance tests are named after the specification's test names, for example `arc16_repository_layout_check`.
+- **Muse Spark**, **SAM 3.1** and **Muse Voice Transcribe** through the Meta Model API, under the
+  [Meta Model API Terms of Service](https://dev.meta.ai/legal/terms-of-service). No Meta model weights are part of
+  this repository.
+- **Muse Glimmer 30B**, open weights under the Apache License 2.0, downloaded by the user from Meta's release.
+- **meta-sam-parser** (Meta's decoder for SAM 3.1's masks), installed from PyPI under the SAM License; a copy of the
+  licence comes with the package.
+- **Kokoro-82M** (Apache-2.0) for speech, and **llama.cpp** (MIT) to run Glimmer.
