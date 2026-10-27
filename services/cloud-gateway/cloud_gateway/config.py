@@ -18,7 +18,7 @@ from cloud_gateway.operations import OperationsPolicy
 
 DEFAULTS = Path(__file__).with_name("defaults.toml")
 Environment = Literal["dev", "staging", "pilot", "production"]
-AdapterKind = Literal["gemini", "vertex", "openai_compat", "meta"]
+AdapterKind = Literal["openai_compat", "meta"]
 Effort = Literal["none", "low", "medium", "high"]
 
 

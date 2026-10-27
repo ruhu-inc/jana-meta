@@ -10,18 +10,14 @@ import httpx
 from cloud_gateway.config import GatewayConfig, ModelSpec, ProviderSpec, Sam
 from cloud_gateway.custody import Secret, SecretSource
 from cloud_gateway.providers.base import ProviderAdapter
-from cloud_gateway.providers.gemini import GeminiAdapter
 from cloud_gateway.providers.meta import MetaAdapter
 from cloud_gateway.providers.openai_compat import OpenAICompatAdapter
-from cloud_gateway.providers.vertex import VertexAdapter
 
 if TYPE_CHECKING:
     from cloud_gateway.inference_budget import InferenceBudget
 
 ClientFactory = Callable[[str, ProviderSpec | Sam], httpx.AsyncClient]
 ADAPTERS: dict[str, Callable[[ProviderSpec, Secret | None, httpx.AsyncClient], ProviderAdapter]] = {
-    "gemini": GeminiAdapter,
-    "vertex": VertexAdapter,
     "openai_compat": OpenAICompatAdapter,
     "meta": MetaAdapter,
 }

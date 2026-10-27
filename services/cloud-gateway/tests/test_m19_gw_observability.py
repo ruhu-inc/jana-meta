@@ -106,7 +106,7 @@ def obs22_gateway_stores_no_bodies(tmp_path: Path) -> None:
         device = devices[0]
         for _ in range(2):
             await device.login(h.client)
-            h.stubs["gemini"].say(Output(text="ok"))
+            h.stubs["meta"].say(Output(text="ok"))
             assert (
                 await device.chat(
                     h.client, {"model": "primary/fast-model", "messages": [{"role": "user", "content": "hi"}]}
@@ -116,7 +116,7 @@ def obs22_gateway_stores_no_bodies(tmp_path: Path) -> None:
 
     clock.now += 86400
     asyncio.run(next_day())
-    by_day = _rows(storage, "SELECT day, device_hash FROM requests WHERE model = 'gemini-stub-flash'")
+    by_day = _rows(storage, "SELECT day, device_hash FROM requests WHERE model = 'muse-stub-fast'")
     assert len(by_day) == 2 and by_day[0][0] != by_day[1][0] and by_day[0][1] != by_day[1][1]
     assert len(_rows(storage, "SELECT day FROM day_keys")) == 1  # earlier days' keys are gone
 

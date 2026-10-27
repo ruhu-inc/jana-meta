@@ -1,5 +1,5 @@
 """The online study tools (D133, STU-08) end to end: the device's real study queue and cloud client, the real cloud
-gateway over pinned TLS on loopback, and a scripted stand-in for the Gemini model behind it.
+gateway over pinned TLS on loopback, and a scripted stand-in for Muse Spark behind it.
 
 Nothing reaches the internet: the study host is dialled at 127.0.0.1, its certificate comes from a throwaway CA, and
 the model replies are scripted here. Each kind of study tool is made online, checked by the gateway's support pass,
@@ -71,7 +71,7 @@ def draft(request: dict[str, Any]) -> dict[str, Any]:
 
 
 class Model:
-    """The stand-in for Gemini: drafts each study tool and passes the gateway's support check."""
+    """The stand-in for Muse Spark: drafts each study tool and passes the gateway's support check."""
 
     def __init__(self) -> None:
         self.drafts: list[str] = []
@@ -79,35 +79,36 @@ class Model:
 
     def handler(self, request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content or b"{}")
-        texts = [p.get("text", "") for c in body.get("contents", []) for p in c.get("parts", [])]
-        if "supported" in json.dumps(body.get("generationConfig", {})):
+        users = [m["content"] for m in body.get("messages", []) if m["role"] == "user"]
+        texts = [c if isinstance(c, str) else "".join(p.get("text", "") for p in c) for c in users]
+        if "supported" in json.dumps(body.get("response_format", {})):
             self.checks += 1
             text = json.dumps({"supported": True, "answerable": True, "reason": "", "repairable": False})
         else:
             sent = json.loads(texts[0])  # the frozen request: request_id, kind and the passages
             self.drafts.append(sent["kind"])
             text = json.dumps(draft(sent))
-        usage = {"promptTokenCount": 400, "candidatesTokenCount": 120, "cachedContentTokenCount": 0,
-                 "totalTokenCount": 520}  # fmt: skip
-        return httpx.Response(200, json={"candidates": [{"content": {"role": "model", "parts": [{"text": text}]},
-                                                         "finishReason": "STOP"}],
-                                         "usageMetadata": usage, "modelVersion": "gem-flash"})  # fmt: skip
+        usage = {"prompt_tokens": 400, "completion_tokens": 120, "total_tokens": 520}
+        return httpx.Response(200, json={"id": "chatcmpl-stub", "object": "chat.completion", "created": 1,
+                                         "model": body["model"], "usage": usage,
+                                         "choices": [{"index": 0, "finish_reason": "stop",
+                                                      "message": {"role": "assistant", "content": text}}]})  # fmt: skip
 
 
 class _Secrets:
     def get(self, name: str) -> Secret | None:
-        return Secret("stub-gemini-key-not-real") if name == "gemini_api_key" else None
+        return Secret("stub-meta-key-not-real") if name == "meta_api_key" else None
 
 
 @contextlib.asynccontextmanager
 async def gateway(tmp: Path, pki: Any, model: Model):
     signer = dev_signer(Purpose.LICENCE)
-    models = {"fast-model": {"id": "gem-flash"}, "small-model": {"id": "gem-lite"}}
+    models = {"fast-model": {"id": "muse-stub-fast"}, "small-model": {"id": "muse-stub-small"}}
     config = load_config(None, environment="staging", audience_host=HOSTS["gateway"], storage_dir=tmp / "gateway",
                          entitlement_keys={signer.key_id: dev_trust().certificates[signer.key_id].public_key},
-                         slots={"primary": "gemini"}, study_model="primary/fast-model",
-                         providers={"gemini": {"adapter": "gemini", "base_url": "https://gemini.stub/v1beta",
-                                               "secret": "gemini_api_key", "models": models}},
+                         slots={"primary": "meta"}, study_model="primary/fast-model",
+                         providers={"meta": {"adapter": "meta", "base_url": "https://meta.stub/v1",
+                                             "secret": "meta_api_key", "models": models}},
                          prices={m["id"]: {"input": 1.0, "cached_input": 0.1, "output": 4.0} for m in models.values()},
                          quotas={"device_burst": 1000, "licence_burst": 10000})  # fmt: skip
     app = create_gateway(config, secrets=_Secrets(),  # type: ignore[arg-type]

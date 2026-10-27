@@ -481,7 +481,7 @@ def generation_schema(
         item, key = definitions["QuizItem"], definitions["QuizKey"]
         item.pop("allOf")
         flat_item = json.loads(json.dumps(item))
-        # Gemini does not implement if/then or non-empty string constraints. A choice item has
+        # Structured output does not implement if/then or non-empty string constraints. A choice item has
         # no unit field at all; otherwise it sometimes invents an empty unit_prompt and fails
         # canonical validation. Disjoint variants also prevent options on non-choice items.
         choice = json.loads(json.dumps(item))

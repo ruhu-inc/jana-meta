@@ -35,7 +35,7 @@ MARK = struct.pack("<8h", 1234, -4321, 2345, -5432, 3456, -6543, 4567, -7654)
 
 def setup(tmp_path: Path, stack: Any = None, **overrides: Any) -> tuple[TestClient, Device, Any, Path]:
     log = tmp_path / "logs" / "gateway.log"
-    prices = {**PRICES, "gemini-live-2.5-flash-native-audio": {"input": 0.5, "cached_input": 0.5, "output": 12.0}}
+    prices = {**PRICES, "live-voice-stub": {"input": 0.5, "cached_input": 0.5, "output": 12.0}}
     config = gateway_config(tmp_path / "store", providers=PROVIDERS, prices=prices, log_path=log,
                             **{"voice_enabled": True, **overrides})  # fmt: skip
     if stack is None:
@@ -355,7 +355,7 @@ def test_voc28_endpoint_zero_retention(tmp_path):
     with sqlite3.connect(GatewayStore(tmp_path / "store").path) as db:
         rows = db.execute("SELECT feature, model, status, cost_usd FROM requests").fetchall()
     models = {model for feature, model, status, _ in rows if feature == "cloud_voice" and status == 200}
-    assert {"muse-voice-transcribe-1.0", "gemini-live-2.5-flash-native-audio", "kokoro-82m/af_heart"} <= models
+    assert {"muse-voice-transcribe-1.0", "live-voice-stub", "kokoro-82m/af_heart"} <= models
     assert all(cost > 0 for _, model, _, cost in rows if model == "muse-voice-transcribe-1.0")
     assert all(cost == 0 for _, model, _, cost in rows if model == "kokoro-82m/af_heart")
 

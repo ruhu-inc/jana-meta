@@ -23,7 +23,7 @@ def sec21_revocation(tmp_path: Path) -> None:
         h = harness(gateway_config(tmp_path))
         device = Device()
         await device.login(h.client)
-        h.stubs["gemini"].say(Output(text="Hi."))
+        h.stubs["meta"].say(Output(text="Hi."))
         assert (await device.chat(h.client, CHAT)).status_code == 200
         spare = (await device.challenge(h.client)).json()["nonce"]  # a challenge issued before revocation
 
@@ -38,7 +38,7 @@ def sec21_revocation(tmp_path: Path) -> None:
         assert refused.status_code == 401 and classify_http(401, refused.json()) == "auth"
         assert (await device.challenge(h.client)).status_code == 401
         assert (await device.exchange(h.client, spare)).status_code == 401
-        assert len(h.stubs["gemini"].seen) == 1  # nothing reached the provider after revocation
+        assert len(h.stubs["meta"].seen) == 1  # nothing reached the provider after revocation
 
     asyncio.run(main())
 
@@ -101,7 +101,7 @@ def test_access_token_expires(tmp_path: Path) -> None:
         h = harness(gateway_config(tmp_path), clock)
         device = Device()
         await device.login(h.client)
-        h.stubs["gemini"].say(Output(text="a"), Output(text="b"))
+        h.stubs["meta"].say(Output(text="a"), Output(text="b"))
         assert (await device.chat(h.client, CHAT)).status_code == 200
         clock.now += h.config.access_token_ttl_s + 1
         assert (await device.chat(h.client, CHAT)).status_code == 401
@@ -153,11 +153,11 @@ def test_ping_and_status(tmp_path: Path) -> None:
         device = Device()
         await device.login(h.client)
         for _ in range(6):
-            h.stubs["gemini"].say(Output(error=(500, {"error": {"message": "boom"}})))
+            h.stubs["meta"].say(Output(error=(500, {"error": {"message": "boom"}})))
             await device.chat(h.client, CHAT)
         assert (await h.client.get("/v1/status")).json() == {"status": "outage"}
         for _ in range(10):
-            h.stubs["gemini"].say(Output(text="fine"))
+            h.stubs["meta"].say(Output(text="fine"))
             await device.chat(h.client, CHAT)
         assert (await h.client.get("/v1/status")).json() == {"status": "degraded"}
 

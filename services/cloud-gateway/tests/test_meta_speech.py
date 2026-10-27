@@ -510,7 +510,7 @@ def test_default_stack_is_voice_transcribe_and_kokoro(tmp_path: Path) -> None:
     assert isinstance(stack.recognizer, MetaRecognizer) and stack.live is None
     assert isinstance(stack.tts, KokoroSynthesizer) and stack.tts.voice == "kokoro-82m/af_heart"
     with pytest.raises(ImportError):
-        import cloud_gateway.providers.google_speech
+        import cloud_gateway.providers.google_speech  # noqa: F401 -- JM-D14: no Google voice remains
     stack = create_app(
         gateway_config(tmp_path / "nokey", voice_enabled=True), secrets=FakeSecrets({})
     ).state.voice.stack

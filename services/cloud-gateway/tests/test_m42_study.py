@@ -50,7 +50,7 @@ def test_passage_references_preserve_decomposed_unicode_and_still_require_suppor
                 "keys": [{"item_id": "q1", "answer": "a", "explanation": claim, "marking": "judged"}],
             }
         for attempt, supported in [(1, True), (2, False)]:
-            h.stubs["gemini"].say(
+            h.stubs["meta"].say(
                 Output(text=json.dumps(draft)),
                 Output(text=json.dumps({"supported": supported, "reason": "EPHEMERAL verifier reason"})),
             )
@@ -76,12 +76,10 @@ def test_passage_references_preserve_decomposed_unicode_and_still_require_suppor
                 if kind == "flashcards":
                     assert result["flashcards"][0]["front"]["citations"] == [citation]
                     assert result["flashcards"][0]["back"]["citations"] == [citation]
-                sent = h.stubs["gemini"].seen[0].user_texts[0]
+                sent = h.stubs["meta"].seen[0].user_texts[0]
                 assert "🧪" in sent and "e\u0301" in sent and "\\u0301" not in sent
                 citation_schema = (
-                    h.stubs["gemini"]
-                    .seen[0]
-                    .schema["properties"]["claims"]["items"]["properties"]["citations"]["items"]
+                    h.stubs["meta"].seen[0].schema["properties"]["claims"]["items"]["properties"]["citations"]["items"]
                 )
                 assert citation_schema["properties"]["passage_id"]["enum"] == ["p0"]
                 await h.client.delete("/v1/study/requests/" + JID, headers=device.headers())
@@ -112,10 +110,10 @@ def test_invented_or_mixed_passage_reference_is_withheld_before_support(tmp_path
         device = Device()
         await device.login(h.client)
         draft = {"request_id": JID, "kind": "summary", "claims": [{"text": "A claim", "citations": [reference]}]}
-        h.stubs["gemini"].say(Output(text=json.dumps(draft)))
+        h.stubs["meta"].say(Output(text=json.dumps(draft)))
         response = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert response.status_code == 422
-        assert len(h.stubs["gemini"].seen) == 1
+        assert len(h.stubs["meta"].seen) == 1
         assert not h.client._transport.app.state.study.buffers
         assert h.client._transport.app.state.gateway.store._db.execute("SELECT outcome FROM requests").fetchone() == (
             "citation_reference",
@@ -178,7 +176,7 @@ def test_prose_aids_keep_only_individually_supported_claims_and_require_safety(
             "answerable": answerable,
             "repairable": False,
         }
-        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text=json.dumps(verdict)))
+        h.stubs["meta"].say(Output(text=json.dumps(draft)), Output(text=json.dumps(verdict)))
         result = await h.client.post("/v1/study/process", json={**payload(), "kind": kind}, headers=device.headers())
         assert result.status_code == (200 if accepted and answerable else 422), result.text
         if accepted and answerable:
@@ -186,7 +184,7 @@ def test_prose_aids_keep_only_individually_supported_claims_and_require_safety(
             assert result.json()["claims"][0]["citations"][0]["quote"] == TEXT
         else:
             assert "claims" not in result.json()
-        assert len(h.stubs["gemini"].seen) == 2
+        assert len(h.stubs["meta"].seen) == 2
 
     asyncio.run(run())
 
@@ -243,7 +241,7 @@ def test_cards_and_quiz_keep_only_whole_verified_items_with_matching_keys(tmp_pa
                     {"item_id": "q1", "answer": "true", "explanation": fact(TEXT), "marking": "judged"},
                 ],
             }
-        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text=json.dumps(verdict)))
+        h.stubs["meta"].say(Output(text=json.dumps(draft)), Output(text=json.dumps(verdict)))
         response = await h.client.post(
             "/v1/study/process", json={**payload(), "kind": kind, "count": 2}, headers=device.headers()
         )
@@ -258,7 +256,7 @@ def test_cards_and_quiz_keep_only_whole_verified_items_with_matching_keys(tmp_pa
                 assert [(k["item_id"], k["answer"]) for k in result["quiz"]["keys"]] == [("q1", "true")]
         else:
             assert "claims" not in response.json()
-        assert len(h.stubs["gemini"].seen) == 2
+        assert len(h.stubs["meta"].seen) == 2
 
     asyncio.run(run())
 
@@ -307,7 +305,7 @@ def test_flashcards_withhold_unsupported_accompanying_claim_even_when_cards_are_
             (2, True, r"The source gives \(v = \Delta x/\Delta t = 2.5\,\mathrm{m/s}\)."),
         ]:
             draft = {"request_id": JID, "kind": "flashcards", "claims": [claim(wording)], "flashcards": cards}
-            h.stubs["gemini"].say(
+            h.stubs["meta"].say(
                 Output(text=json.dumps(draft)),
                 Output(text=json.dumps({"supported": supported, "answerable": True})),
             )
@@ -315,7 +313,7 @@ def test_flashcards_withhold_unsupported_accompanying_claim_even_when_cards_are_
                 "/v1/study/process", json=body, headers={**device.headers(), "x-study-attempt": str(attempt)}
             )
             assert result.status_code == (200 if supported else 422)
-            assert len(h.stubs["gemini"].seen) == attempt * 2  # Never retry or drop an unsupported claim silently.
+            assert len(h.stubs["meta"].seen) == attempt * 2  # Never retry or drop an unsupported claim silently.
             if supported:
                 accepted = result.json()
                 assert accepted["claims"][0]["text"] == wording
@@ -347,7 +345,7 @@ def test_known_repairable_rejection_gets_one_reverified_draft_and_one_combined_c
             "claims": [{"text": "A claim", "citations": [{"passage_id": "p0"}]}],
         }
         feedback = "EPHEMERAL revision: use the source's cafe\u0301 notation without an invented definition."
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)),
             Output(text=json.dumps({"supported": False, "answerable": True, "repairable": True, "reason": feedback})),
             Output(text=json.dumps(draft)),
@@ -359,13 +357,13 @@ def test_known_repairable_rejection_gets_one_reverified_draft_and_one_combined_c
         )
         result = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert result.status_code == (200 if revised_supported else 422)
-        seen = h.stubs["gemini"].seen
+        seen = h.stubs["meta"].seen
         assert len(seen) == 4
         first, second = [json.loads(seen[i].user_texts[0]) for i in (0, 2)]
         assert second == {**first, "revision_feedback": feedback}
         assert "e\u0301" in seen[2].user_texts[0] and "\\u0301" not in seen[2].user_texts[0]
         store = h.client._transport.app.state.gateway.store
-        actual = cost_usd(h.client._transport.app.state.gateway.config.prices["gemini-stub-flash"], Usage(160, 48, 32))
+        actual = cost_usd(h.client._transport.app.state.gateway.config.prices["muse-stub-fast"], Usage(160, 48, 32))
         assert store._db.execute("SELECT state,actual_usd,reserved_usd FROM study_receipts").fetchall() == [
             ("completed" if revised_supported else "failed", actual, 0.0)
         ]
@@ -396,7 +394,7 @@ def test_missing_answer_or_non_repairable_refusal_never_generates_another_draft(
             "kind": "chat",
             "claims": [{"text": "A claim", "citations": [{"passage_id": "p0"}]}],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)),
             Output(
                 text=json.dumps(
@@ -405,7 +403,7 @@ def test_missing_answer_or_non_repairable_refusal_never_generates_another_draft(
             ),
         )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
-        assert result.status_code == 422 and len(h.stubs["gemini"].seen) == 2
+        assert result.status_code == 422 and len(h.stubs["meta"].seen) == 2
         assert not h.client._transport.app.state.study.buffers
 
     asyncio.run(run())
@@ -421,7 +419,7 @@ def test_unknown_provider_outcome_during_revision_stays_held_and_is_not_resent(t
             "kind": "summary",
             "claims": [{"text": "A claim", "citations": [{"passage_id": "p0"}]}],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)),
             Output(
                 text=json.dumps({"supported": False, "answerable": True, "repairable": True, "reason": "Fix wording"})
@@ -429,9 +427,9 @@ def test_unknown_provider_outcome_during_revision_stays_held_and_is_not_resent(t
             Output(error=(503, {"error": {"status": "UNAVAILABLE", "message": "unknown usage"}})),
         )
         result = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
-        assert result.status_code == 502 and len(h.stubs["gemini"].seen) == 3
+        assert result.status_code == 502 and len(h.stubs["meta"].seen) == 3
         again = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
-        assert again.status_code == 409 and len(h.stubs["gemini"].seen) == 3
+        assert again.status_code == 409 and len(h.stubs["meta"].seen) == 3
         state, actual, held = h.client._transport.app.state.gateway.store._db.execute(
             "SELECT state,actual_usd,reserved_usd FROM study_receipts"
         ).fetchone()
@@ -453,7 +451,7 @@ def test_revised_draft_must_repeat_json_and_citation_validation_before_verificat
             "claims": [{"text": "A claim", "citations": [{"passage_id": "p0"}]}],
         }
         revised = json.dumps(draft).replace('"p0"', '"p999"') if not malformed else '{"claims":'
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)),
             Output(
                 text=json.dumps({"supported": False, "answerable": True, "repairable": True, "reason": "Fix wording"})
@@ -461,7 +459,7 @@ def test_revised_draft_must_repeat_json_and_citation_validation_before_verificat
             Output(text=revised),
         )
         result = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
-        assert result.status_code == 422 and len(h.stubs["gemini"].seen) == 3
+        assert result.status_code == 422 and len(h.stubs["meta"].seen) == 3
         state, held = h.client._transport.app.state.gateway.store._db.execute(
             "SELECT state,reserved_usd FROM study_receipts"
         ).fetchone()
@@ -564,7 +562,7 @@ def test_motion_chat_preserves_conditional_source_report_without_inventing_runne
             "means zero acceleration."
         )
         conditional = "The source states that constant speed in a straight line means zero acceleration."
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft(wrong if unconditional else conditional))),
             Output(
                 text=json.dumps(
@@ -578,16 +576,16 @@ def test_motion_chat_preserves_conditional_source_report_without_inventing_runne
             ),
         )
         if not actual_value:
-            h.stubs["gemini"].say(
+            h.stubs["meta"].say(
                 Output(text=json.dumps(draft(conditional))),
                 Output(text=json.dumps({"supported": True, "answerable": True, "repairable": False})),
             )
         response = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert response.status_code == (422 if actual_value else 200)
-        assert len(h.stubs["gemini"].seen) == (2 if actual_value else 4)
+        assert len(h.stubs["meta"].seen) == (2 if actual_value else 4)
         if not actual_value:
             assert response.json()["claims"][1]["text"] == conditional
-        for sent in h.stubs["gemini"].seen[::2]:
+        for sent in h.stubs["meta"].seen[::2]:
             assert sent.schema["properties"]["claims"]["items"]["properties"]["citations"]["items"]["properties"][
                 "passage_id"
             ]["enum"] == ["p0"]
@@ -614,12 +612,12 @@ def test_chat_requires_answerable_even_when_an_unrelated_fact_is_supported(tmp_p
                 }
             ],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)), Output(text=json.dumps({"supported": supported, "answerable": answerable}))
         )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert result.status_code == 422 and result.json()["error"]["code"] == "insufficient_evidence"
-        assert "author's year of birth" in json.dumps(h.stubs["gemini"].seen[1].user_texts)
+        assert "author's year of birth" in json.dumps(h.stubs["meta"].seen[1].user_texts)
         assert not h.client._transport.app.state.study.buffers
 
     asyncio.run(run())
@@ -641,14 +639,14 @@ def test_math_format_gets_one_bounded_retry_before_independent_support(tmp_path,
                 "claims": [{"text": text, "citations": [{"passage_id": "p0"}]}],
             }
 
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft("x_i=2"))),
             Output(text=json.dumps(draft(r"\(x_i=2\)" if valid_second_draft else "x_i=2"))),
             *([Output(text='{"supported":true}')] if valid_second_draft else []),
         )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert result.status_code == (200 if valid_second_draft else 422), result.text
-        assert len(h.stubs["gemini"].seen) == (3 if valid_second_draft else 2)
+        assert len(h.stubs["meta"].seen) == (3 if valid_second_draft else 2)
         if valid_second_draft:
             assert result.json()["claims"][0]["text"] == r"\(x_i=2\)"
             assert result.json()["claims"][0]["citations"][0]["quote"] == "x_i=2"
@@ -732,15 +730,15 @@ def test_retained_formatted_points_still_require_independent_source_verification
                 {"text": TEXT, "citations": [{"passage_id": "p0"}]},
             ],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)),
             Output(text=json.dumps(draft)),
             Output(text=json.dumps({"supported": supported})),
         )
         response = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert response.status_code == (200 if supported else 422), response.text
-        assert len(h.stubs["gemini"].seen) == 3
-        verification = json.loads(h.stubs["gemini"].seen[2].user_texts[0])
+        assert len(h.stubs["meta"].seen) == 3
+        verification = json.loads(h.stubs["meta"].seen[2].user_texts[0])
         assert [c["text"] for c in verification["draft"]["claims"]] == [TEXT]
         if supported:
             assert [c["text"] for c in response.json()["claims"]] == [TEXT]
@@ -759,16 +757,16 @@ def test_teaching_chat_is_one_ordered_lesson_with_original_evidence(tmp_path):
             "kind": "chat",
             "claims": [{"text": "Enzymes are biological catalysts.", "citations": [{"passage_id": "p0"}]}],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)),
             Output(text=json.dumps({"supported": True, "answerable": True})),
         )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert result.status_code == 200, result.text
-        system = h.stubs["gemini"].seen[0].system
+        system = h.stubs["meta"].seen[0].system
         assert "one coherent response" in system and "earliest substantive learning concept" in system
         assert "example already present" in system and "Do not restart" in system
-        assert len(h.stubs["gemini"].seen) == 2  # final answer still has independent support verification
+        assert len(h.stubs["meta"].seen) == 2  # final answer still has independent support verification
         citation = result.json()["claims"][0]["citations"][0]
         assert citation["chunk_id"] == CID and citation["quote"] == TEXT
 
@@ -793,7 +791,7 @@ def test_lesson_followup_context_reaches_both_models_without_becoming_evidence(t
             "kind": "chat",
             "claims": [{"text": "Enzymes are catalysts.", "citations": [{"passage_id": "p0"}]}],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)),
             Output(
                 text=json.dumps(
@@ -807,7 +805,7 @@ def test_lesson_followup_context_reaches_both_models_without_becoming_evidence(t
         )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert result.status_code == (200 if supported else 422), result.text
-        calls = h.stubs["gemini"].seen
+        calls = h.stubs["meta"].seen
         assert previous in json.dumps(calls[0].user_texts)
         assert previous in json.dumps(calls[1].user_texts)
         assert "not factual evidence" in calls[0].system
@@ -847,13 +845,13 @@ def test_processing_support_once_cleanup_and_no_body_storage(tmp_path):
                 }
             ],
         }
-        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
+        h.stubs["meta"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
         result = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert result.status_code == 200, result.text
         assert {k: v for k, v in result.json().items() if k != "usage"} == draft
         again = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert again.status_code == 200 and again.json() == result.json()
-        assert len(h.stubs["gemini"].seen) == 2
+        assert len(h.stubs["meta"].seen) == 2
         changed = await h.client.post(
             "/v1/study/process", json={**payload(), "output_locale": "fr"}, headers=device.headers()
         )
@@ -977,7 +975,7 @@ def test_draft_unicode_offsets_bind_only_to_exact_unique_quote_and_settle_once(t
             "kind": "summary",
             "claims": [{"text": "DNA stores information.", "citations": [citation]}],
         }
-        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
+        h.stubs["meta"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
         reply = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert reply.status_code == 200, reply.text
         assert reply.json()["claims"][0]["citations"][0] == {**citation, "start": 2, "end": 5}
@@ -987,16 +985,16 @@ def test_draft_unicode_offsets_bind_only_to_exact_unique_quote_and_settle_once(t
         assert store._db.execute("SELECT count(*) FROM requests WHERE feature='study_materials'").fetchone()[0] == 1
         await h.client.delete("/v1/study/requests/" + JID, headers=device.headers())
         # An explicit higher attempt is a new send; the erased attempt itself cannot replay.
-        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
+        h.stubs["meta"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
         assert (
             await h.client.post("/v1/study/process", json=body, headers={**device.headers(), "x-study-attempt": "2"})
         ).status_code == 200
         second = {**body, "request_id": "stj_" + "3" * 26}
         second["chunks"] = [{**body["chunks"][0], "text": "DNA DNA", "sha256": hashlib.sha256(b"DNA DNA").hexdigest()}]
         ambiguous = {**draft, "request_id": second["request_id"]}
-        h.stubs["gemini"].say(Output(text=json.dumps(ambiguous)))
+        h.stubs["meta"].say(Output(text=json.dumps(ambiguous)))
         assert (await h.client.post("/v1/study/process", json=second, headers=device.headers())).status_code == 422
-        assert len(h.stubs["gemini"].seen) == 5  # no support/model retry for an ambiguous quote.
+        assert len(h.stubs["meta"].seen) == 5  # no support/model retry for an ambiguous quote.
 
     asyncio.run(run())
 
@@ -1006,13 +1004,13 @@ def test_unknown_provider_usage_retains_reservation_and_prevents_automatic_resen
         h = harness(gateway_config(tmp_path))
         device = Device()
         await device.login(h.client)
-        h.stubs["gemini"].say(Output(error=(503, {"error": {"message": "synthetic unavailable"}})))
+        h.stubs["meta"].say(Output(error=(503, {"error": {"message": "synthetic unavailable"}})))
         assert (await h.client.post("/v1/study/process", json=payload(), headers=device.headers())).status_code == 502
         assert (await h.client.post("/v1/study/process", json=payload(), headers=device.headers())).status_code == 409
         store = h.client._transport.app.state.gateway.store
         row = store._db.execute("SELECT state,reserved_usd,actual_usd FROM study_receipts").fetchone()
         assert row[0] == "reserved" and row[1] > 0 and row[2] == 0
-        assert len(h.stubs["gemini"].seen) == 1
+        assert len(h.stubs["meta"].seen) == 1
         h.clock.now += 31 * 86400
         h.client._transport.app.state.study.sweep()
         assert store._db.execute("SELECT state FROM study_receipts").fetchone()[0] == "reserved"
@@ -1041,7 +1039,7 @@ def test_token_limit_completion_is_withheld_even_when_json_is_parseable(tmp_path
 
         monkeypatch.setattr(adapter, "complete", limited)
         draft = {"request_id": JID, "kind": "summary", "claims": [{"text": TEXT, "citations": [{"passage_id": "p0"}]}]}
-        h.stubs["gemini"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
+        h.stubs["meta"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
         result = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert result.status_code == 503 and result.json()["error"]["code"] == "model_unavailable"
         assert calls == 2
@@ -1057,7 +1055,7 @@ def test_truncated_model_json_is_withheld_and_known_usage_settled(tmp_path):
         h = harness(gateway_config(tmp_path))
         device = Device()
         await device.login(h.client)
-        h.stubs["gemini"].say(Output(text='{"claims": ['))
+        h.stubs["meta"].say(Output(text='{"claims": ['))
         result = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert result.status_code == 422 and result.json()["error"]["code"] == "insufficient_evidence"
         row = h.client._transport.app.state.gateway.store._db.execute(
@@ -1065,7 +1063,7 @@ def test_truncated_model_json_is_withheld_and_known_usage_settled(tmp_path):
         ).fetchone()
         assert row[0] == "failed" and row[1] == 0 and row[2] > 0
         assert not h.client._transport.app.state.study.buffers
-        assert len(h.stubs["gemini"].seen) == 1
+        assert len(h.stubs["meta"].seen) == 1
 
     asyncio.run(run())
 
@@ -1109,7 +1107,7 @@ def test_observed_output_limit_retries_one_fresh_draft_and_still_requires_suppor
                 ],
                 "keys": [{"item_id": "q1", "answer": "a", "explanation": claim, "marking": "judged"}],
             }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text='{"claims":[{"text":"TRUNCATED DRAFT MUST NEVER APPEAR"}]}'),
             Output(text=json.dumps(draft)),
             Output(
@@ -1130,9 +1128,9 @@ def test_observed_output_limit_retries_one_fresh_draft_and_still_requires_suppor
         assert result.status_code == (200 if supported else 422), result.text
         assert calls == 3  # bounded fresh draft, then an independent verification
         assert "TRUNCATED DRAFT" not in result.text
-        assert all("TRUNCATED DRAFT" not in text for text in h.stubs["gemini"].seen[1].user_texts)
+        assert all("TRUNCATED DRAFT" not in text for text in h.stubs["meta"].seen[1].user_texts)
         if kind == "quiz":
-            retry = json.loads(h.stubs["gemini"].seen[1].user_texts[0])
+            retry = json.loads(h.stubs["meta"].seen[1].user_texts[0])
             assert retry["count"] == 1 and retry["settings"]["question_types"] == ["choice"]
             assert retry["passages"][0]["quote"] == TEXT
         if supported:
@@ -1168,12 +1166,12 @@ def test_quiz_coaching_verifies_the_requested_help_without_requiring_a_final_ans
                 }
             ],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)), Output(text=json.dumps({"supported": supported, "answerable": answerable}))
         )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert result.status_code == (200 if supported and answerable else 422), result.text
-        generation, verification = h.stubs["gemini"].seen
+        generation, verification = h.stubs["meta"].seen
         assert "rather than answering the embedded" in generation.system
         assert "it does not require giving the final" in verification.system
         assert "If the draft gives the missing word" in verification.system
@@ -1222,7 +1220,7 @@ def test_quiz_coaching_cannot_promote_unsupported_text_even_with_no_spoiler(tmp_
             "kind": "chat",
             "claims": [{"text": "An invented prerequisite.", "citations": [{"passage_id": "p0"}]}],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft)),
             Output(
                 text=json.dumps(
@@ -1238,7 +1236,7 @@ def test_quiz_coaching_cannot_promote_unsupported_text_even_with_no_spoiler(tmp_
         )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert result.status_code == 422 and "claims" not in result.json()
-        assert len(h.stubs["gemini"].seen) == 2
+        assert len(h.stubs["meta"].seen) == 2
         assert not h.client._transport.app.state.study.buffers
 
     asyncio.run(run())
@@ -1273,7 +1271,7 @@ def test_quiz_coach_drafts_from_prerequisites_and_verifies_against_unchanged_evi
             "kind": "chat",
             "claims": [{"text": prerequisite, "citations": [{"passage_id": "p1"}]}],
         }
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps({"request_id": JID, "cue_id": "c0"} if selecting else draft)),
             Output(
                 text=json.dumps(
@@ -1291,7 +1289,7 @@ def test_quiz_coach_drafts_from_prerequisites_and_verifies_against_unchanged_evi
         )
         response = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert response.status_code == 200, response.text
-        generation, verification = h.stubs["gemini"].seen
+        generation, verification = h.stubs["meta"].seen
         if selecting:
             assert generation.schema["properties"]["cue_id"]["enum"] == ["c0"]
             assert set(generation.schema["properties"]) == {"request_id", "cue_id"}
@@ -1421,7 +1419,7 @@ def test_selected_prerequisite_must_pass_every_independent_check(tmp_path, faile
             failed_check: False,
         }
         for _ in range(1 if failed_check == "safe" else 2):
-            h.stubs["gemini"].say(
+            h.stubs["meta"].say(
                 Output(text=json.dumps({"request_id": JID, "cue_id": "c0"})), Output(text=json.dumps(verdict))
             )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
@@ -1458,7 +1456,7 @@ def test_named_term_definition_is_a_valid_first_step_but_never_overrides_factual
         if failed_check:
             verdict[failed_check] = False
         for _ in range(1 if failed_check in (None, "safe") else 2):
-            h.stubs["gemini"].say(
+            h.stubs["meta"].say(
                 Output(text=json.dumps({"request_id": JID, "cue_id": "c0"})), Output(text=json.dumps(verdict))
             )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
@@ -1510,7 +1508,7 @@ def test_coaching_answer_wording_requires_bounded_repair_even_if_model_approves(
             if first_text == "MAP maximizes P(θ|dataset)."
             else approved
         )
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft(first_text))),
             initial,
             Output(
@@ -1526,12 +1524,12 @@ def test_coaching_answer_wording_requires_bounded_repair_even_if_model_approves(
         )
         result = await h.client.post("/v1/study/process", json=body, headers=device.headers())
         assert result.status_code == (422 if second_discloses else 200), result.text
-        assert len(h.stubs["gemini"].seen) == 4
+        assert len(h.stubs["meta"].seen) == 4
         from cloud_gateway.study import COACHING_GENERATION, COACHING_VERIFICATION
 
-        assert h.stubs["gemini"].seen[0].system == COACHING_GENERATION
-        assert h.stubs["gemini"].seen[1].system == COACHING_VERIFICATION
-        verification_request = json.loads(h.stubs["gemini"].seen[1].user_texts[0])["request"]
+        assert h.stubs["meta"].seen[0].system == COACHING_GENERATION
+        assert h.stubs["meta"].seen[1].system == COACHING_VERIFICATION
+        verification_request = json.loads(h.stubs["meta"].seen[1].user_texts[0])["request"]
         assert verification_request["settings"] == body["settings"]
         if not second_discloses:
             assert result.json()["claims"][0]["text"] == "Which relationship does the cited passage describe?"

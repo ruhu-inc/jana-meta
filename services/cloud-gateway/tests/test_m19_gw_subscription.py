@@ -70,7 +70,7 @@ def test_biz07_credentials_end_with_the_subscription(tmp_path: Path) -> None:
         h = harness(gateway_config(tmp_path), clock)
         device = Device()
         await device.login(h.client)
-        h.stubs["gemini"].say(Output(text="Hi."))
+        h.stubs["meta"].say(Output(text="Hi."))
         assert (await device.chat(h.client, CHAT)).status_code == 200
         clock.now = END + 1
         refused = await device.chat(h.client, CHAT)
@@ -81,7 +81,7 @@ def test_biz07_credentials_end_with_the_subscription(tmp_path: Path) -> None:
         assert (await device.register(h.client, document=renewal)).status_code == 201
         assert device.credential_id == kept
         await device.login(h.client)
-        h.stubs["gemini"].say(Output(text="Hi again."))
+        h.stubs["meta"].say(Output(text="Hi again."))
         assert (await device.chat(h.client, CHAT)).status_code == 200
 
     asyncio.run(main())

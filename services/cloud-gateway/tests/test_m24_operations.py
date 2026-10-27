@@ -21,7 +21,7 @@ def policy():
         latency_multiple=c.ops_probe_latency_multiple,
         latency_objective_s=c.ops_first_words_p95_s,
         healthy_s=c.ops_failback_healthy_s,
-        qualified_providers=frozenset({"gemini", "openai_compat"}),
+        qualified_providers=frozenset({"meta", "openai_compat"}),
         cost_history_days=c.ops_cost_history_days,
         cost_multiple=c.ops_cost_multiple,
         metadata_retention_days=c.ops_metadata_retention_days,
@@ -70,23 +70,23 @@ def test_policy_ops12_global_cloud_off(tmp_path: Path):
 def test_policy_ops20_failover_drill(tmp_path: Path):
     cfg = policy()
     ops = GatewayOperations(tmp_path, cfg)
-    assert ops.choose("gemini", "openai_compat", "model", "lic", 0) == "gemini"
-    ops.probe("gemini", False, 0, 0)
+    assert ops.choose("meta", "openai_compat", "model", "lic", 0) == "meta"
+    ops.probe("meta", False, 0, 0)
     ops.probe("openai_compat", True, 1, 0)
-    assert ops.choose("gemini", "openai_compat", "model", "lic", 1) == "openai_compat"
+    assert ops.choose("meta", "openai_compat", "model", "lic", 1) == "openai_compat"
     ops.probe("openai_compat", False, 0, 1)
-    assert ops.choose("gemini", "openai_compat", "model", "lic", 2) is None
+    assert ops.choose("meta", "openai_compat", "model", "lic", 2) is None
     for at in range(
         cfg.window_s + cfg.probe_interval_s,
         cfg.window_s + cfg.healthy_s + 2 * cfg.probe_interval_s,
         cfg.probe_interval_s,
     ):
-        ops.probe("gemini", True, 1, at)
+        ops.probe("meta", True, 1, at)
         ops.probe("openai_compat", True, 1, at)
-    assert ops.choose("gemini", "openai_compat", "model", "lic", at) == "gemini"
-    for kind, target in (("provider", "gemini"), ("model", "model"), ("licence", "lic")):
+    assert ops.choose("meta", "openai_compat", "model", "lic", at) == "meta"
+    for kind, target in (("provider", "meta"), ("model", "model"), ("licence", "lic")):
         ops.switch(kind, target, True, "operator", "drill", "inc-drill", at)
-        assert ops.blocked("gemini", "model", "lic")
+        assert ops.blocked("meta", "model", "lic")
         ops.switch(kind, target, False, "operator", "recovered", "inc-drill", at)
     with pytest.raises(ValueError):
         ops.switch("unknown", "x", True, "operator", "", "", at)
@@ -100,11 +100,11 @@ def test_ops_cost_metadata_groups_and_daily_spike(tmp_path: Path):
     ops = GatewayOperations(tmp_path, cfg, alerts=lambda kind, detail: alerts.append((kind, detail)))
     now = 1792108800.0
     for day in range(c.ops_cost_history_days, 0, -1):
-        ops.record_cost(now - day * 86400, "gemini", "model", "coach", "lic_synthetic", 1, 0, 1, 1.0)
-    ops.record_cost(now, "gemini", "model", "coach", "lic_synthetic", 3, 0, 3, 3.0)
+        ops.record_cost(now - day * 86400, "meta", "model", "coach", "lic_synthetic", 1, 0, 1, 1.0)
+    ops.record_cost(now, "meta", "model", "coach", "lic_synthetic", 3, 0, 3, 3.0)
     assert any(kind == "ops19_daily_spike" for kind, _ in alerts)
     grouped = ops.cost_groups(now)
-    assert grouped[0]["provider"] == "gemini" and grouped[0]["cost_usd"] == 3.0
+    assert grouped[0]["provider"] == "meta" and grouped[0]["cost_usd"] == 3.0
     assert set(grouped[0]) == {
         "day",
         "provider",
