@@ -251,7 +251,12 @@ class Device:
         if not done:
             self.mark("filler_sent")
             self.chunk(request_id, FILLER + " ")
-        result = await work
+        try:
+            result = await work
+        except SystemExit as stopped:  # the spending cap (`--max-usd`) stopped the turn: report what finished
+            self.turn = {"stopped": str(stopped)}
+            self.done.set()
+            return
         self.mark("accepted")
         self.spoken = spoken_form(engine, result, before)
         for sentence in re.split(r"(?<=[.!?])(?=\s)", self.spoken):
@@ -420,6 +425,9 @@ async def main_async(args: argparse.Namespace) -> int:
                     supervisor,
                     Settings().voice_cloud_filler_after_ms,
                 )
+                if result.get("stopped"):
+                    print(result["stopped"], flush=True)
+                    break
                 results.append(result)
                 print(
                     json.dumps(

@@ -19,7 +19,7 @@ Work landed on `main` today, from this session and from parallel sessions merged
 | W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, the Google stack still registered (§8.1), turn latency (§12: speculative Solver done, ~4 s off a new question) |
 | W2 Vision | **Done**: SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed (parallel session); the diagram drill (§5.2, 2026-10-26) | Read time of a diagram (~15–20 s) |
 | W3 Glimmer | Downloaded and verified (with the DFlash draft); measured (§7) | Launcher and router entries, the lean offline path, power-cut switch timing and recovery |
-| W4 Speech | Not started | §6, re-baselined by §12 |
+| W4 Speech | **Online done**: Muse Voice Transcribe in the gateway (paced, silence between turns, budgeted, per-turn re-checks; branch `claude/bold-bardeen-60a405`), Kokoro served by the gateway (Magpie development only), a 600 ms end-of-speech hold, a spoken checked turn in the browser host (§12) | The engine turn (the 4 s target), offline (§6.3), self-hosted Magpie (§15 item 3), spoken unit names |
 | W5 Adult | Sign-up with date of birth, adult copy, parent sections removed, safety wording | Engine-side band check, remaining guardian copy (§17) |
 | W6 Bugs | #1, #4, #6 done; #5 partly (parallel session) | #2, #3, #7 |
 | W7 Research agent | Specified (§18) | All |
@@ -208,9 +208,9 @@ PCM silence between turns or reconnects; `endStream` ends the whole session.
 
 | File | Change |
 |---|---|
-| `cloud_gateway/providers/meta_speech.py` (new) | `MetaRecognizer` / `MetaRecognition` implementing `Recognizer` and `Recognition` from `providers/speech.py`. |
-| `cloud_gateway/voice.py`, `config.py` | Build `SpeechStack(MetaRecognizer, live=None, MagpieSynthesizer)`; replace `config.voice_google` with `config.voice_meta`; `voice_enabled=true` in the dev config. With `live=None` the TTS-only reader path is used (it already exists as the drift fallback). |
-| `cloud_gateway/voice.py` (~1054–1067) | Re-check quota and credential every turn (review finding: sessions currently run past caps). |
+| `cloud_gateway/providers/meta_speech.py` (new) | `MetaRecognizer` / `MetaRecognition` implementing `Recognizer` and `Recognition` from `providers/speech.py`. Done 2026-10-27 (branch `claude/bold-bardeen-60a405`); the server's end of speech is held at least 600 ms; keywords fit Meta's limits (at most 500, each at most 30 characters, measured live). |
+| `cloud_gateway/voice.py`, `config.py` | Build `SpeechStack(MetaRecognizer, live=None, <synthesizer>)`; replace `config.voice_google` with `config.voice_meta`; `voice_enabled=true` in the dev config. With `live=None` the TTS-only reader path is used (it already exists as the drift fallback). Done: the synthesizer is Kokoro by default (§6.4), `MagpieSynthesizer` with `voice_meta.tts = "magpie"` in dev only. |
+| `cloud_gateway/voice.py` (~1054–1067) | Re-check quota and credential every turn (review finding: sessions currently run past caps). Done (branch `claude/bold-bardeen-60a405`): credential, operations and quotas before each turn. |
 
 ### 6.2 Online text to speech: NVIDIA Magpie
 
@@ -437,6 +437,38 @@ decode-only call: 6 of 13 (46%), none for the incorrect-needs-a-category rule (3
 error category outside the contract's list (`calculation`, `calculation_error`, `wrong_value`, `substitution_error`),
 about 1.4 s each; the role prompt names no categories. The 30 turns spent $0.79 and left $0.37 of holds (dropped
 speculative and timed-out calls keep their bound).
+
+**Measured 2026-10-27, spoken turns (W4)** (Muse Voice Transcribe and Kokoro through the gateway; times from the end of
+speech in the recording). The runs below the first bullet used an earlier recognizer on this branch; after merging
+`claude/bold-bardeen-60a405`'s recognizer, three recorded questions were re-measured: final transcript 1.08–1.22 s,
+**filler audio 1.38–1.52 s**, Kokoro's first audio 0.28–0.37 s, first answer audio 8.5–12.8 s (engine 7.1–11.2 s).
+That re-run first failed every handshake: Voice Transcribe refuses more than 500 keywords and any keyword over 30
+characters (an `invalid_request_error`), which the glossary list of 1,368 terms exceeded; both limits are now applied.
+- *Voice Transcribe alone* (a recorded 6.9 s car question streamed in real time): final transcript **0.6 s** after the
+  speech ends (target ≤ 0.7 s); first connect and acknowledgement 3.4 s (hidden: the microphone opens at once and
+  audio is held); 200 glossary keywords accepted.
+- *`jana_tools.voice_latency`* (five recorded Maths and Physics questions through the gateway's real voice
+  connection, answered by a real engine turn on Spark the way the voice adapter answers, on a heavily loaded laptop):
+  after the changes below, **filler audio 1.57 s** median (1.40–1.81 s; target 1.5 s), gateway's final transcript
+  1.27 s (Voice Transcribe's ~0.6 s plus the 600 ms hold), Kokoro's first audio **0.26 s** after the accepted words,
+  engine turn 11.1 s, **first answer audio 12.6 s** median (11.4–14.6 s); 5/5 kept the rules. The earlier ten-turn run
+  (before the hold, the 300 ms cloud filler and the replayed filler): transcript 0.67 s, filler 2.51 s, Kokoro 1.49 s
+  under CPU contention, answer audio 13.3 s, 8/10 kept the rules (one question split at a sentence pause, one
+  degraded turn).
+- *Browser demo host* (tutor screen: hold-to-dictate, then Send, with read-aloud on; D130 gives the tutor no voice
+  bar): draft in the composer **1.5 s** after the speech ends (the key released 1.0 s after it); a guided, checked
+  reply (units checked, the board's Given and Find) read aloud **18.1 s** after Send: the turn took 16 s, a fresh
+  voice connection waited 2 s for a Voice Transcribe stream it did not need (the dev config now waits 0.3 s), and
+  Kokoro's first audio came 0.2–0.3 s after each sentence was requested.
+- **The ≤ 4 s target is not met and cannot be by speech work**: speech costs about 1.3 s before the turn and 0.3 s after
+  it; the rest is the engine turn on Spark (7–16 s today). The filler plays at 1.5 s.
+- Fixed on the way: Voice Transcribe ends a turn about 0.6 s into a pause, so "... through a resistor. What is its
+  resistance?" became two turns: the gateway now holds its end of speech at least 600 ms; releasing hold-to-dictate
+  waited out the 10 s silence it was held with (draft 10.3 s after the speech): a silence change now re-times the hold;
+  an adult turning on Cloud voice never recorded the profile's `cloud_voice` consent (and no notice existed for it),
+  and accepting "Use online voice?" was not announced, so voice was not offered until the next network event.
+- Spend: Voice Transcribe about $0.03 for all runs (settled in the budget ledger); Spark about $1.05 (the harness
+  runs and the browser turns; the ledger rose about $1.20 meanwhile, parallel sessions included). Kokoro and the Magpie trial cost nothing.
 
 ## 13. Workstreams and plan
 

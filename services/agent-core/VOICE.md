@@ -43,19 +43,25 @@ the network is usable. Otherwise the local sidecar serves the start, exactly as 
     most 4 s ahead) and a gap in the device's audio is filled with silence, since a stream that falls behind or goes
     quiet is closed. `speechStart`/`speechEnd` become `speech_started`/`speech_stopped`, barge-in included;
     `speechComplete` becomes the transcription delta and the `completed` transcript. The recognizer's end of speech
-    is held for the rest of the session's `silence_duration_ms`, so hold-to-think keeps one utterance. Streams are
+    is held for the rest of the session's `silence_duration_ms` and at least `min_hold_ms` (600 ms: Voice Transcribe
+    ends a turn about 0.6 s into a pause, so a question in two sentences stays one turn); a `session.update` that
+    changes the silence re-times a running hold (hold-to-dictate's release). Streams are
     rotated at a quiet moment before the 60-minute session cap; a 1011 or 1013 close reopens the stream (after a
     short backoff, except at the cap) while the student's audio is held.
   - *Thinking*: unchanged; the tunnel above. `response.created` still follows the device's first accepted words.
     Every turn re-checks the credential and the quotas first; a refusal ends the connection (4401, 4429 or 4503).
-  - *Voice*: the verbatim synthesizer reads the accepted sentences: Cloud Text-to-Speech streaming (Chirp 3 HD,
-    `en-GB-Chirp3-HD-Kore`, `voice_google_tts`) until the Magpie synthesizer (SPEC §6.2) replaces it. The Meta stack
-    has no Live voice. `voice.py` still supports one (a fixed read-exactly instruction, its output transcription
+  - *Voice*: the verbatim synthesizer reads the accepted sentences as they arrive: Kokoro-82M (`af_heart`,
+    Apache-2.0) from the speech pack, in a worker under the speech runtime's interpreter (`providers/kokoro_speech.py`,
+    `cloud_gateway/kokoro_worker.py`), warmed at startup; the first sentence is split at its first clause, and the
+    engine's keyed filler is read once at warm-up and replayed. `voice_tts.engine = "magpie"` uses NVIDIA Magpie
+    (`providers/magpie_speech.py`), development only (SPEC §6.4). The Meta stack has no Live voice. `voice.py` still
+    supports one (a fixed read-exactly instruction, its output transcription
     checked against the sentence on letters and digits, a departure cut before the next chunk and the rest read
     verbatim, two departures switching to the synthesizer only); the tests drive that path with a fake. Barge-in or
     Stop cancels the reply; the device truncates heard text at the played position. Transcript deltas follow the
     audio they belong to and always concatenate to the accepted words, so the bridge's `spoken_transcript_mismatch`
-    check and heard text work unchanged.
+    check and heard text work unchanged. On cloud voice the adapter's filler waits `voice_cloud_filler_after_ms`
+    (300 ms), so it plays about 1.5 s after the student stops.
   - *Latency*: the recognition stream (and a Live session, when there is one) opens with the connection, and `session.created` (which
     opens the device's microphone) waits up to `voice_prewarm_s` for them; audio arriving while a stream opens,
     rotates or resumes is held (up to `voice_first_words_ms`) and sent first. An adaptive idle timeout (twice the
@@ -67,25 +73,22 @@ the network is usable. Otherwise the local sidecar serves the start, exactly as 
     spoken text live only while their utterance or reply runs; the ledger records feature `cloud_voice`, model,
     seconds or characters as cost, latency and status. Voice Transcribe is $0.18 per audio hour, per whole second
     (padded silence included); under a deployment inference budget each stream reserves its longest bill and each
-    sentence its characters, settled with what was used. Ids, prices and limits are `voice_meta` and
-    `voice_google_tts` in `config.py`, with their sources. The Text-to-Speech client is the gateway's `google-voice`
-    extra.
+    sentence its characters, settled with what was used (Kokoro costs nothing). Ids, prices and limits are
+    `voice_meta` and `voice_tts` in `config.py`, with their sources.
 - **Tests.** `services/cloud-gateway/tests/test_meta_speech.py` drives the Voice Transcribe recognizer, alone and in
   real voice turns, against a scripted server (handshake, acknowledgement, cumulative partials, pacing and silence,
-  1011/1013 reconnects, per-turn re-checks, the budget). `services/cloud-gateway/tests/test_gateway_voc28_cloud_voice.py`
+  1011/1013 reconnects, per-turn re-checks, the budget, the default Kokoro stack); `test_voice_synthesizers.py`
+  Kokoro's worker protocol and Magpie (`JANA_LIVE_KOKORO=1` loads the real Kokoro).
+  `services/cloud-gateway/tests/test_gateway_voc28_cloud_voice.py`
   runs the real gateway against fakes of the three services (`cloud_gateway/speech_fakes.py`): `voc28_live_reads_only_accepted_text`, departure cut and
-  Text-to-Speech finish, two departures, barge-in and truncation, prewarm, buffered first words, idle release and
-  resume, hold-to-think, `voc28_endpoint_zero_retention`, recognition failure, wire subset, auth and the checker.
+  synthesizer finish, two departures, barge-in and truncation, prewarm, buffered first words, idle release and
+  resume, hold-to-think, a two-sentence question, hold-to-dictate's release, `voc28_endpoint_zero_retention`, recognition failure, wire subset, auth and the checker.
   `services/agent-core/tests/test_voc28_cloud_voice.py` is the end-to-end turn from the UI socket through the real
   bridge, engine and gateway over pinned TLS (`voc28_egress_announced`, `voc28_off_means_local`,
-  `voc29_fallback_to_local`). `test_voc28_live_google.py` is the opt-in live smoke test (`JANA_LIVE_GEMINI=1` for
-  Live; `JANA_LIVE_GOOGLE_VOICE=1` with `JANA_VOICE_PROJECT` for Speech-to-Text and Text-to-Speech).
-- **Live run (2026-10-21, jana-staging-512005):** Cloud Text-to-Speech then Speech-to-Text v2 streaming round trip
-  passes with `begin`/`end`/`final` voice-activity events; Live on Vertex (`gemini-live-2.5-flash-native-audio`,
-  chosen by the owner because Vertex does not serve `gemini-3.8-live`) read the test sentence exactly in 3 of 3 runs,
-  first audio about 0.69 s; Cloud TTS first audio 1.26 s warm, 3.4 s cold.
-- **Open:** Live's transcription renders numbers its own way, so a sentence with digits may count as a departure;
-  the client's rendering of the `voice.now_local` notice; the tunnel frames are not yet in the spec's Realtime
+  `voc29_fallback_to_local`). `jana_tools.voice_latency` measures recorded questions end to end (SPEC §12).
+- **Live run (2026-10-27):** a recorded spoken question through the browser host (dictation, a checked turn on Spark,
+  the reply read aloud by Kokoro) and the latency harness: SPEC §12.
+- **Open:** the client's rendering of the `voice.now_local` notice; the tunnel frames are not yet in the spec's Realtime
   contract; DPIA `s4_voice` before release.
 
 ## Student voice extension
