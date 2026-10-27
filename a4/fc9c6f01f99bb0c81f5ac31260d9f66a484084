@@ -1,0 +1,19 @@
+services/cloud-gateway/M42.md
+  s_cba027eb33c77d::t_081942e84c09c8 3-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a4fc9c6f01f99bb0c81f5ac31260d9f66a484084",
+  "prompts": {},
+  "sessions": {
+    "s_cba027eb33c77d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f34882de-86b7-4b7b-9597-aa879116a414",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
