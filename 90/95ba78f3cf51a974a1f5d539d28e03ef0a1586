@@ -1,0 +1,24 @@
+packages/i18n/locales/en.json
+  s_11f8fb97757ad6::t_c9f1d2a3585bce 1645-1646
+packages/ui/test/mock-report-lost.test.tsx
+  s_11f8fb97757ad6::t_447659424454a3 1-33,36-39
+  s_11f8fb97757ad6::t_3afdab63addaa8 34-35
+packages/ui/src/mock/MockExam.tsx
+  s_11f8fb97757ad6::t_c9f1d2a3585bce 576-588,638-639
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9095ba78f3cf51a974a1f5d539d28e03ef0a1586",
+  "prompts": {},
+  "sessions": {
+    "s_11f8fb97757ad6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3ed4da93-12cd-4930-a375-0bf68f4e4ba4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
