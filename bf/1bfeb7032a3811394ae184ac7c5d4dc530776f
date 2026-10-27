@@ -1,0 +1,21 @@
+services/agent-core/tests/test_w3_glimmer.py
+  s_39fc6898abe9a0::t_765c15f26cc7f6 79-98
+services/agent-core/agent_core/providers/llama.py
+  s_39fc6898abe9a0::t_107711651be231 140-141,143-148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bf1bfeb7032a3811394ae184ac7c5d4dc530776f",
+  "prompts": {},
+  "sessions": {
+    "s_39fc6898abe9a0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0537a49d-61f4-4000-a6ea-d38d01696f9f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
