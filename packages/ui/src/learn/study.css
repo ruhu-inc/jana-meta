@@ -5,6 +5,7 @@
 .study-tool-icon-amber { --study-tool-colour: color-mix(in srgb, var(--content-orange) 65%, var(--content-brown)); }
 .study-tool-icon-purple { --study-tool-colour: var(--content-purple); }
 .study-tool-icon-blue-green { --study-tool-colour: var(--content-blue-green); }
+.study-tool-icon-green { --study-tool-colour: var(--content-green); }
 .study-tool-icon {
   color: color-mix(in srgb, var(--study-tool-colour) 75%, var(--color-ink));
   background: color-mix(in srgb, var(--study-tool-colour) 9%, var(--color-canvas));
