@@ -192,11 +192,9 @@ def prd03_network_requirements_state_offline_behaviour(tmp_path: Path) -> None:
 
 
 def prd07_consent_required_before_egress(tmp_path: Path) -> None:
-    """Switching the cloud tier on without a recorded consent puts nothing online for a minor's profile: the profile's
-    own switch is refused with the consent route (guardian_consent_required, the checkout's consent screen, D70),
-    the tier is not in effect and a turn stays local; once the guardian's consent is recorded it is in effect. Sync
-    (cloud_backup, multi_device) is not an online feature of this stage and cannot be switched on at all."""
-    from agent_core.store import consents as store
+    """Switching the cloud tier on without a recorded consent puts nothing online for a profile: with the device switch
+    on and a subscription in force, the tier is not in effect until the 18+ learner gives their own consent (D70,
+    W5). Sync (cloud_backup, multi_device) is not an online feature of this stage and cannot be switched on at all."""
     from agent_core.store import subscription as subscriptions
     from test_m10e_consent import NOTICE
 
@@ -204,12 +202,10 @@ def prd07_consent_required_before_egress(tmp_path: Path) -> None:
         async with core(tmp_path, worker=False) as r:
             c, profile = await learner(r)
             api = c.api
-            alone = await api.call("PUT", f"/v1/profiles/{profile}/consents/cloud_tier",
-                                   {"action": "on", "notice_version": NOTICE}, profile=c.token)  # fmt: skip
             device = await api.call("PATCH", "/v1/connectivity", {"features": {"cloud_tier": True}})
             online = r.runtime.online
             assert online is not None
-            # A subscription applied for the profile whose guardian's consent is still needed (D70): pending.
+            # A subscription in force for the profile (D70); no guardian consent is ever needed (W5).
             now = r.core.clock_ms()
             pending = {
                 "subscription_id": "sub_synthetic",
@@ -219,7 +215,7 @@ def prd07_consent_required_before_egress(tmp_path: Path) -> None:
                 "allowance_tokens": None,
                 "licence_id": "lic_synthetic",
                 "profiles": [profile],
-                "consent_needed": [profile],
+                "consent_needed": [],
                 "payer": "synthetic",
                 "ended_at": None,
                 "entitlement": None,
@@ -227,8 +223,9 @@ def prd07_consent_required_before_egress(tmp_path: Path) -> None:
             subscriptions.save(r.runtime.directory.device, pending, now)  # fmt: skip
             with r.runtime.directory.open_learner(profile) as conn:
                 without = online.cloud_effective(profile, conn)
-                store.grant(conn, "cloud_tier", "guardian", "Parent", NOTICE, r.core.settings.consent_dpia_ref, now)
-                subscriptions.save(r.runtime.directory.device, subscriptions.consent_given(pending, [profile]), now)
+            alone = await api.call("PUT", f"/v1/profiles/{profile}/consents/cloud_tier",
+                                   {"action": "on", "notice_version": NOTICE}, profile=c.token)  # fmt: skip
+            with r.runtime.directory.open_learner(profile) as conn:
                 with_consent = online.cloud_effective(profile, conn)
             sync = await api.call("PATCH", "/v1/connectivity", {"features": {"cloud_backup": True}})
             ledger = await c.ok("GET", "/v1/connectivity/ledger")
@@ -236,7 +233,7 @@ def prd07_consent_required_before_egress(tmp_path: Path) -> None:
                 "sync": (sync.status_code, sync.json()), "ledger": ledger}  # fmt: skip
 
     found = asyncio.run(scenario())
-    assert found["alone"]["error"]["code"] == "guardian_consent_required"
+    assert found["alone"]["granted_by_role"] == "student_18_plus"
     assert found["device"] == 200 and found["without"] is False and found["with"] is True
     assert found["sync"][0] != 200 and "not an online feature of this version" in found["sync"][1]["error"]["message"]
     # The device switch lets the layer probe the gateway's reachability (ARC-08): no learner data class goes with it.

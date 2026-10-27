@@ -28,6 +28,13 @@ INDEX_UPDATE = {
 
 
 ADULT_BAND = "18_plus"
+ADULT_ONLY = "Jana is for learners aged 18 or over"
+
+
+def require_adult(age_band: object) -> None:
+    """W5 (SPEC §8.2): the engine runs only adult profiles, whatever a sign-up form sent or an older build stored."""
+    if age_band != ADULT_BAND:
+        raise ProfileError("validation_failed", ADULT_ONLY)
 
 
 class ProfileError(Exception):
@@ -117,6 +124,20 @@ class ProfileDirectory:
         with self._learner(profile_id) as learner:
             return str(learner.execute("SELECT age_band FROM profile").fetchone()[0])
 
+    def _stored_band(self, profile_id: str) -> str | None:
+        """The band as stored, read without recovering the database: a damaged one is recovered when the profile is
+        activated, which reports it (DAT-13, UXS-47); until then its band is unknown."""
+        path = self.learner_path(profile_id)
+        try:
+            conn = sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True)
+            try:
+                row = conn.execute("SELECT age_band FROM profile").fetchone()
+            finally:
+                conn.close()
+        except sqlite3.Error:
+            return None
+        return None if row is None else str(row[0])
+
     def self_consents(self, profile_id: str) -> bool:
         """The profile grants its own consents as a student aged 18 or over (PRV-06): its band is 18_plus, however it
         was set; the product owner chose to trust a corrected band (2026-10-15)."""
@@ -159,7 +180,8 @@ class ProfileDirectory:
     # --- student profiles ----------------------------------------------------------------------------------------
 
     def create(self, body: dict[str, Any]) -> dict[str, Any]:
-        """A new student profile: its own folder and learner database."""
+        """A new student profile: its own folder and learner database. Only an adult's (W5)."""
+        require_adult(body.get("age_band"))
         now = self.clock_ms()
         if len(self.summaries()["profiles"]) >= 12:
             raise ProfileError("validation_failed", "a device holds at most 12 profiles")
@@ -197,6 +219,9 @@ class ProfileDirectory:
 
     def unlock(self, profile_id: str) -> dict[str, Any]:
         row = self._row(profile_id)
+        stored = self._stored_band(profile_id)
+        if stored is not None:
+            require_adult(stored)  # a minor profile an older build made does not open (W5)
         self.device.execute(
             "UPDATE profiles_index SET last_used_at = ? WHERE profile_id = ?",
             (self.clock_ms(), internal_id(profile_id)),
@@ -214,14 +239,15 @@ class ProfileDirectory:
         return self.edit(profile_id, body)[0]
 
     def edit(self, profile_id: str, body: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
-        """The owning student edits their own profile, with the scopes the edit withdrew. Correcting the age band
-        never grants a consent: a band raised to 18 or over keeps the guardian route for new grants, and a band
-        lowered from 18 or over withdraws every scope the profile granted itself, each queued for its destinations
-        (PRV-06, D86, DAT-11)."""
+        """The owning student edits their own profile, with the scopes the edit withdrew. The age band can only be
+        18_plus (W5); were it ever lowered from 18 or over, every scope the profile granted itself would be withdrawn,
+        each queued for its destinations (PRV-06, D86, DAT-11)."""
         now = self.clock_ms()
         fields = {
             k: body[k] for k in ("display_name", "avatar", "level", "subjects", "exam_date", "age_band") if k in body
         }
+        if "age_band" in fields:
+            require_adult(fields["age_band"])  # W5
         internal = internal_id(profile_id)
         before = self.age_band(profile_id)
         withdrawn: list[str] = []

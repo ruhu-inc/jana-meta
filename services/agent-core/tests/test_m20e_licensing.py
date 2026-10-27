@@ -410,11 +410,11 @@ def biz03_subscription_unlocks_online_only(tmp_path: Path) -> None:
             before = (await Client(r).ok("GET", "/v1/licence"))["entitlements"]
             done = await subscribe(api, [ama, kofi])  # nothing typed: the checkout's signed entitlement
             assert done.json()["state"] == "active" and await cloud_on(api)
-            for profile in (ama, kofi):  # the guardian's consent, recorded for each profile under 18
+            for profile in (ama, kofi):  # no guardian consent: each adult gives their own in the app (W5)
                 with r.runtime.directory.open_learner(profile) as conn:
                     from agent_core.store import consents as consent_store
 
-                    assert consent_store.active(conn, "cloud_tier")[1] == "guardian"
+                    assert consent_store.active(conn, "cloud_tier") is None
             after = (await Client(r).ok("GET", "/v1/licence"))["entitlements"]
             assert after["cloud_tier"] == "subscribed" and before["cloud_tier"] == "available"
             assert offline_part(after) == offline_part(before)  # nothing offline depends on it
@@ -582,8 +582,8 @@ def jrn11_lab_no_guardian_scope(tmp_path: Path) -> None:
 
 def prv06_lab_research_consent_recordable(tmp_path: Path) -> None:
     """On a school_lab install a research scope is recorded through the study screen's agreement as on a family
-    install (D13, D100): the guardian's in-app agreement for a minor (with the student's assent), the student's own at
-    18+, and a research export then runs. It unlocks nothing online: the cloud tier stays refused and off."""
+    install (D13, D100): each student's own agreement at 18+ (W5), and a research export then runs. It unlocks nothing
+    online: the cloud tier stays refused and off."""
     from test_m10d_deletion_export import STUDY, _public
 
     settings = SETTINGS.model_copy(update={"export_research_public_key": _public(STUDY)})
@@ -591,7 +591,7 @@ def prv06_lab_research_consent_recordable(tmp_path: Path) -> None:
     async def scenario() -> None:
         r = await core(tmp_path, worker=False, settings=settings)
         try:
-            api, minor, _ = await learner(r)
+            api, ama, _ = await learner(r)
             grown = await api.add(student("Esi", age_band="18_plus"))
             await install_file(Client(r), issue_licence_file("lab_bundle", 20))
             assert (await Client(r).ok("GET", "/v1/licence"))["install_kind"] == "school_lab"
@@ -599,32 +599,29 @@ def prv06_lab_research_consent_recordable(tmp_path: Path) -> None:
             own = await api.call("PUT", f"/v1/profiles/{grown}/consents/research_use",
                                  {"action": "on", "notice_version": NOTICE}, profile=grown_token)  # fmt: skip
             assert own.status_code == 200 and own.json()["granted_by_role"] == "student_18_plus"
-            token = await api.token(minor)
-            path = f"/v1/profiles/{minor}/consents/research_use"
-            alone = await api.call("PUT", path, {"action": "on", "notice_version": NOTICE}, profile=token)
-            assert code(alone) == "validation_failed"  # the student cannot grant it alone
-            agreed = await api.call("PUT", path, {"action": "on", "notice_version": NOTICE, "guardian_agreed": True},
-                                    profile=token)  # fmt: skip
+            token = await api.token(ama)
+            path = f"/v1/profiles/{ama}/consents/research_use"
+            agreed = await api.call("PUT", path, {"action": "on", "notice_version": NOTICE}, profile=token)
             assert agreed.status_code == 200, agreed.text
-            assert agreed.json()["granted_by_role"] == "guardian" and agreed.json()["effective"]
-            with r.runtime.directory.open_learner(minor) as conn:
+            assert agreed.json()["granted_by_role"] == "student_18_plus" and agreed.json()["effective"]
+            with r.runtime.directory.open_learner(ama) as conn:
                 methods = conn.execute("SELECT scope, method FROM consents WHERE withdrawn_at IS NULL").fetchall()
-            assert methods == [("research_use", "in_app_guardian")]
+            assert methods == [("research_use", "in_app_notice")]
             folder = tmp_path / "usb"
             folder.mkdir()
             approval = {"student_assent": True, "school_approval_ref": "synthetic-school-approval",
                         "protocol_ref": "synthetic-registered-protocol"}  # fmt: skip
-            export = await api.call("POST", "/v1/exports", {"kind": "research_export", "profile_ids": [minor],
+            export = await api.call("POST", "/v1/exports", {"kind": "research_export", "profile_ids": [ama],
                                                             "destination": {"kind": "file", "path": str(folder)},
                                                             "research_approval": approval}, profile=token)  # fmt: skip
             assert export.status_code == 202, export.text
-            for who in (minor, grown):  # nothing online follows from it
+            for who in (ama, grown):  # nothing online follows from it
                 key = await api.token(who)
                 online = await api.call("PUT", f"/v1/profiles/{who}/consents/cloud_tier",
                                         {"action": "on", "notice_version": NOTICE, "guardian_agreed": True},
                                         profile=key)  # fmt: skip
                 assert code(online) == "feature_disabled", who
-            assert code(await subscribe(api, [minor])) == "feature_disabled"
+            assert code(await subscribe(api, [ama])) == "feature_disabled"
             assert not await cloud_on(api)
         finally:
             await stop_core(r)

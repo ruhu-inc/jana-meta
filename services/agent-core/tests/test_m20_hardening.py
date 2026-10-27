@@ -106,7 +106,7 @@ def test_sec15_rollback_installer_checked_against_signed_manifest(tmp_path: Path
 def _archive(sessions: dict[str, object] | None = None, extra: int = 0) -> bytes:
     out = io.BytesIO()
     profile = {"display_name": "Imported", "avatar": "disc-teal", "level": "O", "subjects": ["physics"],
-               "age_band": "13_15", "exam_date": None}  # fmt: skip
+               "age_band": "18_plus", "exam_date": None}  # fmt: skip
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.json", json.dumps({"format": FORMAT, "version": 1, "profile": profile}))
         archive.writestr("events.jsonl", "")

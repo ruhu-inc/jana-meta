@@ -88,7 +88,7 @@ describe("UXS-07", () => {
     expect(confirm.textContent).toContain("Turn on usage reports?");
     expect(confirm.textContent).toContain(UXS07A.telemetry![1]);
     expect(confirm.textContent).toContain("Send anonymous counts that help us make the app faster. No questions, answers or names.");
-    expect(confirm.textContent).toContain("I am this student's parent or guardian.");
+    expect(confirm.textContent).toContain("I am 18 or over and agree to send this material to the online service.");
     expect(patches(core)).toEqual([]);
     fireEvent.click(within(confirm).getByRole("button", { name: "Cancel" }));
     expect(dialog()).toBeNull();
@@ -116,18 +116,18 @@ describe("UXS-07", () => {
     fireEvent.click(within(row("downloads")).getByRole("checkbox"));
     confirm = dialog()!;
     expect(confirm.textContent).toContain(UXS07A.downloads![1]);
-    expect(confirm.textContent).not.toContain("parent or guardian");
+    expect(confirm.textContent).not.toContain("18 or over");
     fireEvent.click(within(confirm).getByRole("button", { name: "Turn on" }));
     await waitFor(() => expect(core.features.downloads).toBe(true));
     expect(core.deviceConsents.get("downloads")).toBeUndefined();
 
-    // The cloud tutor (D70): subscribing turned it on, waiting for the guardian's consent for Ada.
-    await waitFor(() => expect(row("cloud_tier").textContent).toContain("Waiting for a parent or guardian's consent for Ada."));
+    // The cloud tutor (D70): subscribing turned it on, waiting for the learner's own consent for Ada.
+    await waitFor(() => expect(row("cloud_tier").textContent).toContain("Waiting for consent from Ada."));
     fireEvent.click(within(row("cloud_tier")).getByRole("button", { name: "Give consent" }));
     confirm = dialog()!;
     expect(confirm.textContent).toContain("Turn on the cloud tutor? The question, the working so far and the topic will be sent to the cloud tutor when you're online. Your name is not sent.");
     expect(confirm.textContent).toContain(BASE["settings.online.consent.cloud_tier"]!);
-    expect(confirm.textContent).toContain("I am this student's parent or guardian.");
+    expect(confirm.textContent).toContain("I am 18 or over and agree to send this material to the online service.");
     fireEvent.click(within(confirm).getByRole("button", { name: "Cancel" }));
     expect(core.log.some((r) => r.method === "POST" && r.path === "/v1/subscription")).toBe(false);
     fireEvent.click(within(row("cloud_tier")).getByRole("button", { name: "Give consent" }));

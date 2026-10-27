@@ -151,7 +151,7 @@ def test_profile_open_settings_change_and_lock_tell_the_voice(tmp_path: Path):
                                               content=None if body is None else json.dumps(body))  # fmt: skip
 
             made = await call("POST", "/v1/profiles", {"display_name": "Ama", "avatar": "disc-teal", "level": "O",
-                                                       "subjects": ["physics"], "age_band": "13_15"})  # fmt: skip
+                                                       "subjects": ["physics"], "age_band": "18_plus"})  # fmt: skip
             assert made.status_code == 200, made.text
             profile = made.json()["profile_id"]
             opened = await call("POST", f"/v1/profiles/{profile}/open", {})

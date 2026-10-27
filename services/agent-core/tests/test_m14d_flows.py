@@ -516,7 +516,7 @@ def ped09_no_policy_setting(tmp_path: Path) -> None:
     """A write of `solution_policy`, whatever its value or the profile's age, is rejected by the API (D86, D87)."""
 
     async def scenario(api: Api, r: Any) -> None:
-        young = await api.add(student("Ama", "13_15"))
+        young = await api.add(student("Ama"))
         grown = await api.add(student("Kojo", "18_plus"))
         token = (await api.unlock(young)).json()["profile_token"]
         refused = await api.call("PATCH", f"/v1/profiles/{young}/settings", {"solution_policy": "never"},

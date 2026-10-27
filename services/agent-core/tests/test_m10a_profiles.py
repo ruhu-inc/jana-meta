@@ -18,7 +18,7 @@ def run(coro):
     return LOOP.run_until_complete(coro)
 
 
-def student(name: str, age_band: str = "13_15") -> dict:
+def student(name: str, age_band: str = "18_plus") -> dict:
     return {"display_name": name, "avatar": "disc-teal", "level": "O", "subjects": ["physics"], "age_band": age_band}
 
 
@@ -240,25 +240,23 @@ def api28_settings_patch_keys(tmp_path: Path):
 
 
 def test_open_profile_reads_its_own_age_band(tmp_path: Path):
-    """The open profile's record carries its age band with its own token (PRV-06, API-28, D93), so the study screen
-    knows whether the guardian agrees; the profile list keeps to name and avatar, and another profile's record is
-    404."""
+    """The open profile's record carries its age band with its own token (PRV-06, API-28, D93); the profile list
+    keeps to name and avatar, and another profile's record is 404. Every band is 18_plus (W5)."""
     from agent_core.contracts import errors
 
     async def scenario(api: Api, r):
-        minor = await api.add(student("Ama"))
-        grown = await api.add(student("Esi", age_band="18_plus"))
-        token = await api.token(minor)
-        own = await api.call("GET", f"/v1/profiles/{minor}", profile=token)
+        ama = await api.add(student("Ama"))
+        esi = await api.add(student("Esi"))
+        token = await api.token(ama)
+        own = await api.call("GET", f"/v1/profiles/{ama}", profile=token)
         assert own.status_code == 200 and errors("api/commands#/$defs/Profile", own.json()) == []
-        assert (own.json()["display_name"], own.json()["age_band"]) == ("Ama", "13_15")
-        assert (await api.call("GET", f"/v1/profiles/{grown}", profile=token)).status_code == 404
-        assert (await api.call("GET", f"/v1/profiles/{minor}")).status_code in (401, 404)  # no profile token
+        assert (own.json()["display_name"], own.json()["age_band"]) == ("Ama", "18_plus")
+        assert (await api.call("GET", f"/v1/profiles/{esi}", profile=token)).status_code == 404
+        assert (await api.call("GET", f"/v1/profiles/{ama}")).status_code in (401, 404)  # no profile token
         listed = (await api.call("GET", "/v1/profiles")).json()["profiles"]
         assert all(set(p) == {"profile_id", "display_name", "avatar"} for p in listed)
-        corrected = await api.call("PATCH", f"/v1/profiles/{minor}", {"age_band": "18_plus"}, profile=token)
-        assert corrected.json()["age_band"] == "18_plus"
-        assert (await api.call("GET", f"/v1/profiles/{minor}", profile=token)).json()["age_band"] == "18_plus"
+        same = await api.call("PATCH", f"/v1/profiles/{ama}", {"age_band": "18_plus"}, profile=token)
+        assert same.json()["age_band"] == "18_plus"
 
     with_api(tmp_path, scenario)
 

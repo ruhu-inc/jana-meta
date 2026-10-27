@@ -236,7 +236,7 @@ def plt29_below_minimum_notice(tmp_path: Path) -> None:
             r.runtime.probe, r.runtime.epoch = probe, r.core.epoch
             r.runtime.plan = write_launch_plan(tmp_path / "data", SETTINGS, False, r.core.epoch, probe=probe)
             made = await r.client.post(r.base + "/v1/profiles", headers=r.headers(True),
-                                       json={"display_name": "Ama", "avatar": "a1", "age_band": "13_15",
+                                       json={"display_name": "Ama", "avatar": "a1", "age_band": "18_plus",
                                              "level": "O", "subjects": ["physics"]})  # fmt: skip
             assert made.status_code in (200, 201), made.text
             models = (await r.get("/v1/models")).json()

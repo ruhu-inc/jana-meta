@@ -51,34 +51,23 @@ def _checkout(r, profile: str, scope: str = "cloud_tier") -> None:
 
 def api28_consent_switch_per_profile(tmp_path: Path):
     async def scenario(api: Api, r):
-        minor = await api.add(student("Ama"))
-        grown = await api.add(student("Esi", age_band="18_plus"))
-        token = (await api.unlock(minor)).json()["profile_token"]
+        other = await api.add(student("Ama"))
+        grown = await api.add(student("Esi"))
+        token = (await api.unlock(grown)).json()["profile_token"]
         for scope in store.shipped_scopes():
-            alone = await api.call("PUT", f"/v1/profiles/{minor}/consents/{scope}",
-                                   {"action": "on", "notice_version": NOTICE}, profile=token)  # fmt: skip
-            expected = "validation_failed" if scope == "research_use" else "guardian_consent_required"
-            assert code(alone) == expected, scope
-            if scope != "research_use":
-                _checkout(r, minor, scope)
-            granted = await api.call(
-                "PUT",
-                f"/v1/profiles/{minor}/consents/{scope}",
-                {"action": "on", "guardian_agreed": True, "notice_version": NOTICE},
-                profile=token,
-            )
-            assert granted.status_code == 200 and granted.json()["granted_by_role"] == "guardian", granted.text
-            withdrawn = await api.call("PUT", f"/v1/profiles/{minor}/consents/{scope}", {"action": "withdraw"},
+            granted = await api.call("PUT", f"/v1/profiles/{grown}/consents/{scope}",
+                                     {"action": "on", "notice_version": NOTICE}, profile=token)  # fmt: skip
+            assert granted.status_code == 200 and granted.json()["granted_by_role"] == "student_18_plus", granted.text
+            withdrawn = await api.call("PUT", f"/v1/profiles/{grown}/consents/{scope}", {"action": "withdraw"},
                                        profile=token)  # fmt: skip
             assert withdrawn.json()["granted"] is False
         telemetry = await api.call(
             "PUT",
-            f"/v1/profiles/{minor}/consents/telemetry",
-            {"action": "on", "guardian_agreed": True, "notice_version": NOTICE},
+            f"/v1/profiles/{grown}/consents/telemetry",
+            {"action": "on", "notice_version": NOTICE},
             profile=token,
         )
         assert telemetry.status_code == 422 and code(telemetry) == "scope_not_profile"
-        token = (await api.unlock(grown)).json()["profile_token"]
         own = await api.call(
             "PUT",
             f"/v1/profiles/{grown}/consents/cloud_tier",
@@ -87,15 +76,15 @@ def api28_consent_switch_per_profile(tmp_path: Path):
         )
         assert own.status_code == 200 and own.json()["granted_by_role"] == "student_18_plus"
         await api.call("PUT", f"/v1/profiles/{grown}/consents/cloud_tier", {"action": "withdraw"}, profile=token)
-        # The device switch writes one row per profile under 18 and none for the 18+ profile.
+        # The device switch writes no profile's consent row.
         assert (await api.call("PATCH", "/v1/connectivity", {"features": {"cloud_tier": True}})
                 ).status_code == 200  # fmt: skip
         rows = {}
-        for profile in (minor, grown):
+        for profile in (other, grown):
             with r.runtime.directory.open_learner(profile) as conn:
                 rows[profile] = conn.execute("SELECT granted_by_role FROM consents WHERE scope = 'cloud_tier' AND"
                                              " withdrawn_at IS NULL").fetchall()  # fmt: skip
-        assert rows[minor] == [] and rows[grown] == [], "a device switch does not mint profile consent"
+        assert rows[other] == [] and rows[grown] == [], "a device switch does not mint profile consent"
         state = (await api.call("GET", "/v1/connectivity")).json()
         assert state["features"]["cloud_tier"]["enabled"] is True
 
@@ -103,20 +92,13 @@ def api28_consent_switch_per_profile(tmp_path: Path):
 
 
 def prv06_minor_cannot_self_consent(tmp_path: Path):
+    """No profile under 18 exists to consent (W5): the band is refused when the profile is made."""
+
     async def scenario(api: Api, r):
         for band in ("under_13", "13_15", "16_17"):
-            profile = await api.add(student(f"Kid {band}", age_band=band))
-            token = (await api.unlock(profile)).json()["profile_token"]
-            for scope in store.shipped_scopes():
-                reply = await api.call("PUT", f"/v1/profiles/{profile}/consents/{scope}",
-                                       {"action": "on", "notice_version": NOTICE}, profile=token)  # fmt: skip
-                assert code(reply) == (
-                    "validation_failed" if scope == "research_use" else "guardian_consent_required"
-                ), (
-                    band,
-                    scope,
-                )
-            assert all(not c["granted"] for c in (await _consents(api, profile, token)).values())
+            reply = await api.call("POST", "/v1/profiles", student(f"Kid {band}", age_band=band))
+            assert code(reply) == "validation_failed", band
+        assert (await api.call("GET", "/v1/profiles")).json()["profiles"] == []
         # The removed school route does not exist: no consent method other than adult attestation is accepted.
         assert "school" not in json.dumps(json.loads((REPO_ROOT / "services" / "agent-core" / "agent_core" / "contracts"
                                                       / "schemas" / "api" / "commands.schema.json").read_text())
@@ -165,35 +147,35 @@ def _outbox(r) -> list:
 
 
 def prv05_pause_is_not_withdrawal(tmp_path: Path):
-    """A pause stops processing at once and is undone from the profile with no guardian step; only a withdrawal sends
-    anything to a destination (D87)."""
+    """A pause stops processing at once and is undone from the profile in one step; only a withdrawal sends anything
+    to a destination (D87)."""
 
     async def scenario(api: Api, r):
-        minor = await api.add(student("Ama"))
-        token = (await api.unlock(minor)).json()["profile_token"]
-        await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use",
-                       {"action": "on", "guardian_agreed": True, "notice_version": NOTICE}, profile=token)  # fmt: skip
-        paused = await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use", {"action": "pause"},
+        learner = await api.add(student("Ama"))
+        token = (await api.unlock(learner)).json()["profile_token"]
+        await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use",
+                       {"action": "on", "notice_version": NOTICE}, profile=token)  # fmt: skip
+        paused = await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use", {"action": "pause"},
                                 profile=token)  # fmt: skip
-        with r.runtime.directory.open_learner(minor) as conn:
+        with r.runtime.directory.open_learner(learner) as conn:
             in_force = next(c for c in store.states(conn, set()) if c["scope"] == "research_use")["effective"]
         folder = tmp_path / "usb"
         folder.mkdir()
-        export = await api.call("POST", "/v1/exports", {"kind": "research_export", "profile_ids": [minor],
+        export = await api.call("POST", "/v1/exports", {"kind": "research_export", "profile_ids": [learner],
                                                         "destination": {"kind": "file", "path": str(folder)}},
                                 profile=token)  # fmt: skip
         after_pause = _outbox(r)
-        resumed = await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use", {"action": "on"},
+        resumed = await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use", {"action": "on"},
                                  profile=token)  # fmt: skip
-        await api.call("PUT", f"/v1/profiles/{minor}/consents/research_use", {"action": "withdraw"}, profile=token)
-        return paused.json(), in_force, export, after_pause, resumed.json(), _outbox(r), minor
+        await api.call("PUT", f"/v1/profiles/{learner}/consents/research_use", {"action": "withdraw"}, profile=token)
+        return paused.json(), in_force, export, after_pause, resumed.json(), _outbox(r), learner
 
-    paused, in_force, export, after_pause, resumed, after_withdrawal, minor = with_api(tmp_path, scenario)
+    paused, in_force, export, after_pause, resumed, after_withdrawal, learner = with_api(tmp_path, scenario)
     assert paused["paused"] and paused["granted"] and not paused["effective"] and not in_force
     assert export.status_code >= 400  # nothing is processed under a paused consent
     assert after_pause == []  # a pause sends nothing
-    assert resumed["effective"] and resumed["granted_by_role"] == "guardian"  # the same grant, no guardian step
-    assert [(k, d, p) for k, _, d, p, _ in after_withdrawal] == [("consent_withdrawal", "research_use", minor[4:])]
+    assert resumed["effective"] and resumed["granted_by_role"] == "student_18_plus"  # the same grant, one step
+    assert [(k, d, p) for k, _, d, p, _ in after_withdrawal] == [("consent_withdrawal", "research_use", learner[4:])]
 
 
 def prv05_withdrawal_delivered(tmp_path: Path):

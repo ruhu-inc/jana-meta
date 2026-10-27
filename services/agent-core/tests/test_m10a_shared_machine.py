@@ -124,30 +124,16 @@ def _consent(reply) -> dict:
     return {k: reply.json()[k] for k in ("granted", "granted_by_role", "method")}
 
 
-def test_prv06_corrected_age_band_self_consents(tmp_path: Path):
-    """A profile whose band is corrected to 18 or over consents for itself, as a profile added as 18 or over does: the
-    product owner chose to trust the corrected band (PRV-06, 2026-10-15). The change itself grants nothing; before it,
-    a minor's research grant needs the guardian's agreement."""
+def test_prv06_adult_self_consents(tmp_path: Path):
+    """A profile is 18 or over (W5) and consents for itself, as PRV-06 says."""
 
     async def go():
         r = await start_core(tmp_path, settings=Settings(consent_dpia_ref="dpia-test"), worker=False)
         api = Api(r)
         try:
-            kid = await api.add(student("Kid", "13_15"))
-            token = (await api.unlock(kid)).json()["profile_token"]
-            on = {"action": "on"}
-            alone = await api.call("PUT", f"/v1/profiles/{kid}/consents/research_use", on, profile=token)
-            assert code(alone) == "validation_failed"  # a minor's research grant needs the guardian's agreement
-            raised = await api.call("PATCH", f"/v1/profiles/{kid}", {"age_band": "18_plus"}, profile=token)
-            assert raised.status_code == 200
-            listed = await api.call("GET", f"/v1/profiles/{kid}/consents", profile=token)
-            assert not any(c.get("granted") for c in listed.json()), "the change grants nothing"
-            own = await api.call("PUT", f"/v1/profiles/{kid}/consents/research_use", on, profile=token)
-            assert _consent(own) == {"granted": True, "granted_by_role": "student_18_plus", "method": "in_app_notice"}
-            # A profile added as 18 or over consents for itself, as PRV-06 says.
-            adult = await api.add(student("Grown", "18_plus"))
+            adult = await api.add(student("Grown"))
             token = (await api.unlock(adult)).json()["profile_token"]
-            own = await api.call("PUT", f"/v1/profiles/{adult}/consents/research_use", on, profile=token)
+            own = await api.call("PUT", f"/v1/profiles/{adult}/consents/research_use", {"action": "on"}, profile=token)
             assert _consent(own) == {"granted": True, "granted_by_role": "student_18_plus", "method": "in_app_notice"}
         finally:
             await stop_core(r)
@@ -155,22 +141,22 @@ def test_prv06_corrected_age_band_self_consents(tmp_path: Path):
     run(go())
 
 
-def test_prv06_age_band_lowered_withdraws_self_grants(tmp_path: Path):
-    """Moving a profile from 18 or over to a minor band withdraws every scope it granted itself (PRV-06)."""
+def test_prv06_age_band_cannot_be_lowered(tmp_path: Path):
+    """A band under 18 is refused (W5), so the profile's own grants stay in force (PRV-06)."""
 
     async def go():
         r = await start_core(tmp_path, settings=Settings(consent_dpia_ref="dpia-test"), worker=False)
         api = Api(r)
         try:
-            adult = await api.add(student("Grown", "18_plus"))
+            adult = await api.add(student("Grown"))
             token = (await api.unlock(adult)).json()["profile_token"]
             own = await api.call("PUT", f"/v1/profiles/{adult}/consents/research_use", {"action": "on"}, profile=token)
             assert _consent(own)["granted"] is True
             lowered = await api.call("PATCH", f"/v1/profiles/{adult}", {"age_band": "16_17"}, profile=token)
-            assert lowered.status_code == 200
+            assert lowered.status_code == 422 and code(lowered) == "validation_failed"
             states = (await api.call("GET", f"/v1/profiles/{adult}/consents", profile=token)).json()
             research = next(s for s in states if s["scope"] == "research_use")
-            assert research["granted"] is False
+            assert research["granted"] is True
         finally:
             await stop_core(r)
 

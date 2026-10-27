@@ -96,7 +96,7 @@ def subscription(profiles: list[str], *, period_end: str = "2099-01-01T00:00:00.
 
 
 async def subscribe(api: Api, profiles: list[str], **kwargs: Any) -> Any:
-    """The checkout's signed entitlement, with the guardian's consent given there for each profile (D70, PRV-06)."""
+    """The checkout's signed entitlement, naming each profile it covers (D70); adults consent for themselves (W5)."""
     body = {"entitlement": subscription(profiles, **kwargs),
             "consents": [{"profile_id": p, "notice_version": NOTICE} for p in profiles]}  # fmt: skip
     return await api.call("POST", "/v1/subscription", body)
