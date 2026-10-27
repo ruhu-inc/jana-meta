@@ -421,3 +421,23 @@ def test_dictation_waits_for_key_release_and_preserves_paused_segments(overlap):
         {"type": "dictation_transcript", "capture_id": identity, "text": "First sentence. Second sentence."},
         {"type": "dictation_finished", "capture_id": identity, "cancelled": False},
     ]
+
+
+def test_dictation_pressed_before_the_endpoint_is_ready_stays_listening():
+    """A dictation opens a fresh voice connection, and the press can reach the bridge before the endpoint's
+    `session.created` (cloud voice opens Voice Transcribe first). That event must not report `idle` while the key is
+    held: the client takes `idle` after `listening` as the end of the dictation, forgets it, and never sends the
+    release, so the draft hangs at "Working out what you said" (seen 2 of 4 times in the browser host, 2026-10-27)."""
+    from agent_core.engine.voice_bindings import VoiceBindings
+    from agent_core.engine.voice_bridge import VoiceBridge
+    from test_m31_voice_bridge import SESSION
+
+    bridge = VoiceBridge(VoiceBindings("epoch").mint(SESSION, None), strict=True)
+    bridge.offer_conversation(False)  # the tutor screen: no conversation, dictation only
+    identity = new_id("cap")
+    states = [e["state"] for e in bridge.start_dictation(identity, 0).events if e["type"] == "voice.state"]
+    effects = bridge.server(event("session.created", session={"type": "realtime"}), 0)
+    states += [e["state"] for e in effects.events if e["type"] == "voice.state"]
+    assert states == ["listening"]  # never `idle` while the key is held
+    released = bridge.control({"type": "dictate", "capture_id": identity, "pressed": False})
+    assert released.upstream  # the release reaches the endpoint as usual
