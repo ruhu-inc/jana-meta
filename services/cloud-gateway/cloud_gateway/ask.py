@@ -142,10 +142,15 @@ def permitted(url: str, allow: list[str] | None, excluded: list[str]) -> bool:
     return not any(_under(host, d) for d in excluded)
 
 
+def instruction_like(text: str) -> bool:
+    """Whether text carries an instruction-like span (the rule `inert` withholds by; research pages use it too)."""
+    return _INSTRUCTION.search(text) is not None
+
+
 def inert(text: str, limit: int) -> str:
     """Fetched or learner text as data: text carrying anything instruction-like is withheld whole (a page that tries
     to steer the answer is not a source to quote), and the rest is escaped so no tag inside it is live."""
-    clean = REMOVED if _INSTRUCTION.search(text[:limit]) else text[:limit]
+    clean = REMOVED if instruction_like(text[:limit]) else text[:limit]
     return clean.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
