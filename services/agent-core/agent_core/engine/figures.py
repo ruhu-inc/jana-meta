@@ -27,11 +27,13 @@ DIGITS = re.compile(r"\d+(?:\.\d+)?(?:/\d+)?")
 MASK = "?"
 KEEP = frozenset({"id", "from", "to", "of", "graph", "type", "object", "optic", "kind", "layout_hint", "mode",
                   "predict", "arrangement", "between", "rays", "show", "marks", "scale", "axes"})  # fmt: skip
+# The whole request to copy, not only its params: left to write the rest, the Coach adds a `ref` of its own, which the
+# contract refuses (a `ref` names a library diagram) and the decoding schema cannot stop (its pattern is not sent).
 FIGURE_NOTE = (
-    "a checked figure fits this topic: in `visual`, show one {kind} drawn with this problem's own numbers, shaped "
-    "like this pattern (fill each ? from the question; never label the answer on it): {params}. List in its "
-    "numbers_from, as strings, the ids of the givens you draw ({givens}) and of any check you use; a number you cannot "
-    "cite stays off. Then ask about one of its parts ({parts}), pointing at it"
+    "a checked figure fits this topic: in `visual`, show one {kind} drawn with this problem's own numbers, written "
+    "like this request (fill each ? from the question; never label the answer on it): {request}. It takes no `ref`. "
+    "Add its numbers_from: as strings, the ids of the givens you draw ({givens}) and of any check you use; a number "
+    "you cannot cite stays off. Then ask about one of its parts ({parts}), pointing at it"
 )
 SHOWN_NOTE = "the question's figure is on screen ({visual_id}, parts {parts}): point at a part when you ask about it"
 PREDICT_NOTE = ("a predict-first simulation is on screen ({visual_id}): ask the student to write their prediction "
@@ -90,8 +92,9 @@ def opening_note(engine: Any) -> str:
     given = knowns(engine)
     listed = ", ".join(f"{ref} = {value}" for ref, value in given.items())
     params = json.dumps(masked(pattern["params"]), ensure_ascii=False, separators=(",", ":"))
+    request = f'{{"spec_version":1,"type":"{pattern["type"]}","params":{params[:600]}}}'
     parts = ", ".join(p for p in pattern["parts"] if not p.startswith("seg_"))[:200]
-    return FIGURE_NOTE.format(kind=pattern["type"], params=params[:600], givens=listed, parts=parts)
+    return FIGURE_NOTE.format(kind=pattern["type"], request=request, givens=listed, parts=parts)
 
 
 def show(engine: Any, turn: Any, record: Any) -> str:
