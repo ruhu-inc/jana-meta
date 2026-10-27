@@ -38,6 +38,12 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
   const [teachReview, setTeachReview] = useState(false);
   const studyReady = view.status === "ready";
   useEffect(() => { if (studyReady) controller.loadTopicMaps().catch(() => undefined); }, [controller, studyReady]);
+  // The materials research packs made (SPEC §18): their concept maps say their concepts came from the web.
+  const [webSources, setWebSources] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    if (!studyReady || typeof controller.researchPacks !== "function") return;
+    void controller.researchPacks().then((packs) => setWebSources(new Set(packs.flatMap((p) => (p.source_id ? [p.source_id] : []))))).catch(() => undefined);
+  }, [controller, studyReady, view.source?.source_id]);
   useEffect(() => setTopicsSearched(false), [view.source?.source_id, view.source?.revision]);
   const [adding, setAdding] = useState(false), [activityOpen, setActivityOpen] = useState(false), [allSetsOpen, setAllSetsOpen] = useState(false), [activityLimit, setActivityLimit] = useState(8);
   const [title, setTitle] = useState(""), [text, setText] = useState(""), [confirm, setConfirm] = useState<string | null>(null);
@@ -409,7 +415,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
             <p className="text-meta text-muted">{t(view.podcastVoice?.enabled ? "study.audio_nvidia" : "study.audio_local")}</p>
           </>}
           {shown.status === "stale" && <Notice message={t("study.stale_help")} />}
-          {shown.kind === "concept_map" && shown.concept_map && <StudyConceptMap map={shown.concept_map} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editConceptMap(ops); }}
+          {shown.kind === "concept_map" && shown.concept_map && <StudyConceptMap map={shown.concept_map} fromWeb={shown.sources.some((x) => webSources.has(x.source_id))} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editConceptMap(ops); }}
             actions={ready ? { onAsk: (name) => { setTab("chat"); void controller.conceptAction(name, "ask", preferCloud); }, onFlashcards: (name) => { void controller.conceptAction(name, "flashcards", preferCloud); }, onQuiz: (name) => { void controller.conceptAction(name, "quiz", preferCloud); } } : {}} />}
           {summaryGroups ? summaryGroups.map((group, i) => <section key={i} className="flex flex-col gap-3"><h3 className="text-ui font-semibold text-ink">{group.label}</h3>{shown.settings?.focus?.startsWith("Format as concise revision bullet points.") ? <ul className="flex list-disc flex-col gap-3 ps-5">{group.claims.map((c, j) => <li key={j}>{claim(c)}</li>)}</ul> : group.claims.map((c, j) => claim(c, String(j)))}</section>) : !view.deck && !view.quiz && shown.kind !== "concept_map" && shown.claims.map((c, i) => claim(c, String(i)))}
           {shown.kind === "chat" && shown.status === "ready" && savedJourney?.lesson_aid_id === shown.aid_id && savedJourney.phase === "review" && <span><Button tone="primary" disabled={view.busy} onClick={() => { void controller.saveJourney("lesson_reviewed"); }}>{t("study.journey.reviewed_lesson")}</Button></span>}

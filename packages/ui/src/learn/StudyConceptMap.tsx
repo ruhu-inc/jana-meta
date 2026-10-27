@@ -5,7 +5,7 @@
 // shows its cited summary (or plain note), its relations with their citations, the study actions (ask Jana, make
 // flashcards, quiz me: the same cited, consented and budgeted jobs as the Generate panel) and the learner's edits
 // (rename, remove, merge, add), which are kept. The same map is a table for those who prefer one.
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { StudyContracts as W } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Button, FIELD_LOOK, IconButton, SegmentedControl } from "../primitives/index.js";
@@ -25,9 +25,12 @@ export interface StudyConceptActions {
 
 const DIRECTED = new Set(["builds_on", "part_of", "causes", "example_of"]);
 
-function useOriginWord(): (origin: Origin) => string {
-  const t = useT();
-  return (origin) => t(`study.concept.origin.${origin}`);
+/** The map is of a research pack's material (SPEC §18): its sourced concepts came from web pages, so they say so. */
+const FromWeb = createContext(false);
+
+function useOriginWord(fromWeb?: boolean): (origin: Origin) => string {
+  const t = useT(), inherited = useContext(FromWeb), web = fromWeb ?? inherited;
+  return (origin) => t(web && origin === "document" ? "study.concept.origin.web" : `study.concept.origin.${origin}`);
 }
 
 function ConceptSheet({ concept, map, claim, actions, busy, onEdit, onClose, onPick }: {
@@ -138,12 +141,14 @@ function ConceptTable({ map, onPick }: { map: W.StudyConceptMap; onPick: (id: st
 }
 
 /** A Study concept map with its sheet, edits and table. `claim` draws a cited claim the workspace's way. */
-export function StudyConceptMap({ map, claim, busy = false, actions = {}, onEdit, heading }: {
+export function StudyConceptMap({ map, claim, busy = false, actions = {}, onEdit, heading, fromWeb = false }: {
   map: W.StudyConceptMap; claim: (c: W.Claim) => ReactNode; busy?: boolean; actions?: StudyConceptActions;
   onEdit?: (ops: W.ConceptEditOp[]) => void; heading?: ReactNode;
+  /** The material is a research pack's web pages (SPEC §18), not the learner's own document. */
+  fromWeb?: boolean;
 }) {
   const t = useT();
-  const origin = useOriginWord();
+  const origin = useOriginWord(fromWeb);
   const Drawing = useConceptRenderer();
   const { reducedMotion } = useVisualSettings();
   const [mode, setMode] = useState<"map" | "table">("map");
@@ -161,7 +166,7 @@ export function StudyConceptMap({ map, claim, busy = false, actions = {}, onEdit
   }, [map, origin, t]);
   const concept = open === null ? null : map.concepts.find((c) => c.concept_id === open) ?? null;
   const unsourced = map.concepts.some((c) => c.origin === "model");
-  return (
+  return (<FromWeb.Provider value={fromWeb}>
     <section className="flex flex-col gap-4" data-study-concept-map data-concepts={map.concepts.length} aria-label={t("study.tool.concept_map")}>
       {heading}
       {unsourced && <p role="note" className="rounded-control border border-dashed border-line-strong p-3 text-ui text-ink" data-no-source>{t("study.concept.no_source_note")}</p>}
@@ -191,5 +196,5 @@ export function StudyConceptMap({ map, claim, busy = false, actions = {}, onEdit
         </form>
       )}
     </section>
-  );
+  </FromWeb.Provider>);
 }

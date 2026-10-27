@@ -87,4 +87,9 @@ describe("study concept map", () => {
     expect(table.querySelector('[data-row-concept="c1"]')!.textContent).toContain("Acceleration builds on Velocity");
     expect(table.querySelector('[data-row-concept="c1"]')!.textContent).toContain("Matches a syllabus skill");
   });
+  test("a_research_packs_map_says_its_concepts_came_from_the_web", () => {
+    show(<StudyConceptMap map={DOC} claim={claim} fromWeb />);
+    expect(document.querySelector('[data-node="c1"]')!.textContent).toBe("Velocity · From the web · Matches a syllabus skill");
+    expect(document.body.textContent).not.toContain("From your document");
+  });
 });
