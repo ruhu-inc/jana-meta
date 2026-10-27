@@ -235,3 +235,30 @@ def test_a_motion_graph_with_numbers_for_its_points_is_repaired_not_refused() ->
         assert error.code == "visual_param_invalid"
     else:
         raise AssertionError("a boolean or a word is not a number")
+
+
+def test_a_visual_number_that_is_one_of_the_problems_knowns_is_cited_for_it() -> None:
+    """The Coach cites the knowns a figure uses (`numbers_from`) and can leave one out: a velocity-time graph of the
+    demo question citing u = 0 and v = 20 but not t = 5 was refused ("5 does not match any cited check or known") and
+    cost a second Coach iteration in the browser host (2026-10-27). A number equal to one of the problem's own knowns
+    is traced to it: the known is cited for it and the repair recorded. Any other number is still refused."""
+    params = {"graph": "velocity_time", "points": [{"id": "A", "t": "0", "value": "0"},
+                                                  {"id": "B", "t": "5", "value": "20"}],
+              "gradient": [{"id": "slope", "from": "A", "to": "B"}], "units": {"t": "s", "value": "m/s"}}  # fmt: skip
+    context = VisualContext("physics", "O", "S2", knowns={"kn_zero": Fraction(0), "kn_01": Fraction(0),
+                                                          "kn_02": Fraction(20), "kn_03": Fraction(5)})  # fmt: skip
+    request = {
+        "spec_version": 1,
+        "type": "motion_graph",
+        "params": params,
+        "numbers_from": ["kn_zero", "kn_01", "kn_02"],
+    }
+    resolved, repairs = validate(request, context)
+    assert "kn_03" in resolved["numbers_from"] and "numbers_from:+kn_03" in repairs
+    unknown = {**params, "points": [params["points"][0], {"id": "B", "t": "7", "value": "20"}]}
+    try:
+        validate({**request, "params": unknown}, context)
+    except VisualError as error:
+        assert error.code == "visual_untraced_number"  # 7 is no known of this problem
+    else:
+        raise AssertionError("a number that is no known must still be cited")

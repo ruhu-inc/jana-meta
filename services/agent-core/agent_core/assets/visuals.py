@@ -224,7 +224,7 @@ def validate(
     view = View(spec["type"], spec["params"], computed, spec.get("steps", []), entry, ctx.locale)
     final = parts_of(view)
     spec = _final_parts(spec, final, repairs, entry)
-    _numbers(spec, ctx, computed)  # 8
+    _numbers(spec, ctx, computed, repairs)  # 8
     resolved = _resolve(spec, final, computed, repairs, ctx, entry)
     if len(json.dumps(resolved).encode()) > ctx.max_resolved_bytes:  # 9
         raise VisualError("visual_too_large", "resolved spec")
@@ -759,8 +759,11 @@ def _preset_values(spec: dict[str, Any], ctx: VisualContext) -> list[Fraction]:
     return values
 
 
-def _numbers(spec: dict[str, Any], ctx: VisualContext, computed: dict[str, Any]) -> None:
-    """VSL-12: every claim number equals a referenced value at its shown precision; claims bind to their check."""
+def _numbers(spec: dict[str, Any], ctx: VisualContext, computed: dict[str, Any],
+             repairs: list[str] | None = None) -> None:  # fmt: skip
+    """VSL-12: every claim number equals a referenced value at its shown precision; claims bind to their check. A
+    number that equals none of the cited values but is one of the problem's own knowns (the statement's givens) is
+    traced to that known: it is added to `numbers_from` and the repair recorded (the model left a citation out)."""
     sources: list[Fraction] = _preset_values(spec, ctx)
     for ref in [*spec.get("numbers_from", []), *_param_sources(spec)]:
         if ref.startswith("chk_"):
@@ -775,13 +778,26 @@ def _numbers(spec: dict[str, Any], ctx: VisualContext, computed: dict[str, Any])
         except ArithmeticError:
             traced = False
         if not traced:
-            raise VisualError("visual_untraced_number", f"{where} = {written}", hint=written)
+            known = next((ref for ref, value in ctx.knowns.items() if _given_equal(written, value, ctx)), None)
+            if known is None:
+                raise VisualError("visual_untraced_number", f"{where} = {written}", hint=written)
+            spec["numbers_from"] = [*spec.get("numbers_from", []), known]
+            sources.append(ctx.knowns[known])
+            if repairs is not None:
+                repairs.append(f"numbers_from:+{known}")
     caption = spec.get("caption", "")
     if "=" in caption:
         claim = _canonical(caption)
         cited = [ctx.check_claims.get(r) for r in spec.get("numbers_from", []) if r.startswith("chk_")]
         if not any(c is not None and c == claim for c in cited):
             raise VisualError("visual_untraced_number", f"caption claim {caption[:60]!r} differs from its check")
+
+
+def _given_equal(written: str, value: Fraction, ctx: VisualContext) -> bool:
+    try:
+        return _shown_equal(written, value, ctx.relative_tolerance)
+    except ArithmeticError:
+        return False
 
 
 def _param_sources(spec: dict[str, Any]) -> list[str]:
