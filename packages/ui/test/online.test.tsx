@@ -243,3 +243,22 @@ describe("Online Study profile consent", () => {
     await waitFor(() => expect(screen.queryByRole("button", { name: "Review Study consent" })).toBeNull());
   });
 });
+
+describe("Adult product (JM-D15)", () => {
+  test("no consent-from-someone-else line flashes while the profile is read", async () => {
+    let release: () => void = () => undefined;
+    const { core } = await adultControls((c) => {
+      c.adults.add(BEN.profile_id);
+      c.subscription = { state: "pending_consent", subscription_id: "sub_flash", period_end: null, allowance_used_up: false,
+        profiles: [{ profile_id: BEN.profile_id, consent: "needed" }] };
+      release = c.hold(`/v1/profiles/${BEN.profile_id}`);
+    });
+    await waitFor(() => expect(core.log.some((r) => r.method === "GET" && r.path === "/v1/subscription")).toBe(true));
+    // Loading: the cloud tutor row says nothing about whose consent it waits for.
+    expect(row("cloud_tier").textContent).not.toMatch(/Waiting for consent|parent|guardian/i);
+    expect(document.body.textContent).not.toMatch(/parent|guardian/i);
+    release();
+    await waitFor(() => expect(row("cloud_tier").textContent).toContain(BASE["settings.online.cloud.pending_self"]!));
+    expect(document.body.textContent).not.toMatch(/parent|guardian/i);
+  });
+});
