@@ -48,6 +48,7 @@ class Case:
     leaks: tuple[str, ...] = ()
     computes: bool = True
     follows: str | None = None
+    core: bool = True  # one of the ten seeded turns the median is reported on
 
 
 CASES = (
@@ -65,6 +66,15 @@ CASES = (
          (r"\b24\b",)),
     Case("phys-define-speed", "physics", "What is meant by the term speed?", (), computes=False),
 )  # fmt: skip
+# Wrong answers to the openings above (`--wrong-answers`): each runs the Checker, for its verdict and redo counts. They
+# are follow-ups in the opening's session, reported apart from the ten seeded turns.
+WRONG_ANSWERS = (
+    Case("maths-brackets-wrong", "mathematics", "x = 7", (r"x\s*=\s*5\b",), follows="maths-brackets", core=False),
+    Case("maths-percent-wrong", "mathematics", "24", (r"\b36\b",), follows="maths-percent", core=False),
+    Case("maths-triangle-wrong", "mathematics", "108 cm^2", (r"\b54\b",), follows="maths-triangle", core=False),
+    Case("phys-force-wrong", "physics", "F = 1.5 N", (r"\b6\s*N\b",), follows="phys-force", core=False),
+    Case("phys-ohm-wrong", "physics", "R = 6 ohm", (r"\b24\b",), follows="phys-ohm", core=False),
+)
 
 
 @dataclass
@@ -332,6 +342,7 @@ async def run_case(case: Case, engine: Any, gateway: InProcessGateway) -> dict[s
     calls = gateway.clock.calls
     return {
         "case": case.name,
+        "core": case.core,
         "subject": case.subject,
         "total_s": round(total, 2),
         "first_text_s": round(first_text[0], 2) if first_text else None,
@@ -357,8 +368,22 @@ async def run_case(case: Case, engine: Any, gateway: InProcessGateway) -> dict[s
     }
 
 
+def checker_redos(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Each turn's Checker verdict: written while tools were offered (unconstrained), or redone by a decode-only call
+    after it broke the verdict contract."""
+    verdicts = redone = 0
+    for r in results:
+        calls = [c for c in r["calls"] if c["role"] == "checker"]
+        if not calls:
+            continue
+        verdicts += 1
+        redone += any(c["tools_offered"] == 0 for c in calls)
+    return {"verdicts": verdicts, "redone": redone, "rate": round(redone / verdicts, 2) if verdicts else None}
+
+
 def summary(results: list[dict[str, Any]], spent: float) -> dict[str, Any]:
-    totals = [r["total_s"] for r in results]
+    core = [r for r in results if r.get("core", True)]
+    totals = [r["total_s"] for r in core]
     firsts = [r["first_text_s"] for r in results if r["first_text_s"] is not None]
     by_role: dict[str, list[float]] = {}
     for r in results:
@@ -367,6 +392,9 @@ def summary(results: list[dict[str, Any]], spent: float) -> dict[str, Any]:
     return {
         "turns": len(results),
         "median_total_s": round(statistics.median(totals), 2) if totals else None,
+        "p90_total_s": round(statistics.quantiles(totals, n=10)[-1], 2) if len(totals) > 1 else None,
+        "core_turns": len(core),
+        "checker": checker_redos(results),
         "max_total_s": max(totals) if totals else None,
         "median_first_text_s": round(statistics.median(firsts), 2) if firsts else None,
         "quality_passed": sum(r["quality"]["passed"] for r in results),
@@ -395,7 +423,8 @@ async def main_async(args: argparse.Namespace) -> int:
     from cloud_gateway.config import load_config
 
     wanted = set(args.only.split(",")) if args.only else None
-    cases = [c for c in CASES if wanted is None or c.name in wanted or (c.follows in wanted if c.follows else False)]
+    seeded = CASES + (WRONG_ANSWERS if args.wrong_answers else ())
+    cases = [c for c in seeded if wanted is None or c.name in wanted or (c.follows in wanted if c.follows else False)]
     out = Path(args.out or tempfile.mkdtemp(prefix="jana-turn-latency-"))
     out.mkdir(parents=True, exist_ok=True)
     config = load_config(Path(args.config))
@@ -419,16 +448,19 @@ async def main_async(args: argparse.Namespace) -> int:
     engines: dict[str, Any] = {}
     results = []
     try:
-        for _ in range(args.repeat):
-            for case in cases:
-                if case.follows is None:
-                    engines[case.name] = await open_engine(gateway, case.subject, out, supervisor)
-                elif case.follows not in engines:
-                    continue
-                engine = engines[case.name if case.follows is None else case.follows]
-                result = await run_case(case, engine, gateway)
-                results.append(result)
-                print(table([result])[1], flush=True)
+        try:
+            for _ in range(args.repeat):
+                for case in cases:
+                    if case.follows is None:
+                        engines[case.name] = await open_engine(gateway, case.subject, out, supervisor)
+                    elif case.follows not in engines:
+                        continue
+                    engine = engines[case.name if case.follows is None else case.follows]
+                    result = await run_case(case, engine, gateway)
+                    results.append(result)
+                    print(table([result])[1], flush=True)
+        except SystemExit as stopped:  # --max-usd reached mid-turn: report the turns that finished
+            print(stopped, flush=True)
         spent = gateway.run_usd()
     finally:
         await supervisor.close()
@@ -449,6 +481,7 @@ def main() -> int:
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--out")
     parser.add_argument("--model", action="append", help="try another model for an alias: alias=model id")
+    parser.add_argument("--wrong-answers", action="store_true", help="add wrong answers that run the Checker")
     parser.add_argument("--replies", action="store_true", help="keep specialists' replies in the report")
     parser.add_argument("--thinking", action="append", help="try another Spark effort: alias.asked=sent")
     return asyncio.run(main_async(parser.parse_args()))
