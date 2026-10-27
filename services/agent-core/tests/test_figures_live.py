@@ -14,6 +14,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from agent_core.assets.visuals import VisualContext, VisualError, validate
+from agent_core.contracts import errors as contract_errors
 from agent_core.engine import figures
 from agent_core.engine.pointing import Targets, resolve
 from agent_core.retrieval.index import KnowledgeIndex
@@ -74,8 +75,16 @@ def test_the_coachs_figure_note_masks_the_patterns_numbers() -> None:
     engine = SimpleNamespace(state=state, deps=deps, diagnosis=SimpleNamespace(kc_ids=[ACCELERATION]))
     note = figures.opening_note(engine)
     assert "motion_graph" in note and '"graph":"velocity_time"' in note and '"id":"slope"' in note
+    # The whole request to copy, not only its params: a Coach left to write the rest added a `ref` of its own in 2 of
+    # 8 browser-faithful replays (2026-10-27), which the contract refuses (a `ref` names a library diagram), and every
+    # such reply cost a correction round trip. Filled in, the shape is a valid request.
+    request = json.loads(note[note.index("{") : note.index("}. ") + 1])
+    assert request["spec_version"] == 1 and request["type"] == "motion_graph" and "ref" not in request
+    assert "no `ref`" in note
+    filled = json.loads(json.dumps(request).replace('"?"', '"1"'))
+    assert contract_errors("visuals/visual-spec", {**filled, "numbers_from": ["kn_01"]}) == []
     # Another problem's values never reach the Coach: only the shape, with this problem's givens by id.
-    pattern = json.loads(note[note.index("{") : note.index(". List in its")])
+    pattern = request["params"]
     assert pattern["points"] == [{"id": "A", "t": "?", "value": "?"}, {"id": "B", "t": "?", "value": "?"}]
     assert not re.search(r"\d", json.dumps(pattern))
     assert "kn_01 = 0" in note and "kn_02 = 20" in note and "kn_03 = 5" in note and "kn_zero = 0" in note

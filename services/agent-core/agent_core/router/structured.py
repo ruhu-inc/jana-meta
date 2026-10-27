@@ -158,29 +158,48 @@ def parsed(text: str) -> Any:
         return None
 
 
-def _without_empty_optional(value: Any, schema: Any) -> Any:
-    """The reply without the optional top-level strings it left empty where the contract wants a non-empty one: an
-    empty value says nothing, so it reads as absent instead of costing a correction round trip (Muse Spark's native
-    JSON schema does not enforce `minLength`, and its tutor turns send `"sketch_wanted": ""`). A required field is
-    never dropped, so its emptiness still fails validation."""
+def _without_empty_optional(value: Any, schema: Any, resolver: Any) -> Any:
+    """The reply without the optional strings it left empty where the contract wants a non-empty one, at any depth: an
+    empty value says nothing, so it reads as absent instead of costing a correction round trip. Muse Spark's native
+    JSON schema does not enforce `minLength`, nor a pattern the decoding schema leaves out, so its tutor turns send
+    `"sketch_wanted": ""` and, in a visual, `"ref": ""`. A required field is never dropped, so its emptiness still
+    fails validation, and a non-empty value is held to the field's rules as before."""
+    schema, resolver = _dereferenced(schema, resolver)
+    if isinstance(value, list) and isinstance(schema, dict) and isinstance(schema.get("items"), dict):
+        return [_without_empty_optional(v, schema["items"], resolver) for v in value]
     if not isinstance(value, dict) or not isinstance(schema, dict) or not isinstance(schema.get("properties"), dict):
         return value
     required = set(schema.get("required") or ())
     props = schema["properties"]
-    empty = [k for k, v in value.items() if v == "" and k not in required and isinstance(props.get(k), dict)
-             and int(props[k].get("minLength") or 0) >= 1]  # fmt: skip
-    return {k: v for k, v in value.items() if k not in empty} if empty else value
+    out = {}
+    for name, item in value.items():
+        sub = props.get(name)
+        if item == "" and name not in required and isinstance(sub, dict) and _refuses_empty(sub, resolver):
+            continue
+        out[name] = _without_empty_optional(item, sub, resolver) if isinstance(item, dict | list) else item
+    return out
 
 
-def _root(validator: Draft202012Validator) -> Any:
-    """The validator's root schema, through a root that is only a reference to the contract (`{"$ref": "<id>"}`)."""
-    schema = validator.schema
-    if isinstance(schema, dict) and set(schema) == {"$ref"}:
+def _dereferenced(schema: Any, resolver: Any) -> tuple[Any, Any]:
+    """A subschema through its `$ref`s (the contract validators' roots are only a reference to the contract), with the
+    resolver for references inside it; an unresolvable one is left for the validator to report."""
+    for _ in range(8):
+        if not isinstance(schema, dict) or "$ref" not in schema or resolver is None:
+            break
         try:
-            return validator._resolver.lookup(schema["$ref"]).contents
-        except Exception:  # an unresolvable root is the validator's to report
-            return schema
-    return schema
+            found = resolver.lookup(schema["$ref"])
+        except Exception:
+            break
+        schema, resolver = found.contents, found.resolver
+    return schema, resolver
+
+
+def _refuses_empty(schema: Any, resolver: Any) -> bool:
+    schema, _ = _dereferenced(schema, resolver)
+    if not isinstance(schema, dict):
+        return False
+    pattern = schema.get("pattern")
+    return int(schema.get("minLength") or 0) >= 1 or (isinstance(pattern, str) and re.search(pattern, "") is None)
 
 
 def check(text: str, validator: Draft202012Validator) -> Checked:
@@ -190,7 +209,7 @@ def check(text: str, validator: Draft202012Validator) -> Checked:
         value = model_json.loads(fenced.group(1) if fenced else body)  # LaTeX backslashes kept, not read as escapes
     except json.JSONDecodeError as error:
         return Checked(None, [f"the reply is not valid JSON ({error.msg} at character {error.pos})"])
-    value = _without_empty_optional(value, _root(validator))
+    value = _without_empty_optional(value, validator.schema, validator._resolver)
     problems = sorted(validator.iter_errors(value), key=lambda e: [str(p) for p in e.absolute_path])
     errors = [f"{'/'.join(str(p) for p in e.absolute_path) or '(root)'}: {e.message[:300]}" for e in problems[:10]]
     if not errors and not isinstance(value, dict):  # `null` or a bare list can pass a loose schema: never valid
