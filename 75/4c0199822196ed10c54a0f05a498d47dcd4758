@@ -1,0 +1,19 @@
+SPEC.md
+  s_2ea71d9573bd82::t_b15e933206def4 699-700,720-721,745,752-753,795-840
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "754c0199822196ed10c54a0f05a498d47dcd4758",
+  "prompts": {},
+  "sessions": {
+    "s_2ea71d9573bd82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9b9f1408-053e-4040-9b54-33272f595959",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
