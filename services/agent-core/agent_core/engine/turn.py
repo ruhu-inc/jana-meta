@@ -139,6 +139,7 @@ from agent_core.engine.ui import HandlerError, emit_part, error_of, open_board, 
 from agent_core.engine.unit_format import decimal_unit_comma, format_turn_units
 from agent_core.engine.verbaliser import verbalise
 from agent_core.engine.vision import PhotoReader, PhotoReading, Screen
+from agent_core.engine.visual_claims import refers_to_visual, remove_visual_claims
 from agent_core.learner.service import NewEvent
 from agent_core.memory.render import NOTES_CLOSE, NOTES_OPEN, allowance
 from agent_core.prompts.builder import Message, PromptSession, budgets, build_prompt, prompt_mode_for
@@ -285,6 +286,9 @@ class _Turn:
     # Gate entries the finalise step adds (the markup strip, the sketch selector), kept when gates are built.
     extra_gates: list[dict[str, Any]] = field(default_factory=list)
     visual_retried: bool = False  # VSL-17: the Coach has had its one corrected attempt at a visual this turn
+    # The Coach has been asked once to answer in words because a visual it spoke of cannot be shown (VSL-16): the
+    # trace's record of that ask, settled when the reply is shown.
+    visual_words: dict[str, Any] | None = None
     input_injected: bool = False
     fork: bool = False  # a side question's forked turn (AGT-18): nothing it says joins the lesson's transcript
     visuals: dict[str, VisualResult] = field(default_factory=dict)  # requests resolved through the worker (VSL-13)
@@ -2099,7 +2103,20 @@ class Engine(Coordination, Offers, Predictions):
             if verdict == "continue":
                 assert candidate is not None
                 await self._resolve_visuals(turn, candidate)
-                return self._finalise(turn, candidate)
+                # The words follow what will be on screen (VSL-16): a reply that speaks of a visual that cannot be
+                # shown is asked once for words only, else its claims are taken out before anything is shown or said.
+                unshown = self._unshown_visuals(turn, candidate)
+                if (unshown and self._claims_visual(candidate, unshown) and turn.visual_words is None
+                        and iteration + 1 < max_iterations
+                        and turn.coach_calls < settings.coach_turn_ceiling):  # fmt: skip
+                    turn.visual_words = {"gate": "visual_words", "fired": True, "nudges": 1, "attempt": iteration + 1,
+                                         "outcome": "skipped"}  # fmt: skip
+                    turn.extra_gates.append(turn.visual_words)
+                    turn.nudges.append(NUDGES["visual_words"])
+                    # Should the words-only attempt fail its gates, the reply shipped is this one with its claims out.
+                    turn.gates.pending = self._without_visual_claims(candidate, unshown)
+                    continue
+                return self._finalise(turn, self._words_follow_visuals(turn, candidate))
             if verdict == "break":
                 return self._ship_pending_or_canned(turn, turn.degraded_reason or "gate_budget_exhausted")
             if turn.status == "error":
@@ -2617,13 +2634,85 @@ class Engine(Coordination, Offers, Predictions):
             key = json.dumps(request, sort_keys=True)
             turn.visuals[key] = await asyncio.to_thread(render_visual, request, ctx, resolve)
 
+    def _visual_result(self, turn: _Turn, request: dict[str, Any]) -> VisualResult:
+        """What showing `request` gives this turn: the worker's resolution when it ran, else the in-process render;
+        kept on the turn so the words are checked against the same outcome Finalise shows (VSL-16)."""
+        if self.deps.visual_allowed is not None and not self.deps.visual_allowed(request):
+            return VisualResult("text_only", None, error="safety restriction")
+        key = json.dumps(request, sort_keys=True)
+        if key not in turn.visuals:
+            turn.visuals[key] = render_visual(request, self._visual_context())
+        return turn.visuals[key]
+
+    def _unshown_visuals(self, turn: _Turn, draft: dict[str, Any]) -> list[dict[str, Any]]:
+        """The draft's visual requests that will not be on screen, when none of them is (a shown one may be what the
+        words speak of)."""
+        requests = [r for r in draft.get("visual") or [] if isinstance(r, dict)]
+        unshown = [r for r in requests if self._visual_result(turn, r).resolved is None]
+        return unshown if unshown and len(unshown) == len(requests) else []
+
+    @staticmethod
+    def _visual_part_ids(requests: list[dict[str, Any]]) -> set[str]:
+        """The ids the refused requests gave their own parts (a graph's points "A" and "B")."""
+        found: set[str] = set()
+
+        def walk(node: Any) -> None:
+            if isinstance(node, dict):
+                if isinstance(node.get("id"), str):
+                    found.add(node["id"])
+                for value in node.values():
+                    walk(value)
+            elif isinstance(node, list):
+                for value in node:
+                    walk(value)
+
+        for request in requests:
+            walk(request.get("params"))
+        return found
+
+    def _words_follow_visuals(self, turn: _Turn, draft: dict[str, Any]) -> dict[str, Any]:
+        """The draft Finalise shows: never one whose words speak of a visual that will not be on screen (VSL-16)."""
+        unshown = self._unshown_visuals(turn, draft)
+        record = turn.visual_words
+        if not unshown or not self._claims_visual(draft, unshown):
+            if record is not None and record["outcome"] == "skipped":
+                record["outcome"] = "passed_after_nudge"
+            return draft
+        if record is None:
+            record = {"gate": "visual_words", "fired": True, "nudges": 0, "attempt": 1, "outcome": "skipped"}
+            turn.visual_words = record
+            turn.extra_gates.append(record)
+        record["outcome"] = "exhausted_fallback"  # shown with the claims taken out
+        return self._without_visual_claims(draft, unshown)
+
+    def _claims_visual(self, draft: dict[str, Any], unshown: list[dict[str, Any]]) -> bool:
+        ids = self._visual_part_ids(unshown)
+        return any(refers_to_visual(str(draft.get(name) or ""), ids) for name in ("say", "say_spoken"))
+
+    def _without_visual_claims(self, draft: dict[str, Any], unshown: list[dict[str, Any]]) -> dict[str, Any]:
+        """The draft with its sentences about the unshown visual taken out (VSL-16). When that takes the reply's ask
+        with it, or leaves nothing, the engine's hint for the rung (a question, engine-owned) closes it."""
+        ids = self._visual_part_ids(unshown)
+        rung = max(self.state.rung, 1)
+        repaired = dict(draft)
+        say, removed = remove_visual_claims(str(draft.get("say") or ""), ids)
+        if removed:
+            asked = question_count(str(draft.get("say") or "")) > 0
+            if not say or (asked and question_count(say) == 0):
+                say = f"{say} {self.deps.templates.hints[rung]}".strip()
+            repaired["say"] = say
+        if draft.get("say_spoken"):
+            spoken, gone = remove_visual_claims(str(draft["say_spoken"]), ids)
+            if gone:
+                asked = question_count(str(draft["say_spoken"])) > 0
+                if not spoken or (asked and question_count(spoken) == 0):
+                    spoken = f"{spoken} {self.deps.templates.spoken_hint(rung)}".strip()
+                repaired["say_spoken"] = spoken
+        return repaired
+
     def _visual(self, turn: _Turn, request: dict[str, Any]) -> None:
         """`show_visual`: validate, resolve and emit, or fall back to words (TOL-19, VSL-15, VSL-16)."""
-        resolved = turn.visuals.get(json.dumps(request, sort_keys=True))
-        if self.deps.visual_allowed is not None and not self.deps.visual_allowed(request):
-            result = VisualResult("text_only", None, error="safety restriction")
-        else:
-            result = resolved if resolved is not None else render_visual(request, self._visual_context())
+        result = self._visual_result(turn, request)
         record = {
             "gate": "visual",
             "fired": result.status != "ok",
@@ -2699,8 +2788,11 @@ class Engine(Coordination, Offers, Predictions):
 
     def _ship_pending_or_canned(self, turn: _Turn, reason: str) -> TurnResult:
         """Every early end ships the pending answer, or the withholding-safe canned turn for the rung (AGT-08)."""
+        if turn.visual_words is not None and turn.visual_words["outcome"] == "skipped":  # the words-only ask failed
+            pending = turn.gates.pending is not None
+            turn.visual_words["outcome"] = "exhausted_pending_used" if pending else "exhausted_canned"
         if turn.gates.pending is not None:
-            return self._finalise(turn, turn.gates.pending)
+            return self._finalise(turn, self._words_follow_visuals(turn, turn.gates.pending))
         turn.degraded = True
         turn.degraded_reason = turn.degraded_reason or reason
         verified = turn.gates.records["verified"]

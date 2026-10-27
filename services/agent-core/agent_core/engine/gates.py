@@ -393,6 +393,8 @@ NUDGES = {
     "no_answer_leak": "Your draft gives a result the student has not reached yet. Give a rung-{rung} hint instead.",
     "budget": "Budget nearly used: finish this step.",
     "one_ask": "End with exactly one short question or instruction for the student, with nothing after it.",
+    "visual_words": "Nothing could be drawn, so no drawing is on the screen. Give the same help in words only: do not "
+    "mention a graph, a diagram or a drawing, or a point on one.",
 }
 
 WAITING = ("student_answer", "student_choice")  # a turn that waits for the student (PED-28)
