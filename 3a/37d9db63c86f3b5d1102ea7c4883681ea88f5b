@@ -1,0 +1,19 @@
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_207b3a26495062::t_0757aef0c19e72 276
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3a37d9db63c86f3b5d1102ea7c4883681ea88f5b",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
