@@ -56,14 +56,16 @@ def test_devlab_gate_logic() -> None:
 
 # --- EVL-15 ---------------------------------------------------------------------------------------------------------
 
-PARAMS = {"muse-glimmer-30b": 30.0, "qwen3-vl-8b": 8.0, "gemma-4-12b": 12.0, "gemma-4-26b-a4b": 26.0, "qwen3-vl-30b": 30.0,
-          "gemma-4-31b": 31.0}
+# Synthetic candidates (ids and sizes only): the shipped file lists Muse Glimmer alone, so the procedure is checked over
+# a field that spans the hardware classes.
+PARAMS = {"muse-glimmer-30b": 30.0, "synthetic-8b": 8.0, "synthetic-12b": 12.0, "synthetic-26b": 26.0,
+          "synthetic-30b": 30.0, "synthetic-31b": 31.0}
 
 
 def _results() -> dict[str, dict[str, Any]]:
-    """Synthetic bake-off results for the D58 candidates (no model was run to make them)."""
+    """Synthetic bake-off results for the synthetic candidates (no model was run to make them)."""
     out = {}
-    for n, model in enumerate(bakeoff.candidates()):
+    for n, model in enumerate(PARAMS):
         size = PARAMS[model]
         fits = {"low": size <= 8, "mid": size <= 12, "high": True}
         runs = {hw: {"safety": {"critical_failures": 0, "leak_gate_failures": 0},
@@ -77,11 +79,11 @@ def _results() -> dict[str, dict[str, Any]]:
 
 def evl15_bakeoff_report_complete() -> None:
     results = _results()
-    assert set(results) == set(PARAMS), "the report covers the D58 candidates"
+    assert set(bakeoff.candidates()) <= set(results), "the report covers the shipped candidates"
     report = bakeoff.build(results, "bko_test", "2026-10-09")
-    assert bakeoff.report_errors(report) == []
+    assert bakeoff.report_errors(report, expected=list(PARAMS)) == []
     assert abs(sum(report["weights"].values()) - 1.0) < 1e-9
-    assert report["decision"]["fast"]["low"] == "qwen3-vl-8b", "only the 8B class fits the minimum laptop"
+    assert report["decision"]["fast"]["low"] == "synthetic-8b", "only the 8B class fits the minimum laptop"
     for row in report["candidates"]:
         for per in row["classes"].values():
             assert set(per["filters"]) == {"licence", "ram_fit", "tool_calling", "json_schema", "min_params"}
@@ -89,8 +91,8 @@ def evl15_bakeoff_report_complete() -> None:
                 assert all(len(s["interval"]) == 2 for s in per["scores"].values())
 
     missing = copy.deepcopy(report)
-    missing["candidates"] = [r for r in missing["candidates"] if r["model"] != "gemma-4-31b"]
-    assert "candidate gemma-4-31b is missing from the report" in bakeoff.report_errors(missing)
+    missing["candidates"] = [r for r in missing["candidates"] if r["model"] != "synthetic-31b"]
+    assert "candidate synthetic-31b is missing from the report" in bakeoff.report_errors(missing, expected=list(PARAMS))
     unconfirmed = copy.deepcopy(results)
     for model in unconfirmed:
         unconfirmed[model]["held_out"] = {}
@@ -98,13 +100,13 @@ def evl15_bakeoff_report_complete() -> None:
     assert any("has no held-out confirmation" in e for e in errors)
 
     unsafe = copy.deepcopy(results)
-    unsafe["gemma-4-12b"]["runs"]["mid"]["safety"]["critical_failures"] = 1
-    unsafe["gemma-4-12b"]["licence"] = {"spdx": "LicenseRef-Gemma-Terms", "file_sha256": "b" * 64}
-    row = next(r for r in bakeoff.build(unsafe, "bko", "2026-10-09")["candidates"] if r["model"] == "gemma-4-12b")
+    unsafe["synthetic-12b"]["runs"]["mid"]["safety"]["critical_failures"] = 1
+    unsafe["synthetic-12b"]["licence"] = {"spdx": "LicenseRef-Synthetic-Terms", "file_sha256": "b" * 64}
+    row = next(r for r in bakeoff.build(unsafe, "bko", "2026-10-09")["candidates"] if r["model"] == "synthetic-12b")
     assert row["classes"]["mid"]["excluded"].startswith("filter: licence")
 
     tied = copy.deepcopy(results)
     for model in tied:
         tied[model]["runs"]["high"]["criteria"] = {c: (90, 100) for c in bakeoff.CRITERIA}
     ranking = bakeoff.build(tied, "bko", "2026-10-09")["ranking"]["strong"]["high"]
-    assert ranking[0] == "gemma-4-26b-a4b", "ties go to the smaller model"
+    assert ranking[0] == "synthetic-26b", "ties go to the smaller model"
