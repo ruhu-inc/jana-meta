@@ -96,3 +96,15 @@ def test_a_model_served_under_several_aliases_is_installed_under_each() -> None:
         return installed
 
     assert asyncio.run(scenario()) == ["muse-glimmer", GLIMMER]
+
+
+def test_a_model_attached_without_a_launch_plan_is_listed_as_installed_and_serving() -> None:
+    # The browser host hands the core a running Glimmer (`control.runtime_endpoint`) with no model pack or launch plan;
+    # the device still has a tutor model, so the client must not say "no tutor model" or hide the composer offline.
+    from agent_core.engine.health import catalogue
+
+    listed = catalogue(None, GLIMMER)
+    assert [(row["model_id"], row["serving"]) for row in listed["installed"]] == [(GLIMMER, True)]
+    assert catalogue(None, None)["installed"] == []
+    planned = catalogue({"attempts": [{"model": GLIMMER}], "model_pack": {"pack_id": "p", "version": "1"}}, GLIMMER)
+    assert [(row["model_id"], row["planned"]) for row in planned["installed"]] == [(GLIMMER, True)]

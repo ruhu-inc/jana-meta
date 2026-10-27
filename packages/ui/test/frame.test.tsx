@@ -238,6 +238,19 @@ describe("UXS-14", () => {
     expect(within(knowns).getByText("m/s\u00b2")).toBeTruthy();
   });
 
+  test("test_uxs14_an_equation_given_whole_is_shown_once", () => {
+    const f = new Fixture();
+    workspace(f);
+    // A parse may give the question's equation as both the known's symbol and its value (seen on Muse Glimmer).
+    f.emit({ type: "board.knowns", board_id: BOARD, knowns: [
+      { known_id: "kn_e", symbol: "2x+3=11", label: "equation", value: "2x + 3 = 11", unit: null, source: "question", check_id: null },
+    ], unknowns: [{ symbol: "x", label: "x", unit: null }], conventions: [] }, null);
+    boardStep(f, 0, "correct");
+    const knowns = document.querySelector<HTMLElement>("[data-knowns]")!;
+    expect(within(knowns).queryByText("2x + 3 = 11")).toBeNull();
+    expect(knowns.querySelectorAll(".katex")).toHaveLength(2); // the equation and the x to find, nothing after them
+  });
+
   test("uxs14_board_sheet_below_breakpoint", () => {
     atWidth(TOKENS.layout.breakpoints.expanded - 1);
     const f = new Fixture();

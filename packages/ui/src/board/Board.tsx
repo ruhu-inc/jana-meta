@@ -229,7 +229,8 @@ const Knowns = memo(function Knowns({ knowns, unknowns }: { knowns: readonly Kno
   const t = useT();
   if (knowns.length === 0 && unknowns.length === 0) return null;
   const term = (k: KnownView, key: string, label: string | null, find: boolean) => {
-    const value = find ? undefined : k.value?.trim();
+    // A parse may give an equation as both the symbol and its value ("2x+3=11" = "2x + 3 = 11"): it is shown once.
+    const value = find || (k.value !== undefined && compact(k.value) === compact(k.symbol)) ? undefined : k.value?.trim();
     // A parse may write the unit into the value as well ("14 m/s" with unit "m/s"): it is shown once.
     const unit = !find && k.unit !== null && !(value !== undefined && compact(value).endsWith(compact(k.unit))) ? k.unit : null;
     return (

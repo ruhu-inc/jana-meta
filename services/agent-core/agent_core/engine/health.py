@@ -110,6 +110,10 @@ def catalogue(plan: dict[str, Any] | None, serving: str | None,
         for name, why in plan.get("left_out", [])
         if name not in used and name not in ("manifest.json", "plan")
     ]  # fmt: skip
+    if serving and serving not in used:
+        # A runtime the shell attached without a launch plan (the browser host's Glimmer): the tutor model is here.
+        installed.append({"model_id": serving, "pack_id": pack.get("pack_id"), "pack_version": pack.get("version"),
+                          "serving": True, "planned": False})  # fmt: skip
     if plan.get("hardware_class"):
         reason = f"hardware_class.{plan['hardware_class']}.{plan.get('hardware_reason') or 'predicted'}"
     elif hardware is not None and hardware.get("hardware_class") == "content_only":
