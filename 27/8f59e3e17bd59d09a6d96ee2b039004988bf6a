@@ -1,0 +1,45 @@
+services/cloud-gateway/deploy/meta-dev.toml
+  s_caaef212f871aa::t_3c752fe716ab67 4,10-12
+services/cloud-gateway/cloud_gateway/app.py
+  s_caaef212f871aa::t_3c752fe716ab67 376
+services/cloud-gateway/tests/test_inference_budget.py
+  s_caaef212f871aa::t_e449df51887ec7 243-251
+services/cloud-gateway/tests/test_meta_speech.py
+  s_caaef212f871aa::t_bec5b275d3c61c 1-18,20-30,32-58,60-71,73-75,77-174,176-381,384-402,411,413,416-419,429-451,453-457,460,473,476-485
+  s_caaef212f871aa::t_581dbe975ed8fd 59,72,76
+  s_caaef212f871aa::t_cf7e9461cec396 19,31,403-410,412,414-415,420-428,458-459,461-472,474-475
+  s_caaef212f871aa::t_2f3bc9034516e7 175,382-383,452
+services/cloud-gateway/cloud_gateway/config.py
+  s_caaef212f871aa::t_c1c73231e70291 111-144,148,353-356,360-361,368-369,372-373,422-426
+services/cloud-gateway/cloud_gateway/providers/meta_speech.py
+  s_caaef212f871aa::t_ba437b7e04bbef 1-86,88-152,154-155,157-195,199-275
+  s_caaef212f871aa::t_5d2520527fc824 87,156,196-198
+  s_caaef212f871aa::t_581dbe975ed8fd 153
+services/cloud-gateway/cloud_gateway/voice_keywords.txt
+  s_caaef212f871aa::t_de35f7b6d08a1a 1-1371
+services/cloud-gateway/cloud_gateway/voice.py
+  s_caaef212f871aa::t_581dbe975ed8fd 265-276
+  s_caaef212f871aa::t_269b73aca04530 6,8-10,14-20,65,347-350,354,364,369,389,399-401,497-498,734,919,933,1045-1071,1075,1079-1080,1083,1085,1087-1088,1090-1091,1096,1153
+  s_caaef212f871aa::t_180bccbf68c5f3 21-22
+  s_caaef212f871aa::t_bbdc8566793dc6 64,70,264,346,1097,1103,1155
+services/cloud-gateway/tests/test_gateway_voc28_cloud_voice.py
+  s_caaef212f871aa::t_e449df51887ec7 1,3-4,320-321
+services/cloud-gateway/cloud_gateway/providers/google_speech.py
+  s_caaef212f871aa::t_a4272c746d1ea0 1-3,5-7,16,36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "278f59e3e17bd59d09a6d96ee2b039004988bf6a",
+  "prompts": {},
+  "sessions": {
+    "s_caaef212f871aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "70617874-dbc2-442e-9978-7252c3771b2a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
