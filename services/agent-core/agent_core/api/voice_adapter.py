@@ -619,8 +619,10 @@ class VoiceTutorAdapter:
                     raise VoiceTurnConflict("voice_utterance_limit")
                 place = self.runtime.place_of(binding)
                 # VOC-53: in an open chat a question is answered there, except one in an installed subject spoken in
-                # Ask anything, which the tutor answers (PED-01; the owner's choice, D130).
-                to_tutor = place is None or (place.kind == "ask" and self.route(text) == "tutor")
+                # Ask anything, which the tutor answers (PED-01; the owner's choice, D130). On the tutor screen every
+                # spoken turn is a tutor turn (the owner's choice for this entry, 2026-10-27, SPEC §6).
+                to_tutor = (place is None or place.kind == "tutor"
+                            or (place.kind == "ask" and self.route(text) == "tutor"))  # fmt: skip
                 if not to_tutor:
                     assert place is not None
                     chat = _Chat(binding, entry, place, text)
@@ -652,7 +654,7 @@ class VoiceTutorAdapter:
                     self.core.voice_engines[entry.session_id] = provisional.engine
                     entry.active_turn = provisional.ids.turn_id
                     evaluation = asyncio.create_task(provisional.evaluate())
-                    if place is not None:
+                    if place is not None and place.kind == "ask":
                         job.asked = text
             if chat is not None:
                 async for line in self._chat_reply(chat):

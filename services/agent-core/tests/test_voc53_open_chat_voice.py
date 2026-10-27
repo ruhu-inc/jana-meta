@@ -266,10 +266,12 @@ def test_voc53_distress_spoken_in_ask_shows_the_calm_screen_and_rests_voice(tmp_
 def test_voc53_places_and_spoken_forms():
     assert parse_place({"type": "place", "place": None}) is None
     assert parse_place({"type": "place", "place": "ask"}).kind == "ask"
+    assert parse_place({"type": "place", "place": "tutor"}).kind == "tutor"  # the tutor screen with Cloud voice on
     study = parse_place({"type": "place", "place": "study", "source_id": SOURCE, "revision": 1, "open": ""})
     assert (study.kind, study.source_id, study.revision) == ("study", SOURCE, 1)
-    for bad in ({"type": "place", "place": "tutor"}, {"type": "place", "place": "study", "source_id": "x",
-                                                         "revision": 1, "open": ""}):  # fmt: skip
+    for bad in ({"type": "place", "place": "tutor", "source_id": SOURCE}, {"type": "place", "place": "study",
+                                                                           "source_id": "x", "revision": 1,
+                                                                           "open": ""}):  # fmt: skip
         try:
             parse_place(bad)
         except VoiceProtocolError:
