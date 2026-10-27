@@ -150,8 +150,8 @@ def test_the_conversation_then_a_pack_made_from_the_web(tmp_path: Any) -> None:
         quiz = next(p for p in making["parts"] if p["kind"] == "quiz")
         body = json.loads(conn.execute("SELECT checkpoint FROM study_jobs WHERE job_id=?",
                                        (quiz["job_id"],)).fetchone()[0])  # fmt: skip
-        assert body["request"]["settings"]["question_types"] == ["choice", "true_false", "multi_select",
-                                                                 "fill_blank", "numeric"]  # fmt: skip
+        assert body["request"]["settings"] == {"focus": "the valves", "difficulty": "medium",
+                                               "question_types": ["choice", "fill_blank", "true_false"]}  # fmt: skip
 
         for part, state in zip(making["parts"], ("completed", "completed", "failed", "completed"), strict=True):
             jid = part["job_id"]

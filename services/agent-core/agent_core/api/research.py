@@ -36,7 +36,9 @@ SOURCE_CHARS = 20_000  # what Study processes per part: a few batches, not dozen
 STOPWORDS = frozenset({"what", "which", "when", "where", "does", "with", "from", "that", "this", "their", "they",
                        "into", "each", "your", "about", "level", "there", "these", "those", "have", "been"})
 PART_KINDS = ("concept_map", "notes", "flashcards", "quiz", "audio_overview")
-CODE_MARKED = ["choice", "true_false", "multi_select", "fill_blank", "numeric"]  # SPEC §18.1: no worded answers
+# SPEC §18.1: only types code marks, as Study's own quiz defaults. With multi-select and numeric added, the first live
+# pack's quiz failed (a topic with no quantities); Study's defaults made the same material's quiz at once.
+CODE_MARKED = ["choice", "fill_blank", "true_false"]
 LIVE = ("sending", "waiting_online", "researching", "making")
 
 
@@ -108,6 +110,7 @@ def part_request(kind: str, source: dict[str, Any], brief: dict[str, Any]) -> di
     if kind == "quiz":
         body["count"] = 10
         settings["question_types"] = CODE_MARKED
+        settings["difficulty"] = "medium"
     if kind == "audio_overview":
         settings["podcast_length"] = "standard" if long else "short"
     if settings:
