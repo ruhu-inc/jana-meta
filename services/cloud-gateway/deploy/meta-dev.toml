@@ -1,12 +1,15 @@
 # Local development configuration for Jana on Meta. No key belongs in this file.
 # Put the Meta Model API key in the login keychain: service jana-meta.cloud-gateway, account meta_api_key
 # (and nvidia_api_key for Podcast narration). A gateway-only META_API_KEY environment variable also works.
+# The same key opens Muse Voice Transcribe streams for cloud voice (SPEC §6.1).
 environment = "dev"
 audience_host = "localhost"
 # Outside /tmp, so the spending ledger survives restarts and macOS temporary-file cleanup. Never delete it to reset.
 storage_dir = "~/.jana-meta/gateway"
 keychain_service = "jana-meta.cloud-gateway"
-voice_enabled = false
+# Cloud voice: Voice Transcribe hears; its charges are reserved against the budget below. The endpoint refuses voice
+# connections until a verbatim voice is configured (Magpie, SPEC §6.2; or `[voice_google_tts] project` meanwhile).
+voice_enabled = true
 
 # The event's Meta Model API credit is USD 150 for ten days (2026-10-26 to 2026-11-04). USD 120 is the hard total
 # for development, leaving USD 30 for judging; USD 10 per UTC day. The ledger reserves every call's full bound before

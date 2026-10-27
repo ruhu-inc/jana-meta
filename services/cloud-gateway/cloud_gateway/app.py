@@ -373,7 +373,7 @@ def create_app(
     speech: Any = None,
 ) -> FastAPI:
     """`speech` is cloud voice's `SpeechStack` (or a factory taking the gateway); by default it is built from
-    `voice_google` when voice is switched on."""
+    `voice_meta` (and the interim `voice_google_tts`) when voice is switched on."""
     _file_logging(config)
     gw = Gateway(config, secrets if secrets is not None else secret_source(config), clock, client_factory, alerts)
 

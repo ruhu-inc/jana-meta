@@ -448,22 +448,6 @@ wheels = [
 ]
 
 [[package]]
-name = "google-cloud-speech"
-version = "2.41.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "google-api-core", extra = ["grpc"] },
-    { name = "google-auth" },
-    { name = "grpcio" },
-    { name = "proto-plus" },
-    { name = "protobuf" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/f6/1af146975bb5d9a2a411b47b61bc6321c3947f388dd7921c9b455fe89da1/google_cloud_speech-2.41.0.tar.gz", hash = "sha256:f1abf0c3260fbf3a4c3df9ede8a8013bb42bdd583cbbfeeba752c7a4f781d261", size = 400610, upload-time = "2026-10-01T18:18:15.542Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ad/66/ca9258847c8215a17fd58c82a7e7b04f04ed7cd2689a8d704786ae9fdb0b/google_cloud_speech-2.41.0-py3-none-any.whl", hash = "sha256:a4939b5afdc9038ce8f49ffe523532057fe647280e323a2031c76043a867301a", size = 343423, upload-time = "2026-10-01T18:12:28.404Z" },
-]
-
-[[package]]
 name = "google-cloud-texttospeech"
 version = "2.38.0"
 source = { registry = "https://pypi.org/simple" }
@@ -752,7 +736,6 @@ dependencies = [
 
 [package.optional-dependencies]
 google-voice = [
-    { name = "google-cloud-speech" },
     { name = "google-cloud-texttospeech" },
 ]
 
@@ -766,7 +749,6 @@ requires-dist = [
     { name = "av", specifier = "==19.0.1" },
     { name = "cryptography", specifier = ">=46,<47" },
     { name = "fastapi", specifier = ">=0.118,<1" },
-    { name = "google-cloud-speech", marker = "extra == 'google-voice'", specifier = ">=2.33,<3" },
     { name = "google-cloud-texttospeech", marker = "extra == 'google-voice'", specifier = ">=2.29,<3" },
     { name = "httpx", specifier = ">=0.28,<0.29" },
     { name = "jana-study-worker", editable = "services/study-worker" },

@@ -240,13 +240,15 @@ def test_gateway_counts_real_stream_usage_and_caps_output(tmp_path: Path) -> Non
     asyncio.run(run())
 
 
-@pytest.mark.parametrize(
-    "overrides",
-    [{"voice_enabled": True}, {"ask_search": {"url": "https://search.example.invalid", "secret": "fake-search-key"}}],
-)
-def test_unbudgeted_paid_services_cannot_be_enabled(overrides) -> None:
-    with pytest.raises(ValueError, match="does not cover voice or search"):
-        load_config(quotas={"deployment_total_spend_usd": 1}, **overrides)
+def test_unbudgeted_paid_services_cannot_be_enabled() -> None:
+    with pytest.raises(ValueError, match="does not cover search"):
+        load_config(quotas={"deployment_total_spend_usd": 1},
+                    ask_search={"url": "https://search.example.invalid", "secret": "fake-search-key"})  # fmt: skip
+
+
+def test_voice_is_enabled_under_the_budget() -> None:
+    """Cloud voice reserves its speech charges against the budget (SPEC §6.1), so the dev config can switch it on."""
+    assert load_config(quotas={"deployment_total_spend_usd": 1}, voice_enabled=True).voice_enabled
 
 
 @pytest.mark.parametrize("amount", [float("inf"), float("nan"), -1])

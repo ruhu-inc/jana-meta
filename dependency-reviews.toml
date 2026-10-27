@@ -579,18 +579,11 @@ maintainer_health = "Aymeric Augustin; installed distribution declares Productio
 size = "662 KB installed; no speech model or remote-service SDK bundled"
 shipped = true
 
-[pypi.google-cloud-speech]
-purpose = "Server-only cloud voice speech to text: Cloud Speech-to-Text v2 streaming recognition (Chirp) over gRPC (VOC-28, D124); gateway `google-voice` extra, never bundled into desktop"
-licence = "Apache-2.0"
-maintainer_health = "Google Cloud client libraries team (googleapis/google-cloud-python); frequent releases; 2.41.0 pinned in uv.lock 2026-10-21"
-size = "About 1 MB wheel plus grpcio (about 10 MB platform wheel), protobuf and google-api-core"
-shipped = false
-
 [pypi.google-cloud-texttospeech]
-purpose = "Server-only cloud voice verbatim voice: Cloud Text-to-Speech streaming synthesis (Chirp 3 HD) over gRPC (VOC-28, D124); gateway `google-voice` extra, never bundled into desktop"
+purpose = "Server-only cloud voice interim verbatim voice until Magpie (SPEC §6.2): Cloud Text-to-Speech streaming synthesis (Chirp 3 HD) over gRPC (VOC-28, D124); gateway `google-voice` extra, never bundled into desktop"
 licence = "Apache-2.0"
 maintainer_health = "Google Cloud client libraries team (googleapis/google-cloud-python); frequent releases; 2.38.0 pinned in uv.lock 2026-10-21"
-size = "About 300 KB wheel; shares grpcio, protobuf and google-api-core with google-cloud-speech"
+size = "About 300 KB wheel plus grpcio (about 10 MB platform wheel), protobuf and google-api-core"
 shipped = false
 
 [pypi.pyinstaller]
