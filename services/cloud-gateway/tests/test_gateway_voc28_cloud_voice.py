@@ -311,12 +311,14 @@ def test_voc28_endpoint_zero_retention(tmp_path):
         for secret in (b"CANARYHEARD", b"CANARYSAID", MARK, base64.b64encode(MARK)[:12],
                        BINDING.encode()):  # fmt: skip
             assert secret not in blob
-    # Metadata is kept, as for every gateway call (OBS-22): each service is metered as cloud_voice, with a cost.
+    # Metadata is kept, as for every gateway call (OBS-22): each service is metered as cloud_voice, with its cost:
+    # Voice Transcribe by the second, Kokoro (on our own machine) at nothing.
     with sqlite3.connect(GatewayStore(tmp_path / "store").path) as db:
         rows = db.execute("SELECT feature, model, status, cost_usd FROM requests").fetchall()
     models = {model for feature, model, status, _ in rows if feature == "cloud_voice" and status == 200}
-    assert {"muse-voice-transcribe-1.0", "gemini-live-2.5-flash-native-audio", "en-GB-Chirp3-HD-Kore"} <= models
-    assert all(cost > 0 for _, model, _, cost in rows if model in ("muse-voice-transcribe-1.0", "en-GB-Chirp3-HD-Kore"))
+    assert {"muse-voice-transcribe-1.0", "gemini-live-2.5-flash-native-audio", "kokoro-82m/af_heart"} <= models
+    assert all(cost > 0 for _, model, _, cost in rows if model == "muse-voice-transcribe-1.0")
+    assert all(cost == 0 for _, model, _, cost in rows if model == "kokoro-82m/af_heart")
 
 
 def test_voc28_recognition_failure_ends_the_connection_for_fallback(tmp_path):

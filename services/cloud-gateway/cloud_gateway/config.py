@@ -138,16 +138,26 @@ class MetaVoice(_Strict):
     hour_usd: float = key(0.18, serves="BIZ-08", unit="USD/audio hour", ge=0)
 
 
-class GoogleTts(_Strict):
-    """Interim verbatim voice: Cloud Text-to-Speech streaming synthesis, Chirp 3 HD, with the attached service
-    identity of `project`. It stays only until the Magpie synthesizer (SPEC §6.2) replaces it; JM-D14 removes it from
-    the submission. Without a project there is no voice and the endpoint refuses voice connections."""
+class VoiceTts(_Strict):
+    """Cloud voice's verbatim voice (JM-D13, SPEC §6.4): Kokoro-82M (Apache-2.0, the speech pack's own voice, run here)
+    so the audio judges hear is licence-clean. NVIDIA Magpie through the API-catalog trial is for development only:
+    its audio may not be distributed, so the configuration refuses it outside the dev environment."""
 
-    project: str = Field(default="", pattern=r"^([a-z][a-z0-9-]{4,61}[a-z0-9])?$")
-    tts_location: Literal["global", "us", "eu"] = "eu"
-    # The voice for each transcription language.
-    tts_voices: dict[str, str] = Field(default_factory=lambda: {"en": "en-GB-Chirp3-HD-Kore"})
-    tts_million_chars_usd: float = key(30.0, serves="BIZ-08", unit="USD/1M characters", ge=0)
+    engine: Literal["kokoro", "magpie"] = "kokoro"
+    # Kokoro runs in a worker under the speech runtime's interpreter (torch, kokoro, misaki), from local files only.
+    kokoro_python: str = "~/.cache/jana-speech/venv/bin/python"
+    kokoro_model_dir: str = "~/.cache/jana-speech/packs/sp.en.0_1/models/kokoro-82m"
+    kokoro_speaker: str = Field(default="af_heart", pattern=r"^[ab][fm]_[a-z]+$")
+    kokoro_threads: int = key(0, serves="VOC-28", ge=0, le=64)
+    # The first sentence is split once at its first clause when this many words come before it: first audio sooner.
+    kokoro_first_clause_words: int = key(4, serves="VOC-28", unit="words", ge=0, le=40)
+    kokoro_start_timeout_s: float = key(120.0, serves="VOC-28", unit="s", ge=5, le=600)
+    # Engine-owned keyed phrases (no learner content: the VOC-12 filler) read once at startup and replayed, so the
+    # filler's audio starts the moment it is accepted. Any other text is synthesised when it is given and not kept.
+    fixed_phrases: tuple[str, ...] = ("Let me work that out.",)
+    magpie_secret: str = "nvidia_api_key"  # noqa: S105 -- the secret's name in the secret source, not a key
+    magpie_voice: str = "Magpie-Multilingual.EN-US.Aria.Calm"
+    magpie_fallback_voice: str = "Magpie-Multilingual.EN-US.Aria.Neutral"
 
 
 class Quotas(_Strict):
@@ -351,14 +361,14 @@ class GatewayConfig(_Strict):
     # Trusted deployment command, including its OS sandbox wrapper. Never supplied by a device request.
     study_worker_command: tuple[str, ...] = ()
     # Cloud voice (VOC-28, D124): our hosted Realtime endpoint. Speech to text is Muse Voice Transcribe
-    # (`voice_meta`, JM-D12); the verbatim voice is `voice_google_tts` until Magpie (SPEC §6.2). The tutor's words come
+    # (`voice_meta`, JM-D12); the verbatim voice is `voice_tts` (Kokoro; Magpie in development). The tutor's words come
     # from the device's own engine through the connection, never from a model here. Audio and transcripts stay in
     # memory for the length of one utterance or one spoken reply.
     voice_enabled: bool = False
     # The voice service's own host name, accepted as a token audience beside `audience_host` (SEC-21).
     voice_audience_host: str | None = None
     voice_meta: MetaVoice = Field(default_factory=lambda: MetaVoice())
-    voice_google_tts: GoogleTts = Field(default_factory=lambda: GoogleTts())
+    voice_tts: VoiceTts = Field(default_factory=lambda: VoiceTts())
     voice_max_utterance_s: float = key(30.0, serves="VOC-28", unit="s", ge=1, le=120)
     voice_max_session_s: float = key(3600.0, serves="VOC-28", unit="s", ge=60)
     # Prewarm (D124): `session.created`, which opens the device's microphone, waits this long for the recognition
@@ -422,6 +432,8 @@ class GatewayConfig(_Strict):
             # Cloud voice reserves its speech charges against the budget (`cloud_gateway.voice`); search does not.
             if self.ask_search is not None:
                 raise ValueError("the inference budget does not cover search service charges; disable search")
+        if self.voice_enabled and self.voice_tts.engine == "magpie" and self.environment != "dev":
+            raise ValueError("Magpie trial audio may not be distributed: it is a development voice only (SPEC §6.4)")
         if self.voice_enabled and self.voice_first_words_ms > self.voice_meta.ahead_ms:
             raise ValueError("held first words must fit within what speech to text takes ahead of real time")
         return self

@@ -368,8 +368,16 @@ def test_gaps_are_filled_with_silence_and_offsets_skip_it() -> None:
 # --- in the voice connection -----------------------------------------------------------------------------------------
 
 
-def meta_setup(tmp_path: Path, server: FakeServer, **overrides: Any) -> tuple[Any, Any, Any]:
-    stack = SpeechStack(recognizer=recognizer(server), live=None, tts=FakeTts())
+class PricedTts(FakeTts):
+    """A verbatim voice priced by the character (Kokoro costs nothing, so a cap needs a priced voice to be spent)."""
+
+    def million_chars_usd(self) -> float:
+        return 30.0
+
+
+def meta_setup(tmp_path: Path, server: FakeServer, tts: FakeTts | None = None,
+               **overrides: Any) -> tuple[Any, Any, Any]:  # fmt: skip
+    stack = SpeechStack(recognizer=recognizer(server), live=None, tts=tts or FakeTts())
     client, device, _, _ = setup(tmp_path, (stack, stack.recognizer, None, stack.tts), **overrides)
     return client, device, stack
 
@@ -429,19 +437,26 @@ def test_speech_start_barges_in(tmp_path: Path) -> None:
     assert done["response"]["status_details"]["reason"] == "turn_detected"
 
 
-def test_default_stack_is_meta_without_google(tmp_path: Path) -> None:
+def test_default_stack_is_voice_transcribe_and_kokoro(tmp_path: Path) -> None:
+    """Voice Transcribe hears and Kokoro reads (SPEC §6.4), with no Live voice; Magpie only when configured, in dev."""
+    from cloud_gateway.providers.kokoro_speech import KokoroSynthesizer
+    from cloud_gateway.providers.magpie_speech import MagpieSynthesizer
+
     config = gateway_config(tmp_path, voice_enabled=True)
     app = create_app(config, secrets=FakeSecrets({"meta_api_key": KEY}))
     stack = app.state.voice.stack
     assert isinstance(stack.recognizer, MetaRecognizer) and stack.live is None
-    assert stack.tts is None and not app.state.voice.available()  # no verbatim voice yet: voice is refused
-    import cloud_gateway.providers.google_speech as google_speech
-
-    assert not hasattr(google_speech, "google_stack") and not hasattr(google_speech, "ChirpRecognizer")
-    config = gateway_config(tmp_path / "tts", voice_enabled=True, voice_google_tts={"project": "jana-voice-test"})
+    assert isinstance(stack.tts, KokoroSynthesizer) and stack.tts.voice == "kokoro-82m/af_heart"
+    with pytest.raises(ImportError):
+        import cloud_gateway.providers.google_speech  # noqa: F401 -- JM-D14: no Google voice remains
+    config = gateway_config(tmp_path / "dev", environment="dev", voice_enabled=True, voice_tts={"engine": "magpie"})
     stack = create_app(config, secrets=FakeSecrets({"meta_api_key": KEY})).state.voice.stack
-    assert stack.tts is not None and stack.tts.voice == "en-GB-Chirp3-HD-Kore"  # the interim voice until §6.2
-    stack = create_app(config, secrets=FakeSecrets({})).state.voice.stack
+    assert isinstance(stack.tts, MagpieSynthesizer)
+    with pytest.raises(ValueError, match="development voice only"):
+        gateway_config(tmp_path / "staging", voice_enabled=True, voice_tts={"engine": "magpie"})
+    stack = create_app(
+        gateway_config(tmp_path / "nokey", voice_enabled=True), secrets=FakeSecrets({})
+    ).state.voice.stack
     assert stack.recognizer is None  # no Meta key, no speech to text
 
 
@@ -472,7 +487,7 @@ def test_a_revoked_credential_ends_the_connection_at_the_next_turn(tmp_path: Pat
 def test_a_spent_cap_ends_the_connection_at_the_next_turn(tmp_path: Path) -> None:
     server = FakeServer()
     quotas = {"device_burst": 1000, "licence_burst": 10000, "device_daily_spend_usd": 0.000001}
-    client, device, _ = meta_setup(tmp_path, server, quotas=quotas)
+    client, device, _ = meta_setup(tmp_path, server, PricedTts(), quotas=quotas)
     with client, connect(client, device) as ws:
         opened(ws)
         scripted_turn(ws)  # admitted with nothing spent; its spoken sentences are metered
@@ -533,3 +548,11 @@ def test_a_spent_budget_refuses_speech_to_text(tmp_path: Path) -> None:
         seen: list[dict[str, Any]] = []
         error = until(ws, "error", seen)
     assert error["error"]["code"] == "quota_exceeded" and not server.sockets  # nothing opened, nothing billed
+
+
+def test_dev_config_switches_voice_on_with_kokoro(tmp_path: Path) -> None:
+    from cloud_gateway.config import load_config
+
+    config = load_config(Path(__file__).parents[1] / "deploy" / "meta-dev.toml", storage_dir=tmp_path)
+    assert config.voice_enabled and config.voice_tts.engine == "kokoro"
+    assert config.quotas.deployment_daily_spend_usd is not None  # voice runs under the budget

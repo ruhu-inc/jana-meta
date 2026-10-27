@@ -167,13 +167,13 @@ class FakeLive:
 
 
 class FakeTts:
-    voice = "en-GB-Chirp3-HD-Kore"
+    voice = "kokoro-82m/af_heart"
 
     def __init__(self) -> None:
         self.texts: list[str] = []
 
     def million_chars_usd(self) -> float:
-        return 30.0
+        return 0.0  # Kokoro runs on our own machine
 
     async def warm(self) -> None:
         return None

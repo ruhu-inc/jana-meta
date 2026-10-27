@@ -32,7 +32,7 @@ from typing import Any
 from cloud_gateway.config import GatewayConfig, MetaVoice
 from cloud_gateway.custody import Secret, SecretSource
 from cloud_gateway.providers.base import UpstreamError
-from cloud_gateway.providers.speech import Heard, SpeechStack
+from cloud_gateway.providers.speech import Heard, SpeechStack, Synthesizer
 
 BYTES_PER_MS = 48  # 24 kHz mono PCM16
 FRAME = 3840  # 80 ms, the frame Meta's examples send
@@ -262,14 +262,18 @@ class MetaRecognizer:
 
 
 def meta_stack(config: GatewayConfig, secrets: SecretSource) -> SpeechStack:
-    """Cloud voice's services: Voice Transcribe hears, no Live voice (the verbatim reader path), and the interim
-    Cloud Text-to-Speech voice until Magpie (SPEC §6.2). Without the Meta key there is no speech to text, and without
-    a voice the endpoint refuses voice connections."""
+    """Cloud voice's services: Voice Transcribe hears, no Live voice (the verbatim reader path), and `voice_tts` reads:
+    Kokoro by default, Magpie in development (SPEC §6.4). Without the Meta key there is no speech to text and the
+    endpoint refuses voice connections."""
     key = secrets.get(config.voice_meta.secret)
     recognizer = MetaRecognizer(config.voice_meta, key) if key is not None else None
-    tts = None
-    if config.voice_google_tts.project:
-        from cloud_gateway.providers.google_speech import ChirpSynthesizer
+    tts: Synthesizer
+    if config.voice_tts.engine == "magpie":
+        from cloud_gateway.providers.magpie_speech import MagpieSynthesizer
 
-        tts = ChirpSynthesizer(config.voice_google_tts)
+        tts = MagpieSynthesizer(config.voice_tts, secrets.get(config.voice_tts.magpie_secret))
+    else:
+        from cloud_gateway.providers.kokoro_speech import KokoroSynthesizer
+
+        tts = KokoroSynthesizer(config.voice_tts)
     return SpeechStack(recognizer=recognizer, live=None, tts=tts)

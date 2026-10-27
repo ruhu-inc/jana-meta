@@ -21,11 +21,6 @@ dependencies = [
     "meta-sam-parser==0.1.0",
 ]
 
-[project.optional-dependencies]
-# Cloud voice's interim verbatim voice (D124): Text-to-Speech (Chirp 3 HD), gRPC-only, until Magpie (SPEC §6.2).
-# Installed where a `voice_google_tts` project is set; tests use fakes and never import it.
-google-voice = ["google-cloud-texttospeech>=2.29,<3"]
-
 [dependency-groups]
 # The tests check the gateway's replies with the device's own request builder and error classifier.
 dev = ["jana-agent-core"]

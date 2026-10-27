@@ -7,8 +7,8 @@ audience_host = "localhost"
 # Outside /tmp, so the spending ledger survives restarts and macOS temporary-file cleanup. Never delete it to reset.
 storage_dir = "~/.jana-meta/gateway"
 keychain_service = "jana-meta.cloud-gateway"
-# Cloud voice: Voice Transcribe hears; its charges are reserved against the budget below. The endpoint refuses voice
-# connections until a verbatim voice is configured (Magpie, SPEC §6.2; or `[voice_google_tts] project` meanwhile).
+# Cloud voice: Voice Transcribe hears and Kokoro-82M (the speech pack's, run by the gateway) reads the accepted words;
+# speech charges are reserved against the budget below.
 voice_enabled = true
 
 # The event's Meta Model API credit is USD 150 for ten days (2026-10-26 to 2026-11-04). USD 120 is the hard total

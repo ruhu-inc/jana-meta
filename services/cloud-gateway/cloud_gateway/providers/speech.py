@@ -3,8 +3,8 @@
   Recognizer   streaming speech to text with speech events (Muse Voice Transcribe, `meta_speech.py`)
   Live         an optional voice that reads accepted sentences aloud and reports what it said (none is configured:
                the Meta stack reads with the synthesizer)
-  Synthesizer  verbatim streaming text to speech (Cloud Text-to-Speech, Chirp 3 HD, in `google_speech.py` until the
-               Magpie synthesizer of SPEC §6.2)
+  Synthesizer  verbatim streaming text to speech (Kokoro-82M, `kokoro_speech.py`; Magpie in development,
+               `magpie_speech.py`)
 
 Tests give fakes with the same shape (`speech_fakes.py`). Nothing here
 holds audio or text beyond the call that carries it, and nothing here logs either."""
@@ -91,6 +91,10 @@ class SpeechStack:
     recognizer: Recognizer | None = None
     live: Live | None = None
     tts: Synthesizer | None = None
+
+    async def warm(self) -> None:
+        if self.tts is not None:
+            await self.tts.warm()
 
     async def aclose(self) -> None:
         if self.tts is not None:
