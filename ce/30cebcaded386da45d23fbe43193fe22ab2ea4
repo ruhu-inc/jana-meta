@@ -1,0 +1,111 @@
+services/agent-core/agent_core/router/router.yaml
+  s_cba027eb33c77d::t_fdf97d8109e6ec 2
+  s_cba027eb33c77d::t_ef61094a16ee7c 3-5
+services/agent-core/tests/fixtures/probe/mid.json
+  s_cba027eb33c77d::t_8987a57ee6a96d 29
+services/agent-core/tests/test_cloud_reasoning_headroom.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 25
+services/agent-core/tests/test_m4cd_roles_tools.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 159
+services/agent-core/tests/fixtures/probe/low.json
+  s_cba027eb33c77d::t_8987a57ee6a96d 29
+services/agent-core/agent_core/engine/devscript.py
+  s_cba027eb33c77d::t_34795a26fe2bbf 118
+services/agent-core/tests/test_m10a_isolation.py
+  s_cba027eb33c77d::t_dea113057b6e65 245,256
+  s_cba027eb33c77d::t_8987a57ee6a96d 238
+services/agent-core/tests/test_m11f_vision.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 70,101,193
+services/agent-core/tests/test_session_notes_offline.py
+  s_cba027eb33c77d::t_6b168538c746cc 41
+services/agent-core/tests/local_tiers.py
+  s_cba027eb33c77d::t_240a9b836b73b4 1-24
+services/agent-core/tests/test_m11b_runtime.py
+  s_cba027eb33c77d::t_201f9fbf544f00 50-51,58,66
+  s_cba027eb33c77d::t_8987a57ee6a96d 48-49,90,94
+  s_cba027eb33c77d::t_dc721388a56921 32-35,44
+scripts/governance/shipped-assets.toml
+  s_cba027eb33c77d::t_ef61094a16ee7c 59,64,66
+  s_cba027eb33c77d::t_34795a26fe2bbf 60
+services/agent-core/tests/test_m11b_supervisor.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 28
+services/agent-core/tests/journey_harness.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 35
+services/agent-core/tests/test_m11c_router.py
+  s_cba027eb33c77d::t_240a9b836b73b4 50,54,135,138,200,207,251-252,268,272,285,294,308,352,409
+  s_cba027eb33c77d::t_36ca6b2ebded8f 41,68
+services/agent-core/tests/test_w3_power_cut.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 24
+services/agent-core/tests/test_aux_cloud_fallback.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 30-31
+services/agent-core/agent_core/router/recommended_models.json
+  s_cba027eb33c77d::t_fdf97d8109e6ec 3
+services/agent-core/tests/fixtures/probe/high.json
+  s_cba027eb33c77d::t_8987a57ee6a96d 21
+evals/contracts/agents/model-recommendations/valid/hand_shipped.json
+  s_cba027eb33c77d::t_31ec8d0417c9d1 3,6-7,10-13,15-25,27-28,32-37
+services/agent-core/tests/test_m4ab_engine.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 142
+services/agent-core/tests/test_m3_router.py
+  s_cba027eb33c77d::t_240a9b836b73b4 104,335,386,397-398,558,615
+  s_cba027eb33c77d::t_36ca6b2ebded8f 44,82
+scripts/tests/test_m11f_models.py
+  s_cba027eb33c77d::t_34ba70a40d59ac 26,38,65,68-69,71
+services/agent-core/tests/api_harness.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 37
+services/agent-core/tests/test_m20f_crashes.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 96
+services/agent-core/tests/test_m11e_power.py
+  s_cba027eb33c77d::t_6b168538c746cc 53-55
+  s_cba027eb33c77d::t_240a9b836b73b4 25,39-41,43,49,57,66-67,92,94
+  s_cba027eb33c77d::t_36ca6b2ebded8f 21
+services/agent-core/tests/test_m24_runtime.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 50,57-58
+services/agent-core/tests/test_local_tool_templates.py
+  s_cba027eb33c77d::t_0679e796468c3f 24
+scripts/jana_tools/harness/trajectory.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 162
+services/agent-core/tests/test_m11a_hardware.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 91-92
+scripts/tests/test_m7b_devlab.py
+  s_cba027eb33c77d::t_34ba70a40d59ac 59-62,66,68,83,85,93-94,98,102-104,111
+scripts/jana_tools/scenarios.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 177
+services/agent-core/tests/test_m4ij_observability.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 341
+services/agent-core/tests/test_m11a_classes.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 100,105
+services/agent-core/tests/test_g114_s2_engine.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 518
+scripts/jana_tools/point_demo.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 75,175
+evals/contracts/agents/model-recommendations/invalid/unknown_property.json
+  s_cba027eb33c77d::t_31ec8d0417c9d1 3,6-7,10-13,15-25,27-28,32-37
+services/agent-core/tests/test_d128_low_class.py
+  s_cba027eb33c77d::t_8987a57ee6a96d 27,163-164,167,169,181
+services/agent-core/tests/engine_harness.py
+  s_cba027eb33c77d::t_a4c9dc9495cae5 166,177
+  s_cba027eb33c77d::t_8987a57ee6a96d 43
+services/agent-core/tests/test_m14b_gates.py
+  s_cba027eb33c77d::t_fcfd469e0f3736 641
+services/agent-core/tests/test_m14i_skills.py
+  s_cba027eb33c77d::t_a9bdb1c101c4c2 374,399
+services/agent-core/tests/test_m5abc_api.py
+  s_cba027eb33c77d::t_76c2456a1fd6ce 347,1058,1063
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ce30cebcaded386da45d23fbe43193fe22ab2ea4",
+  "prompts": {},
+  "sessions": {
+    "s_cba027eb33c77d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f34882de-86b7-4b7b-9597-aa879116a414",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
