@@ -1,0 +1,21 @@
+services/agent-core/tests/test_m3_router.py
+  s_e4f202a2cbb02b::t_2081603d9b77a8 753-773
+services/agent-core/agent_core/router/structured.py
+  s_e4f202a2cbb02b::t_7f65682e1c7c2f 161-169,174-194,197-202,212
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5208ab7f47f2ef284f0b17e39147163cfb2f33bb",
+  "prompts": {},
+  "sessions": {
+    "s_e4f202a2cbb02b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "589c976b-ede0-4f0a-927e-16e15ec19f5a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
