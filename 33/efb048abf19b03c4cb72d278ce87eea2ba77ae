@@ -1,0 +1,38 @@
+services/agent-core/agent_core/router/core.py
+  s_39fc6898abe9a0::t_ab7830f2206228 76-79,211-214,246-251,706-730
+  s_39fc6898abe9a0::t_b97f420452ef53 731-738
+services/cloud-gateway/cloud_gateway/app.py
+  s_39fc6898abe9a0::t_c75a804e204337 16-17,36,39,73-86,148-149,153-164,570-572
+services/cloud-gateway/tests/test_m19_gw_auth.py
+  s_39fc6898abe9a0::t_2ed6d56b4358ab 9,11,112-142
+  s_39fc6898abe9a0::t_e325f87a3811fe 143-144
+services/agent-core/agent_core/engine/assembly.py
+  s_39fc6898abe9a0::t_a84eb0821f3338 984-985
+services/agent-core/agent_core/providers/gateway.py
+  s_39fc6898abe9a0::t_dce72ea4084531 131-134,136-141
+services/agent-core/agent_core/router/online.py
+  s_39fc6898abe9a0::t_a84eb0821f3338 12,26-27,43-44,83-85
+services/agent-core/tests/test_w3_power_cut.py
+  s_39fc6898abe9a0::t_90495851a455e8 1-35,41-118
+  s_39fc6898abe9a0::t_22320396b99916 36-40
+scripts/jana_tools/hackathon_app.py
+  s_39fc6898abe9a0::t_589d6d14f30732 15,25,122,156-167,244-245
+services/agent-core/agent_core/net/state.py
+  s_39fc6898abe9a0::t_a84eb0821f3338 103-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "33efb048abf19b03c4cb72d278ce87eea2ba77ae",
+  "prompts": {},
+  "sessions": {
+    "s_39fc6898abe9a0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0537a49d-61f4-4000-a6ea-d38d01696f9f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
