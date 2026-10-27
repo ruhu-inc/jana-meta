@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/cloud/gateway.schema.json sha256 86148eb34845435b46e7150b336b755a3d102132aaa263c7291e325e6a69ed0e; do not edit",
+ "$comment": "GENERATED from contracts/cloud/gateway.schema.json sha256 f8bb76ddb360a47c1daf8312ce0b67baac13217a16a4fc201af2846077660b69; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/cloud/gateway",
  "title": "Cloud gateway",
@@ -351,6 +351,12 @@
   },
   "StudyExtractionResponse": {
    "$ref": "https://jana.dev/contracts/study/workspace#/$defs/ExtractionResponse"
+  },
+  "ResearchRequest": {
+   "$ref": "https://jana.dev/contracts/study/research#/$defs/JobRequest"
+  },
+  "ResearchJob": {
+   "$ref": "https://jana.dev/contracts/study/research#/$defs/Job"
   }
  }
 }

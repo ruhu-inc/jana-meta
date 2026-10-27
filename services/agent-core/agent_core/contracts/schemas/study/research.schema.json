@@ -1,0 +1,332 @@
+{
+ "$comment": "GENERATED from contracts/study/research.schema.json sha256 f6852389f10b85b9038939f05dfac4360c5f6bb374792eb6b5327452cffb03ab; do not edit",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://jana.dev/contracts/study/research",
+ "title": "Study research agent",
+ "$defs": {
+  "ResearchId": {
+   "type": "string",
+   "pattern": "^rsj_[0-9A-HJKMNP-TV-Z]{26}$"
+  },
+  "Output": {
+   "enum": [
+    "diagram_drill",
+    "concept_map",
+    "notes",
+    "flashcards",
+    "quiz",
+    "audio_overview"
+   ]
+  },
+  "Brief": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "title",
+    "subject",
+    "level",
+    "purpose",
+    "known",
+    "focus",
+    "sub_questions",
+    "outputs",
+    "length"
+   ],
+   "properties": {
+    "title": {
+     "type": "string",
+     "minLength": 3,
+     "maxLength": 120
+    },
+    "subject": {
+     "enum": [
+      "mathematics",
+      "physics",
+      "chemistry",
+      "accounting",
+      "biology"
+     ]
+    },
+    "level": {
+     "enum": [
+      "o_level",
+      "first_year"
+     ]
+    },
+    "purpose": {
+     "enum": [
+      "exam",
+      "lesson",
+      "curiosity"
+     ]
+    },
+    "known": {
+     "type": "string",
+     "minLength": 0,
+     "maxLength": 300
+    },
+    "focus": {
+     "type": "string",
+     "minLength": 0,
+     "maxLength": 300
+    },
+    "sub_questions": {
+     "type": "array",
+     "minItems": 4,
+     "maxItems": 8,
+     "items": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 200
+     }
+    },
+    "outputs": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 6,
+     "uniqueItems": true,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/research#/$defs/Output"
+     }
+    },
+    "length": {
+     "enum": [
+      "short",
+      "long"
+     ]
+    }
+   }
+  },
+  "ChatTurn": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "kind",
+    "question",
+    "chips",
+    "asks",
+    "brief"
+   ],
+   "properties": {
+    "kind": {
+     "enum": [
+      "question",
+      "brief",
+      "out_of_scope"
+     ]
+    },
+    "question": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "minLength": 3,
+       "maxLength": 200
+      }
+     ]
+    },
+    "chips": {
+     "type": "array",
+     "maxItems": 5,
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     }
+    },
+    "asks": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "enum": [
+        "purpose",
+        "known",
+        "outputs"
+       ]
+      }
+     ]
+    },
+    "brief": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://jana.dev/contracts/study/research#/$defs/Brief"
+      }
+     ]
+    }
+   }
+  },
+  "JobRequest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "brief",
+    "photo_parts"
+   ],
+   "properties": {
+    "brief": {
+     "$ref": "https://jana.dev/contracts/study/research#/$defs/Brief"
+    },
+    "photo_parts": {
+     "type": "array",
+     "maxItems": 24,
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+     }
+    }
+   }
+  },
+  "Page": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "url",
+    "title",
+    "site",
+    "text",
+    "sub_question",
+    "fetched_at"
+   ],
+   "properties": {
+    "url": {
+     "type": "string",
+     "pattern": "^https://",
+     "maxLength": 2048
+    },
+    "title": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 160
+    },
+    "site": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 60000
+    },
+    "sub_question": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7
+    },
+    "fetched_at": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "SubQuestionProgress": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "text",
+    "state",
+    "sources"
+   ],
+   "properties": {
+    "text": {
+     "type": "string",
+     "minLength": 8,
+     "maxLength": 200
+    },
+    "state": {
+     "enum": [
+      "waiting",
+      "searching",
+      "fetching",
+      "done",
+      "failed"
+     ]
+    },
+    "sources": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "Job": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "research_id",
+    "status",
+    "sub_questions",
+    "failure",
+    "pages",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "research_id": {
+     "$ref": "https://jana.dev/contracts/study/research#/$defs/ResearchId"
+    },
+    "status": {
+     "enum": [
+      "queued",
+      "researching",
+      "ready",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "sub_questions": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/research#/$defs/SubQuestionProgress"
+     }
+    },
+    "failure": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "enum": [
+        "no_sources",
+        "budget",
+        "interrupted",
+        "upstream",
+        "timeout"
+       ]
+      }
+     ]
+    },
+    "pages": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "array",
+       "maxItems": 30,
+       "items": {
+        "$ref": "https://jana.dev/contracts/study/research#/$defs/Page"
+       }
+      }
+     ]
+    },
+    "created_at": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "updated_at": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  }
+ }
+}
