@@ -68,6 +68,7 @@ class Pipe:
         self.inbound: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
         self.outbound: asyncio.Queue[tuple[float, dict[str, Any]]] = asyncio.Queue()
         self.headers: dict[str, str] = {}
+        self.query_params: dict[str, str] = {}
 
     async def send_text(self, text: str) -> None:
         self.outbound.put_nowait((time.monotonic(), json.loads(text)))
@@ -326,6 +327,7 @@ async def run_one(
     engine = await open_engine(gateway, case.subject, out, supervisor)
     pipe = Pipe()
     pipe.headers["authorization"] = "Bearer " + session[1]
+    pipe.query_params["subject"] = case.subject  # as the device names it
     connection = VoiceConnection(service, pipe, session[0])
     device = Device(pipe, engine, gateway, case, filler_ms)
     opened = time.monotonic()

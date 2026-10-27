@@ -7,7 +7,7 @@ binary PCM16 frames, and a turn is `speechStart`, cumulative `transcript` partia
 each with `audioProcessedMs`. It hears tone and silence by energy, like `speech_fakes.FakeRecognizer`.
 
 To regenerate the packaged keywords after a glossary change:
-    uv run --offline python -c "from test_meta_speech import glossary_terms; print(*glossary_terms(), sep='\\n')"
+    uv run --offline python -c "from test_meta_speech import keyword_file; print(keyword_file(), end='')"
 from `services/cloud-gateway/tests`, below the header of `cloud_gateway/voice_keywords.txt`."""
 
 from __future__ import annotations
@@ -38,11 +38,27 @@ KEY = "LLM_1234_test-not-a-key"
 WINDOW = 960  # 20 ms
 
 
-def glossary_terms() -> list[str]:
-    terms: dict[str, str] = {}
+SUBJECT_OF = {"kc.mth.": "mathematics", "kc.phy.": "physics", "kc.chm.": "chemistry", "kc.acc.": "accounting"}
+
+
+def glossary_sections_of_yaml() -> dict[str, list[str]]:
+    """Each subject's glossary terms, in glossary order, once each (case-insensitive): a term belongs to every
+    subject one of its KCs is in, or to `other` when it names none."""
+    sections: dict[str, dict[str, str]] = {}
     for entry in yaml.safe_load(GLOSSARY.read_text())["terms"]:
-        terms.setdefault(str(entry["term"]).strip().casefold(), str(entry["term"]).strip())
-    return list(terms.values())
+        term = str(entry["term"]).strip()
+        subjects = {name for kc in entry.get("kcs") or [] for prefix, name in SUBJECT_OF.items()
+                    if str(kc).startswith(prefix)} or {"other"}  # fmt: skip
+        for subject in sorted(subjects):
+            sections.setdefault(subject, {}).setdefault(term.casefold(), term)
+    order = [*SUBJECT_OF.values(), "other"]
+    return {name: list(sections[name].values()) for name in order if name in sections}
+
+
+def keyword_file() -> str:
+    """`voice_keywords.txt` below its header: a `[subject]` line, then that subject's terms."""
+    return "".join(f"[{name}]\n" + "".join(f"{term}\n" for term in terms)
+                   for name, terms in glossary_sections_of_yaml().items())  # fmt: skip
 
 
 def _loud(window: bytes) -> bool:
@@ -182,7 +198,7 @@ def test_handshake_frame_carries_the_key_and_session_settings() -> None:
         "model": "muse-voice-transcribe-1.0", "audioEncoding": "PCM_24KHZ", "mode": "ENDPOINTING",
         "partialMode": "CUMULATIVE", "emitAudioProgress": False}  # fmt: skip
     assert frame["languageBias"] == ["English"]
-    fitting = [word for word in glossary_keywords() if len(word) <= 30][:500]  # Meta's limits (measured)
+    fitting = [word for word in glossary_keywords() if len(word) <= 30][:500]  # Meta's limits; no subject named
     assert frame["keywords"] == fitting and "potential difference" in frame["keywords"]
     assert server.sockets[0].sent[-1] == json.dumps({"type": "endStream"})  # close ends the session
 
@@ -210,7 +226,31 @@ def test_packaged_keywords_fit_meta_limit() -> None:
 
 
 def test_packaged_keywords_are_the_glossary_terms() -> None:
-    assert glossary_keywords() == glossary_terms()
+    from cloud_gateway.providers.meta_speech import glossary_sections
+
+    assert glossary_sections() == glossary_sections_of_yaml()
+
+
+def test_keywords_favour_the_session_subject_then_the_other_demo_subject() -> None:
+    """Meta takes 500 keywords: a Physics session fills them with Physics terms first, then Mathematics; a Maths
+    session the other way round; with no subject, Maths and Physics; Accounting is never first."""
+    from cloud_gateway.providers.meta_speech import glossary_sections
+
+    sections = glossary_sections()
+    maths, physics = sections["mathematics"], sections["physics"]
+    for subject, first, second in (("physics", physics, maths), ("mathematics", maths, physics),
+                                   (None, maths, physics), ("accounting", maths, physics)):  # fmt: skip
+        words = glossary_keywords(subject)
+        assert words[: len(first)] == first
+        assert set(words[len(first) : len(first) + 50]) <= set(second)  # then the other demo subject
+        assert words[0] not in sections["accounting"] or words[0] in first
+    accounting_only = [w for w in sections["accounting"] if all(w not in sections[s] for s in sections
+                                                                if s != "accounting")]  # fmt: skip
+    for subject in (None, "physics", "mathematics", "chemistry"):
+        sent = recognizer(FakeServer()).keywords_for(subject)
+        assert len(sent) == 500 and not set(sent) & set(accounting_only)  # Accounting never makes the cut
+    sent = recognizer(FakeServer()).keywords_for("physics")
+    assert "acceleration" in sent and "velocity" in sent
 
 
 def test_no_audio_before_the_acknowledgement() -> None:

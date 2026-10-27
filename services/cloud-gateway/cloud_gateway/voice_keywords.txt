@@ -1,217 +1,10 @@
-# Muse Voice Transcribe keywords (SPEC §6.1): the `term` of every entry in content/agent/glossary/en.yaml, in
-# order, once each (case-insensitive). They bias recognition; they do not guarantee spelling. Regenerate with
-# the command in tests/test_meta_speech.py when the glossary changes; that test fails until this file matches.
-AVCO
-FIFO
-net realisable value
-cost of sales
+# Muse Voice Transcribe keywords (SPEC §6.1): the `term` of every entry in content/agent/glossary/en.yaml, by subject
+# (a `[subject]` line, then the terms of that subject's KCs, in glossary order, once each, case-insensitive). The
+# recognizer fills Meta's 500 with the session's subject first (`glossary_keywords`). Regenerate with the command in
+# tests/test_meta_speech.py when the glossary changes; that test fails until this file matches.
+[mathematics]
 independent event
 dependent event
-current
-potential difference
-electromotive force
-resistance
-accounting
-accounting equation
-asset
-liability
-capital
-transaction
-premises
-income
-expense
-commission
-financial statements
-supplier
-lender
-investor
-credit supplier
-on credit
-accrual
-income owing
-prepayment
-income received in advance
-year-end adjustment
-other payables
-other receivables
-accounting concept
-accruals
-business entity
-going concern
-consistency
-prudence
-realisation
-materiality
-money measurement
-historic cost
-duality
-bank reconciliation
-reconciliation statement
-bank statement
-cash book
-cheque
-unpresented cheque
-lodgement
-outstanding lodgement
-credit transfer
-direct debit
-standing order
-bank charges
-dishonoured cheque
-overdraft
-debit balance
-credit balance
-receipts and payments account
-income and expenditure account
-expenditure
-subscriptions
-subscriptions in arrears
-subscriptions in advance
-accumulated fund
-surplus
-deficit
-non-profit organisation
-control account
-sales ledger control account
-purchases ledger control account
-sales ledger
-purchases ledger
-contra entry
-opening balance
-closing balance
-fixed cost
-variable cost
-direct cost
-indirect cost
-unit cost
-contribution
-contribution per unit
-break-even point
-margin of safety
-target profit
-depreciation
-capital expenditure
-revenue expenditure
-capitalised
-installation
-straight-line method
-reducing-balance method
-residual value
-useful life
-accumulated depreciation
-net book value
-disposal
-obsolescence
-wear and tear
-non-current asset
-double entry
-debit
-credit
-ledger
-ledger account
-balance carried down
-balance brought down
-drawings
-capital introduced
-purchases
-purchases returns
-sales returns
-credit purchases
-credit sales
-incomplete records
-statement of affairs
-opening capital
-closing capital
-gross margin
-mark-up
-inventory
-closing inventory
-opening inventory
-valuation
-overstate
-understate
-irrecoverable debt
-write-off
-debt recovered
-debtor
-allowance for irrecoverable debts
-trade receivables
-net trade receivables
-trade payables
-partnership
-partnership agreement
-appropriation account
-interest on capital
-interest on drawings
-partner's salary
-profit-sharing ratio
-residual profit
-capital account
-current account
-fixed capital
-ratio
-profit margin
-current ratio
-acid-test ratio
-liquidity
-rate of inventory turnover
-average inventory
-trade receivables collection period
-trade payables payment period
-capital employed
-return on capital employed
-profitability
-efficiency
-income statement
-statement of financial position
-revenue
-gross profit
-profit for the year
-other income
-carriage inwards
-carriage outwards
-current assets
-current liabilities
-non-current liabilities
-net current assets
-source document
-invoice
-credit note
-debit note
-receipt
-cheque counterfoil
-counterfoil
-paying-in slip
-statement of account
-book of prime entry
-day book
-sales journal
-purchases journal
-sales returns journal
-purchases returns journal
-general journal
-petty cash book
-trade discount
-list price
-cash discount
-discount allowed
-discount received
-trial balance
-debit column
-credit column
-suspense account
-error of omission
-error of commission
-error of principle
-error of original entry
-compensating error
-complete reversal
-transposition
-undercast
-overcast
-journal
-journal entry
-correcting entry
 12-hour clock
 24-hour clock
 time interval
@@ -231,6 +24,7 @@ simple interest
 compound interest
 exponential growth
 exponential decay
+depreciation
 percentage
 percentage change
 percentage increase
@@ -293,6 +87,7 @@ lower bound
 upper bound
 maximum
 minimum
+ratio
 proportion
 direct proportion
 inverse proportion
@@ -547,10 +342,16 @@ lower quartile
 upper quartile
 interquartile range
 percentile
+[physics]
+current
+potential difference
+electromotive force
+resistance
 a.c. generator
 absolute zero
 absorption
 absorber
+acceleration
 acceleration due to gravity
 activity
 air resistance
@@ -563,6 +364,8 @@ amplitude
 angle of incidence
 angle of reflection
 angle of refraction
+anticlockwise
+clockwise
 area under
 armature
 asteroid
@@ -574,6 +377,7 @@ audible
 average force
 average kinetic energy
 average orbital speed
+average speed
 axis
 background radiation
 background count
@@ -607,6 +411,7 @@ circuit
 circuit breaker
 circuit symbol
 circular motion
+circumference
 coil
 collision
 combined resistance
@@ -614,6 +419,7 @@ comet
 communications satellite
 commutator
 compass
+component
 compression
 condensation
 conduction
@@ -636,7 +442,9 @@ cosmic ray
 coulomb
 crest
 critical angle
+cross-sectional area
 crumple zone
+cubic centimetre
 cubic metre
 current-carrying
 current-voltage graph
@@ -644,8 +452,10 @@ cycle
 d.c. motor
 decay
 decay equation
+deceleration
 deflection
 denser
+density
 depth
 diffraction
 diminished
@@ -655,6 +465,7 @@ displacement
 displacement can
 displacement-time graph
 distance travelled
+distance-time graph
 division
 double insulation
 drag
@@ -664,6 +475,7 @@ generator
 earth wire
 earthing
 echo
+efficiency
 elastic
 elastic store
 electrical energy
@@ -673,6 +485,7 @@ electromagnetic induction
 electromagnetic wave
 electromagnetic spectrum
 electron
+element
 emission
 emitter
 energy meter
@@ -701,6 +514,7 @@ forward direction
 fossil fuel
 free electrons
 free fall
+frequency
 friction
 fuse
 fuse rating
@@ -714,6 +528,7 @@ geostationary
 geothermal
 giga
 gigahertz
+gradient
 gravitational field strength
 gravitational force
 gravitational potential energy
@@ -723,12 +538,14 @@ half-life
 hard magnetic material
 heating element
 helium nucleus
+hemisphere
 hertz
 hooke's law
 hubble constant
 hubble's law
 hydroelectric
 ideal transformer
+image
 impulse
 incident ray
 induce
@@ -788,6 +605,7 @@ wave equation
 wave speed
 wavefront
 ripple tank
+reflection
 refraction
 medium
 vacuum
@@ -815,10 +633,12 @@ speed of light
 megahertz
 satellite
 sterilise
+normal
 ray
 reflected ray
 plane mirror
 refractive index
+sine
 total internal reflection
 optical fibre
 principal axis
@@ -876,8 +696,13 @@ watt
 megajoule
 neutral wire
 residual current device
+magnitude
+scalar
+vector
+resultant
 right angles
 pythagoras
+scale drawing
 si unit
 prefix
 mega
@@ -890,8 +715,10 @@ reaction time
 pendulum
 measuring cylinder
 overflow can
+square metre
 square centimetre
 metres per second
+volume
 mass
 weight
 newton
@@ -912,6 +739,7 @@ stability
 unstable
 upthrust
 speed
+velocity
 velocity-time graph
 total distance
 total time
@@ -981,6 +809,7 @@ orbit radius
 orbital period
 orbital speed
 solar system
+rotation
 tilt
 season
 sunlit
@@ -1000,6 +829,7 @@ universe
 redshift
 recession speed
 radio telescope
+[chemistry]
 abundance
 acid
 acid rain
@@ -1039,6 +869,7 @@ argon
 astatine
 atomic number
 Avogadro constant
+balance
 balanced equation
 barium nitrate
 barrier method
@@ -1048,6 +879,8 @@ basic oxide
 binary compound
 bitumen
 blast furnace
+boiling
+boiling point
 bond breaking
 bond energy
 bond making
@@ -1072,6 +905,7 @@ catalytic converter
 cathode
 cation
 chemical change
+formula
 chloride
 chlorination
 chlorine
@@ -1080,6 +914,8 @@ chromatogram
 chromatography
 climate change
 cobalt(II) chloride
+coefficient
+collision
 collision frequency
 collision theory
 coloured compound
@@ -1094,23 +930,28 @@ concordant
 condensation polymer
 condensing
 electrical conductivity
+conductor
 electrical conductor
 conical flask
 Contact process
 corrosion
+coulomb
 covalent bond
 cracking
 crude oil
 cryolite
 crystallisation
+current
 decomposition
 deforestation
 delocalised electrons
+density
 desulfurisation
 diamond
 diesel oil
 diffusion
 dilute
+displacement
 dissolving
 distillation
 dm³
@@ -1123,14 +964,18 @@ effervescence
 electrode
 electrolysis
 electrolyte
+electron
 electron arrangement
 electron pair
 electroplating
+element
 empirical formula
 end-point
 endothermic
 energy profile
+energy transferred
 enthalpy change
+equation
 ester
 esterification
 ethane
@@ -1138,6 +983,7 @@ ethanoic acid
 ethanol
 ethene
 ethyl ethanoate
+evaporation
 excess
 exothermic
 extraction
@@ -1148,6 +994,8 @@ filtrate
 filtration
 flavouring
 flue gas desulfurisation
+fossil fuel
+fraction
 fractional distillation
 fractionating column
 freezing
@@ -1199,10 +1047,13 @@ ionic compound
 ionic formula
 ionic half-equation
 ionic lattice
+ionisation
 partly ionised
 iridium
 iron(III) oxide
+isotope
 kerosene
+kinetic energy
 lattice
 lighted splint
 limewater
@@ -1222,8 +1073,16 @@ magnesium
 malleable
 potassium manganate(VII)
 manganese
+nucleon number
+proton number
+proton
+neutron
+nucleus
 mean rate
 rate of reaction
+measuring cylinder
+melting
+melting point
 sublimation
 metal oxide
 metallic bonding
@@ -1251,6 +1110,7 @@ mole ratio
 reacting mass
 simple molecular
 molecular formula
+molecule
 molten
 monomer
 polymer
@@ -1296,6 +1156,7 @@ organic compound
 outer shell
 outer-shell electrons
 shell
+period
 Periodic Table
 overall charge
 oxidation number
@@ -1305,6 +1166,7 @@ redox
 oxidising agent
 reducing agent
 oxygen
+particle
 particle model
 state
 steam
@@ -1324,7 +1186,10 @@ thermal decomposition
 sodium hydrogencarbonate
 pipette
 stopwatch
+thermometer
 polystyrene cup
+specific heat capacity
+temperature change
 titration
 titre
 rough titre
@@ -1342,6 +1207,9 @@ reactivity
 reactivity series
 reversible reaction
 position of equilibrium
+pressure
+temperature
+surface area
 successful collision
 residue
 separation
@@ -1350,6 +1218,7 @@ Rf value
 solvent front
 solute
 solvent
+solution
 precipitate
 precipitation
 rusting
@@ -1369,3 +1238,209 @@ potassium bromide
 potassium chloride
 potassium iodide
 transition element
+[accounting]
+AVCO
+FIFO
+net realisable value
+cost of sales
+accounting
+accounting equation
+asset
+liability
+capital
+transaction
+premises
+income
+expense
+commission
+financial statements
+supplier
+lender
+investor
+credit supplier
+on credit
+accrual
+income owing
+prepayment
+income received in advance
+year-end adjustment
+other payables
+other receivables
+accounting concept
+accruals
+business entity
+going concern
+consistency
+prudence
+realisation
+materiality
+money measurement
+historic cost
+duality
+bank reconciliation
+reconciliation statement
+bank statement
+cash book
+cheque
+unpresented cheque
+lodgement
+outstanding lodgement
+credit transfer
+direct debit
+standing order
+bank charges
+dishonoured cheque
+overdraft
+debit balance
+credit balance
+receipts and payments account
+income and expenditure account
+expenditure
+subscriptions
+subscriptions in arrears
+subscriptions in advance
+accumulated fund
+surplus
+deficit
+non-profit organisation
+control account
+sales ledger control account
+purchases ledger control account
+sales ledger
+purchases ledger
+contra entry
+opening balance
+closing balance
+fixed cost
+variable cost
+direct cost
+indirect cost
+unit cost
+contribution
+contribution per unit
+break-even point
+margin of safety
+target profit
+depreciation
+capital expenditure
+revenue expenditure
+capitalised
+installation
+straight-line method
+reducing-balance method
+residual value
+useful life
+accumulated depreciation
+net book value
+disposal
+obsolescence
+wear and tear
+non-current asset
+double entry
+debit
+credit
+ledger
+ledger account
+balance carried down
+balance brought down
+drawings
+capital introduced
+purchases
+purchases returns
+sales returns
+credit purchases
+credit sales
+incomplete records
+statement of affairs
+opening capital
+closing capital
+gross margin
+mark-up
+inventory
+closing inventory
+opening inventory
+valuation
+overstate
+understate
+irrecoverable debt
+write-off
+debt recovered
+debtor
+allowance for irrecoverable debts
+trade receivables
+net trade receivables
+trade payables
+partnership
+partnership agreement
+appropriation account
+interest on capital
+interest on drawings
+partner's salary
+profit-sharing ratio
+residual profit
+capital account
+current account
+fixed capital
+ratio
+profit margin
+current ratio
+acid-test ratio
+liquidity
+rate of inventory turnover
+average inventory
+trade receivables collection period
+trade payables payment period
+capital employed
+return on capital employed
+profitability
+efficiency
+income statement
+statement of financial position
+revenue
+gross profit
+profit for the year
+other income
+carriage inwards
+carriage outwards
+current assets
+current liabilities
+non-current liabilities
+net current assets
+source document
+invoice
+credit note
+debit note
+receipt
+cheque counterfoil
+counterfoil
+paying-in slip
+statement of account
+book of prime entry
+day book
+sales journal
+purchases journal
+sales returns journal
+purchases returns journal
+general journal
+petty cash book
+trade discount
+list price
+cash discount
+discount allowed
+discount received
+trial balance
+debit column
+credit column
+suspense account
+error of omission
+error of commission
+error of principle
+error of original entry
+compensating error
+complete reversal
+transposition
+undercast
+overcast
+journal
+journal entry
+correcting entry

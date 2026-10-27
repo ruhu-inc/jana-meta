@@ -39,7 +39,9 @@ class Recognition(Protocol):
 
 
 class Recognizer(Protocol):
-    async def open(self, language: str) -> Recognition: ...
+    async def open(self, language: str, subject: str | None = None) -> Recognition:
+        """`subject`: the session's subject, when the device named it (it orders the vocabulary bias)."""
+        ...
 
     def minute_usd(self) -> float: ...
 

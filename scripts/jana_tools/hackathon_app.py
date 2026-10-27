@@ -122,7 +122,8 @@ class LoopbackCloudVoice(CloudVoice):
         self.layer.client._ledger(VOICE_FEATURE, host, len(VOICE_PATH), VOICE_PAYLOAD, profile)
         try:
             socket = await websocket_connect(
-                f"ws://127.0.0.1:{self.port}{VOICE_PATH}", additional_headers={"Authorization": "Bearer " + token},
+                self.url(HOST, session_id).replace(f"wss://{HOST}", f"ws://127.0.0.1:{self.port}", 1),
+                additional_headers={"Authorization": "Bearer " + token},
                 proxy=None, compression=None, max_size=1_000_000, max_queue=64, close_timeout=2,
                 open_timeout=self.layer.settings.net_connect_timeout_s, ping_interval=1.0,
                 ping_timeout=3.0)  # fmt: skip

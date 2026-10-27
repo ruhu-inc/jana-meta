@@ -468,3 +468,15 @@ def test_tts_fake_is_verbatim():
         return [chunk async for chunk in FakeTts().synthesize("x")]
 
     assert len(asyncio.run(read())) == 2
+
+
+@pytest.mark.parametrize(("query", "subject"),
+                         [("?subject=physics", "physics"), ("?subject=history", None), ("", None)])  # fmt: skip
+def test_voc28_the_session_subject_orders_speech_to_text(tmp_path, query, subject):
+    """The device names the session's subject in the URL; the recognizer opens with it (its vocabulary bias puts that
+    subject's terms first). Anything else is ignored."""
+    client, device, (_, recognizer, _, _), _ = setup(tmp_path)
+    with client, client.websocket_connect("/v1/voice/realtime" + query,
+                                          headers={"Authorization": f"Bearer {device.token}"}) as ws:  # fmt: skip
+        opened(ws)
+    assert recognizer.subjects and set(recognizer.subjects) == {subject}

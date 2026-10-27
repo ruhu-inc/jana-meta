@@ -531,3 +531,15 @@ def test_bridge_holds_microphone_audio_while_the_endpoint_is_replaced():
     assert kinds == ["session.update", "input_audio_buffer.append", "input_audio_buffer.append"]
     assert [base64.b64decode(e["audio"]) for e in effects.upstream[1:]] == words
     assert bridge.ready
+
+
+def test_cloud_voice_names_the_session_subject_and_nothing_else():
+    """The endpoint is told the session's subject (it orders speech to text's vocabulary bias), and only a curriculum
+    subject: anything else leaves the address as it was."""
+    voice = CloudVoice(None, lambda: PROFILE, lambda: None, lambda *_: None, lambda _body: None)  # type: ignore[arg-type]
+    assert voice.url("voice.test", "ses_1") == "wss://voice.test/v1/voice/realtime"
+    subjects = {"ses_1": "physics", "ses_2": "mathematics", "ses_3": "Ada's notes"}
+    voice.subject_of = subjects.get
+    assert voice.url("voice.test", "ses_1") == "wss://voice.test/v1/voice/realtime?subject=physics"
+    assert voice.url("voice.test", "ses_2").endswith("?subject=mathematics")
+    assert voice.url("voice.test", "ses_3") == voice.url("voice.test", "ses_9") == "wss://voice.test/v1/voice/realtime"

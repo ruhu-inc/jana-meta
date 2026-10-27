@@ -268,6 +268,13 @@ async def main(
             return await voice_reply(voice.adapter, body)
 
         cloud = runtime.prepare_cloud_voice(core._announce, respond)
+        if cloud is not None:  # the session's current subject orders speech to text's vocabulary bias
+
+            def subject_of(session_id: str) -> str | None:
+                entry = core.sessions.get(session_id)
+                return entry.engine_state.subject if entry is not None else None
+
+            cloud.subject_of = subject_of
 
         def online_voice() -> bool:
             return cloud is not None and cloud.ready()
