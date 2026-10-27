@@ -81,6 +81,40 @@ class Sam(_Strict):
     total_images: int = key(300, serves="SEC-20", unit="images", ge=1)
 
 
+class Research(_Strict):
+    """The research agent's gateway job (SPEC §18.3-18.5, §18.10): one Responses API web search per sub-question on
+    the Study model, then the result pages fetched and reduced to text. Searches are priced per 1,000 (they never
+    appear in `usage`); each call holds its bound in the shared inference budget and the job's own cap. The domain
+    lists are the source policy of §18.10: a host on `excluded_domains` is never fetched; `preferred_domains` and
+    `preferred_suffixes` rank reference and educational sources first. An entry may carry a path prefix
+    (`bbc.co.uk/bitesize`)."""
+
+    enabled: bool = True
+    per_job_usd: float = key(0.30, serves="BIZ-08", unit="USD", ge=0)  # owner, 2026-10-26 (§18.10)
+    daily_jobs_per_learner: int = key(5, serves="SEC-20", unit="jobs/day", ge=1)  # owner, 2026-10-26 (§18.10)
+    max_searches: int = key(12, serves="BIZ-08", unit="searches", ge=1, le=64)
+    max_pages: int = key(30, serves="STU-02", unit="pages", ge=3, le=30)  # the contract's bound on `pages`
+    parallel: int = key(4, serves="ARC-12", unit="requests", ge=1, le=8)
+    fetch_parallel: int = key(6, serves="ARC-12", unit="pages", ge=1, le=16)
+    search_usd_per_1000: float = key(2.50, serves="BIZ-08", unit="USD/1,000 searches", ge=0)
+    # The hold per Responses call: Spark reads its search results as input tokens and reasons within the output, so
+    # the bound is generous; the call settles at its billed usage. Searches per call are 1-2 (probes, 2026-10-27).
+    search_input_tokens: int = key(30_000, serves="SEC-20", unit="tokens", ge=1000)
+    search_output_tokens: int = key(4096, serves="SEC-20", unit="tokens", ge=256)
+    searches_per_call: int = key(3, serves="SEC-20", unit="searches", ge=1)
+    search_timeout_s: float = key(90.0, serves="ARC-12", unit="s", ge=5, le=300)
+    page_timeout_s: float = key(8.0, serves="SEC-31", unit="s", ge=1, le=30)
+    page_max_bytes: int = key(1_000_000, serves="SEC-31", unit="bytes", ge=10_000, le=5_000_000)
+    page_max_chars: int = key(60_000, serves="STU-02", unit="characters", ge=1000, le=60_000)
+    page_min_chars: int = key(200, serves="STU-02", unit="characters", ge=1)
+    max_redirects: int = key(3, serves="SEC-31", unit="hops", ge=0, le=5)
+    job_timeout_s: float = key(900.0, serves="ARC-12", unit="s", ge=60)  # §18.4: hard stop at 15 minutes
+    retention_s: float = key(86_400.0, serves="PRV-25", unit="s", ge=60, le=86_400)  # §18.6: at most 24 hours
+    excluded_domains: tuple[str, ...] = ()
+    preferred_domains: tuple[str, ...] = ()
+    preferred_suffixes: tuple[str, ...] = ()
+
+
 class ModelSpec(_Strict):
     id: str
     thinking: Thinking | None = None
@@ -374,6 +408,7 @@ class GatewayConfig(_Strict):
     ask_search: AskSearch | None = None
     podcast_speech: NvidiaPodcastSpeech = Field(default_factory=NvidiaPodcastSpeech)
     sam: Sam = Field(default_factory=Sam)
+    research: Research = Field(default_factory=Research)
     ask_search_results: int = key(6, serves="STU-20", unit="sources", ge=1, le=10)
     ask_max_tokens: int = key(4096, serves="STU-20", unit="tokens", ge=512, le=16384)
     objectives: Objectives = Field(default_factory=Objectives)
