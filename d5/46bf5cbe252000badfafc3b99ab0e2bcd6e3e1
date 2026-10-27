@@ -1,0 +1,80 @@
+packages/i18n/locales/en.json
+  s_87311ffec186a4::t_dc7678215f876d 61-65
+services/agent-core/agent_core/contracts/learning/student_records.py
+  s_87311ffec186a4::t_dc7678215f876d 585
+services/agent-core/agent_core/learner/planner.py
+  s_87311ffec186a4::t_dc7678215f876d 121-127,129-130,137,139,168,170
+services/agent-core/agent_core/engine/assessment/items.py
+  s_87311ffec186a4::t_dc7678215f876d 50-51
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_87311ffec186a4::t_dc7678215f876d 2
+services/agent-core/tests/test_s10_next_up_subject.py
+  s_87311ffec186a4::t_dc7678215f876d 1-51
+packages/contracts-ts/src/generated/learning/student_records.ts
+  s_87311ffec186a4::t_dc7678215f876d 372
+services/agent-core/tests/test_s10_unit_expected.py
+  s_87311ffec186a4::t_dc7678215f876d 1-40
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_87311ffec186a4::t_dc7678215f876d 2
+packages/ui/src/TutorScreen.tsx
+  s_87311ffec186a4::t_dc7678215f876d 81,83-84,233
+packages/client-core/src/health.ts
+  s_87311ffec186a4::t_dc7678215f876d 6,220-237
+  s_87311ffec186a4::t_2ce4aa54dc0df8 238
+packages/ui/src/index.ts
+  s_87311ffec186a4::t_dc7678215f876d 20
+services/agent-core/agent_core/contracts/api/commands.py
+  s_87311ffec186a4::t_dc7678215f876d 2,905
+services/agent-core/agent_core/engine/live_flows.py
+  s_87311ffec186a4::t_dc7678215f876d 227-228,236,254-258
+services/agent-core/agent_core/engine/learn.py
+  s_87311ffec186a4::t_dc7678215f876d 193-195
+services/agent-core/tests/test_d94_session_subject.py
+  s_87311ffec186a4::t_dc7678215f876d 242-268
+packages/contracts-ts/src/generated/api/commands.ts
+  s_87311ffec186a4::t_dc7678215f876d 2,1007
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_87311ffec186a4::t_dc7678215f876d 2,3650-3652
+packages/ui/src/composer/NoTutor.tsx
+  s_87311ffec186a4::t_dc7678215f876d 1-25
+services/agent-core/agent_core/engine/team.py
+  s_87311ffec186a4::t_dc7678215f876d 175,196,296-304,306
+apps/desktop/src/App.tsx
+  s_87311ffec186a4::t_dc7678215f876d 39,43,417-421,869-870,1065,1257
+packages/client-core/src/index.ts
+  s_87311ffec186a4::t_dc7678215f876d 45-46
+packages/ui/test/no-tutor.test.tsx
+  s_87311ffec186a4::t_dc7678215f876d 1-24
+SPEC.md
+  s_87311ffec186a4::t_dc7678215f876d 330,335-341,345-346
+packages/client-core/test/tutor-reach.test.ts
+  s_87311ffec186a4::t_dc7678215f876d 1-51
+contracts/api/commands.schema.json
+  s_87311ffec186a4::t_dc7678215f876d 3649-3652
+packages/ui/test/unit-field.test.tsx
+  s_87311ffec186a4::t_dc7678215f876d 1-41
+packages/ui/src/learn/items.tsx
+  s_87311ffec186a4::t_dc7678215f876d 70-72,75,92,95,99,156,196
+services/agent-core/tests/test_tutor_runtime_regressions.py
+  s_87311ffec186a4::t_dc7678215f876d 33
+packages/contracts-ts/src/generated/client-validators.js
+  s_87311ffec186a4::t_41c74f4805fa81 10
+packages/contracts-ts/src/generated/validators.js
+  s_87311ffec186a4::t_f9367bf63bd28d 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d546bf5cbe252000badfafc3b99ab0e2bcd6e3e1",
+  "prompts": {},
+  "sessions": {
+    "s_87311ffec186a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02ea0a11-c16d-43dd-9ca0-be1ee039343a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
