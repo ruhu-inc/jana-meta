@@ -1,0 +1,25 @@
+dependency-reviews.toml
+  s_caaef212f871aa::t_357a7c6416fdfc 583,586
+services/agent-core/VOICE.md
+  s_caaef212f871aa::t_fb85f548c2c627 38-48,50-59,68-76
+services/cloud-gateway/pyproject.toml
+  s_caaef212f871aa::t_357a7c6416fdfc 17,25-27
+services/cloud-gateway/cloud_gateway/providers/speech.py
+  s_caaef212f871aa::t_357a7c6416fdfc 3-7,9,58-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "868bc41d8fa94165bdeccd3ff4df20e7b45dfaf9",
+  "prompts": {},
+  "sessions": {
+    "s_caaef212f871aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "70617874-dbc2-442e-9978-7252c3771b2a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
