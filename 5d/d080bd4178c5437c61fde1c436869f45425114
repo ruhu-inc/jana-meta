@@ -1,0 +1,19 @@
+scripts/tests/test_hackathon_app.py
+  s_207b3a26495062::t_3366ed6eff76c7 86-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5dd080bd4178c5437c61fde1c436869f45425114",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
