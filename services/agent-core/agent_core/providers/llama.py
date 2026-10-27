@@ -137,9 +137,15 @@ class LlamaServerProvider:
     # --- models ---------------------------------------------------------------------------------------
 
     async def installed(self) -> list[str]:
-        """Model ids the server can load (router mode lists every model in its models directory)."""
+        """Model ids the server can load (router mode lists every model in its models directory), with each model's
+        aliases: a server started with `--alias a,b` lists one of them as the id and answers to both."""
         reply = await self._call(self.client.get("/v1/models", 10))
-        return sorted(m["id"] for m in (reply.body or {}).get("data", []) if isinstance(m, dict) and "id" in m)
+        names: set[str] = set()
+        for m in (reply.body or {}).get("data", []):
+            if isinstance(m, dict) and "id" in m:
+                names.add(str(m["id"]))
+                names.update(str(a) for a in m.get("aliases") or [] if isinstance(a, str))
+        return sorted(names)
 
     async def capabilities(self, model: str) -> ModelCapabilities:
         if model in self._caps:

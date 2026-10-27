@@ -76,3 +76,23 @@ def test_a_local_model_that_always_reasons_gets_room_for_it_and_a_toggle_model_d
 
     assert asyncio.run(complete("effort"))["max_tokens"] == 200 + LOCAL_REASONING_HEADROOM
     assert asyncio.run(complete("toggle"))["max_tokens"] == 200
+
+
+def test_a_model_served_under_several_aliases_is_installed_under_each() -> None:
+    """llama-server started with `--alias muse-glimmer-30b,muse-glimmer` lists one of them as the id (it sorts them)
+    and answers to both, so the router's `muse-glimmer-30b` must count as installed."""
+    from agent_core.net.loopback import Response
+
+    async def scenario() -> list[str]:
+        provider = LlamaServerProvider("http://127.0.0.1:9", "key")
+        listed = {"data": [{"id": "muse-glimmer", "aliases": ["muse-glimmer", GLIMMER], "object": "model"}]}
+
+        async def get(path: str, timeout_s: float) -> Response:
+            return Response(200, {}, listed)
+
+        provider.client.get = get  # type: ignore[method-assign]
+        installed = await provider.installed()
+        await provider.close()
+        return installed
+
+    assert asyncio.run(scenario()) == ["muse-glimmer", GLIMMER]
