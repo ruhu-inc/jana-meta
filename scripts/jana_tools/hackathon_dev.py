@@ -1,7 +1,10 @@
-"""Start the original browser app with an optional verified, local NVIDIA tutor.
+"""Start the original browser app with an optional verified, local Muse Glimmer tutor (SPEC §7, JM-D11).
 
 No download happens at launch and no Meta provider key is needed here. The
 separately running gateway owns that secret and the persistent inference budget.
+With `--local-model` the app keeps tutoring on Muse Glimmer 30B when the gateway
+cannot reach Meta (Wi-Fi off): its vision projector and DFlash draft are taken
+from the same folder when present.
 """
 
 from __future__ import annotations
@@ -21,16 +24,47 @@ import httpx
 
 from jana_tools import REPO_ROOT
 
-MODEL = "nvidia-nemotron-nano-4b"
-MODEL_SHA256 = "be5d9a656a51922f24f1f09a759cebb694e1f5d9728bf0ef9f8c972c5a0b5ef2"
-MODEL_SOURCE = "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF"
+MODEL = "muse-glimmer-30b"  # the id the router's tiers name (router.yaml)
+MODEL_SOURCE = "https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF"
+# Meta publishes no SHA-256, so these were recorded on first download (2026-10-26) against Hugging Face's own hashes
+# and are pinned here (SPEC §7).
+PINNED_SHA256 = {
+    "Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+    "mmproj-Muse-Glimmer-30B-Q4_K_M.gguf": "f48b452316f9b213758e8659444029b961a24a07f99a1abb2a9f88b06f7c00c6",
+    "dflash-Muse-Glimmer-30B-Q4_K_M.gguf": "b2e808bf656086fe86bd0d0bd990f01d33e377537a07c02d45371517c8b264ef",
+}
+PROJECTOR = "mmproj-Muse-Glimmer-30B-Q4_K_M.gguf"
+DRAFT = "dflash-Muse-Glimmer-30B-Q4_K_M.gguf"
+# Four slots, one per role whose prompt is long and repeated (coach, solver, diagnoser) and one the short auxiliary
+# roles share, so each keeps its prompt prefix cached (llama.py `role_slot`); 8192 tokens each.
+SLOTS = 4
+CONTEXT = 8192 * SLOTS
 
 
 def verify_model(path: Path) -> None:
+    expected = PINNED_SHA256.get(path.name)
+    if expected is None:
+        raise ValueError(f"{path.name} is not a pinned Muse Glimmer file")
     with path.open("rb") as source:
         actual = hashlib.file_digest(source, "sha256").hexdigest()
-    if actual != MODEL_SHA256:
-        raise ValueError("Local model does not match NVIDIA's published SHA-256")
+    if actual != expected:
+        raise ValueError(f"{path.name} does not match its pinned SHA-256")
+
+
+def runtime_arguments(model: Path, port: int, key_file: Path) -> list[str]:
+    """llama-server's arguments for Glimmer: the GGUF's own chat template (`--jinja`), the vision projector so offline
+    photos work, and DFlash speculative decoding (30-45% faster generation on short prompts, SPEC §7). Reasoning is
+    left on, as Glimmer requires: the app sets its strength per request."""
+    args = ["--model", str(model), "--alias", f"{MODEL},muse-glimmer", "--host", "127.0.0.1", "--port", str(port),
+            "--api-key-file", str(key_file), "--ctx-size", str(CONTEXT), "--parallel", str(SLOTS),
+            "--n-gpu-layers", "99", "--jinja", "--no-webui", "--log-disable"]  # fmt: skip
+    projector, draft = model.with_name(PROJECTOR), model.with_name(DRAFT)
+    if projector.is_file():
+        args += ["--mmproj", str(projector)]
+    if draft.is_file():
+        args += ["--model-draft", str(draft), "--spec-type", "draft-dflash", "--n-gpu-layers-draft", "99",
+                 "--spec-draft-n-max", "4"]  # fmt: skip
+    return args
 
 
 def stop(child: subprocess.Popen[bytes]) -> None:
@@ -68,10 +102,13 @@ def main() -> int:
         runtime = None
         try:
             if args.local_model:
-                verify_model(args.local_model)
+                model = args.local_model.resolve()
+                for path in (model, model.with_name(PROJECTOR), model.with_name(DRAFT)):
+                    if path == model or path.is_file():
+                        verify_model(path)
                 program = shutil.which("llama-server")
                 if not program:
-                    parser.error("Install llama.cpp before selecting a local NVIDIA model")
+                    parser.error("Install llama.cpp before selecting the local Muse Glimmer model")
                 with socket.socket() as sock:
                     sock.bind(("127.0.0.1", 0))
                     port = sock.getsockname()[1]
@@ -79,40 +116,13 @@ def main() -> int:
                 key_file = Path(folder) / "runtime.key"
                 key_file.touch(mode=0o600)
                 key_file.write_text(key)
-                runtime = subprocess.Popen(
-                    [
-                        program,
-                        "--model",
-                        str(args.local_model.resolve()),
-                        "--alias",
-                        MODEL,
-                        "--host",
-                        "127.0.0.1",
-                        "--port",
-                        str(port),
-                        "--api-key-file",
-                        str(key_file),
-                        "--ctx-size",
-                        "65536",
-                        "--parallel",
-                        "4",
-                        "--n-gpu-layers",
-                        "99",
-                        "--jinja",
-                        "--reasoning",
-                        "off",
-                        "--no-webui",
-                        "--log-disable",
-                    ],
-                    cwd=REPO_ROOT,
-                    env=env,
-                )
+                runtime = subprocess.Popen([program, *runtime_arguments(model, port, key_file)], cwd=REPO_ROOT, env=env)
                 endpoint = f"http://127.0.0.1:{port}"
                 with httpx.Client(trust_env=False, headers={"authorization": f"Bearer {key}"}) as client:
-                    deadline = time.monotonic() + 120
+                    deadline = time.monotonic() + 300  # 17 GB read from a cold disk
                     while time.monotonic() < deadline:
                         if runtime.poll() is not None:
-                            raise RuntimeError("The local NVIDIA runtime exited during loading")
+                            raise RuntimeError("The local Muse Glimmer runtime exited during loading")
                         try:
                             if client.get(endpoint + "/health", timeout=2).status_code == 200:
                                 break
@@ -120,11 +130,11 @@ def main() -> int:
                             pass
                         time.sleep(0.5)
                     else:
-                        raise RuntimeError("The local NVIDIA runtime did not load within two minutes")
+                        raise RuntimeError("The local Muse Glimmer runtime did not load within five minutes")
                 # Native control.runtime_endpoint performs the real tool-template
                 # readiness generation; /health above only sequences startup.
                 env["JANA_DEV_RUNTIME"] = f"{endpoint} {key} {MODEL}"
-                print("Verified NVIDIA Nemotron Nano 4B loaded locally; native readiness check follows.", flush=True)
+                print("Verified Muse Glimmer 30B loaded locally; native readiness check follows.", flush=True)
             command = [pnpm, "--filter", "@jana/desktop", "dev"]
             if args.stable:
                 bundle = str(Path(folder) / "browser")
