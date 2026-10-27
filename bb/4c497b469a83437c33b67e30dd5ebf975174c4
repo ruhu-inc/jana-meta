@@ -1,0 +1,31 @@
+services/cloud-gateway/cloud_gateway/config.py
+  s_2ea71d9573bd82::t_742124f6cc6810 89-90,101-103,105-107,112,117
+services/cloud-gateway/cloud_gateway/providers/meta_responses.py
+  s_2ea71d9573bd82::t_742124f6cc6810 6-8,128,135,152,154
+services/cloud-gateway/cloud_gateway/research.py
+  s_2ea71d9573bd82::t_742124f6cc6810 166
+services/cloud-gateway/cloud_gateway/research_fetch.py
+  s_2ea71d9573bd82::t_a53c17f7a24ed1 19-20
+  s_2ea71d9573bd82::t_742124f6cc6810 18,79-80,82,88,92-96
+services/cloud-gateway/tests/test_research.py
+  s_2ea71d9573bd82::t_742124f6cc6810 258,419-421
+  s_2ea71d9573bd82::t_a53c17f7a24ed1 94
+services/cloud-gateway/cloud_gateway/defaults.toml
+  s_2ea71d9573bd82::t_742124f6cc6810 85,87-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bb4c497b469a83437c33b67e30dd5ebf975174c4",
+  "prompts": {},
+  "sessions": {
+    "s_2ea71d9573bd82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9b9f1408-053e-4040-9b54-33272f595959",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
