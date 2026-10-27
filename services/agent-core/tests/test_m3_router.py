@@ -750,3 +750,24 @@ def test_an_empty_optional_string_reads_as_absent_but_an_empty_required_one_fail
             "sketch_wanted": "", "visual": []}  # fmt: skip
     checked = check(json.dumps(turn), contract_validator("agents/tutor-turn"))
     assert not checked.errors and "sketch_wanted" not in checked.value
+
+
+def test_an_empty_optional_string_inside_an_item_reads_as_absent_too() -> None:
+    # Told a checked figure takes no `ref`, Muse Spark wrote `"ref": ""` in the visual (1 of 8 browser-faithful Coach
+    # replays, 2026-10-27): the field is optional and its pattern is not in the decoding schema, so the empty value
+    # cost a correction round trip. A non-empty `ref` is still held to the pattern; a required field is never dropped.
+    from agent_core.contracts import validator as contract_validator
+    from agent_core.router.structured import check
+
+    graph = {"spec_version": 1, "type": "motion_graph", "numbers_from": ["kn_01", "kn_02", "kn_03"],
+             "params": {"graph": "velocity_time", "points": [{"id": "A", "t": "0", "value": "0"},
+                                                             {"id": "B", "t": "5", "value": "20"}]}}  # fmt: skip
+    turn = {"board": [], "card": None, "cites": [], "confidence": "high", "expects": "student_answer", "hint_rung": 0,
+            "numbers_from": [], "reveals": "none", "say": "What does point A tell you?", "say_spoken": None,
+            "visual": [{**graph, "ref": ""}]}  # fmt: skip
+    validator = contract_validator("agents/tutor-turn")
+    checked = check(json.dumps(turn), validator)
+    assert not checked.errors and checked.value["visual"] == [graph]
+    invented = check(json.dumps({**turn, "visual": [{**graph, "ref": "vt_graph"}]}), validator)
+    assert [e for e in invented.errors if e.startswith("visual/0/ref")]
+    assert check(json.dumps({**turn, "visual": [{**graph, "type": ""}]}), validator).errors
