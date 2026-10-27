@@ -3646,6 +3646,10 @@
          "type": "null"
         }
        ]
+      },
+      "unit_expected": {
+       "type": "boolean",
+       "description": "The answer has a unit (under any unit policy), so the client shows a unit field; false for a unitless number. Absent from older cores."
       }
      },
      "required": [

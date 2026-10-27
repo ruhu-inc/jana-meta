@@ -67,10 +67,12 @@ function ReadsAs({ tex, unitEcho = false }: { tex: string | null; unitEcho?: boo
 
 const NOTATION = /[eE^xX×*·/⁰¹²³⁴⁵⁶⁷⁸⁹⁻√π]/;
 
-function NumericInput({ part, draft, onDraft, prompt, unitPrompt }: { part: ItemPart; draft: Draft; onDraft: (d: Draft) => void; prompt: boolean; unitPrompt: string | null }) {
+/** A number, with a unit field and the unit symbols only when the answer has a unit (`unit_expected`; an older core
+ * that does not say keeps them). */
+function NumericInput({ part, draft, onDraft, prompt, unitPrompt, unitExpected }: { part: ItemPart; draft: Draft; onDraft: (d: Draft) => void; prompt: boolean; unitPrompt: string | null; unitExpected: boolean }) {
   const t = useT();
   const valueField = useRef<HTMLInputElement>(null), unitField = useRef<HTMLInputElement>(null);
-  const value = draft.value ?? "", unit = draft.unit ?? "";
+  const value = draft.value ?? "", unit = unitExpected ? draft.unit ?? "" : "";
   // The unit field keeps what was typed; a unit with a power or a product, or a value in standard form, reads back
   // typeset as on the board ("m/s^2" as m/s², "3.2x10^-4" as 3.2 × 10⁻⁴).
   const unitTex = /[\^*·⁰¹²³⁴⁵⁶⁷⁸⁹⁻]|ohm/.test(unit) ? unitLatexOf(unit) : null;
@@ -87,14 +89,14 @@ function NumericInput({ part, draft, onDraft, prompt, unitPrompt }: { part: Item
           {t("check.answer")}
           <input ref={valueField} className={FIELD_LOOK} inputMode="decimal" autoComplete="off" value={value} onChange={(e) => onDraft({ ...draft, value: e.target.value })} />
         </label>
-        <label className="flex w-36 flex-col gap-1.5 text-meta font-medium text-muted">
+        {unitExpected && <label className="flex w-36 flex-col gap-1.5 text-meta font-medium text-muted">
           {t("check.unit")}
           <input ref={unitField} className={FIELD_LOOK} autoComplete="off" value={unit} onChange={(e) => onDraft({ ...draft, unit: e.target.value })} />
-        </label>
+        </label>}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <NotationBar keys={NUMBER_KEYS} field={valueField} value={value} onValue={(next) => onDraft({ ...draft, value: next })} />
-        <NotationBar keys={UNIT_KEYS} field={unitField} value={unit} onValue={(next) => onDraft({ ...draft, unit: next })} />
+        {unitExpected && <NotationBar keys={UNIT_KEYS} field={unitField} value={unit} onValue={(next) => onDraft({ ...draft, unit: next })} />}
       </div>
       <ReadsAs tex={tex} unitEcho={unitTex !== null} />
       {unitPrompt !== null && <p className="text-meta text-muted">{t("check.unit_prompt", { unit: unitPrompt })}</p>}
@@ -151,7 +153,7 @@ export function PartInput({ part, draft, onDraft, itemId, prompt = true }: { par
       </fieldset>
     );
   }
-  if (input.kind === "numeric") return <NumericInput part={part} draft={draft} onDraft={onDraft} prompt={prompt} unitPrompt={input.unit_prompt} />;
+  if (input.kind === "numeric") return <NumericInput part={part} draft={draft} onDraft={onDraft} prompt={prompt} unitPrompt={input.unit_prompt} unitExpected={input.unit_expected !== false} />;
   if (input.kind === "algebraic" || input.kind === "equation_solutions") {
     return <AlgebraInput part={part} draft={draft} onDraft={onDraft} prompt={prompt} help={input.kind === "algebraic" ? t("check.expression_help") : t("check.solutions_help", { variable: input.variable })} typeset={input.kind === "algebraic"} />;
   }
@@ -191,7 +193,7 @@ export function answerOf(part: ItemPart, draft: Draft): PartAnswer | null {
   if (input.kind === "numeric") {
     const raw = (draft.value ?? "").trim();
     const value = /^[+-]?(?:\d+,\d+|,\d+)(?:[eE][+-]?\d+)?$/.test(raw) ? canonicalDecimalCommas(raw) : raw;
-    const unit = (draft.unit ?? "").trim();
+    const unit = input.unit_expected === false ? "" : (draft.unit ?? "").trim();
     return value === "" ? null : { part_id: part.part_id, kind: "numeric", value, unit: unit === "" ? null : unit };
   }
   if (input.kind === "ordering") return { part_id: part.part_id, kind: "ordering", element_ids: draft.order ?? input.elements.map((e) => e.id) };

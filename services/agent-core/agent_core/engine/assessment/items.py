@@ -47,6 +47,8 @@ def present(
             shown["options"] = [{"id": o["id"], "label": o["text"]} for o in a["options"]]
         elif kind == "numeric":
             shown["unit_prompt"] = a.get("unit") if a.get("unit_policy") == "exact" else None
+            # Whether the answer has a unit at all: the client shows a unit field only then (SPEC §10.7).
+            shown["unit_expected"] = bool(a.get("unit")) and a.get("unit_policy") != "none"
         elif kind == "algebraic":
             shown["variables"] = list(a["variables"])
         elif kind == "equation_solutions":
