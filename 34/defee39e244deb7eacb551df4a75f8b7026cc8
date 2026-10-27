@@ -1,0 +1,232 @@
+services/agent-core/agent_core/api/research.py
+  s_87311ffec186a4::t_69d57297822539 1-269
+evals/contracts/study/research/ChatTurn/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-25
+evals/contracts/study/research/ChatRequest/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-8
+evals/contracts/study/research/Page/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-9
+services/cloud-gateway/cloud_gateway/contracts/cloud/gateway.py
+  s_87311ffec186a4::t_69d57297822539 2,129-166,405-435,528-538,638
+  s_87311ffec186a4::t_311c501d716275 639-640
+services/agent-core/agent_core/contracts/trace/turn_trace.py
+  s_87311ffec186a4::t_69d57297822539 2,396,476,616
+evals/contracts/index.json
+  s_87311ffec186a4::t_69d57297822539 2396-2419,4136-4315
+services/agent-core/agent_core/store/migration_v18.py
+  s_87311ffec186a4::t_69d57297822539 1-13
+evals/contracts/study/research/Job/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-10
+evals/contracts/study/research/ChatEntry/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-5
+evals/contracts/study/research/ChatEntry/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-6
+evals/prompt-snapshots/checker/qwen3.full.opening.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+services/agent-core/agent_core/engine/research_chat.py
+  s_87311ffec186a4::t_69d57297822539 1-156
+evals/contracts/study/research/CreateRequest/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-22
+evals/contracts/study/research/CreateRequest/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-21
+evals/prompt-snapshots/checker/gemma3.compact.opening.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+evals/contracts/cloud/gateway/ResearchRequest/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-21
+packages/contracts-ts/src/generated/agents/router_config.ts
+  s_87311ffec186a4::t_69d57297822539 2,83,175
+services/agent-core/agent_core/api/screening.py
+  s_87311ffec186a4::t_69d57297822539 91-106,168-172
+evals/contracts/study/research/Brief/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-19
+evals/contracts/study/research/JobRequest/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-22
+evals/contracts/study/research/SubQuestionProgress/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-6
+services/agent-core/agent_core/router/config.py
+  s_87311ffec186a4::t_69d57297822539 18
+services/agent-core/agent_core/router/router.yaml
+  s_87311ffec186a4::t_69d57297822539 107-111,199
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_87311ffec186a4::t_a08987cc7c499d 2
+services/agent-core/agent_core/store/profile_stores.py
+  s_87311ffec186a4::t_69d57297822539 74-75
+services/agent-core/tests/test_checker_error_categories.py
+  s_87311ffec186a4::t_69d57297822539 1-20
+evals/contracts/study/research/Record/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-31
+services/agent-core/agent_core/contracts/schemas/cloud/gateway.schema.json
+  s_87311ffec186a4::t_69d57297822539 2,354-359
+services/agent-core/tests/test_research_api.py
+  s_87311ffec186a4::t_69d57297822539 1-204
+services/cloud-gateway/cloud_gateway/contracts/schemas/cloud/gateway.schema.json
+  s_87311ffec186a4::t_69d57297822539 2,354-359
+evals/prompt-snapshots/checker/gemma3.full.mid_problem.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+evals/contracts/study/research/ChatTurn/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-24
+evals/prompt-snapshots/checker/qwen3.compact.opening.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+services/agent-core/agent_core/contracts/schemas/study/research.schema.json
+  s_87311ffec186a4::t_69d57297822539 1-629
+evals/contracts/study/research/ChatRequest/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-9
+evals/contracts/study/research/Output/invalid/wrong_type.json
+  s_87311ffec186a4::t_69d57297822539 1
+evals/contracts/cloud/gateway/ResearchRequest/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-22
+services/agent-core/agent_core/api/__main__.py
+  s_87311ffec186a4::t_69d57297822539 243
+services/agent-core/tests/test_a1_input_routes.py
+  s_87311ffec186a4::t_69d57297822539 85-87,114-121,295-296
+evals/prompt-snapshots/checker/gemma3.full.opening.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+contracts/cloud/gateway.schema.json
+  s_87311ffec186a4::t_69d57297822539 353-358
+evals/prompt-snapshots/checker/qwen3.minimal.mid_problem.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+content/agent/roles/checker.md
+  s_87311ffec186a4::t_69d57297822539 61-63
+contracts/data/schema.sql
+  s_87311ffec186a4::t_69d57297822539 651-657
+contracts/study/research.schema.json
+  s_87311ffec186a4::t_69d57297822539 1-639
+evals/prompt-snapshots/checker/qwen3.minimal.opening.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+evals/contracts/study/research/JobRequest/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-21
+contracts/trace/turn-trace.schema.json
+  s_87311ffec186a4::t_69d57297822539 98-99,644-645,1586-1587
+services/agent-core/agent_core/api/core.py
+  s_87311ffec186a4::t_69d57297822539 157-160
+services/agent-core/agent_core/api/study.py
+  s_87311ffec186a4::t_69d57297822539 138,833-836
+services/cloud-gateway/cloud_gateway/contracts/schemas/study/research.schema.json
+  s_87311ffec186a4::t_69d57297822539 1-629
+contracts/policies/privacy.json
+  s_87311ffec186a4::t_69d57297822539 32
+evals/contracts/study/research/Record/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-30
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_87311ffec186a4::t_69d57297822539 3224-3309
+  s_87311ffec186a4::t_a08987cc7c499d 2
+scripts/jana_tools/turn_latency.py
+  s_87311ffec186a4::t_69d57297822539 8-9,78-84,156-157,462-463
+evals/contracts/cloud/gateway/ResearchJob/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-9
+contracts/api/commands.schema.json
+  s_87311ffec186a4::t_69d57297822539 12556-12641
+evals/contracts/study/research/PackPart/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-7
+evals/prompt-snapshots/checker/qwen3.full.mid_problem.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+evals/prompt-snapshots/index.json
+  s_87311ffec186a4::t_69d57297822539 3,6,17,20,31,34,45,48,59,62,73,76,87,90,101,104,115,118,129,132,143,146,157,160
+evals/contracts/cloud/gateway/ResearchJob/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-10
+evals/contracts/study/research/RecordList/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-3
+evals/contracts/study/research/RecordId/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1
+evals/prompt-snapshots/checker/gemma3.minimal.mid_problem.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+evals/contracts/study/research/ResearchId/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1
+packages/contracts-ts/src/generated/index.ts
+  s_87311ffec186a4::t_69d57297822539 4,63,401-1019
+evals/contracts/study/research/Job/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-9
+evals/contracts/study/research/SubQuestionProgress/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-5
+evals/contracts/study/research/Page/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-8
+scripts/governance/data-inventory.toml
+  s_87311ffec186a4::t_69d57297822539 651-657
+services/agent-core/agent_core/store/retention.py
+  s_87311ffec186a4::t_69d57297822539 354-355
+packages/contracts-ts/src/generated/validators.d.ts
+  s_87311ffec186a4::t_69d57297822539 890-906
+services/agent-core/tests/test_research_chat.py
+  s_87311ffec186a4::t_69d57297822539 1-128
+services/agent-core/agent_core/contracts/schemas/agents/router-config.schema.json
+  s_87311ffec186a4::t_69d57297822539 2,246-248,482-483
+packages/contracts-ts/src/generated/api/commands.ts
+  s_87311ffec186a4::t_a08987cc7c499d 2
+services/agent-core/agent_core/contracts/cloud/gateway.py
+  s_87311ffec186a4::t_69d57297822539 2,129-166,405-435,528-538,638
+  s_87311ffec186a4::t_f216d56b845a77 639-640
+services/agent-core/agent_core/contracts/study/research.py
+  s_87311ffec186a4::t_69d57297822539 1-210
+evals/contracts/study/research/Output/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1
+evals/prompt-snapshots/checker/qwen3.compact.mid_problem.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+services/agent-core/agent_core/net/study.py
+  s_87311ffec186a4::t_69d57297822539 9,122,124-125,234-258
+  s_87311ffec186a4::t_50def341e98fcf 259
+services/agent-core/agent_core/providers/gateway.py
+  s_87311ffec186a4::t_69d57297822539 116
+evals/contracts/study/research/RecordId/invalid/wrong_type.json
+  s_87311ffec186a4::t_69d57297822539 1
+SPEC.md
+  s_87311ffec186a4::t_69d57297822539 445-447,701-710,712,737-741
+services/agent-core/agent_core/store/generated/schema.py
+  s_87311ffec186a4::t_69d57297822539 2,6,8
+evals/contracts/study/research/Brief/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-18
+packages/contracts-ts/src/generated/trace/turn_trace.ts
+  s_87311ffec186a4::t_69d57297822539 2,9,106-107,224
+evals/contracts/study/research/PackPart/valid/minimal.json
+  s_87311ffec186a4::t_69d57297822539 1-6
+services/agent-core/agent_core/contracts/api/commands.py
+  s_87311ffec186a4::t_a08987cc7c499d 2
+packages/contracts-ts/src/generated/study/research.ts
+  s_87311ffec186a4::t_69d57297822539 1-213
+services/agent-core/agent_core/store/sqlite.py
+  s_87311ffec186a4::t_69d57297822539 34,94
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_87311ffec186a4::t_69d57297822539 3216-3301
+  s_87311ffec186a4::t_a08987cc7c499d 2
+contracts/agents/router-config.schema.json
+  s_87311ffec186a4::t_69d57297822539 245-247,481-482
+services/agent-core/agent_core/contracts/schemas/trace/turn-trace.schema.json
+  s_87311ffec186a4::t_69d57297822539 2,99-100,645-646,1587-1588
+evals/prompt-snapshots/checker/gemma3.minimal.opening.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+evals/prompt-snapshots/checker/gemma3.compact.mid_problem.txt
+  s_87311ffec186a4::t_69d57297822539 30-32
+evals/contracts/study/research/ResearchId/invalid/wrong_type.json
+  s_87311ffec186a4::t_69d57297822539 1
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_87311ffec186a4::t_69d57297822539 249-250,259-260,345-361,414-430
+packages/contracts-ts/src/generated/client.ts
+  s_87311ffec186a4::t_69d57297822539 4,63,360-543
+services/agent-core/agent_core/contracts/agents/router_config.py
+  s_87311ffec186a4::t_69d57297822539 2,134,241
+evals/contracts/study/research/RecordList/invalid/unknown_property.json
+  s_87311ffec186a4::t_69d57297822539 1-4
+packages/contracts-ts/src/generated/cloud/gateway.ts
+  s_87311ffec186a4::t_69d57297822539 2,107-116,620-717
+services/agent-core/agent_core/engine/study.py
+  s_87311ffec186a4::t_69d57297822539 226
+packages/contracts-ts/src/generated/client-validators.js
+  s_87311ffec186a4::t_33717ff49295bb 10
+packages/contracts-ts/src/generated/validators.js
+  s_87311ffec186a4::t_9199369f512037 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "34defee39e244deb7eacb551df4a75f8b7026cc8",
+  "prompts": {},
+  "sessions": {
+    "s_87311ffec186a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02ea0a11-c16d-43dd-9ca0-be1ee039343a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
