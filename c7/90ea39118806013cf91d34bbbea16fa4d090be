@@ -1,0 +1,21 @@
+services/agent-core/agent_core/engine/health.py
+  s_819c106e25f434::t_4a1d10b274430e 113-116
+services/agent-core/tests/test_w3_glimmer.py
+  s_819c106e25f434::t_94d796102f3066 99-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c790ea39118806013cf91d34bbbea16fa4d090be",
+  "prompts": {},
+  "sessions": {
+    "s_819c106e25f434": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7ca4da5-edad-4d19-9893-bd0c0389ef94",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
