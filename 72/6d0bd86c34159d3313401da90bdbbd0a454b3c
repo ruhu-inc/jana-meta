@@ -1,0 +1,30 @@
+services/agent-core/agent_core/learner/planner.py
+  s_e7d1c33ddce4d8::t_1fb5010215cb80 121-127,129-130,137,139,168,170
+services/agent-core/tests/test_d94_session_subject.py
+  s_e7d1c33ddce4d8::t_44ab1db3995c21 242-268
+services/agent-core/tests/test_tutor_runtime_regressions.py
+  s_e7d1c33ddce4d8::t_4f1aa9287180a1 33
+services/agent-core/agent_core/engine/team.py
+  s_e7d1c33ddce4d8::t_6eab07bd670440 175,196,296-304,306
+services/agent-core/tests/test_s10_next_up_subject.py
+  s_e7d1c33ddce4d8::t_44ab1db3995c21 1-31,35-51
+  s_e7d1c33ddce4d8::t_cf2cc4ffba9c19 32-34
+services/agent-core/agent_core/engine/live_flows.py
+  s_e7d1c33ddce4d8::t_dfbcaab9cb3e37 227-228,236,254-258
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "726d0bd86c34159d3313401da90bdbbd0a454b3c",
+  "prompts": {},
+  "sessions": {
+    "s_e7d1c33ddce4d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8c7fb12e-1dc7-49be-ba50-167547f3e6ce",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
