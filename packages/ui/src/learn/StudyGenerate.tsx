@@ -10,7 +10,7 @@ import { Button, Dialog, FIELD_LOOK, IconButton, Notice, SegmentedControl, Switc
 const TOOL_ICON: Record<GenerateTool, IconName> = { summary: "notes", quiz: "question", flashcards: "flashcards", notes: "learn", audio_overview: "read-aloud", lesson_plan: "timer", concept_map: "share" };
 /** Small, decorative accents use Jana's existing palette; names and icons still identify every tool. */
 function StudyToolIcon({ kind, size = 20 }: { kind: W.AidKind; size?: 16 | 20 }) {
-  const colour = { summary: "blue", quiz: "pink", flashcards: "orange", notes: "amber", audio_overview: "purple", lesson_plan: "blue-green", chapters: "blue-green", chat: "blue", concept_map: "purple" }[kind];
+  const colour = { summary: "blue", quiz: "pink", flashcards: "orange", notes: "amber", audio_overview: "purple", lesson_plan: "blue-green", chapters: "blue-green", chat: "blue", concept_map: "green" }[kind];
   return <span aria-hidden="true" className={`study-tool-icon study-tool-icon-${colour} inline-flex shrink-0 items-center justify-center rounded-control p-1`}><Icon name={kind === "chapters" ? "table" : TOOL_ICON[kind as GenerateTool] ?? "notes"} size={size} /></span>;
 }
 /** The question types a learner picks from (STU-21); a number and an expression are one choice. */
