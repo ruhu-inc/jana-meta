@@ -141,7 +141,7 @@ fn write_marker(staged: &Path) -> io::Result<()> {
 
 /// A copy of `from` at `to`, every file synced. Links are refused: an application data folder holds none, and
 /// following one could copy something that was never the app's.
-fn copy_tree(from: &Path, to: &Path) -> io::Result<()> {
+pub(crate) fn copy_tree(from: &Path, to: &Path) -> io::Result<()> {
     fs::create_dir(to)?;
     for entry in fs::read_dir(from)? {
         let entry = entry?;
@@ -228,7 +228,7 @@ mod tests {
 
     /// A roaming folder as builds before this one left it: the core's data and the shell's pid files.
     fn roaming_folder(root: &Path) -> PathBuf {
-        let roaming = root.join("Roaming/app.jana.desktop");
+        let roaming = root.join("Roaming/app.jana-meta.desktop");
         fs::create_dir_all(roaming.join("core/profiles/p1")).unwrap();
         fs::write(
             roaming.join("core/profiles/p1/learner.db"),
@@ -251,7 +251,7 @@ mod tests {
     fn test_dat01_roaming_data_moves_to_local_once() {
         let root = scratch("move");
         let roaming = roaming_folder(&root);
-        let local = root.join("Local/app.jana.desktop");
+        let local = root.join("Local/app.jana-meta.desktop");
         fs::create_dir_all(local.join("EBWebView")).unwrap(); // the webview's data is already local
         assert_eq!(resolve(Some(&roaming), &local).unwrap(), local);
         holds_the_data(&local);
@@ -273,7 +273,7 @@ mod tests {
     fn test_dat01_cross_volume_copy_verifies_before_deleting() {
         let root = scratch("copy");
         let roaming = roaming_folder(&root);
-        let local = root.join("Local/app.jana.desktop");
+        let local = root.join("Local/app.jana-meta.desktop");
         let staged = staging(&local);
         // As if renaming failed: the copy is made and checked against the untouched original.
         fs::create_dir_all(staged.parent().unwrap()).unwrap();
@@ -301,7 +301,7 @@ mod tests {
     fn test_dat01_interrupted_move_resumes() {
         let root = scratch("resume");
         let roaming = roaming_folder(&root);
-        let local = root.join("Local/app.jana.desktop");
+        let local = root.join("Local/app.jana-meta.desktop");
         let staged = staging(&local);
         fs::create_dir_all(&local).unwrap();
         // Interrupted after the whole-folder rename and one entry's move, before the marker was written.
@@ -316,7 +316,7 @@ mod tests {
         assert!(!staged.exists());
         // Interrupted after a verified copy, with the original half deleted: the deletion finishes, the moves resume.
         let roaming = roaming_folder(&root);
-        let local = root.join("Local2/app.jana.desktop");
+        let local = root.join("Local2/app.jana-meta.desktop");
         let staged = staging(&local);
         fs::create_dir_all(staged.parent().unwrap()).unwrap();
         copy_tree(&roaming, &staged).unwrap();
@@ -332,7 +332,7 @@ mod tests {
     fn test_dat01_local_entry_is_never_overwritten() {
         let root = scratch("kept");
         let roaming = roaming_folder(&root);
-        let local = root.join("Local/app.jana.desktop");
+        let local = root.join("Local/app.jana-meta.desktop");
         fs::create_dir_all(local.join("core")).unwrap();
         fs::write(local.join("core/local-only"), b"newer local data").unwrap();
         assert_eq!(
@@ -358,14 +358,14 @@ mod tests {
         let root = scratch("refused");
         let roaming = roaming_folder(&root);
         std::os::unix::fs::symlink("/etc/hosts", roaming.join("link")).unwrap();
-        let local = root.join("Local/app.jana.desktop");
+        let local = root.join("Local/app.jana-meta.desktop");
         // Renaming works here, so stage a copy by hand to exercise the cross-volume refusal.
         assert!(copy_tree(&roaming, &staging(&local)).is_err());
         let _ = fs::remove_dir_all(staging(&local));
         // A local folder on a volume that cannot be created: the move fails before anything leaves roaming.
         let blocked = root.join("blocked");
         fs::write(&blocked, b"a file, not a folder").unwrap();
-        let unreachable = blocked.join("app.jana.desktop");
+        let unreachable = blocked.join("app.jana-meta.desktop");
         assert_eq!(resolve(Some(&roaming), &unreachable).unwrap(), roaming);
         assert!(roaming.join("core/profiles/p1/learner.db").is_file());
         fs::remove_dir_all(root).unwrap();

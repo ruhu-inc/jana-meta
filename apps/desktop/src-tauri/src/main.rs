@@ -2,8 +2,9 @@
 //! capability file, SEC-11), the core and the model runtime supervised for the life of the app.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use jana_shell::control::{Config, ToShell};
+use jana_shell::control::{Config, KeyStoreKind, ToShell};
 use jana_shell::generated::keys;
+use jana_shell::identity;
 use jana_shell::keychain::KeyStore;
 use jana_shell::runtime::{Builds, CoreLink, RuntimeCommand, RuntimePolicy, RuntimeSupervisor};
 use jana_shell::supervisor::{CoreCommand, LaunchInfo, Policy, Supervisor};
@@ -150,40 +151,75 @@ const DEV_RUNTIME_VAR: &str = "JANA_LLAMA_SERVER";
 const DEV_PILOT_COUNTRY_VAR: &str = "JANA_PILOT_COUNTRY_FILE";
 
 /// The core's device secrets (SEC-17, D97): the OS keychain under the app's identifier, or the file fallback in the
-/// user's configuration folder, outside the app data folder (`$XDG_CONFIG_HOME/jana/keys` on Linux; on Windows the
-/// local `%LOCALAPPDATA%\jana\keys`, never the roaming folder, where builds before this one kept it and from which it
-/// is moved). Development builds keep theirs apart from an installed app's.
+/// user's configuration folder, outside the app data folder (`$XDG_CONFIG_HOME/jana-meta/keys` on Linux; on Windows
+/// the local `%LOCALAPPDATA%\jana-meta\keys`, never the roaming folder, where builds before this one kept it and from
+/// which it is moved). Development builds keep theirs apart from an installed app's. When this start adopted the data
+/// builds under Jana's identifier left, an empty store adopts their keys too (`identity`).
 fn key_store(app: &tauri::App, data_dir: &std::path::Path) -> std::io::Result<KeyStore> {
+    let development = cfg!(debug_assertions);
     let (service, folder) =
-        jana_shell::keychain::service_and_folder(&app.config().identifier, cfg!(debug_assertions));
-    let roaming = app
-        .path()
-        .config_dir()
-        .ok()
-        .map(|c| c.join("jana").join(folder));
-    let fallback = if cfg!(windows) {
+        jana_shell::keychain::service_and_folder(&app.config().identifier, development);
+    let config = app.path().config_dir().ok();
+    let fallback_in = |parent: &str| -> std::io::Result<PathBuf> {
+        let roaming = config.as_ref().map(|c| c.join(parent).join(folder));
+        if !cfg!(windows) {
+            return Ok(roaming.unwrap_or_default());
+        }
         let local = app
             .path()
             .local_data_dir()
             .map_err(std::io::Error::other)?
-            .join("jana")
+            .join(parent)
             .join(folder);
-        jana_shell::data_home::resolve(roaming.as_deref(), &local)?
-    } else {
-        roaming.unwrap_or_default()
+        // Only the app's own folder is moved out of the roaming profile; the former one is Jana's.
+        if parent == identity::KEYS_PARENT {
+            jana_shell::data_home::resolve(roaming.as_deref(), &local)
+        } else {
+            Ok(local)
+        }
     };
-    Ok(KeyStore::open(&service, fallback, data_dir))
+    let store = KeyStore::open(&service, fallback_in(identity::KEYS_PARENT)?, data_dir);
+    if !identity::keys_pending(data_dir) {
+        return Ok(store);
+    }
+    let (former_service, _) =
+        jana_shell::keychain::service_and_folder(identity::FORMER_IDENTIFIER, development);
+    let former = match store.kind() {
+        KeyStoreKind::OsKeychain => KeyStore::keychain(&former_service),
+        KeyStoreKind::UserFile => fallback_in(identity::FORMER_KEYS_PARENT)
+            .ok()
+            .filter(|dir| dir.is_dir())
+            .and_then(|dir| KeyStore::files(dir, data_dir).ok()),
+    };
+    match identity::adopt_keys(data_dir, &store, former.as_ref()) {
+        Ok(adopted) => eprintln!("jana-shell: adopted {adopted} device keys from {former_service}"),
+        Err(error) => eprintln!("jana-shell: could not finish adopting the former keys ({error})"),
+    }
+    Ok(store)
 }
 
 /// The app's data folder (DAT-01): the local application data folder, after moving what builds before this one kept
-/// in the roaming folder (Windows; on macOS and Linux they are one folder). See `data_home`.
+/// in the roaming folder (Windows; on macOS and Linux they are one folder; see `data_home`), and after copying in the
+/// core's data that builds under Jana's identifier left, when this folder has none (`identity`). A copy that fails
+/// leaves the former folder whole and the app starts without it.
 fn data_home(app: &tauri::App) -> std::io::Result<PathBuf> {
     let local = app
         .path()
         .app_local_data_dir()
         .map_err(std::io::Error::other)?;
     let roaming = app.path().app_data_dir().ok();
-    jana_shell::data_home::resolve(roaming.as_deref(), &local)
+    let data_dir = jana_shell::data_home::resolve(roaming.as_deref(), &local)?;
+    match identity::adopt_data(&identity::former_data(&local), &data_dir) {
+        Ok(true) => eprintln!(
+            "jana-shell: adopted the core's data from {}",
+            identity::FORMER_IDENTIFIER
+        ),
+        Ok(false) => {}
+        Err(error) => {
+            eprintln!("jana-shell: could not adopt the former data ({error}); starting without it")
+        }
+    }
+    Ok(data_dir)
 }
 
 /// The core's address and per-launch token for the webview, kept in its memory only (API-02). After a core restart

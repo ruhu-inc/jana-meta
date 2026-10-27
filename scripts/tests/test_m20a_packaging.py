@@ -282,8 +282,9 @@ def test_plt24_delete_choice_clears_the_keychain_and_overrides_tauris_box() -> N
     assert unin.index("StrCpy $DeleteAppDataCheckboxState 0") < unin.index('${If} $JanaLearnerData == "delete"')
     assert "--uninstall-keys" in delete and "--uninstall-keys" not in keep
     assert '"$INSTDIR\\${MAINBINARYNAME}.exe" --uninstall-keys --keys-dir "${JANA_KEYS}"' in delete
-    assert '!define JANA_KEYS "$LOCALAPPDATA\\jana\\keys"' in hooks  # the shell's fallback folder, local (data_home)
-    assert '!define JANA_DATA "$LOCALAPPDATA\\app.jana.desktop"' in hooks
+    # The shell's fallback folder, local (data_home).
+    assert '!define JANA_KEYS "$LOCALAPPDATA\\jana-meta\\keys"' in hooks
+    assert '!define JANA_DATA "$LOCALAPPDATA\\app.jana-meta.desktop"' in hooks
     # A machine whose roaming folder was never moved (or whose move was interrupted) is handled by both choices.
     for place in ("${JANA_ROAMING_DATA}", "${JANA_STAGING}"):
         assert f'--uninstall delete --data-dir "{place}\\core"' in delete and f'RmDir /r "{place}"' in delete

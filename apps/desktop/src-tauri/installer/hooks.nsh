@@ -34,11 +34,11 @@
   !define JANA_NEEDED_BYTES 0
 !endif
 !define JANA_PRECHECK "${__FILEDIR__}\..\..\..\..\target\release\jana-precheck.exe"
-!define JANA_DATA "$LOCALAPPDATA\app.jana.desktop"
-!define JANA_KEYS "$LOCALAPPDATA\jana\keys"
-!define JANA_STAGING "$LOCALAPPDATA\app.jana.desktop.jana-migrating"
-!define JANA_ROAMING_DATA "$APPDATA\app.jana.desktop"
-!define JANA_ROAMING_KEYS "$APPDATA\jana\keys"
+!define JANA_DATA "$LOCALAPPDATA\app.jana-meta.desktop"
+!define JANA_KEYS "$LOCALAPPDATA\jana-meta\keys"
+!define JANA_STAGING "$LOCALAPPDATA\app.jana-meta.desktop.jana-migrating"
+!define JANA_ROAMING_DATA "$APPDATA\app.jana-meta.desktop"
+!define JANA_ROAMING_KEYS "$APPDATA\jana-meta\keys"
 
 !macro NSIS_HOOK_PREINSTALL
   InitPluginsDir

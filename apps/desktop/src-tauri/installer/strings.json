@@ -7,7 +7,7 @@
     "janaUninstallKeepHelp": "It stays here for a later reinstall.",
     "janaUninstallDelete": "Delete all students' progress",
     "janaUninstallDeleteHelp": "Every student's records and saved keys are removed from this computer. This can't be undone.",
-    "janaUninstallKeysFailed": "Some saved keys could not be removed from this computer's keychain. You can remove the entries named app.jana.desktop yourself in Credential Manager.",
+    "janaUninstallKeysFailed": "Some saved keys could not be removed from this computer's keychain. You can remove the entries named app.jana-meta.desktop yourself in Credential Manager.",
     "janaPrecheckWindowsTooOld": "This computer's operating system is too old for the tutor. It needs Windows 10 version 22H2 or a later version of Windows, on a 64-bit Intel or AMD processor.",
     "janaPrecheckMacIntel": "The tutor needs a Mac with Apple silicon (M1 or later). Macs with Intel processors are not supported.",
     "janaPrecheckMacTooOld": "This Mac's system is too old for the tutor. It needs macOS 13 (Ventura) or a later version.",

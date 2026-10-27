@@ -18,7 +18,7 @@ def _installation(tmp_path: Path) -> tuple[Path, Path, FileKeyStore]:
     for name in ("jana-shell.exe", "agent-core/agent-core.exe", "runtime/vulkan/llama-server.exe"):
         (install / name).parent.mkdir(parents=True, exist_ok=True)
         (install / name).write_bytes(b"synthetic binary")
-    data = tmp_path / "AppData" / "app.jana.desktop" / "core"
+    data = tmp_path / "AppData" / "app.jana-meta.desktop" / "core"
     stores = open_local(data, app_version="1.0.0", now_ms=1_800_000_000_000)
     stores.learner.execute("CREATE TABLE IF NOT EXISTS synthetic_progress (id TEXT)")
     stores.learner.commit()

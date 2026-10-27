@@ -5,10 +5,10 @@ Sources, by environment:
 - Every environment reads the secret manager's mount: one file per secret, named after it, in `secrets_dir`
   (for example a Cloud Run or Kubernetes secret volume). A mount inside a git working tree is refused, so a key
   can never be read from (or left in) the repository.
-- `dev` also reads the developer's OS keychain: on macOS the Keychain item with service `jana.cloud-gateway` and the
-  secret's name as account (`security find-generic-password -s jana.cloud-gateway -a gemini_api_key -w`); on Linux
-  the Secret Service (`secret-tool lookup service jana.cloud-gateway account gemini_api_key`).
-- `dev` only: a developer's own key from the environment, `JANA_DEV_<NAME>` (for example `JANA_DEV_GEMINI_API_KEY`).
+- `dev` also reads the developer's OS keychain: on macOS the Keychain item with service `jana-meta.cloud-gateway` and
+  the secret's name as account (`security find-generic-password -s jana-meta.cloud-gateway -a meta_api_key -w`); on
+  Linux the Secret Service (`secret-tool lookup service jana-meta.cloud-gateway account meta_api_key`).
+- `dev` only: a developer's own key from the environment, `JANA_DEV_<NAME>` (for example `JANA_DEV_META_API_KEY`).
   Staging, pilot and production ignore environment keys.
 - Every environment also accepts `META_API_KEY` (the Meta Model API key; Meta's docs call it `MODEL_API_KEY`) and
   `NVIDIA_API_KEY` in the gateway process environment, as a hosting runtime's secret-to-environment mapping supplies
@@ -30,7 +30,7 @@ from typing import Any, Protocol
 
 from cloud_gateway.config import GatewayConfig
 
-KEYCHAIN_SERVICE = "jana.cloud-gateway"
+KEYCHAIN_SERVICE = "jana-meta.cloud-gateway"
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 
 
