@@ -165,15 +165,15 @@ def test_keychain_lookup_commands() -> None:
         calls.append(argv)
         return subprocess.CompletedProcess(argv, 0, "keychain-key\n", "")
 
-    mac = KeychainSecrets(system="Darwin", run=run).get("gemini_api_key")
-    linux = KeychainSecrets(system="Linux", run=run).get("gemini_api_key")
+    mac = KeychainSecrets(system="Darwin", run=run).get("meta_api_key")
+    linux = KeychainSecrets(system="Linux", run=run).get("meta_api_key")
     assert mac is not None and linux is not None and mac.reveal() == "keychain-key"
     assert calls == [
-        ["security", "find-generic-password", "-s", "jana.cloud-gateway", "-a", "gemini_api_key", "-w"],
-        ["secret-tool", "lookup", "service", "jana.cloud-gateway", "account", "gemini_api_key"],
+        ["security", "find-generic-password", "-s", "jana-meta.cloud-gateway", "-a", "meta_api_key", "-w"],
+        ["secret-tool", "lookup", "service", "jana-meta.cloud-gateway", "account", "meta_api_key"],
     ]
     missing = KeychainSecrets(system="Darwin", run=lambda argv: subprocess.CompletedProcess(argv, 44, "", "nope"))
-    assert ChainedSecrets((missing,)).get("gemini_api_key") is None
+    assert ChainedSecrets((missing,)).get("meta_api_key") is None
 
 
 @pytest.mark.parametrize("name", ["meta_api_key", "nvidia_api_key"])

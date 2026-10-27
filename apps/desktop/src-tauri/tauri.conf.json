@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Jana",
   "version": "0.0.0",
-  "identifier": "app.jana.desktop",
+  "identifier": "app.jana-meta.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5180"

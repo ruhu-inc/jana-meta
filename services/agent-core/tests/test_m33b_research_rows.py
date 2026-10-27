@@ -73,7 +73,10 @@ def test_skl28_research_export_carries_skill_sessions(desk):
 
 def proposed(pointer: str) -> dict[str, Any]:
     """A value proposed in contract-additions-m33b.json (D72), until the specification adopts it."""
-    additions = json.loads((Path(__file__).parents[3] / "contract-additions-m33b.json").read_text())["additions"]
+    path = Path(__file__).parents[3] / "contract-additions-m33b.json"
+    if not path.is_file():
+        pytest.skip("the proposed contract additions are not in this tree (the hackathon submission leaves them out)")
+    additions = json.loads(path.read_text())["additions"]
     return next(a["value"] for a in additions if a["pointer"] == pointer)
 
 

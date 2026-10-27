@@ -9,6 +9,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
+import pytest
 from agent_core.contracts._validation import _registry
 from agent_core.engine.parents import ParentDesk
 from agent_core.engine.safety import wellbeing_alert_category
@@ -30,6 +31,8 @@ MONDAY, SUNDAY = "2026-10-19", "2026-10-25"  # the scripted week
 
 @cache
 def _proposed() -> dict[str, Any]:
+    if not ADDITIONS.is_file():
+        pytest.skip("the proposed contract additions are not in this tree (the hackathon submission leaves them out)")
     entries = json.loads(ADDITIONS.read_text())["additions"]
     return {e["pointer"].removeprefix("/$defs/"): e["value"] for e in entries if e["pointer"].startswith("/$defs/")}
 

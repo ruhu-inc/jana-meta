@@ -9,6 +9,7 @@ from __future__ import annotations
 import random
 from dataclasses import replace
 
+import pytest
 from agent_core.config import Settings
 from agent_core.learner.fsrs import DAY_MS, scheduler_of
 from agent_core.learner.mastery import Ability, KcEvidence, MasteryParams, item_probability, observe
@@ -102,7 +103,10 @@ def test_lrn12_adopted_fit_matches_the_proposed_event():
 
     from jsonschema import Draft202012Validator
 
-    additions = json.loads((Path(__file__).parents[3] / "contract-additions-m33b.json").read_text())["additions"]
+    path = Path(__file__).parents[3] / "contract-additions-m33b.json"
+    if not path.is_file():
+        pytest.skip("the proposed contract additions are not in this tree (the hackathon submission leaves them out)")
+    additions = json.loads(path.read_text())["additions"]
     events = json.loads((Path(__file__).parents[1] / "agent_core/contracts/schemas/learning/learning-event.schema.json")
                         .read_text())  # fmt: skip
     payload = next(a["value"] for a in additions if a["pointer"] == "/$defs/payload_personal_calibration")

@@ -356,7 +356,7 @@ class GatewayConfig(_Strict):
     log_path: Path | None = None
     # Secret-manager mount: one file per secret, named after the secret (SEC-20).
     secrets_dir: Path | None = None
-    keychain_service: str = "jana.cloud-gateway"
+    keychain_service: str = "jana-meta.cloud-gateway"
 
     @field_validator("storage_dir", "log_path", "secrets_dir", mode="after")
     @classmethod

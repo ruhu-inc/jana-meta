@@ -307,6 +307,8 @@ def test_aut38_counts_match_the_proposed_telemetry_field():
     m33b.json, D72): what one accepts the other does, and a count with text or a person's name fits neither."""
     from jsonschema import Draft202012Validator
 
+    if not (REPO / "contract-additions-m33b.json").is_file():
+        pytest.skip("the proposed contract additions are not in this tree (the hackathon submission leaves them out)")
     additions = json.loads((REPO / "contract-additions-m33b.json").read_text())["additions"]
     schema = next(a["value"] for a in additions if a["pointer"] == "/properties/content_reports")
     validator = Draft202012Validator(schema)

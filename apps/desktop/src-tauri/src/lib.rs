@@ -4,6 +4,7 @@
 pub mod control;
 pub mod data_home;
 pub mod generated;
+pub mod identity;
 pub mod keychain;
 pub mod launch;
 pub mod orphans;

@@ -418,11 +418,9 @@ pub fn default_config_dir() -> Option<PathBuf> {
 /// was removed, 1 when something was not, 64 when the fallback folder cannot be found).
 pub fn uninstall_keys_main(identifier: &str, development: bool, request: &UninstallKeys) -> i32 {
     let (service, folder) = service_and_folder(identifier, development);
-    let Some(keys_dir) = request
-        .keys_dir
-        .clone()
-        .or_else(|| default_config_dir().map(|config| config.join("jana").join(folder)))
-    else {
+    let Some(keys_dir) = request.keys_dir.clone().or_else(|| {
+        default_config_dir().map(|config| config.join(crate::identity::KEYS_PARENT).join(folder))
+    }) else {
         eprintln!("--uninstall-keys: name the key folder with --keys-dir");
         return 64;
     };
@@ -921,20 +919,22 @@ mod tests {
                 "Jana.exe",
                 "--uninstall-keys",
                 "--keys-dir",
-                "C:\\Users\\a\\AppData\\Local\\jana\\keys"
+                "C:\\Users\\a\\AppData\\Local\\jana-meta\\keys"
             ])),
             Some(UninstallKeys {
                 dry_run: false,
-                keys_dir: Some(PathBuf::from("C:\\Users\\a\\AppData\\Local\\jana\\keys"))
+                keys_dir: Some(PathBuf::from(
+                    "C:\\Users\\a\\AppData\\Local\\jana-meta\\keys"
+                ))
             })
         );
         assert_eq!(
-            service_and_folder("app.jana.desktop", false),
-            ("app.jana.desktop".into(), "keys")
+            service_and_folder("app.jana-meta.desktop", false),
+            ("app.jana-meta.desktop".into(), "keys")
         );
         assert_eq!(
-            service_and_folder("app.jana.desktop", true),
-            ("app.jana.desktop.dev".into(), "keys-dev")
+            service_and_folder("app.jana-meta.desktop", true),
+            ("app.jana-meta.desktop.dev".into(), "keys-dev")
         );
         assert!(default_config_dir().is_some_and(|dir| dir.is_absolute()));
     }
@@ -944,7 +944,10 @@ mod tests {
     #[test]
     #[ignore]
     fn keychain_uninstall() {
-        let service = format!("app.jana.desktop.test-uninstall-{}", std::process::id());
+        let service = format!(
+            "app.jana-meta.desktop.test-uninstall-{}",
+            std::process::id()
+        );
         let store = KeyStore::keychain(&service).expect("a keychain service");
         assert!(store.put("jana.test-a", &Redacted::new("dGVzdA")));
         assert!(store.put("jana.test-b", &Redacted::new("dGVzdA")));
@@ -965,7 +968,7 @@ mod tests {
     #[test]
     #[ignore]
     fn keychain_round_trip() {
-        let service = format!("app.jana.desktop.test-{}", std::process::id());
+        let service = format!("app.jana-meta.desktop.test-{}", std::process::id());
         let store = KeyStore::keychain(&service).expect("a keychain service");
         assert!(store.put("jana.test-secret", &Redacted::new("dGVzdA")));
         let again = KeyStore::keychain(&service).unwrap();
