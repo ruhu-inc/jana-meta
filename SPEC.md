@@ -327,17 +327,23 @@ no history). Licence: Apache-2.0 for code; content packs under the owner's licen
 ## 10. Demo-visible bugs to fix (from the 2026-10-25 review)
 
 Status 2026-10-26: #1, #4 and #6 done; #5 partly done (parallel session: distress screening on the explain-back and
-visual-answer routes); #2, #3 and #7 open.
+visual-answer routes). Status 2026-10-27: #2, #3 and #7 done.
 
 1. Maths starting with a digit shows as raw LaTeX (fixed in Jana main, uncommitted:
    `packages/ui/src/learn/PackText.tsx` and `agent_core/engine/assessment/items.py`; port it).
 2. The subject switches from Mathematics to Physics mid-question; "Next up" and Practice recommend Physics after a
-   Mathematics placement.
-3. The composer accepts questions with no model available and never says so.
+   Mathematics placement. **Done 2026-10-27**: the Diagnoser's chosen topic now decides the question's subject (its
+   free `subject` field counts only when it chose no topic, `team.question_subject`), and once any subject has
+   evidence the planner ranks never-started subjects and their ideas after the started ones (`planner.unstarted`).
+3. The composer accepts questions with no model available and never says so. **Done 2026-10-27**: `tutorReach`
+   (client-core) reads the model state and the connectivity slice; with no tutor model on this computer and the
+   online tutor switched off or out of reach, Home's Ask box and the tutor's dock say so and offer practice and a mock
+   exam (`NoTutor`). Not covered: a spent budget, which the connectivity state does not carry.
 4. A message the core refused is re-sent on every reconnect (`packages/client-core/src/session.ts` ~393, ~472).
 5. The learning-journey route skips input screening (`test_a1_input_routes.py`), if not already fixed upstream.
 6. Tutor picker: radios announced as raw keys (`avatar.*`); "Choose this tutor" disabled when the default is picked.
-7. Unit field and °C/Ω chips on unitless numeric answers.
+7. Unit field and °C/Ω chips on unitless numeric answers. **Done 2026-10-27**: the numeric item input gains
+   `unit_expected` (commands contract); the client shows the unit field and its symbols only when it is true.
 
 ## 11. Tests to update
 
