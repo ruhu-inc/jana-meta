@@ -1,0 +1,25 @@
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_207b3a26495062::t_6750ef00034b91 41-46,418
+packages/i18n/locales/en.json
+  s_207b3a26495062::t_448841c860d963 2322
+packages/ui/test/study-concept-map.test.tsx
+  s_207b3a26495062::t_8131291e364906 90-94
+packages/ui/src/learn/StudyConceptMap.tsx
+  s_207b3a26495062::t_448841c860d963 8,28-33,144,147-148,151,169,199
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2a1c06170de6eb2e0a52557b3fb41f67e1382ed9",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
