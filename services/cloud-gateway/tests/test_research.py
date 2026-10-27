@@ -260,6 +260,10 @@ def test_each_sub_question_is_one_plain_web_search_request_on_the_study_model(tm
         assert text.startswith("Question: What does part 0 of the heart do?") and "Focus: the valves" in text
         assert h.meta.headers[0]["authorization"] == f"Bearer {FAKE_KEYS['meta_api_key']}"
         assert all(s["input"][0]["content"][0]["text"].count("Question:") == 1 for s in h.meta.seen)
+        # Each sub-question names a reference source in turn, so no query carries only the exam's name (§18.11).
+        named = {s["input"][0]["content"][0]["text"].split("Suggested source: ")[1].split("\n")[0] for s in h.meta.seen}
+        assert named == {"OpenStax", "LibreTexts", "BBC Bitesize", "university"}
+        assert "OpenStax" in sent["instructions"] and "leave out exam and level words" in sent["instructions"]
 
     run(go())
 

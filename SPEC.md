@@ -838,3 +838,25 @@ testbook, mytutor, tuttee, brainscape) and no encyclopaedia or open-textbook pag
 YouTube and answers.com were excluded as intended, and savemyexams and Britannica pages did not fetch. Next: steer the
 search prompt toward reference sources (name Wikipedia, Britannica, OpenStax, Khan Academy, BBC Bitesize) and
 measure again; then the device import (§18.7).
+
+**Steering the search toward reference sources (2026-10-27).** `INSTRUCTIONS` now asks for one search whose query is
+the question's key terms in plain words ending with a *suggested source*, with no exam or level words (GCSE, O level,
+revision, notes, past paper…); the prompt still gives the learner's level for the answer. `prompt()` adds
+`Suggested source:` in turn per sub-question (`SOURCES` in `research.py`): O level OpenStax, LibreTexts, BBC Bitesize,
+"university"; first year OpenStax, LibreTexts, "university". Only sources the fetcher can read are named. Free probes
+with the gateway's own fetcher read openstax.org, bio/med.libretexts.org, nhs.uk and ncbi.nlm.nih.gov (Bookshelf);
+en/simple.wikipedia.org, britannica.com and ck12.org answer **403** to its user agent
+(`JanaResearch/1.0 (study source fetcher)`), and khanacademy.org and nhlbi.nih.gov pages are script-only (`empty`).
+Wikimedia's user-agent policy asks for contact details in the agent; the project has no public URL yet, so the agent
+is unchanged and Wikipedia is not named. Spark kept to the rules: no query had a level word.
+
+| Same 4 heart sub-questions | Queries end with | Pages (ref.) | Sites | Cost |
+|---|---|---|---|---|
+| Before (above) | "… GCSE O level biology" | 22 (0) | aleveler, testbook, mytutor, tuttee, brainscape… | $0.042 |
+| Try 1: Bitesize, Wikipedia, Khan Academy, Britannica | the source | 2 → **failed `no_sources`** | "Wikipedia" found no Wikipedia page; "Bitesize" found no BBC page (gauthmath, quizlet, spam); "Khan Academy" and "Britannica" found theirs, which do not fetch | $0.038 |
+| **Try 2: OpenStax, LibreTexts, Bitesize, "university"** | the source | **17 (11)**, ready in 16.1 s | openstax ×3, bio/med.libretexts ×7, organismalbio.biosci.gatech.edu; scottrix, testbook ×3, slideserve, fiveable | **$0.037** |
+
+In try 2 the OpenStax and LibreTexts sub-questions returned only reference pages (5 and 6). The "BBC Bitesize" and
+"university" ones still returned revision sites (scottrix, testbook, fiveable; no BBC page), so those two slots are the
+next to change. Next: give the fetcher a user agent with the project's contact URL once there is one, probe
+Wikipedia again, and name it if it fetches.
