@@ -1,0 +1,63 @@
+services/cloud-gateway/tests/test_m19_gw_auth.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 9,11,112-142
+  s_207b3a26495062::t_9f09cbc2f9c7af 143-144
+scripts/tests/test_m7b_devlab.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 59-60
+services/agent-core/agent_core/config/keys.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 242-245
+services/agent-core/tests/test_w3_power_cut.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 1-141
+services/agent-core/agent_core/net/state.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 103-111
+services/agent-core/tests/test_w3_glimmer.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 1-98
+scripts/jana_tools/hackathon_app.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 15,175,214-216,221-232,309-310
+  s_207b3a26495062::t_7c06e7032742f9 26
+SPEC.md
+  s_207b3a26495062::t_0b3f4de5cf72fc 21,25,278-315,629-630
+scripts/tests/test_w3_launcher.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 1-39
+services/agent-core/agent_core/providers/llama.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 41-45,62,140-141,143-148,158,167-168,177-178,238-241
+services/agent-core/agent_core/router/online.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 12,26-27,43-44,83-85
+services/agent-core/agent_core/router/router.yaml
+  s_207b3a26495062::t_0b3f4de5cf72fc 4-5,10,16,23,176-177
+scripts/jana_tools/hackathon_dev.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 1,5-7,27-41,45-47,50-67,105-108,111,119,122,125,133,137
+services/agent-core/tests/test_m9_slice.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 115-135
+services/agent-core/agent_core/engine/turn.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 1207-1210,3137,3356-3372
+  s_207b3a26495062::t_1d2e1753530791 3373
+services/agent-core/agent_core/router/recommended_models.json
+  s_207b3a26495062::t_0b3f4de5cf72fc 3,5-39
+services/cloud-gateway/cloud_gateway/app.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 19-20,39,42,76-89,151-152,156-167,588-590
+services/agent-core/agent_core/router/core.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 73-79,211-214,246-251,262-265,539-541,710-734
+  s_207b3a26495062::t_79cd478202794a 735-742
+scripts/tests/test_m11f_models.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 68-69,71-72
+services/agent-core/agent_core/providers/gateway.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 132-135,137-142
+services/agent-core/agent_core/engine/assembly.py
+  s_207b3a26495062::t_0b3f4de5cf72fc 984-985
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c6b07c09307cb7c562b5dd0693f8b69c8fc918cc",
+  "prompts": {},
+  "sessions": {
+    "s_207b3a26495062": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59f11afb-ae7e-426c-a582-4434e27c81b9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
