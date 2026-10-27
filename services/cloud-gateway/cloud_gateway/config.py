@@ -121,10 +121,10 @@ class MetaVoice(_Strict):
     # only (JM-D18).
     language_bias: dict[str, list[str]] = Field(default_factory=lambda: {"en": ["English"]})
     # Terms that bias recognition (they do not guarantee spelling). None is the packaged list made from the course
-    # glossary (`voice_keywords.txt`). Meta documents no limit on their number; `keywords_max` trims the list if a
-    # live check finds one.
+    # glossary (`voice_keywords.txt`). Meta refuses more than 500 (measured 2026-10-27: "Too many ASR keywords:
+    # received 1368, maximum is 500", an `invalid_request_error`), so the list is trimmed to `keywords_max`.
     keywords: list[str] | None = None
-    keywords_max: int = key(2000, serves="VOC-28", unit="terms", ge=0)
+    keywords_max: int = key(500, serves="VOC-28", unit="terms", ge=0, le=500)
     # The acknowledgement must follow the first frame; Meta closes a stream whose first frame is later than 10 s.
     handshake_timeout_s: float = key(5.0, serves="VOC-28", unit="s", ge=0.5, le=10)
     # Audio is paced at real time: at most this far ahead of the stream's clock (Meta allows 5 s), and a gap longer

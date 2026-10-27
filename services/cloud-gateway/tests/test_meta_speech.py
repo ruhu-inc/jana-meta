@@ -182,7 +182,8 @@ def test_handshake_frame_carries_the_key_and_session_settings() -> None:
         "model": "muse-voice-transcribe-1.0", "audioEncoding": "PCM_24KHZ", "mode": "ENDPOINTING",
         "partialMode": "CUMULATIVE", "emitAudioProgress": False}  # fmt: skip
     assert frame["languageBias"] == ["English"]
-    assert frame["keywords"] == glossary_keywords() and "potential difference" in frame["keywords"]
+    fitting = [word for word in glossary_keywords() if len(word) <= 30][:500]  # Meta's limits (measured)
+    assert frame["keywords"] == fitting and "potential difference" in frame["keywords"]
     assert server.sockets[0].sent[-1] == json.dumps({"type": "endStream"})  # close ends the session
 
 
@@ -194,6 +195,18 @@ def test_keywords_are_capped_and_configurable() -> None:
 
     asyncio.run(run())
     assert server.handshakes()[0]["keywords"] == ["ohm"]
+
+
+def test_packaged_keywords_fit_meta_limit() -> None:
+    """Meta refuses more than 500 keywords (measured live); the packaged list is trimmed to them."""
+    server = FakeServer()
+
+    async def run() -> None:
+        await (await recognizer(server).open("en")).close()
+
+    asyncio.run(run())
+    sent = server.handshakes()[0]["keywords"]
+    assert len(glossary_keywords()) > 500 and len(sent) == 500 and max(map(len, sent)) <= 30
 
 
 def test_packaged_keywords_are_the_glossary_terms() -> None:
@@ -228,6 +241,16 @@ def test_a_refused_or_silent_handshake_opens_nothing() -> None:
             await opening
         assert failure.value.reason == "upstream_auth" and server.closed == 1
 
+    async def invalid() -> None:
+        server = FakeServer(ack=False)
+        opening = asyncio.create_task(recognizer(server).open("en"))
+        await asyncio.sleep(0.05)
+        server.sockets[0].push({"type": "error", "message": "Too many ASR keywords: received 1368, maximum is 500",
+                                "sessionId": "s", "errorType": "invalid_request_error"})  # fmt: skip
+        with pytest.raises(UpstreamError) as failure:
+            await opening
+        assert failure.value.reason == "format_error"  # not the key's fault
+
     async def silent() -> None:
         server = FakeServer(ack=False)
         with pytest.raises(UpstreamError) as failure:
@@ -244,7 +267,7 @@ def test_a_refused_or_silent_handshake_opens_nothing() -> None:
             await opening
         assert failure.value.reason == "rate_limit" and rec.retry_at > rec.clock()  # backs off before retrying
 
-    for case in (refused, silent, limited):
+    for case in (refused, invalid, silent, limited):
         asyncio.run(case())
 
 

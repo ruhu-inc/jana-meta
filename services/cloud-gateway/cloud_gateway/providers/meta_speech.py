@@ -38,6 +38,7 @@ BYTES_PER_MS = 48  # 24 kHz mono PCM16
 FRAME = 3840  # 80 ms, the frame Meta's examples send
 TICK_S = 0.1  # how often an open stream checks for a gap to fill with silence
 RETRY_S = (0.5, 1.0, 2.0)  # backoff before reopening after a 1011 or 1013 close (the connection's open budget is 5 s)
+KEYWORD_CHARS = 30  # Meta's longest keyword
 CAPPED = "max session duration"  # the 1011 reason that asks for a new session, not a backoff
 
 
@@ -207,7 +208,9 @@ class MetaRecognizer:
                  clock: Callable[[], float] | None = None) -> None:  # fmt: skip
         self.voice, self.key = voice, key
         keywords = voice.keywords if voice.keywords is not None else glossary_keywords()
-        self.keywords = list(dict.fromkeys(keywords))[: voice.keywords_max]
+        # Meta refuses a keyword longer than 30 characters (measured 2026-10-27), so those are left out first.
+        fitting = [word for word in dict.fromkeys(keywords) if len(word) <= KEYWORD_CHARS]
+        self.keywords = fitting[: voice.keywords_max]
         self._connect = connect
         self._clock = clock
         self.retry_at = 0.0  # no stream opens before this (a backoff after 1011 or 1013)
@@ -255,6 +258,9 @@ class MetaRecognizer:
             with contextlib.suppress(Exception):
                 await socket.close()
             if isinstance(reply, dict) and reply.get("type") == "error":
+                # A request Meta finds invalid (too many keywords, a bad setting) is ours to fix, not the key's.
+                if "invalid_request" in str(reply.get("errorType") or ""):
+                    raise UpstreamError("format_error", "recognition handshake invalid")
                 raise UpstreamError("upstream_auth", "recognition handshake refused")
             raise UpstreamError("bad_response", "recognition handshake not acknowledged")
         self.retries = 0
