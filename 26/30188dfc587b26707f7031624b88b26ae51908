@@ -1,0 +1,25 @@
+README.md
+  s_4860f8d432bbd3::t_baf38bca40a9b3 3-5,94
+scripts/build-submission.sh
+  s_4860f8d432bbd3::t_e021bba60b74f0 7-10
+  s_4860f8d432bbd3::t_02a7842da74e1f 5,17,21,28
+SPEC.md
+  s_4860f8d432bbd3::t_fccc194dbf6030 66,363,655
+  s_4860f8d432bbd3::t_92e89abb4355c5 364-365,380
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2630188dfc587b26707f7031624b88b26ae51908",
+  "prompts": {},
+  "sessions": {
+    "s_4860f8d432bbd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "11cf0443-6440-4570-b1cb-b8e7f684aea0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
