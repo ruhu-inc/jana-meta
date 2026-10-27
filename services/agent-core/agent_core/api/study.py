@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import contextlib
-import hashlib
 import json
-import re
 import sqlite3
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -318,21 +316,12 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
 
     @app.get("/v1/study/aids/{aid_id}/speech")
     async def speech(
-        aid_id: str, request: Request, claim: str = "0", offset: str = "0", limit: str = "3500", neural: bool = False
+        aid_id: str, request: Request, claim: str = "0", offset: str = "0", limit: str = "3500"
     ) -> Response:
         def get(d: StudyDesk) -> Any:
             aid = d.aid(aid_id)
             if aid["kind"] != "audio_overview" or aid["status"] != "ready":
                 raise StudyError("source_stale")
-            if neural:
-                if not core.settings.study_neural_speech_enabled or core.study.cloud is None:
-                    raise StudyError("neural_speech_not_configured")
-                try:
-                    core.study.cloud.guard(d.conn)
-                except ValueError as error:
-                    raise StudyError(getattr(error, "reason", "consent_required")) from None
-                if any(d.source(source["source_id"])["private"] for source in aid["sources"]):
-                    raise StudyError("neural_speech_private_material")
             index, start = number(claim, 0, len(aid["claims"]) - 1), number(offset, 0, 100000)
             text = verbalise(aid["claims"][index]["text"]).text
             if start >= len(text):
@@ -352,68 +341,6 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
             )
 
         return read(request, get, ("aid", aid_id))
-
-    @app.get("/v1/study/podcast-voice")
-    async def podcast_voice(request: Request) -> Response:
-        d = desk()
-        enabled = core.settings.study_neural_speech_enabled
-        status = {"enabled": enabled, "configured": False, "provider": "nvidia_magpie"}
-        if enabled and core.study.cloud is not None:
-            try:
-                remote = await core.study.cloud.send(d.conn, "GET", "/v1/podcast/voice")
-                if isinstance(remote, dict) and remote.get("provider") == "nvidia_magpie":
-                    status["configured"] = remote.get("enabled") is True and remote.get("configured") is True
-            except ValueError:
-                pass  # Status never grants consent or silently selects the system voice.
-        return response(status)
-
-    @app.post("/v1/study/aids/{aid_id}/neural-speech")
-    async def neural_speech(aid_id: str, request: Request) -> Response:
-        try:
-            d = desk()
-            if not core.settings.study_neural_speech_enabled or core.study.cloud is None:
-                raise StudyError("neural_speech_not_configured")
-            refs(request, "aid", aid_id)
-            core.limit_command(request.url.path)
-            body = await request.json()
-            if (
-                not isinstance(body, dict)
-                or set(body) != {"claim", "offset", "text_sha256", "nvidia_consent"}
-                or body.get("nvidia_consent") is not True
-                or type(body.get("claim")) is not int
-                or type(body.get("offset")) is not int
-                or not isinstance(body.get("text_sha256"), str)
-                or not re.fullmatch(r"[0-9a-f]{64}", body["text_sha256"])
-            ):
-                raise StudyError("invalid_study_request")
-            key = request.headers.get("idempotency-key", "")
-            if not re.fullmatch(r"cli_[0-9A-HJKMNP-TV-Z]{26}", key):
-                raise StudyError("invalid_study_request")
-            aid = d.aid(aid_id)
-            if aid["kind"] != "audio_overview" or aid["status"] != "ready":
-                raise StudyError("source_stale")
-            if any(d.source(source["source_id"])["private"] for source in aid["sources"]):
-                raise StudyError("neural_speech_private_material")
-            # Reuse the exact passage preparation read by the browser, without accepting arbitrary client text.
-            passage_response = await speech(aid_id, request, str(body["claim"]), str(body["offset"]), "600")
-            passage = json.loads(bytes(passage_response.body))
-            text = passage["text"]
-            if hashlib.sha256(text.encode()).hexdigest() != body["text_sha256"]:
-                raise StudyError("source_stale")
-            voice_index = body["claim"] % 2 if aid.get("settings", {}).get("voices") == 2 else 0
-            audio = await core.study.cloud.podcast_audio(d.conn, text, key, voice_index)
-            # Consent/profile changes, private-grant expiry and deletion during synthesis must withhold playback.
-            core.study.cloud.guard(d.conn)
-            refs(request, "aid", aid_id)
-            if d.aid(aid_id)["status"] != "ready" or any(
-                d.source(source["source_id"])["private"] for source in aid["sources"]
-            ):
-                raise StudyError("source_stale")
-            return Response(audio, media_type="audio/wav", headers={"Cache-Control": "no-store"})
-        except (ValueError, TypeError) as error:
-            if isinstance(error, StudyError):
-                raise fail(error) from None
-            raise fail(StudyError(getattr(error, "reason", "invalid_study_request"))) from None
 
     @app.get("/v1/study/sources/{source_id}")
     async def source(source_id: str, request: Request) -> Response:

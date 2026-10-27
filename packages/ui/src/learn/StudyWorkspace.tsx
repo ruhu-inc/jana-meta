@@ -405,14 +405,11 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
           {view.deck && <p role="status" className="text-meta text-muted">{t("study.cards_in_review", { count: view.deck.cards.filter((c) => !c.suspended).length })}</p>}
           {view.quiz && <p role="status" className="text-meta text-muted">{t("study.quiz_questions", { count: view.quiz.items.length })}</p>}
           {shown.prompt && <p className="whitespace-pre-wrap rounded-card bg-panel px-4 py-3 text-ui font-medium">{shown.prompt}</p>}
-          {shown.kind === "audio_overview" && <><div className="flex flex-wrap gap-2">{view.reading ? <>
-            {view.podcastVoice?.enabled && <Button tone="primary" onClick={() => view.audioPaused ? controller.resumeOverview() : controller.pauseOverview()}>{t(view.audioPaused ? "study.resume_audio" : "study.pause_audio")}</Button>}
-            <Button onClick={() => controller.stopReading()}>{t("study.stop_audio")}</Button>
-          </> : <Button tone="primary" disabled={view.busy || !view.canSpeak || shown.status !== "ready"} onClick={() => { void controller.playOverview(); }}>{t("study.play_audio")}</Button>}</div>
-            {!view.canSpeak && <Notice message={t(view.podcastVoice?.enabled ? view.podcastVoice.configured ? "study.neural_audio_unsupported" : "study.neural_voice_unavailable" : "study.voice_unavailable")} />}
-            <p role="status" className="text-meta text-muted">{view.reading ? view.audioPaused ? t("study.audio_paused", { number: view.spokenClaim + 1, total: shown.claims.length }) : view.audioPreparing ? t("study.preparing_neural") : t("study.audio_progress", { number: view.spokenClaim + 1, total: shown.claims.length }) : view.audioCompleted ? t("study.audio_complete", { total: shown.claims.length }) : null}</p>
+          {shown.kind === "audio_overview" && <><div className="flex flex-wrap gap-2">{view.reading ? <Button onClick={() => controller.stopReading()}>{t("study.stop_audio")}</Button> : <Button tone="primary" disabled={view.busy || !view.canSpeak || shown.status !== "ready"} onClick={() => { void controller.playOverview(); }}>{t("study.play_audio")}</Button>}</div>
+            {!view.canSpeak && <Notice message={t("study.voice_unavailable")} />}
+            <p role="status" className="text-meta text-muted">{view.reading ? t("study.audio_progress", { number: view.spokenClaim + 1, total: shown.claims.length }) : view.audioCompleted ? t("study.audio_complete", { total: shown.claims.length }) : null}</p>
             {(view.reading || view.audioCompleted) && <ProgressBar bare label={t("study.tool.audio_overview")} max={shown.claims.length} value={view.audioCompleted ? shown.claims.length : view.spokenClaim} valueText={`${view.audioCompleted ? shown.claims.length : view.spokenClaim} / ${shown.claims.length}`} />}
-            <p className="text-meta text-muted">{t(view.podcastVoice?.enabled ? "study.audio_nvidia" : "study.audio_local")}</p>
+            <p className="text-meta text-muted">{t("study.audio_local")}</p>
           </>}
           {shown.status === "stale" && <Notice message={t("study.stale_help")} />}
           {shown.kind === "concept_map" && shown.concept_map && <StudyConceptMap map={shown.concept_map} fromWeb={shown.sources.some((x) => webSources.has(x.source_id))} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editConceptMap(ops); }}

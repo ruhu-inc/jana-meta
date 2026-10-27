@@ -8,17 +8,9 @@ import { readSessionNote } from "./session-notes.js";
 import { agreesForItself, readConsents, readProfile } from "./studies.js";
 
 export type { W as StudyContracts, R as ResearchContracts };
-export interface PodcastAudio {
-  available(): boolean;
-  activate(): void;
-  play(audio: Blob, rate: number, callbacks: { end(): void; error(): void }): () => void;
-  pause?(): void;
-  resume?(): void;
-}
 export interface StudyWorkspaceView {
   archivedSourceIds?: string[];
   journey?: W.StudyJourney | null;
-  podcastVoice?: { enabled: boolean; configured: boolean } | null;
   access?: { status: "ready" | "consent_required" | "study_off" | "plan_required"; needsGuardian: boolean } | null;
   status: "idle" | "loading" | "ready" | "failed";
   sources: W.SourceList["items"]; jobs: W.Job[]; source: W.Source | null; chunks: W.Chunk[]; aids: W.Aid[];
@@ -26,8 +18,7 @@ export interface StudyWorkspaceView {
   resultAnswers?: Record<string, string>;
   cleanupPending: boolean; availableRevisions: number[]; busy: boolean; error: string | null; uploadBytes: number; uploadTotal: number;
   selections: W.SourceSelection[]; notes: { id: string; kind: "session_note" | "dictated_note" | "board_note"; title: string | null; private: boolean }[];
-  reading: boolean; spokenClaim: number; canSpeak: boolean; audioPreparing?: boolean;
-  audioPaused?: boolean; audioCompleted?: boolean;
+  reading: boolean; spokenClaim: number; canSpeak: boolean; audioCompleted?: boolean;
   quizFeedback?: Record<string, W.QuizResult["results"][number]>;
   requestedJobId?: string | null;
   /** Contextual coaching stays beside its quiz; never replaces its draft, feedback or result. */
@@ -82,12 +73,11 @@ export class StudyWorkspaceController {
   private cancelSpeech: (() => void) | null = null;
   private finishSpeech: ((ok: boolean) => void) | null = null;
   private speechExpiry: ReturnType<typeof setTimeout> | null = null;
-  private resumeSpeech: (() => void) | null = null;
   private cardReturns = new Map<string, number>();
   private cardReturnTimer: ReturnType<typeof setTimeout> | null = null;
-  constructor(private readonly profiles: ProfileController, private readonly speech?: LocalSpeech, private readonly podcastAudio?: PodcastAudio) {
+  constructor(private readonly profiles: ProfileController, private readonly speech?: LocalSpeech) {
     profiles.onClear(() => { this.clearCardReturns(); this.pendingAid = null; this.stopReading(); this.sequence++; this.selection++; this.referenceGrants = []; this.grant = null; this.grantExpires = 0; this.set({ ...EMPTY_STUDY, canSpeak: speech?.available() ?? false }); });
-    if (speech) { this.patch({ canSpeak: speech.available() }); speech.subscribe(() => this.patch({ canSpeak: this.view.podcastVoice?.enabled ? !!this.view.podcastVoice.configured && !!this.podcastAudio?.available() : speech.available() })); }
+    if (speech) { this.patch({ canSpeak: speech.available() }); speech.subscribe(() => this.patch({ canSpeak: speech.available() })); }
   }
   getView = (): StudyWorkspaceView => this.view;
   subscribe = (listener: () => void): (() => void) => { this.listeners.add(listener); return () => this.listeners.delete(listener); };
@@ -108,16 +98,7 @@ export class StudyWorkspaceController {
       const covered = ["active", "pending_consent"].includes(plan.state) && profilePlan !== undefined;
       const status = !covered || plan.allowance_used_up ? "plan_required" : missing ? "consent_required" : !connectivity.features.study_materials?.enabled || !connectivity.features.cloud_tier?.enabled ? "study_off" : "ready";
       this.patch({ access: { status, needsGuardian: !adult && missing }, ...(status === "ready" && this.view.error === "consent_required" ? { error: null } : {}) });
-      await this.loadPodcastVoice();
     } catch { /* A failed status read never substitutes for the native permission check. */ }
-  }
-  async loadPodcastVoice(): Promise<void> {
-    const generation = this.profiles.generation;
-    try {
-      const status = await this.commands().get<{ enabled: boolean; configured: boolean; provider: string }>("/v1/study/podcast-voice");
-      if (generation !== this.profiles.generation || typeof status.enabled !== "boolean" || typeof status.configured !== "boolean" || status.provider !== "nvidia_magpie") return;
-      this.patch({ podcastVoice: { enabled: status.enabled, configured: status.configured }, canSpeak: status.enabled ? status.configured && !!this.podcastAudio?.available() : this.speech?.available() ?? false });
-    } catch { /* Older cores retain their installed-voice path; configured neural failures never downgrade silently. */ }
   }
   private set(view: StudyWorkspaceView): void { this.view = view; for (const fn of this.listeners) fn(); }
   private patch(view: Partial<StudyWorkspaceView>): void { this.set({ ...this.view, ...view }); }
@@ -499,110 +480,49 @@ export class StudyWorkspaceController {
   }
   stopReading(): void {
     this.speechGeneration++; this.cancelSpeech?.(); this.cancelSpeech = null;
-    this.resumeSpeech?.(); this.resumeSpeech = null;
-    this.podcastAudio?.resume?.();
     if (this.speechExpiry !== null) clearTimeout(this.speechExpiry);
     this.speechExpiry = null;
     this.finishSpeech?.(false); this.finishSpeech = null;
-    if (this.view.reading || this.view.audioPreparing || this.view.audioPaused || this.view.audioCompleted) this.patch({ reading: false, audioPreparing: false, audioPaused: false, audioCompleted: false });
-  }
-  pauseOverview(): void {
-    if (!this.view.reading || this.view.audioPaused || !this.podcastAudio?.pause) return;
-    this.podcastAudio.pause(); this.patch({ audioPaused: true });
-  }
-  async resumeOverview(): Promise<void> {
-    if (!this.view.reading || !this.view.audioPaused) return;
-    const generation = this.speechGeneration, profile = this.profiles.generation, aid = this.view.aid;
-    const current = () => generation === this.speechGeneration && profile === this.profiles.generation && this.view.aid?.aid_id === aid?.aid_id;
-    try {
-      if (this.view.podcastVoice?.enabled && aid) valid<W.SpeechPassage>("SpeechPassage", await this.commands().get(`/v1/study/aids/${aid.aid_id}/speech?claim=${this.view.spokenClaim}&limit=600&neural=true`, this.headers()));
-      if (!current() || !this.view.audioPaused) return;
-      this.podcastAudio?.resume?.(); this.patch({ audioPaused: false });
-      this.resumeSpeech?.(); this.resumeSpeech = null;
-    } catch (error) {
-      if (current()) { this.stopReading(); this.patch({ error: error instanceof CommandError ? String(error.details?.reason ?? error.code) : "neural_speech_unavailable" }); }
-    }
+    if (this.view.reading || this.view.audioCompleted) this.patch({ reading: false, audioCompleted: false });
   }
   async playOverview(): Promise<void> {
     this.stopReading();
     const aid = this.view.aid, speech = this.speech;
-    if (!aid || aid.kind !== "audio_overview" || aid.status !== "ready") return;
-    if (this.view.podcastVoice?.enabled && this.podcastAudio?.available()) this.podcastAudio.activate(); // preserve Play before HTTP
-    const neural = this.view.podcastVoice?.enabled === true;
-    if (neural ? !this.view.podcastVoice?.configured || !this.podcastAudio?.available() : !speech?.available()) return;
+    if (!aid || aid.kind !== "audio_overview" || aid.status !== "ready" || !speech?.available()) return;
     const generation = this.profiles.generation, reading = this.speechGeneration;
     const current = () => generation === this.profiles.generation && reading === this.speechGeneration && this.view.aid?.aid_id === aid.aid_id;
     const settings = this.profiles.getView().settings;
     const rate = settings?.speech_rate ?? 1, voice = settings?.speech_voice ?? "";
     // A two-voice podcast (STU-21) alternates the learner's voice with another voice on the device, if there is one.
-    const second = aid.settings?.voices === 2 ? speech?.voices?.().find((v) => v.id !== voice)?.id : undefined;
-    if (!neural) speech?.configure?.(rate, voice);
-    this.patch({ reading: true, audioPreparing: neural, error: null });
+    const second = aid.settings?.voices === 2 ? speech.voices?.().find((v) => v.id !== voice)?.id : undefined;
+    speech.configure?.(rate, voice);
+    this.patch({ reading: true, error: null });
     const expiries = aid.sources.flatMap((s) => {
       if (s.source_id === this.view.source?.source_id && this.view.source.private) return [this.grantExpires];
       return this.referenceGrants.filter((g) => g.sid === s.source_id).map((g) => g.expiry);
     });
     if (expiries.length) this.speechExpiry = setTimeout(() => this.stopReading(), Math.max(0, Math.min(...expiries) - Date.now()));
-    type Prepared = { passage: W.SpeechPassage; audio: Blob | null; offset: number };
-    const prepare = async (claim: number, offset: number): Promise<Prepared | null> => {
-      if (!current()) return null;
-      const passage = valid<W.SpeechPassage>("SpeechPassage", await this.commands().get(`/v1/study/aids/${aid.aid_id}/speech?claim=${claim}&offset=${offset}${neural ? "&limit=600&neural=true" : ""}`, this.headers()));
-      if (!current()) return null;
-      if (passage.aid_id !== aid.aid_id || passage.claim_index !== claim) throw new Error("invalid speech binding");
-      let audio: Blob | null = null;
-      if (neural) {
-        const text_sha256 = await sha(new TextEncoder().encode(passage.text));
-        if (!current()) return null;
-        audio = await this.commands().request<Blob>("POST", `/v1/study/aids/${aid.aid_id}/neural-speech`, { claim, offset, text_sha256, nvidia_consent: true }, clientId(), this.headers(), true);
-        if (!current()) return null;
-        if (audio.type !== "audio/wav" || audio.size < 44 || audio.size > 6000000) throw new Error("invalid neural audio");
-      }
-      return { passage, audio, offset };
-    };
-    // Observe speculative errors immediately, including a response that arrives after Stop/profile clear.
-    const safely = (work: Promise<Prepared | null>) => work.then((value) => ({ value, error: null as unknown }), (error: unknown) => ({ value: null, error }));
-    let pending = safely(prepare(0, 0)), complete = false;
+    let claim = 0, offset = 0, complete = false;
     try {
       while (current()) {
-        const loaded = await pending;
+        const passage = valid<W.SpeechPassage>("SpeechPassage", await this.commands().get(`/v1/study/aids/${aid.aid_id}/speech?claim=${claim}&offset=${offset}`, this.headers()));
         if (!current()) return;
-        if (loaded.error) throw loaded.error;
-        if (!loaded.value) return;
-        const { passage, audio, offset } = loaded.value;
-        // A pause during the permission read starts a fresh check on Resume, rather than using an old approval.
-        while (current()) {
-          if (this.view.audioPaused) await new Promise<void>((resolve) => { this.resumeSpeech = resolve; });
-          if (!current()) return;
-          if (neural) {
-            const fresh = valid<W.SpeechPassage>("SpeechPassage", await this.commands().get(`/v1/study/aids/${aid.aid_id}/speech?claim=${passage.claim_index}&offset=${offset}&limit=600&neural=true`, this.headers()));
-            if (!current()) return;
-            if (fresh.text !== passage.text) throw new Error("stale speech");
-          }
-          if (!this.view.audioPaused) break;
-        }
-        if (!current()) return;
-        this.patch({ spokenClaim: passage.claim_index, audioPreparing: false });
-        if (!neural && second && offset === 0) speech?.configure?.(rate, passage.claim_index % 2 === 1 ? second : voice);
-        const playing = new Promise<boolean>((resolve) => {
+        if (passage.aid_id !== aid.aid_id || passage.claim_index !== claim) throw new Error("invalid speech binding");
+        this.patch({ spokenClaim: passage.claim_index });
+        if (second && offset === 0) speech.configure?.(rate, passage.claim_index % 2 === 1 ? second : voice);
+        const ok = await new Promise<boolean>((resolve) => {
           this.finishSpeech = resolve;
-          const callbacks = { end: () => resolve(true), error: () => resolve(false) };
-          if (audio && this.podcastAudio) this.cancelSpeech = this.podcastAudio.play(audio, rate, callbacks);
-          else if (speech) this.cancelSpeech = speech.speak(passage.text, { start: () => {}, boundary: () => {}, ...callbacks });
-          else throw new Error("voice unavailable");
+          this.cancelSpeech = speech.speak(passage.text, { start: () => {}, boundary: () => {}, end: () => resolve(true), error: () => resolve(false) });
         });
-        const next: [number, number] | null = passage.next_offset !== null ? [passage.claim_index, passage.next_offset] : !passage.last_claim ? [passage.claim_index + 1, 0] : null;
-        // At most one passage ahead; never synthesize an entire podcast speculatively. No persistent audio cache.
-        if (neural && next) pending = safely(prepare(next[0], next[1]));
-        const ok = await playing;
         if (!current()) return;
         this.finishSpeech = null; this.cancelSpeech = null;
         if (!ok) throw new Error("voice unavailable");
-        if (!next) { complete = true; break; }
-        if (!neural) pending = safely(prepare(next[0], next[1]));
-        this.patch({ audioPreparing: true });
+        if (passage.next_offset !== null) offset = passage.next_offset;
+        else if (!passage.last_claim) { claim = passage.claim_index + 1; offset = 0; }
+        else { complete = true; break; }
       }
-    } catch (error) { if (current()) this.patch({ error: error instanceof CommandError ? String(error.details?.reason ?? error.code) : neural ? "neural_speech_unavailable" : "speech_unavailable" }); }
-    finally { if (current()) { if (this.speechExpiry !== null) clearTimeout(this.speechExpiry); this.speechExpiry = null; this.resumeSpeech = null; this.patch({ reading: false, audioPreparing: false, audioPaused: false, audioCompleted: complete }); } }
+    } catch (error) { if (current()) this.patch({ error: error instanceof CommandError ? String(error.details?.reason ?? error.code) : "speech_unavailable" }); }
+    finally { if (current()) { if (this.speechExpiry !== null) clearTimeout(this.speechExpiry); this.speechExpiry = null; this.patch({ reading: false, audioCompleted: complete }); } }
   }
   /** Back from an aid to the material's study tools. */
   hideAid(): void { this.stopReading(); this.patch({ aid: null, deck: null, quiz: null, result: null, resultAnswers: {}, quizHelp: null }); }
@@ -632,7 +552,6 @@ export class StudyWorkspaceController {
       const journey = valid<W.StudyJourneyReply>("StudyJourneyReply", await this.mutate("POST", `/v1/study/aids/${id}/journey`, { action: "resume" })).journey;
       if (current()) this.patch({ aid, deck, quiz, result: saved?.result ?? null,
         resultAnswers: Object.fromEntries((saved?.answers ?? []).map((a) => [a.item_id, a.answer])), journey, quizFeedback: {}, quizHelp: null, requestedJobId: null });
-      if (current() && aid.kind === "audio_overview") await this.loadPodcastVoice();
     });
   }
   /** Explicit actions update only the saved journey; generated aids and assessment evidence stay unchanged. */

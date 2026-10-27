@@ -23,7 +23,7 @@ test("returning to curriculum material waits for workspace setup and retains the
 });
 function show(extra: Partial<StudyWorkspaceView>, onReviewAccess?: () => void, onJourneyStarted?: (node: string, subject: string) => void) {
   const view = { ...EMPTY_STUDY, status: "ready", ...extra } as StudyWorkspaceView;
-  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}), loadTopicMaps: vi.fn(async () => {}) };
+  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}), loadTopicMaps: vi.fn(async () => {}) };
   const connected = { ...controller, beginJourney: vi.fn(async () => true) };
   render(<StudyWorkspace controller={connected as unknown as StudyWorkspaceController} {...(onReviewAccess ? { onReviewAccess } : {})} {...(onJourneyStarted ? { onJourneyStarted } : {})} />);
   return connected;
@@ -349,13 +349,10 @@ test("a completed job remains openable from history without generating or spendi
 });
 
 
-test("NVIDIA Podcast keeps Play disabled while readiness loads and discloses cloud trial retention", () => {
-  show({ source, busy: true, canSpeak: true, podcastVoice: { enabled: true, configured: true },
-    aid: { ...aidBase, aid_id: `aid_${"0".repeat(26)}`, kind: "audio_overview" } });
+test("a Podcast keeps Play disabled while busy and is read on this computer", () => {
+  show({ source, busy: true, canSpeak: true, aid: { ...aidBase, aid_id: `aid_${"0".repeat(26)}`, kind: "audio_overview" } });
   expect(screen.getByRole("button", { name: "Play overview" }).hasAttribute("disabled")).toBe(true);
-  expect(screen.getByText(/NVIDIA Magpie neural voice/)).toBeTruthy();
-  expect(screen.getByText(/NVIDIA’s free trial may retain text and audio/)).toBeTruthy();
-  expect(screen.queryByText("Read on this computer using an installed voice.")).toBeNull();
+  expect(screen.getByText("Read on this computer using an installed voice.")).toBeTruthy();
 });
 
 test("quick generation uses whole-material defaults; duplicate sets offer Open instead of spending again", () => {

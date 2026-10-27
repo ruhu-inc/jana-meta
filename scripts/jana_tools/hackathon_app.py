@@ -207,7 +207,6 @@ def settings_for_browser(settings: Settings) -> Settings:
             "build_stage": "S3",
             "study_workspace_enabled": True,
             "study_offline_enabled": False,
-            "study_neural_speech_enabled": True,
             "study_batch_char_limit": 16000,
             "consent_dpia_ref": "local-synthetic-hackathon-notice",
             # Spoken turns online (SPEC §6): Muse Voice Transcribe and Kokoro behind the local gateway's voice route.

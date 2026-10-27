@@ -53,8 +53,7 @@ the network is usable. Otherwise the local sidecar serves the start, exactly as 
   - *Voice*: the verbatim synthesizer reads the accepted sentences as they arrive: Kokoro-82M (`af_heart`,
     Apache-2.0) from the speech pack, in a worker under the speech runtime's interpreter (`providers/kokoro_speech.py`,
     `cloud_gateway/kokoro_worker.py`), warmed at startup; the first sentence is split at its first clause, and the
-    engine's keyed filler is read once at warm-up and replayed. `voice_tts.engine = "magpie"` uses NVIDIA Magpie
-    (`providers/magpie_speech.py`), development only (SPEC §6.4). The Meta stack has no Live voice. `voice.py` still
+    engine's keyed filler is read once at warm-up and replayed. The Meta stack has no Live voice. `voice.py` still
     supports one (a fixed read-exactly instruction, its output transcription
     checked against the sentence on letters and digits, a departure cut before the next chunk and the rest read
     verbatim, two departures switching to the synthesizer only); the tests drive that path with a fake. Barge-in or
@@ -78,7 +77,7 @@ the network is usable. Otherwise the local sidecar serves the start, exactly as 
 - **Tests.** `services/cloud-gateway/tests/test_meta_speech.py` drives the Voice Transcribe recognizer, alone and in
   real voice turns, against a scripted server (handshake, acknowledgement, cumulative partials, pacing and silence,
   1011/1013 reconnects, per-turn re-checks, the budget, the default Kokoro stack); `test_voice_synthesizers.py`
-  Kokoro's worker protocol and Magpie (`JANA_LIVE_KOKORO=1` loads the real Kokoro).
+  Kokoro's worker protocol (`JANA_LIVE_KOKORO=1` loads the real Kokoro).
   `services/cloud-gateway/tests/test_gateway_voc28_cloud_voice.py`
   runs the real gateway against fakes of the three services (`cloud_gateway/speech_fakes.py`): `voc28_live_reads_only_accepted_text`, departure cut and
   synthesizer finish, two departures, barge-in and truncation, prewarm, buffered first words, idle release and

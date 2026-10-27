@@ -176,9 +176,6 @@ ROUTES: dict[str, Rule] = {
     # A learning journey from a saved aid: the body is one action of a closed set ("start", "resume",
     # "lesson_reviewed"; StudyJourneyAction forbids any other field), so no learner text reaches it.
     "POST /v1/study/aids/{aid_id}/journey": _IDS,
-    # The server prepares the saved passage; the body contains only its index,
-    # offset, digest and explicit consent, never client-supplied narration text.
-    "POST /v1/study/aids/{aid_id}/neural-speech": _IDS,
     "POST /v1/study/retries/{digest}": _IDS,
     "POST /v1/study/decks/{deck_id}/reviews": _IDS,
     "POST /v1/study/quizzes/{quiz_id}/attempts": Exempt("answers compared with private keys; never sent to a model"),

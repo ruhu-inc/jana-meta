@@ -51,12 +51,12 @@ describe("UXS-05", () => {
     expect(copyLintErrors({
       "study.web_url": "Public web page URL",
       "study.web_help": "Use a public HTTPS page link.",
-      "study.audio_help": "Check NVIDIA’s API access.",
+      "study.audio_help": "Check the API access in the PDF.",
     })).toEqual([]);
     expect(copyLintErrors({
-      "study.audio_status": "NVIDIA AUDIO READY",
-      "study.audio_help": "Check NVIDIA API access!",
-      "study.feedback": "NVIDIA says your answer is wrong.",
+      "study.audio_status": "API AUDIO READY",
+      "study.audio_help": "Check API access!",
+      "study.feedback": "The API says your answer is wrong.",
     })).toEqual([
       "study.audio_status: all-caps word",
       "study.audio_help: exclamation mark in interface copy",
