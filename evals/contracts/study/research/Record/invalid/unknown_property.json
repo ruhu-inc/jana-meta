@@ -1,0 +1,31 @@
+{
+  "research_id": "rsr_00000000000000000000000000",
+  "status": "sending",
+  "brief": {
+    "title": "xxx",
+    "subject": "mathematics",
+    "level": "o_level",
+    "purpose": "exam",
+    "known": "x",
+    "focus": "x",
+    "sub_questions": [
+      "xxxxxxxx",
+      "xxxxxxxx",
+      "xxxxxxxx",
+      "xxxxxxxx"
+    ],
+    "outputs": [
+      "diagram_drill"
+    ],
+    "length": "short"
+  },
+  "capture_id": "cap_00000000000000000000000000",
+  "sub_questions": [],
+  "pages": 0,
+  "failure": "no_sources",
+  "source_id": "src_00000000000000000000000000",
+  "parts": [],
+  "created_at": 0,
+  "updated_at": 0,
+  "__unknown_field__": 1
+}

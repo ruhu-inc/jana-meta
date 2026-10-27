@@ -95,7 +95,8 @@
     "compaction",
     "title",
     "index_rebuild",
-    "capture"
+    "capture",
+    "research_chat"
    ]
   },
   "session_ref": {
@@ -640,7 +641,8 @@
        "compaction",
        "judge",
        "reflection",
-       "vision"
+       "vision",
+       "research_chat"
       ]
      },
      "tier": {
@@ -1581,7 +1583,8 @@
     "title",
     "compaction",
     "judge",
-    "item_drafter"
+    "item_drafter",
+    "research_chat"
    ]
   },
   "effort": {

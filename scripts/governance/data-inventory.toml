@@ -648,3 +648,10 @@ map_id = { purpose = "Random identity of a concept map of a typed topic", retent
 body = { purpose = "The topic, its concepts and relations from the curated skills or a Muse Spark draft, and the learner's edits; no source material", retention = "study_concept_maps", egress = ["Profile archive and support file"] }
 created_at = { purpose = "When the learner made the map", retention = "study_concept_maps", egress = ["Profile archive and support file"] }
 updated_at = { purpose = "Order and display concept maps", retention = "study_concept_maps", egress = ["Profile archive and support file"] }
+
+[learner.study_research]
+research_id = { purpose = "Random identity of a study pack the research agent made", retention = "study_research", egress = ["Profile archive and support file"] }
+gateway_id = { purpose = "The gateway research job this pack follows until its pages arrive; null before sending", retention = "study_research", egress = ["Profile archive and support file"] }
+body = { purpose = "The brief the learner approved, the research's progress and the researched source and parts; no page text and no conversation", retention = "study_research", egress = ["Profile archive and support file"] }
+created_at = { purpose = "When the learner started the research", retention = "study_research", egress = ["Profile archive and support file"] }
+updated_at = { purpose = "Order and display study packs", retention = "study_research", egress = ["Profile archive and support file"] }

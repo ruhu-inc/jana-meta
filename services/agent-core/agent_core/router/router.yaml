@@ -104,6 +104,11 @@ auxiliary:
     model: cloud:primary/fast-model
     reasoning: none
     priority: 2
+  research_chat:
+    # The research agent's conversation before a study pack (SPEC §18.1a): online only, as the research is.
+    model: cloud:primary/fast-model
+    reasoning: low
+    priority: 6
   judge:
     tier: judge
     reasoning: low
@@ -191,6 +196,7 @@ cloud:
   - compaction
   - judge
   - vision
+  - research_chat
 budget:
   per_session_usd: 3.0
   per_student_day_usd: 10.0

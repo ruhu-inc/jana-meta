@@ -242,6 +242,9 @@
     },
     "vision": {
      "$ref": "#/$defs/slot"
+    },
+    "research_chat": {
+     "$ref": "#/$defs/slot"
     }
    }
   },
@@ -475,7 +478,8 @@
        "title",
        "compaction",
        "judge",
-       "vision"
+       "vision",
+       "research_chat"
       ]
      }
     }

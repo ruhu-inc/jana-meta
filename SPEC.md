@@ -442,7 +442,9 @@ four calls deep (guard, Diagnoser beside the Solver's tool call, Solver plan, Co
 decode-only call: 6 of 13 (46%), none for the incorrect-needs-a-category rule (3 of 14 before the line), all six for an
 error category outside the contract's list (`calculation`, `calculation_error`, `wrong_value`, `substitution_error`),
 about 1.4 s each; the role prompt names no categories. The 30 turns spent $0.79 and left $0.37 of holds (dropped
-speculative and timed-out calls keep their bound).
+speculative and timed-out calls keep their bound). With the categories listed in the Checker's prompt (216b681), 14
+wrong-answer turns gave 14 verdicts and no redo, each in two Checker calls (tools, then the verdict); those turns took
+7.2 s median, p90 11.1 s.
 
 ## 13. Workstreams and plan
 
@@ -696,11 +698,18 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
    multi-hop research "is less dependable today" and advise narrower requests, so each sub-question is one search;
    sub-questions are researched in parallel (at most 4 at once).
 3. **Research**: one Responses API request per sub-question, `tools: [{"type": "web_search"}]`,
-   `include: ["web_search_call.results"]`, `background: true`, progress by streamed retrieval
-   (`GET /v1/responses/{id}?stream=true`). Findings keep their `url_citation`s and bounded source excerpts; any text
-   with instruction-like spans is withheld (the gateway's existing `inert` rule).
+   `include: ["web_search_call.results"]`, sent as an ordinary request (measured 2026-10-27: ~6 s, Spark searching
+   1–2 times itself; `background: true` took 36 s, mostly queued, and `?stream=true` retrieval returns plain JSON, so
+   the job, already in the background, sends plain requests, up to 4 at once). What comes back is the model's answer
+   and the result list: titles and URLs, with **no `url_citation` annotations and empty snippets** in the probes.
+3b. **Fetch the sources**: so claims can be checked against real text, the gateway fetches the distinct result URLs
+   the source policy allows (§18.10, up to 30 per job): `https` only, public addresses only (no private, loopback or
+   link-local IPs after resolution, no redirects to them), 1 MB and 8 s per page, `text/html` or `text/plain`,
+   reduced to readable text and cut into numbered passages. A page that fails is skipped. Any passage with
+   instruction-like spans is withheld (the gateway's existing `inert` rule). Spark's own answers are a guide to which
+   pages matter, never evidence.
 4. **Synthesise**: one structured-output call writes the parts the brief asked for (concepts, diagram part map and
-   roles, flashcards, quiz, podcast script), every claim citing evidence ids from stage 3; the concept map is Study's
+   roles, flashcards, quiz, podcast script), every claim citing passage ids from stage 3b; the concept map is Study's
    `concept_map` job on the kept excerpts (§18.1).
 5. **Verify**: one call checks each claim against only its cited excerpts; unsupported claims are dropped. If too little
    survives, at most one more research round for the gaps, then stop.
@@ -725,9 +734,11 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
 - **Estimate** (to confirm on day one of W7): 6 searches ($0.015), research turns ~30k input and 6k output tokens
   ($0.06), synthesis and verification ~25k in and 8k out ($0.065): about **$0.10–0.15 a pack**, so 20 demo packs fit
   in under $3 of the credit.
-- (verify) Whether `web_search` usage appears in Responses `usage` or only as `web_search_call` items, and whether a
-  search is billed when the response is cancelled; the W7 day-1 checks (an addition to `jana_tools.meta_checks`)
-  record both before the ledger prices them.
+- Measured 2026-10-27 (live probes, $0.03): searches appear only as `web_search_call` output items (`action.query`,
+  `results` of `{type, title, url, snippet}`), never in `usage`; the ledger counts the items. A cancelled background
+  response returns `usage: null`, so its searches cannot be known: the job never cancels a request it has sent, it
+  stops sending new ones (Cancel waits for in-flight requests, each ~6 s). Still unknown: whether Meta bills a
+  cancelled request.
 
 ### 18.6 Privacy and consent
 

@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/commands.schema.json sha256 5209818dd9d5c494046316cb839da5770e88f9f21fa86eba5f66b277bd6cec8f; do not edit",
+ "$comment": "GENERATED from contracts/api/commands.schema.json sha256 190c940ce453ffe8a9fdb04f851e37466c16e8bbba30f5232eab7dd9ffe8a29c; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/commands",
  "title": "Command bodies",

@@ -6,7 +6,7 @@ import base64
 import hashlib
 import json
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from agent_core.contracts import errors
 from agent_core.net.client import NetError
@@ -119,7 +119,10 @@ class StudyCloud:
                     "neural_speech_unavailable",
                     "neural_speech_invalid_audio",
                     "safety_blocked",
+                    "research_not_found",
                 )
+                else "research_not_found"
+                if reply.status == 404 and path.startswith("/v1/research")
                 else "processing_failed"
             )
         return reply.body
@@ -227,6 +230,32 @@ class StudyCloud:
             raise StudyCloudError("insufficient_evidence")
         self.meter(conn, output)
         return output
+
+    async def research_start(self, conn: Any, request: dict[str, Any]) -> dict[str, Any]:
+        """The approved brief, and a photographed diagram's confirmed part names, to the gateway's research job (SPEC
+        §18.3): consent, subscription and the redaction check as any Study request. The brief's fields are the only
+        learner text sent; the conversation and the photo stay on the device."""
+        self.guard(conn)
+        profile = conn.execute("SELECT display_name,profile_id FROM profile").fetchone()
+        if Redactor(profile or ()).blocks(request):
+            raise StudyCloudError("safety_blocked")
+        return self._research_job(await self.send(conn, "POST", "/v1/research", request))
+
+    async def research_job(self, conn: Any, research_id: str) -> dict[str, Any]:
+        return self._research_job(await self.send(conn, "GET", f"/v1/research/{research_id}"))
+
+    async def research_cancel(self, conn: Any, research_id: str) -> dict[str, Any]:
+        return self._research_job(await self.send(conn, "POST", f"/v1/research/{research_id}/cancel"))
+
+    async def research_forget(self, conn: Any, research_id: str) -> None:
+        """The gateway deletes a job's pages once they are fetched (SPEC §18.6); this asks it to now."""
+        await self.send(conn, "DELETE", f"/v1/research/{research_id}")
+
+    @staticmethod
+    def _research_job(job: Any) -> dict[str, Any]:
+        if errors("study/research#/$defs/Job", job):
+            raise StudyCloudError("processing_failed")
+        return cast(dict[str, Any], job)
 
     async def extract(
         self, conn: Any, jid: str, request: dict[str, Any], source: dict[str, Any], data: bytes

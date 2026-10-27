@@ -351,6 +351,8 @@ RULES: tuple[Rule, ...] = (
     ),
     Rule("study concept maps of typed topics", "learner", ("study_concept_maps",),
          removed_by="DAT-09 profile deletion; the learner's own maps, no source material"),
+    Rule("study packs from the research agent", "learner", ("study_research",),
+         removed_by="DAT-09 profile deletion; the researched pages are a Study source, erased with it (DAT-22)"),
     Rule("support sharing confirmations", "learner", ("support_shares",), removed_by="session or profile deletion"),
     Rule("sync cursors", "learner", ("sync_cursors",), removed_by="DAT-19 (multi-device disabled or peer removed)"),
     Rule(

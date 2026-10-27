@@ -223,7 +223,7 @@ class StudyError(ValueError):
 
 
 def checked[T](name: str, body: T) -> T:
-    if errors(PREFIX + name, body):
+    if errors(name if "#" in name else PREFIX + name, body):  # a def of study/workspace, or a full reference
         raise StudyError("invalid_study_request")
     return body
 

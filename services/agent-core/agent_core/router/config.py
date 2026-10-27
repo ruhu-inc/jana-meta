@@ -15,7 +15,7 @@ from agent_core.contracts import errors as contract_errors
 
 CONTRACT = "agents/router-config"
 TIERS = ("fast", "strong", "judge")
-SLOTS = ("rule_matcher", "input_guard", "title", "compaction", "judge", "reflection", "vision")  # MDL-06
+SLOTS = ("rule_matcher", "input_guard", "title", "compaction", "judge", "reflection", "vision", "research_chat")  # MDL-06
 
 
 class RouterConfigError(ValueError):

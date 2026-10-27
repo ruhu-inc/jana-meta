@@ -5,7 +5,8 @@
 The engine is assembled as the app assembles it, with the sandboxed tool worker, and its cloud tier is the gateway's
 own Meta adapter and spending ledger, called in-process in place of the HTTP hop (`InProcessGateway`): the device's
 request body, the gateway's minimisation, the alias's effort mapping and the daily, total and expiry caps are the real
-ones, and the key is read the way the gateway reads it. The run stops once it has spent `--max-usd`.
+ones, and the key is read the way the gateway reads it. The run stops between turns once it has spent `--max-usd`
+(a turn in progress may take it a little over; 1.5 times it stops mid-turn).
 
 Each case is a full guided turn: the opening of a typed question (input guard, Diagnoser, Solver and its tools,
 Coach, gates), or a student's follow-up in that session. The report gives per-call and total timings, the time to the
@@ -74,6 +75,13 @@ WRONG_ANSWERS = (
     Case("maths-triangle-wrong", "mathematics", "108 cm^2", (r"\b54\b",), follows="maths-triangle", core=False),
     Case("phys-force-wrong", "physics", "F = 1.5 N", (r"\b6\s*N\b",), follows="phys-force", core=False),
     Case("phys-ohm-wrong", "physics", "R = 6 ohm", (r"\b24\b",), follows="phys-ohm", core=False),
+    # A second wrong answer in the same sessions, after the first one's feedback.
+    Case("maths-linear-wrong-2", "mathematics", "x = 4", (r"x\s*=\s*3\b",), follows="maths-linear", core=False),
+    Case("maths-brackets-wrong-2", "mathematics", "x = 6", (r"x\s*=\s*5\b",), follows="maths-brackets", core=False),
+    Case("maths-percent-wrong-2", "mathematics", "3.6", (r"\b36\b",), follows="maths-percent", core=False),
+    Case("maths-triangle-wrong-2", "mathematics", "21 cm^2", (r"\b54\b",), follows="maths-triangle", core=False),
+    Case("phys-force-wrong-2", "physics", "F = 5 N", (r"\b6\s*N\b",), follows="phys-force", core=False),
+    Case("phys-ohm-wrong-2", "physics", "R = 0.04 ohm", (r"\b24\b",), follows="phys-ohm", core=False),
 )
 
 
@@ -145,8 +153,8 @@ class InProcessGateway:
         from cloud_gateway import minimise
         from cloud_gateway.providers.base import ProviderRequest
 
-        if self.run_usd() >= self.max_usd:
-            raise SystemExit(f"stopped: this run reached its --max-usd {self.max_usd:.2f}")
+        if self.run_usd() >= 1.5 * self.max_usd:  # a hard stop mid-turn; the run itself stops between turns
+            raise SystemExit(f"stopped: this run reached 1.5 times its --max-usd {self.max_usd:.2f}")
         resolved = self.providers.resolve(body.get("model"))
         if resolved is None:
             raise SystemExit(f"the gateway does not serve {body.get('model')}")
@@ -451,6 +459,8 @@ async def main_async(args: argparse.Namespace) -> int:
         try:
             for _ in range(args.repeat):
                 for case in cases:
+                    if gateway.run_usd() >= args.max_usd:
+                        raise SystemExit(f"stopped before {case.name}: this run reached its --max-usd {args.max_usd:.2f}")
                     if case.follows is None:
                         engines[case.name] = await open_engine(gateway, case.subject, out, supervisor)
                     elif case.follows not in engines:

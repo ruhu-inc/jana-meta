@@ -71,6 +71,8 @@ PROFILE_STORES: tuple[ProfileStore, ...] = (
                  "profile_directory", "source study workspace"),
     ProfileStore("study concept maps of typed topics", "concept maps of typed topics and the learner's edits to them",
                  LEARNER, "profile_directory", "study concept maps of typed topics"),
+    ProfileStore("study packs from the research agent", "approved research briefs, progress and the parts made",
+                 LEARNER, "profile_directory", "study packs from the research agent"),
     ProfileStore("source material files", "hashed original blobs and incomplete uploads", "profiles/{profile}/study",
                  "profile_directory", lifetime="until source/profile deletion; unreferenced files collected on open"),
     ProfileStore("study jobs and private grants", "in-flight source jobs and five-minute private-source grants",
