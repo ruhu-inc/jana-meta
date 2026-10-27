@@ -1,0 +1,24 @@
+apps/desktop/src-tauri/src/identity.rs
+  s_4860f8d432bbd3::t_f28d2def966371 75-77,81-82,86-87,192,195,215
+  s_4860f8d432bbd3::t_b5572e0d3f0d7c 15
+  s_4860f8d432bbd3::t_b5facb877bf0a9 16-18,22,35-36,65,70-74,78-79,83-85,88-90,140,180-183,191,193-194,212-214,216-217
+apps/desktop/src-tauri/src/main.rs
+  s_4860f8d432bbd3::t_b5facb877bf0a9 156-157,182-184,195-196
+  s_4860f8d432bbd3::t_f28d2def966371 194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "38dfd0cd6283e3f3f73abb68fdd671853a95588b",
+  "prompts": {},
+  "sessions": {
+    "s_4860f8d432bbd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "11cf0443-6440-4570-b1cb-b8e7f684aea0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
