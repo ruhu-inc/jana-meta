@@ -30,7 +30,7 @@ def tutor(index, question, subject="physics", level="O", diagnosed=None):
     return SimpleNamespace(
         knowledge=SimpleNamespace(index=index),
         state=SimpleNamespace(problem=SimpleNamespace(statement=question), subject=subject, level=level),
-        diagnosis=SimpleNamespace(output={"subject": diagnosed}) if diagnosed else None,
+        diagnosis=SimpleNamespace(output={"subject": diagnosed}, topic_id=None) if diagnosed else None,
     )
 
 

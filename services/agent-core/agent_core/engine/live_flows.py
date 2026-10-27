@@ -224,7 +224,8 @@ def stuck(engine: Any) -> bool:
     return True
 
 
-def outside_content(engine: Any, topics: list[str], diagnosis: dict[str, Any] | None) -> bool:
+def outside_content(engine: Any, topics: list[str], diagnosis: dict[str, Any] | None,
+                    topic_id: str | None = None) -> bool:  # fmt: skip
     """A question the installed packs do not cover (no topic matches it, the Diagnoser found it outside the
     syllabus, or placed it in a subject with no pack installed at the level): saved for human help, and
     `content.out_of_pack` for the soft rules (PED-24, PED-14, D94)."""
@@ -232,7 +233,7 @@ def outside_content(engine: Any, topics: list[str], diagnosis: dict[str, Any] | 
 
     if engine.knowledge is None:
         return False
-    other = team.other_subject(engine, diagnosis)
+    other = team.other_subject(engine, diagnosis, topic_id)
     if other is not None and team.installed(engine, other):
         return False  # another installed subject's question: offered there, not saved (D94)
     if topics and other is None and (diagnosis is None or diagnosis.get("in_scope") is not False):
@@ -250,8 +251,11 @@ def nearest_lesson(engine: Any) -> dict[str, str] | None:
     if knowledge is None or problem is None:
         return None
     # A related lesson must belong to the question's subject, even when that subject has no installed pack.
-    diagnosis = engine.diagnosis.output if engine.diagnosis is not None else {}
-    subject = SUBJECT_CODES.get(diagnosis.get("subject") or engine.state.subject)
+    from agent_core.engine import team
+
+    diagnosed = engine.diagnosis
+    named = team.question_subject(diagnosed.output, diagnosed.topic_id) if diagnosed is not None else None
+    subject = SUBJECT_CODES.get(named or engine.state.subject)
     if subject is None:
         return None
     # Common question/instruction words and bare quantities are not evidence that a lesson covers the topic.
