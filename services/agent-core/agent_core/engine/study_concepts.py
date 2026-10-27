@@ -3,7 +3,10 @@ topic's map, the anchors to the curated skill backbone, and the learner's edits.
 
 - A document's map comes from Muse Spark through the gateway (`concept_map` jobs): every concept has a summary and
   every relation a claim, each cited to its source passage and verified on its own citations. Batches are merged by
-  concept name (the first wins), relations re-pointed and de-duplicated.
+  concept name, or a name that only adds a generic word ("… phases") (the first wins), relations re-pointed and
+  de-duplicated.
+- A study pack's map (SPEC §18) also gets its outline (`with_outline`): its topic, the questions its research
+  answered, and each idea under the question whose pages it was cited from: structure, never a claim.
 - Anchoring: a concept matches a curated KC of an installed pack when its name is one of the KC's glossary terms
   (`glossary`), else appears as a phrase in a KC's statement (`statement`), else names a pack topic (`topic`);
   among several KCs the one whose statement shares most words with the concept's text wins, then the lower code.
@@ -57,6 +60,25 @@ def _name_key(name: str) -> str:
     return " ".join(_words(name))
 
 
+# A longer name that only adds one of these to another concept's name is the same idea ("Cardiac cycle phases" is
+# "Cardiac cycle"). A plain containment is not: "heart" and "heart valve" are two ideas.
+GENERIC = frozenset(
+    "phase process function role structure type system overview definition mechanism stage part".split()
+)
+
+
+def _same_idea(short: str, long: str) -> bool:
+    """`long` names the same idea as `short`, which has at least two words, plus generic words only."""
+    a, b = short.split(), long.split()
+    if len(a) < 2 or len(b) <= len(a):
+        return False
+    for start in range(len(b) - len(a) + 1):
+        if b[start : start + len(a)] == a:
+            rest = b[:start] + b[start + len(a) :]
+            return all(w in GENERIC or w in STOP for w in rest)
+    return False
+
+
 # --- merging a document's batches ------------------------------------------------------------------------------------
 
 
@@ -71,6 +93,9 @@ def merge_drafts(drafts: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         local: dict[str, str] = {}
         for c in draft["concepts"]:
             key = _name_key(c["name"])
+            same = next((k for k in by_name if _same_idea(k, key) or _same_idea(key, k)), None)
+            if key not in by_name and same is not None:
+                by_name[key] = by_name[same]  # a near-duplicate from another batch: the first name and summary win
             if key not in by_name:
                 if len(concepts) >= DRAFT_CONCEPTS_MAX:
                     continue
@@ -155,6 +180,33 @@ def document_map(draft: Mapping[str, Any], content: Any) -> dict[str, Any]:
         for r in draft["relations"]
     ]
     return {"concepts": concepts, "relations": relations, "edited": False}
+
+
+def with_outline(current: Mapping[str, Any], topic: str, branches: Sequence[str],
+                 branch_of: Mapping[str, int]) -> dict[str, Any]:  # fmt: skip
+    """The map with a study pack's outline as its tree: the topic (`t1`) includes each question its research answered
+    (`q1`..), and each question includes the ideas cited from its pages (`branch_of`: concept id -> question index);
+    an idea from no known question hangs from the topic. Outline concepts carry the words as a note and no claim, and
+    outline relations are `includes` with no claim: the pack's organisation, never something the pages said. A map
+    that already has an outline is returned as it is."""
+    concepts = [dict(c) for c in current["concepts"]]
+    if any(c["origin"] == "outline" for c in concepts):
+        return dict(current)
+    used = sorted({i for i in branch_of.values() if 0 <= i < len(branches)})
+    outline = [{"concept_id": "t1", "name": topic[:80], "summary": None, "note": topic[:400], "origin": "outline",
+                "anchor": None}]  # fmt: skip
+    outline += [{"concept_id": f"q{i + 1}", "name": branches[i][:80], "summary": None, "note": branches[i][:400],
+                 "origin": "outline", "anchor": None} for i in used]  # fmt: skip
+    links = [{"from": "t1", "to": f"q{i + 1}", "type": "includes", "claim": None, "origin": "outline"} for i in used]
+    for c in concepts:
+        if c["origin"] == "outline":
+            continue
+        index = branch_of.get(c["concept_id"])
+        parent = f"q{index + 1}" if index in used else "t1"
+        links.append({"from": parent, "to": c["concept_id"], "type": "includes", "claim": None, "origin": "outline"})
+    room = CONCEPTS_MAX - len(outline)
+    return {**current, "concepts": outline + concepts[:room],
+            "relations": (links + list(current["relations"]))[:RELATIONS_MAX]}  # fmt: skip
 
 
 def pack_map(content: Any, topic: str) -> tuple[str, dict[str, Any]] | None:

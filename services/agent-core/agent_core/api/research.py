@@ -27,8 +27,10 @@ from agent_core.api.errors import ApiError
 from agent_core.contracts import errors as contract_errors
 from agent_core.engine.events import new_id
 from agent_core.engine.research_chat import ChatError, Start, next_turn
+from agent_core.engine.research_links import checked_links
 from agent_core.engine.safety import redact_personal
-from agent_core.engine.study import StudyDesk, StudyError
+from agent_core.engine.study import StudyDesk, StudyError, checked
+from agent_core.engine.study_concepts import RELATIONS_MAX, with_outline
 from agent_core.net.study import StudyCloudError
 
 RESEARCH = "study/research#/$defs/"
@@ -93,8 +95,33 @@ def page_sections(title: str, brief: dict[str, Any], pages: list[dict[str, Any]]
         passages = relevant(page["text"], f"{question} {brief['focus']} {brief['title']}", budget)
         if passages:
             sections.append(f"## {len(sections) + 1}. {page['title']}\nSource URL: {page['url']}\n"
-                            f"Site: {page['site']}\n\n{passages}")  # fmt: skip
+                            f"Site: {page['site']}\nQuestion: {index + 1}\n\n{passages}")  # fmt: skip
     return "\n\n".join([head, *sections])
+
+
+QUESTION_LINE = re.compile(r"^Question: (\d+)$", re.M)
+
+
+def branches_for(conn: Any, source_id: str, concepts: list[dict[str, Any]]) -> dict[str, int]:
+    """Which of the brief's questions each idea was found for: the section its summary's first citation lies in
+    (each page section of the pack's material names its question, `page_sections`)."""
+    rows = [json.loads(r[0]) for r in conn.execute("SELECT body FROM study_chunks WHERE source_id=?", (source_id,))]
+    rows.sort(key=lambda c: c["ordinal"])
+    starts, at = {}, 0
+    for chunk in rows:
+        starts[chunk["chunk_id"]] = at
+        at += len(chunk["text"])
+    marks = [(m.start(), int(m[1]) - 1) for m in QUESTION_LINE.finditer("".join(c["text"] for c in rows))]
+    out: dict[str, int] = {}
+    for concept in concepts:
+        citations = (concept.get("summary") or {}).get("citations") or []
+        if not citations or citations[0]["chunk_id"] not in starts:
+            continue
+        position = starts[citations[0]["chunk_id"]] + citations[0]["start"]
+        before = [index for start, index in marks if start <= position]
+        if before:
+            out[concept["concept_id"]] = before[-1]
+    return out
 
 
 def part_request(kind: str, source: dict[str, Any], brief: dict[str, Any]) -> dict[str, Any]:
@@ -224,8 +251,39 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
             elif job["status"] in ("failed", "cancelled"):
                 record = {**record, "status": job["status"], "failure": job["failure"]}
         if record["status"] == "making":
-            record = settle(d, record)
+            was = {p["kind"]: p["state"] for p in record["parts"]}
+            record = save(d, settle(d, record), gateway_id)  # saved first: a second read never shapes the map again
+            for part in record["parts"]:
+                if part["kind"] == "concept_map" and part["state"] == "ready" and was.get("concept_map") != "ready":
+                    await shape(d, record, part["aid_id"])
+            return record
         return save(d, record, gateway_id)
+
+    async def shape(d: StudyDesk, record: dict[str, Any], aid_id: str | None) -> None:
+        """The pack's concept map as a tree: its outline (the topic, its questions, each idea under the question it was
+        found for), then the links a whole-map pass proposes and its check confirms (`research_links`)."""
+        if aid_id is None or record["source_id"] is None:
+            return
+        try:
+            aid = d.aid(aid_id)
+        except StudyError:
+            return  # gone (the learner deleted it): nothing to shape
+        current = aid.get("concept_map")
+        if current is None or any(c["origin"] == "outline" for c in current["concepts"]):
+            return
+        brief = record["brief"]
+        shaped = with_outline(current, brief["title"], brief["sub_questions"],
+                              branches_for(d.conn, record["source_id"], current["concepts"]))  # fmt: skip
+        router = core.research_router() if core.research_router is not None else None
+        if router is not None:
+            links = await checked_links(router, shaped)
+            shaped = {**shaped, "relations": (shaped["relations"] + links)[:RELATIONS_MAX]}
+        aid = d.aid(aid_id)  # read again: the learner may have edited it meanwhile
+        if any(c["origin"] == "outline" for c in aid["concept_map"]["concepts"]):
+            return
+        aid["concept_map"] = shaped
+        checked("Aid", aid)
+        d.conn.execute("UPDATE study_aids SET body=? WHERE aid_id=?", (json.dumps(aid), aid_id))
 
     async def guarded(run: Callable[[StudyDesk], Awaitable[Any]]) -> Response:
         try:

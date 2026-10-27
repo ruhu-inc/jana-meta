@@ -23,7 +23,7 @@ export interface StudyConceptActions {
   onOpenSkill?: (kcId: string) => void;
 }
 
-const DIRECTED = new Set(["builds_on", "part_of", "causes", "example_of"]);
+const DIRECTED = new Set(["builds_on", "part_of", "causes", "example_of", "includes"]); // `includes`: a pack's outline
 
 /** The map is of a research pack's material (SPEC §18): its sourced concepts came from web pages, so they say so. */
 const FromWeb = createContext(false);
@@ -172,7 +172,7 @@ export function StudyConceptMap({ map, claim, busy = false, actions = {}, onEdit
       {unsourced && <p role="note" className="rounded-control border border-dashed border-line-strong p-3 text-ui text-ink" data-no-source>{t("study.concept.no_source_note")}</p>}
       {map.edited && <p className="text-meta text-muted">{t("study.concept.edited")}</p>}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-meta text-muted">{t("study.concept.legend")}</p>
+        <p className="text-meta text-muted">{t(map.concepts.some((c) => c.origin === "outline") ? "study.concept.legend_outline" : "study.concept.legend")}</p>
         {Drawing !== null && <SegmentedControl label={t("concept.view")} value={mode} onChange={setMode} options={[{ value: "map", label: t("concept.view.map") }, { value: "table", label: t("concept.view.table") }]} />}
       </div>
       {mode === "map" && Drawing !== null ? (

@@ -92,4 +92,15 @@ describe("study concept map", () => {
     expect(document.querySelector('[data-node="c1"]')!.textContent).toBe("Velocity · From the web · Matches a syllabus skill");
     expect(document.body.textContent).not.toContain("From your document");
   });
+  test("a_research_packs_outline_reads_as_a_tree_from_its_topic", () => {
+    const outlined: W.StudyConceptMap = { edited: false,
+      concepts: [{ concept_id: "t1", name: "Heart valves", summary: null, note: "Heart valves", origin: "outline", anchor: null },
+        { concept_id: "q1", name: "What do the valves do?", summary: null, note: "What do the valves do?", origin: "outline", anchor: null },
+        ...DOC.concepts],
+      relations: [{ from: "t1", to: "q1", type: "includes", claim: null, origin: "outline" },
+        { from: "q1", to: "c1", type: "includes", claim: null, origin: "outline" }, ...DOC.relations] };
+    show(<StudyConceptMap map={outlined} claim={claim} fromWeb />);
+    expect(document.querySelector('[data-node="t1"]')!.textContent).toBe("Heart valves · Your pack's plan");
+    expect(document.body.textContent).toContain("From the topic to each question the research answered");
+  });
 });

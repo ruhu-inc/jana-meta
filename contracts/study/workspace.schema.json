@@ -3592,7 +3592,8 @@
       "document",
       "learner",
       "pack",
-      "model"
+      "model",
+      "outline"
      ]
     },
     "anchor": {
@@ -3622,7 +3623,7 @@
     "origin",
     "anchor"
    ],
-   "description": "A concept: from the document (a cited summary), the pack (a curated skill), the model with no source (a plain note) or added by the learner (neither)."
+   "description": "A concept: from the document (a cited summary), the pack (a curated skill), the model with no source (a plain note) or added by the learner (neither). An `outline` concept is a study pack's own structure (its topic, or a question its research answered), with the question as its note and no claim."
   },
   "StudyRelation": {
    "type": "object",
@@ -3637,7 +3638,15 @@
      "pattern": "^[a-z][0-9]{1,3}$"
     },
     "type": {
-     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/ConceptRelationType"
+     "anyOf": [
+      {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/ConceptRelationType"
+      },
+      {
+       "const": "includes",
+       "description": "Only for an `outline` relation: the pack's topic or question (from) includes the idea found for it (to); structure, not a claim."
+      }
+     ]
     },
     "claim": {
      "anyOf": [
@@ -3654,7 +3663,8 @@
       "document",
       "learner",
       "pack",
-      "model"
+      "model",
+      "outline"
      ]
     }
    },

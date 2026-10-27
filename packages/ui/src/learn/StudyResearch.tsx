@@ -97,9 +97,9 @@ export function StudyResearch({ controller, initialCapture, onCaptureUsed, onOpe
   const errorLine = error !== null && <ErrorState message={t(`study.research.error.${error}`) === `study.research.error.${error}` ? t("study.research.error.generic") : t(`study.research.error.${error}`)} />;
 
   if (phase.kind === "talking") {
-    const turn = phase.turn, out = turn?.kind === "out_of_scope";
+    const turn = phase.turn, out = turn?.kind === "out_of_scope", fromPhoto = "capture_id" in phase.start;
     return <section className="flex flex-col gap-3" aria-labelledby="study-research" data-research-talk>
-      <h2 id="study-research" className="text-ui font-semibold text-ink">{t("capture_id" in phase.start ? "diagram.study_pack" : "study.research.heading")}</h2>
+      <h2 id="study-research" className="text-ui font-semibold text-ink">{t(fromPhoto ? "diagram.study_pack" : "study.research.heading")}</h2>
       <ol className="flex flex-col gap-2" aria-live="polite">
         {phase.history.map((entry, i) => <li key={i} data-said={entry.role} className={entry.role === "jana" ? "self-start rounded-card bg-panel p-2 text-ui" : "self-end rounded-card border border-line p-2 text-ui"}>{entry.text}</li>)}
         {out && <li data-said="jana" className="self-start rounded-card bg-panel p-2 text-ui">{turn?.question}</li>}

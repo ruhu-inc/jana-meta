@@ -292,6 +292,8 @@ MODEL_ENTRY_POINTS = {
     "turn (_finalise); the only student text is the problem statement the turn's guard screened and redacted",
     ("engine/reflection.py", "call", "complete"): "guarded transcripts only; a window with safety_flagged is skipped",
     ("engine/auxiliary.py", "call", "complete"): "the auxiliary roles above, each reached from a guarded path",
+    ("engine/research_links.py", "_call", "complete"): "a study pack's own cited summaries and passages (SPEC §18), "
+    "delimited as source data; no learner text and no tools",
     ("engine/research_chat.py", "next_turn", "complete"): "the research conversation (SPEC §18.1a): the topic and "
     "each learner reply screened by the route first (POST /v1/study/research/chat), delimited as data; no tools",
     ("router/__init__.py", "complete", "complete"): "the router's module entry, inside an engine turn or job scope",
