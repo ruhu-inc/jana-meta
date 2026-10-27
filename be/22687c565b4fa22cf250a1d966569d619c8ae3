@@ -1,0 +1,19 @@
+services/cloud-gateway/tests/test_m19_gw_keys.py
+  s_cba027eb33c77d::t_5dc008681756a6 138,142,144,146,152,154,156,209,214
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "be22687c565b4fa22cf250a1d966569d619c8ae3",
+  "prompts": {},
+  "sessions": {
+    "s_cba027eb33c77d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f34882de-86b7-4b7b-9597-aa879116a414",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
