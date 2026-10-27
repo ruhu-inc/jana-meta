@@ -436,7 +436,9 @@ four calls deep (guard, Diagnoser beside the Solver's tool call, Solver plan, Co
 decode-only call: 6 of 13 (46%), none for the incorrect-needs-a-category rule (3 of 14 before the line), all six for an
 error category outside the contract's list (`calculation`, `calculation_error`, `wrong_value`, `substitution_error`),
 about 1.4 s each; the role prompt names no categories. The 30 turns spent $0.79 and left $0.37 of holds (dropped
-speculative and timed-out calls keep their bound).
+speculative and timed-out calls keep their bound). With the categories listed in the Checker's prompt (216b681), 14
+wrong-answer turns gave 14 verdicts and no redo, each in two Checker calls (tools, then the verdict); those turns took
+7.2 s median, p90 11.1 s.
 
 ## 13. Workstreams and plan
 
