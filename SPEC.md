@@ -858,6 +858,29 @@ Each stage writes a checkpoint; a restarted gateway resumes from the last finish
 | `packages/ui` Study | Entry points, the conversation with its chips and "Skip, just research it", the brief to approve and edit, the progress view, the pack view (diagram, concept map, concepts, cards, quiz, podcast, sources) |
 | W2 dependency | SAM client, `photo_region` overlay and diagram drill (done, §5.2); the pack view reuses `DiagramDrill` with the pack's own photo and part map |
 
+### 18.7a Built and run end to end (2026-10-27)
+
+On main: the conversation and plan (device), the gateway job (search, safe fetch, checkpoints, source steering),
+the import into Study and the Study UI. Two live packs from the browser (Ada, Study access on):
+
+| Pack | Conversation | Research | Parts | Total | Spend |
+|---|---|---|---|---|---|
+| 1, three questions answered | 3 turns, 3–5 s each | ~30 s, 17 pages | stopped: 199,000 characters gave 39 batches per part (~12 min, ~$2 for four) | — | $0.40 Study + ~$0.05 |
+| 2, "Skip, just research it" | 1 turn + Skip | ~25 s, 5 searches, 17 pages | 6 batches each, all done ~90 s after the research | **~2 min** | **~$0.26** ($0.003 chat, $0.046 research, $0.21 parts) |
+
+Fixed from these runs: the conversation's router carries the profile's cloud tier (the bare runtime router had no
+cloud provider); a pack's material is each page's passages that bear on its question and the plan's focus, within
+20,000 characters; the podcast no longer gets a focus (Study refuses it); the quiz uses Study's own types (choice,
+fill in the blank, true/false at medium: the wider set failed on biology, the default worked on the same material);
+"Open the pack" reloads Study so its parts show in My Sets. Verified in the app: the concept map (cardiac cycle,
+chambers, tricuspid valve → heart valves, chordae tendineae, pressure gradient, ventricular pressure → one-way flow),
+notes, 10 flashcards and the podcast, each cited.
+
+Still open: the concept map's boxes say "From your document" (should say the web for a pack); the pack quiz with the
+new types and the photo start ("Make a study pack" from the drill) are untested live; the podcast is voiced by the
+system voice, not Kokoro on the device (§18.1); the material's text includes boilerplate a page shares with its
+question's words.
+
 ### 18.8 Done when
 
 - From our own photo of a labelled diagram: Jana says what it sees, asks at most three questions (each skippable),
