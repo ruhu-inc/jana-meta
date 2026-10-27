@@ -1,0 +1,21 @@
+services/agent-core/agent_core/engine/figures.py
+  s_e4f202a2cbb02b::t_d6b4adc62a2aeb 30-31,33-36,95,97
+services/agent-core/tests/test_figures_live.py
+  s_e4f202a2cbb02b::t_d30f9d9ea6f6ce 17,78-85,87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5c32710227c9de2622e5a208ed8fa0d8f5e4adf5",
+  "prompts": {},
+  "sessions": {
+    "s_e4f202a2cbb02b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "589c976b-ede0-4f0a-927e-16e15ec19f5a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
