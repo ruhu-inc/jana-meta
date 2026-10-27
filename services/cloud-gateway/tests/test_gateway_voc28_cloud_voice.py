@@ -19,8 +19,6 @@ from typing import Any
 import httpx
 import pytest
 from cloud_gateway.app import create_app
-from cloud_gateway.providers.base import UpstreamError
-from cloud_gateway.providers.gemini_live import setup_message, turn_message, voiced_of
 from cloud_gateway.speech_fakes import FakeLive, FakeRecognizer, FakeTts, fake_stack, tone
 from cloud_gateway.store import GatewayStore
 from cloud_gateway.voice import Reading, sentences
@@ -422,24 +420,6 @@ def test_sentences_split_whole_and_concatenate_back():
     assert done == ["Good thinking. ", "What next? "] and rest == "Try x = 3"
     assert "".join(done) + rest == "Good thinking. What next? Try x = 3"
     assert sentences("e.g.") == ([], "e.g.")
-
-
-def test_live_messages_are_checked():
-    assert setup_message("models/m", "Kore")["setup"]["outputAudioTranscription"] == {}
-    assert "realtimeInputConfig" in setup_message("models/m", "Kore")["setup"]
-    assert turn_message("Hi.")["clientContent"]["turnComplete"] is True
-    pcm = base64.b64encode(b"\1\0\2\0").decode()
-    voiced = voiced_of({"serverContent": {"modelTurn": {"parts": [{"inlineData": {
-        "mimeType": "audio/pcm;rate=24000", "data": pcm}}]}, "outputTranscription": {"text": "Hi"}}})  # fmt: skip
-    assert voiced is not None and voiced.audio == b"\1\0\2\0" and voiced.transcript == "Hi" and not voiced.done
-    assert voiced_of({"serverContent": {"turnComplete": True}}).done  # type: ignore[union-attr]
-    assert voiced_of({"setupComplete": {}}) is None
-    for bad in ({"serverContent": {"modelTurn": {"parts": [{"inlineData": {"mimeType": "audio/pcm;rate=16000",
-                                                                           "data": pcm}}]}}},
-                {"serverContent": {"modelTurn": {"parts": [{"inlineData": {"mimeType": "audio/pcm",
-                                                                           "data": "%%"}}]}}}, []):  # fmt: skip
-        with pytest.raises(UpstreamError):
-            voiced_of(bad)
 
 
 def test_tts_fake_is_verbatim():

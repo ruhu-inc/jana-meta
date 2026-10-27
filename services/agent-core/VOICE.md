@@ -35,24 +35,28 @@ the network is usable. Otherwise the local sidecar serves the start, exactly as 
   works with the cloud tutor switched off; the gateway accepts the voice host as a second token audience.
 - **First use.** The engine asks once per profile with a confirm card ("Use online voice?" · OK / "Keep voice on this
   computer", key `egress.first_use.keep_voice_local`), one egress card at a time after the cloud tutor's.
-- **Gateway, Google pipeline (D124)** (`cloud_gateway/voice.py`, off unless `voice_enabled`, refused with 4503 unless
-  `voice_google.project` names the speech project):
-  - *Hearing*: Cloud Speech-to-Text v2 streaming recognition (`chirp_3`, location `eu`, locale `en-GB`: Google
-    offers no `en-NG`). Its `SPEECH_ACTIVITY_BEGIN`/`END` events become `speech_started`/`speech_stopped`, barge-in
-    included; final results become append-only transcription deltas and the `completed` transcript. The recognizer's
-    end of speech (500 ms) is held for the rest of the session's `silence_duration_ms`, so hold-to-think keeps one
-    utterance. Streams are rotated at a quiet moment before Google's 5-minute limit.
+- **Gateway pipeline (D124, JM-D12)** (`cloud_gateway/voice.py`, off unless `voice_enabled`, refused with 4503
+  unless the Meta key and a verbatim voice are configured):
+  - *Hearing*: Muse Voice Transcribe realtime recognition (`providers/meta_speech.py`, SPEC §6.1): the Meta Model
+    API key in the first frame only, `ENDPOINTING` mode, cumulative partials, `languageBias: ["English"]` and the
+    course glossary's terms as `keywords`. No audio goes before the acknowledgement; audio is paced at real time (at
+    most 4 s ahead) and a gap in the device's audio is filled with silence, since a stream that falls behind or goes
+    quiet is closed. `speechStart`/`speechEnd` become `speech_started`/`speech_stopped`, barge-in included;
+    `speechComplete` becomes the transcription delta and the `completed` transcript. The recognizer's end of speech
+    is held for the rest of the session's `silence_duration_ms`, so hold-to-think keeps one utterance. Streams are
+    rotated at a quiet moment before the 60-minute session cap; a 1011 or 1013 close reopens the stream (after a
+    short backoff, except at the cap) while the student's audio is held.
   - *Thinking*: unchanged; the tunnel above. `response.created` still follows the device's first accepted words.
-  - *Voice*: a Gemini Live session on Vertex AI (`gemini-live-2.5-flash-native-audio`, europe-west4, voice Kore, `providers/gemini_live.py`) set up with a fixed
-    read-exactly instruction, output transcription, no activity detection and no session resumption. It is given
-    only accepted sentences, one `clientContent` turn each, never audio. The gateway compares its output
-    transcription with the sentence on letters and digits (case folded); a departure cuts its audio before the next
-    chunk is forwarded and Cloud Text-to-Speech streaming (Chirp 3 HD, `en-GB-Chirp3-HD-Kore`) reads the rest of the
-    turn from the first word not read exactly. Two departures switch the connection to Text-to-Speech only. Barge-in
-    or Stop cancels Live's turn (the session is dropped and a fresh one prewarmed); the device truncates heard text
-    at the played position. Transcript deltas follow the audio they belong to and always concatenate to the accepted
-    words, so the bridge's `spoken_transcript_mismatch` check and heard text work unchanged.
-  - *Latency*: the recognition stream and the Live session open with the connection, and `session.created` (which
+    Every turn re-checks the credential and the quotas first; a refusal ends the connection (4401, 4429 or 4503).
+  - *Voice*: the verbatim synthesizer reads the accepted sentences: Cloud Text-to-Speech streaming (Chirp 3 HD,
+    `en-GB-Chirp3-HD-Kore`, `voice_google_tts`) until the Magpie synthesizer (SPEC §6.2) replaces it. The Meta stack
+    has no Live voice. `voice.py` still supports one (a fixed read-exactly instruction, its output transcription
+    checked against the sentence on letters and digits, a departure cut before the next chunk and the rest read
+    verbatim, two departures switching to the synthesizer only); the tests drive that path with a fake. Barge-in or
+    Stop cancels the reply; the device truncates heard text at the played position. Transcript deltas follow the
+    audio they belong to and always concatenate to the accepted words, so the bridge's `spoken_transcript_mismatch`
+    check and heard text work unchanged.
+  - *Latency*: the recognition stream (and a Live session, when there is one) opens with the connection, and `session.created` (which
     opens the device's microphone) waits up to `voice_prewarm_s` for them; audio arriving while a stream opens,
     rotates or resumes is held (up to `voice_first_words_ms`) and sent first. An adaptive idle timeout (twice the
     longest quiet stretch before the student spoke, 60 to 300 s, suspended while a turn runs) releases both
@@ -61,10 +65,15 @@ the network is usable. Otherwise the local sidecar serves the start, exactly as 
     `prewarm_s`, never text.
   - *Zero retention*: audio is held only while it waits for a stream and overwritten when released; transcripts and
     spoken text live only while their utterance or reply runs; the ledger records feature `cloud_voice`, model,
-    seconds or characters as cost, latency and status. Ids, locales, voices and prices are `voice_google` in
-    `defaults.toml`, with their sources (checked 2026-10-21). The gRPC clients are the gateway's `google-voice` extra.
-- **Tests.** `services/cloud-gateway/tests/test_gateway_voc28_cloud_voice.py` runs the real gateway against fakes of the
-  three services (`cloud_gateway/speech_fakes.py`): `voc28_live_reads_only_accepted_text`, departure cut and
+    seconds or characters as cost, latency and status. Voice Transcribe is $0.18 per audio hour, per whole second
+    (padded silence included); under a deployment inference budget each stream reserves its longest bill and each
+    sentence its characters, settled with what was used. Ids, prices and limits are `voice_meta` and
+    `voice_google_tts` in `config.py`, with their sources. The Text-to-Speech client is the gateway's `google-voice`
+    extra.
+- **Tests.** `services/cloud-gateway/tests/test_meta_speech.py` drives the Voice Transcribe recognizer, alone and in
+  real voice turns, against a scripted server (handshake, acknowledgement, cumulative partials, pacing and silence,
+  1011/1013 reconnects, per-turn re-checks, the budget). `services/cloud-gateway/tests/test_gateway_voc28_cloud_voice.py`
+  runs the real gateway against fakes of the three services (`cloud_gateway/speech_fakes.py`): `voc28_live_reads_only_accepted_text`, departure cut and
   Text-to-Speech finish, two departures, barge-in and truncation, prewarm, buffered first words, idle release and
   resume, hold-to-think, `voc28_endpoint_zero_retention`, recognition failure, wire subset, auth and the checker.
   `services/agent-core/tests/test_voc28_cloud_voice.py` is the end-to-end turn from the UI socket through the real

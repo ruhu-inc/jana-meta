@@ -1,10 +1,12 @@
 """The three speech services behind cloud voice (VOC-28, D124), as interfaces the voice connection drives.
 
-  Recognizer   streaming speech to text with voice-activity events (Cloud Speech-to-Text v2, Chirp)
-  Live         the voice: reads accepted sentences aloud and reports what it said (Gemini Live, native audio)
-  Synthesizer  verbatim streaming text to speech, the fallback voice (Cloud Text-to-Speech, Chirp 3 HD)
+  Recognizer   streaming speech to text with speech events (Muse Voice Transcribe, `meta_speech.py`)
+  Live         an optional voice that reads accepted sentences aloud and reports what it said (none is configured:
+               the Meta stack reads with the synthesizer)
+  Synthesizer  verbatim streaming text to speech (Cloud Text-to-Speech, Chirp 3 HD, in `google_speech.py` until the
+               Magpie synthesizer of SPEC §6.2)
 
-The real adapters are in `google_speech.py` and `gemini_live.py`; tests give fakes with the same shape. Nothing here
+Tests give fakes with the same shape (`speech_fakes.py`). Nothing here
 holds audio or text beyond the call that carries it, and nothing here logs either."""
 
 from __future__ import annotations
@@ -53,8 +55,8 @@ class Voiced:
 
 
 class LiveSession(Protocol):
-    """One Gemini Live session, set up with the read-exactly instruction and no audio input. `say` sends one
-    sentence as a turn and yields what comes back until the turn completes."""
+    """One Live voice session, set up with a read-exactly instruction and no audio input. `say` sends one sentence
+    as a turn and yields what comes back until the turn completes."""
 
     def say(self, sentence: str) -> AsyncIterator[Voiced]: ...
 
