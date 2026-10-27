@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from dataclasses import replace
 from pathlib import Path
 
@@ -32,6 +33,9 @@ REPLY = {"reply": {"choices": [{"index": 0, "finish_reason": "stop", "message": 
 def test_glimmer_is_recommended_for_the_high_class_and_leads_the_local_candidates() -> None:
     document = json.loads(RECOMMENDATIONS.read_text())
     assert recommendation_errors(document) == []
+    # JM-D11: Glimmer is the only local language model recommended; smaller machines run online only.
+    assert [e["model"] for e in document["models"]] == [GLIMMER]
+    assert not re.search(r"qwen|gemma", RECOMMENDATIONS.read_text(), re.IGNORECASE)
     entry = next(e for e in document["models"] if e["model"] == GLIMMER)
     assert entry["licence"] == "Apache-2.0" and set(entry["classes"]) == {"high"}
     assert entry["thinking"] == {"available": True, "default": "on"}  # it cannot be turned off
