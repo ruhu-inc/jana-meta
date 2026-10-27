@@ -1,0 +1,19 @@
+scripts/build-submission.sh
+  s_58e6259b5784bc::t_987cca1634fd47 203-217
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2b2953a8e2bf5ca958ebb607ca9d02a1f7175c15",
+  "prompts": {},
+  "sessions": {
+    "s_58e6259b5784bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ce01b4ce-c682-4015-a54d-2313db8bbb42",
+        "model": "unknown"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
