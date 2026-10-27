@@ -573,7 +573,19 @@ export function MockReport({ exam, result, paper, names, actions, kindLabel, que
   if ((result.pauses ?? []).length > 0) notes.push(t("mock.report.pauses"));
   if ((result.interruptions ?? []).length > 0) notes.push(t("mock.report.interruptions", { count: (result.interruptions ?? []).length }));
   const integrity = result.integrity_counts;
-  const lost = result.marks_lost;
+  // Marks lost on a question left unanswered are not method, accuracy or independent marks lost on an answer: they
+  // are counted on their own, and the M/A/B split covers only the answers given.
+  const unansweredIds = new Set(result.unanswered ?? []);
+  const answeredLost = { M: 0, A: 0, B: 0 };
+  let unansweredLost = 0;
+  for (const row of result.criteria ?? []) {
+    for (const c of row.criteria) {
+      const missed = Math.max(0, c.available - c.awarded);
+      if (unansweredIds.has(row.question_id)) unansweredLost += missed;
+      else if (c.mark_type in answeredLost) answeredLost[c.mark_type as keyof typeof answeredLost] += missed;
+    }
+  }
+  const lost = result.criteria === undefined ? result.marks_lost : answeredLost;
   // The band only in the exam board's own letters (D27, D100): a paper without them shows nothing about a band; a null
   // band says the evidence is not enough yet.
   const band = mockBandShown(result);
@@ -623,7 +635,8 @@ export function MockReport({ exam, result, paper, names, actions, kindLabel, que
         </section>
         <section aria-labelledby="mock-detail" className="flex min-w-72 flex-1 flex-col gap-3 rounded-card border border-line bg-canvas p-5">
           <h2 id="mock-detail" className="text-heading text-ink">{t("mock.report.where")}</h2>
-          {lost !== undefined && <p className="text-ui text-ink">{t("mock.report.lost", { m: lost.M, a: lost.A, b: lost.B })}</p>}
+          {lost !== undefined && lost.M + lost.A + lost.B > 0 && <p className="text-ui text-ink">{t("mock.report.lost", { m: lost.M, a: lost.A, b: lost.B })}</p>}
+          {unansweredLost > 0 && <p className="text-ui text-ink">{t("mock.report.lost_unanswered", { marks: unansweredLost })}</p>}
           {sections.length > 0 && (
             <ul className="flex flex-col gap-1 text-ui text-muted">
               {sections.map(([section, ms]) => <li key={section}>{t("mock.report.section_time", { section, minutes: minutesOf(ms ?? 0) })}</li>)}
