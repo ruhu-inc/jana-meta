@@ -1,0 +1,75 @@
+packages/i18n/locales/en.json
+  s_87311ffec186a4::t_19856b5f3df3d9 269,310,439,699,761,782,794,1077,1171,1484-1487,1679,1682,2176,2181,2185,2779,2787-2789,2810-2814
+packages/ui/test/online.test.tsx
+  s_87311ffec186a4::t_7d0e3f0e4a97a4 91,119,124-125,130
+packages/ui/test/study-workspace.test.tsx
+  s_87311ffec186a4::t_610330c8f745e3 69
+services/agent-core/agent_core/api/exports.py
+  s_87311ffec186a4::t_ddcf51559a86e2 34,225
+services/agent-core/agent_core/engine/verbaliser.py
+  s_87311ffec186a4::t_0a9603b28e0370 104-151,215-271,488
+services/agent-core/agent_core/store/profiles.py
+  s_87311ffec186a4::t_baa03208c6df95 31-37,127-140,183-184,222-224,242-244,249-250
+services/agent-core/tests/licence_harness.py
+  s_87311ffec186a4::t_51d2f1c1fa3de5 99
+services/agent-core/tests/test_d87_profiles.py
+  s_87311ffec186a4::t_d83edbbeb84894 65,80-81
+services/agent-core/tests/test_d96_voice_prewarm.py
+  s_87311ffec186a4::t_e6195726b9724a 154
+services/agent-core/tests/test_m10a_isolation.py
+  s_87311ffec186a4::t_606b7463691137 159-160,164-165,169-175,179,187,190,192
+services/agent-core/tests/test_m10a_profiles.py
+  s_87311ffec186a4::t_2bb6c7e70143f0 21,243-244,248-251,253-255,258-259
+services/agent-core/tests/test_m10a_shared_machine.py
+  s_87311ffec186a4::t_312db682b39ded 127-128,134,136,144-145,151,156,159
+services/agent-core/tests/test_m10e_consent.py
+  s_87311ffec186a4::t_ffe1eb2042bb04 54-56,58-61,66-67,79,83,87,95-96,99-101,150-151,154-158,160,164,168,170-171,173,177-178
+services/agent-core/tests/test_m11a_classes.py
+  s_87311ffec186a4::t_68621cdc1205f5 239
+services/agent-core/tests/test_m14d_flows.py
+  s_87311ffec186a4::t_b8d5b200a77d4f 519
+services/agent-core/tests/test_m19b_api.py
+  s_87311ffec186a4::t_28937cebbf48c1 110-111,114-120,124,132-133,138,140,147-152,154,208-210,213,215,217-222,224-225,227,234-235,371,396-398
+services/agent-core/tests/test_m20_hardening.py
+  s_87311ffec186a4::t_a6761cc98883ee 109
+services/agent-core/tests/test_m20b_packs.py
+  s_87311ffec186a4::t_ccc465bd5a8576 697
+services/agent-core/tests/test_m20d_first_run.py
+  s_87311ffec186a4::t_e56ce02c5c022b 45,94
+services/agent-core/tests/test_m20e_licensing.py
+  s_87311ffec186a4::t_fed4e6091f43f6 413,417,585-586,594,602-604,606-607,609,614,618,624
+services/agent-core/tests/test_m25a_first_run_and_lab.py
+  s_87311ffec186a4::t_48a0360654d806 37,109,307,309,485-487,509-510,515-517
+services/agent-core/tests/test_m25b_offline_and_privacy.py
+  s_87311ffec186a4::t_4287eca4d962e3 195-197,208,218,226-228,236
+services/agent-core/tests/test_m31_student_voice.py
+  s_87311ffec186a4::t_213d14e74df506 215,242,281
+services/agent-core/tests/test_m42_checkout.py
+  s_87311ffec186a4::t_c08358d3d7a4aa 6
+services/agent-core/tests/test_m45a_ask_anything.py
+  s_87311ffec186a4::t_ee6bd332e1aa6d 127,157
+services/agent-core/tests/test_minor_egress.py
+  s_87311ffec186a4::t_6d6bbfdc068d0f 13,17-20,31-34
+services/agent-core/tests/test_prv03_onboarding.py
+  s_87311ffec186a4::t_0ed03cc4ad15fa 94
+services/agent-core/tests/test_spoken_units.py
+  s_87311ffec186a4::t_95f8919c66b390 1-129
+services/agent-core/tests/test_w5_adult_band.py
+  s_87311ffec186a4::t_e1baa2254efe8d 1-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "efdd5a6082e9ca1217ecb156cf2e9f45d88ceb28",
+  "prompts": {},
+  "sessions": {
+    "s_87311ffec186a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02ea0a11-c16d-43dd-9ca0-be1ee039343a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
