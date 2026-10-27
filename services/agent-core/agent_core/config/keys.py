@@ -443,6 +443,10 @@ class Settings(BaseModel):
     voice_hold_to_think_ms: int = key(10000, serves="VOC-06", layers=ENGINEERING, unit="ms", ge=1000, le=60000)
     # VOC-12: with no accepted spoken form released this long after the adapter's request, one honest filler plays.
     voice_filler_after_ms: int = key(1500, serves="VOC-12", layers=ENGINEERING, unit="ms", ge=200, le=20000)
+    # On cloud voice the request reaches the adapter only after the gateway ends the utterance, about 1.2 s after the
+    # student stops (Voice Transcribe's end of speech and the gateway's hold, SPEC §12), so its filler waits less: it
+    # still plays about 1.5 s after the speech.
+    voice_cloud_filler_after_ms: int = key(300, serves="VOC-12", layers=ENGINEERING, unit="ms", ge=200, le=20000)
     # PRM-26, VOC-07, VOC-37: the spoken form of a voice turn, at most this many characters and sentences before the
     # student's next turn.
     spoken_max_chars: int = key(600, serves="PRM-26, VOC-07", layers=ENGINEERING, unit="characters", ge=50, le=4000)

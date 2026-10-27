@@ -434,13 +434,20 @@ class VoiceTutorAdapter:
         aid = study.desk().aid(job["result_ids"][0])
         chat.aid_id, chat.spoken = aid["aid_id"], aid_spoken(aid)
 
+    def _filler_after_s(self, binding: VoiceBinding) -> float:
+        """How long a turn runs before its filler (VOC-12): less on cloud voice, whose request comes after the
+        recognizer's final transcript, so the filler plays at about the same time after the student stops."""
+        settings = self.core.settings
+        cloud = self.runtime.path_of(binding) == "cloud_voice"
+        return (settings.voice_cloud_filler_after_ms if cloud else settings.voice_filler_after_ms) / 1000
+
     async def _chat_reply(self, chat: _Chat) -> AsyncIterator[str]:
         """The keyed filler while the answer is made, then only its accepted spoken form (VOC-12, VOC-33)."""
         evaluation = chat.evaluation
         assert evaluation is not None
         delivered = False
         try:
-            filler_at = time.monotonic() + self.core.settings.voice_filler_after_ms / 1000
+            filler_at = time.monotonic() + self._filler_after_s(chat.binding)
             filled = False
             while not evaluation.done():
                 wait = self.keep_alive_s if filled else max(0.0, min(self.keep_alive_s, filler_at - time.monotonic()))
@@ -652,7 +659,7 @@ class VoiceTutorAdapter:
                     yield line
                 return
             assert evaluation is not None and job is not None
-            filler_at = time.monotonic() + self.core.settings.voice_filler_after_ms / 1000
+            filler_at = time.monotonic() + self._filler_after_s(binding)
             filled = False
             while not evaluation.done():
                 wait = self.keep_alive_s if filled else max(0.0, min(self.keep_alive_s, filler_at - time.monotonic()))

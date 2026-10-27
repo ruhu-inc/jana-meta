@@ -638,8 +638,9 @@ class VoiceConnection:
         detection = given.get("turn_detection")
         if isinstance(detection, dict) and detection.get("type") == "server_vad":
             silence = detection.get("silence_duration_ms")
-            if isinstance(silence, int) and 32 <= silence <= 10_000:
+            if isinstance(silence, int) and 32 <= silence <= 10_000 and silence != self.silence_ms:
                 self.silence_ms = silence
+                self._rehold()
             if isinstance(detection.get("interrupt_response"), bool):
                 self.interrupt = detection["interrupt_response"]
         await self.emit({"type": "session.updated", "session": {"type": "realtime"}})
@@ -732,13 +733,27 @@ class VoiceConnection:
                          "item_id": utterance.item})  # fmt: skip
         return utterance
 
-    async def _hold(self, utterance: _Utterance) -> None:
+    async def _hold(self, utterance: _Utterance, since: float | None = None) -> None:
         """The recognizer's end of speech, held for the rest of the session's `silence_duration_ms` (hold-to-think
-        sends ten seconds): speech within it continues the same utterance."""
-        hold = max(0, self.silence_ms - self.gw.config.voice_meta.end_ms) / 1000
-        if hold:
+        sends ten seconds), and at least `min_hold_ms`: speech within it continues the same utterance, so a question
+        spoken as two sentences stays one turn. `since`: the hold started then (a re-timed hold)."""
+        voice = self.gw.config.voice_meta
+        hold = max(voice.min_hold_ms, self.silence_ms - voice.end_ms) / 1000
+        if since is not None:
+            hold -= self.gw.clock() - since
+        if hold > 0:
             await asyncio.sleep(hold)
         await self._stop(utterance)
+
+    def _rehold(self) -> None:
+        """The silence changed while an utterance is held after its end of speech (hold-to-dictate's release sends the
+        short silence after the ten seconds it held with): the hold runs on with the new length, from the same start."""
+        utterance = self.utterance
+        if (utterance is None or utterance.stopped or utterance.timing.end_event is None or self.ending is None
+                or self.ending.done()):  # fmt: skip
+            return
+        self.ending.cancel()
+        self.ending = asyncio.create_task(self._hold(utterance, since=utterance.timing.end_event))
 
     async def _stop(self, utterance: _Utterance) -> None:
         if utterance.stopped or self.utterance is not utterance:

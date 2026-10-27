@@ -134,6 +134,10 @@ class MetaVoice(_Strict):
     # The recognizer's own end-of-speech silence in ENDPOINTING mode (not documented: measure); the session's
     # silence holds on from it.
     end_ms: int = key(500, serves="VOC-28", unit="ms", ge=0, le=10_000)
+    # Voice Transcribe ends a turn about 0.6 s into a pause, which a pause between two sentences of one question can
+    # reach (measured 2026-10-27: "... through a resistor. What is its resistance?" became two turns). Speech that
+    # resumes within this hold of its end continues the utterance; it adds this much to every turn's transcript.
+    min_hold_ms: int = key(600, serves="VOC-28", unit="ms", ge=0, le=5000)
     # $0.18 per hour of audio, billed in whole seconds (Meta rounds down; the ledger rounds up, per stream).
     hour_usd: float = key(0.18, serves="BIZ-08", unit="USD/audio hour", ge=0)
 
