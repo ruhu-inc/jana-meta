@@ -78,8 +78,10 @@ function useBoardSignature(sessionId: string): { boardId: string | null; lines: 
   return { boardId, lines, signature };
 }
 
-export function TutorScreen({ sessionId, subjectControl, back, note, helplines = [], onEnd }: {
+export function TutorScreen({ sessionId, subjectControl, back, note, helplines = [], onEnd, noTutor }: {
   sessionId: string; subjectControl?: ReactNode;
+  /** In place of the composer when no tutor can answer now (SPEC §10.3): the conversation stays readable. */
+  noTutor?: ReactNode;
   onEnd?: () => Promise<boolean>;
   /** The verified helplines of the safety-resources pack for the calm screen (UXS-43); none until a pack verifies them. */
   helplines?: readonly Helpline[];
@@ -228,7 +230,7 @@ export function TutorScreen({ sessionId, subjectControl, back, note, helplines =
           )}
           {presenceHere("floating")}
           {presenceHere("phone")}
-          <Composer sessionId={sessionId} note={note ?? t("tutor.dock_note")} />
+          {noTutor !== undefined && noTutor !== null ? <div className="px-4 pb-4">{noTutor}</div> : <Composer sessionId={sessionId} note={note ?? t("tutor.dock_note")} />}
         </main>
       </div>
       {beside && open && (
