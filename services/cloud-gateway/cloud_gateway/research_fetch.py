@@ -15,8 +15,9 @@ other non-content elements) are dropped; headings, paragraphs and list items are
 from `<title>`, and the text is cut at a block boundary to `page_max_chars`. A block with an instruction-like span
 (the `inert` rule of `cloud_gateway.ask`) is withheld whole: a page that tries to steer the model is not a source.
 
-The source policy (§18.10) has no allow-list: excluded hosts (social media, forums, video, answer-selling sites) are
-never fetched, and reference and educational hosts rank first. It judges a page by its host, never by its claims.
+The source policy (§18.10) has no allow-list: excluded hosts (social media, forums, video, answer-selling sites, and
+top-level domains that returned only spam) are never fetched, and reference and educational hosts rank first. It
+judges a page by its host, never by its claims.
 
 Nothing here logs a URL or page text."""
 
@@ -75,18 +76,24 @@ def _matches(host: str, path: str, entry: str) -> bool:
 class SourcePolicy:
     """§18.10: exclusion and ranking by host (and an optional path prefix), never by a page's own claims."""
 
-    def __init__(self, excluded: Iterable[str], preferred: Iterable[str], suffixes: Iterable[str]) -> None:
+    def __init__(self, excluded: Iterable[str], preferred: Iterable[str], suffixes: Iterable[str],
+                 excluded_suffixes: Iterable[str] = ()) -> None:  # fmt: skip
         self.excluded = tuple(excluded)
+        self.excluded_suffixes = tuple(s.lower() for s in excluded_suffixes)
         self.preferred_domains = tuple(preferred)
         self.suffixes = tuple(s.lower() for s in suffixes)
 
     @classmethod
     def of(cls, spec: Research) -> SourcePolicy:
-        return cls(spec.excluded_domains, spec.preferred_domains, spec.preferred_suffixes)
+        return cls(spec.excluded_domains, spec.preferred_domains, spec.preferred_suffixes, spec.excluded_suffixes)
 
     def allowed(self, url: str) -> bool:
         host, path = _host(url)
-        return bool(host) and not any(_matches(host, path, entry) for entry in self.excluded)
+        return (
+            bool(host)
+            and not any(host.endswith(s) for s in self.excluded_suffixes)
+            and not any(_matches(host, path, entry) for entry in self.excluded)
+        )
 
     def preferred(self, url: str) -> bool:
         host, path = _host(url)

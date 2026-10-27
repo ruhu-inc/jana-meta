@@ -82,7 +82,10 @@ excluded_domains = [
     # answer-selling and homework-dump sites
     "chegg.com", "coursehero.com", "brainly.com", "brainly.in", "studocu.com", "scribd.com", "bartleby.com",
     "numerade.com", "quizlet.com", "transtutors.com", "studypool.com", "homeworklib.com", "toppr.com",
+    "gauthmath.com", "askfilo.com", "doubtnut.com", "sarthaks.com", "kunduz.com", "studyx.ai", "homework.study.com",
 ]
+# Hosts under these were only ever spam or mirrors in the live searches (2026-10-27): never fetched.
+excluded_suffixes = [".lat", ".quest", ".live", ".top", ".xyz", ".click", ".icu", ".buzz", ".pages.dev"]
 # Ranked first: encyclopaedias, universities, governments, examination boards and open textbooks.
 preferred_suffixes = [".edu", ".gov", ".ac.uk", ".gov.uk", ".edu.au", ".gov.au", ".edu.ng", ".gov.ng", ".ac.za", ".int"]
 preferred_domains = [

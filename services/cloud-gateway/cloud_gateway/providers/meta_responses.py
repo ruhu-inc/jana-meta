@@ -3,7 +3,9 @@
 One ordinary request per sub-question: `POST {base}/responses` with the Study model, `tools: [{"type":
 "web_search"}]`, `include: ["web_search_call.results"]` and `reasoning: {"effort": "low"}`. Not `background: true`:
 measured 2026-10-27, a plain request took ~6 s while a background one queued for 36 s, and the job already runs in
-the background. What came back in the live probes:
+the background. `max_tool_calls` holds Spark to the searches the job allows (left alone it ran 9 for one question),
+and `store: false` keeps the response out of Meta's stored responses; both are accepted (live, 2026-10-27). What
+came back in the live probes:
 
 - `output` holds `reasoning` items (ignored), one or two `web_search_call` items (Spark searches by itself) with
   `action.query` and `results: [{type, title, url, snippet}]`, and a `message` whose `output_text` is Spark's answer.
@@ -123,13 +125,14 @@ def search_cost(reply: SearchReply, price: Price | None, search_usd_per_1000: fl
 
 class ResponsesClient:
     def __init__(self, base_url: str, model: str, key: Secret | None, client: httpx.AsyncClient, *,
-                 timeout_s: float, max_output_tokens: int) -> None:  # fmt: skip
+                 timeout_s: float, max_output_tokens: int, max_searches: int = 1) -> None:  # fmt: skip
         self.base_url = base_url.rstrip("/")
         self.model = model
         self._key = key
         self.client = client
         self.timeout = httpx.Timeout(timeout_s, connect=5.0)
         self.max_output_tokens = max_output_tokens
+        self.max_searches = max_searches
 
     def __repr__(self) -> str:
         return f"ResponsesClient(base_url={self.base_url!r}, model={self.model!r})"
@@ -146,7 +149,9 @@ class ResponsesClient:
             "tools": [{"type": "web_search"}],
             "include": ["web_search_call.results"],
             "reasoning": {"effort": "low"},
+            "max_tool_calls": self.max_searches,
             "max_output_tokens": self.max_output_tokens,
+            "store": False,
         }
 
     async def search(self, instructions: str, prompt: str) -> SearchReply:

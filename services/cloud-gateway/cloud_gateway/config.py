@@ -86,7 +86,8 @@ class Research(_Strict):
     the Study model, then the result pages fetched and reduced to text. Searches are priced per 1,000 (they never
     appear in `usage`); each call holds its bound in the shared inference budget and the job's own cap. The domain
     lists are the source policy of §18.10: a host on `excluded_domains` is never fetched; `preferred_domains` and
-    `preferred_suffixes` rank reference and educational sources first. An entry may carry a path prefix
+    `preferred_suffixes` rank reference and educational sources first; a host under `excluded_suffixes` (top-level
+    domains the live searches returned only spam from) is never fetched either. An entry may carry a path prefix
     (`bbc.co.uk/bitesize`)."""
 
     enabled: bool = True
@@ -97,20 +98,23 @@ class Research(_Strict):
     parallel: int = key(4, serves="ARC-12", unit="requests", ge=1, le=8)
     fetch_parallel: int = key(6, serves="ARC-12", unit="pages", ge=1, le=16)
     search_usd_per_1000: float = key(2.50, serves="BIZ-08", unit="USD/1,000 searches", ge=0)
+    # Sent as `max_tool_calls`: left alone, Spark ran 9 searches for one broad question (43.7k input tokens, $0.068);
+    # held to one it read 3.2k tokens for $0.0099 (live, 2026-10-27). §18.3: each sub-question is one search.
+    searches_per_call: int = key(1, serves="BIZ-08", unit="searches", ge=1, le=8)
     # The hold per Responses call: Spark reads its search results as input tokens and reasons within the output, so
-    # the bound is generous; the call settles at its billed usage. Searches per call are 1-2 (probes, 2026-10-27).
-    search_input_tokens: int = key(30_000, serves="SEC-20", unit="tokens", ge=1000)
-    search_output_tokens: int = key(4096, serves="SEC-20", unit="tokens", ge=256)
-    searches_per_call: int = key(3, serves="SEC-20", unit="searches", ge=1)
+    # the input bound is generous; the call settles at its billed usage.
+    search_input_tokens: int = key(16_000, serves="SEC-20", unit="tokens", ge=1000)
+    search_output_tokens: int = key(2048, serves="SEC-20", unit="tokens", ge=256)
     search_timeout_s: float = key(90.0, serves="ARC-12", unit="s", ge=5, le=300)
     page_timeout_s: float = key(8.0, serves="SEC-31", unit="s", ge=1, le=30)
     page_max_bytes: int = key(1_000_000, serves="SEC-31", unit="bytes", ge=10_000, le=5_000_000)
     page_max_chars: int = key(60_000, serves="STU-02", unit="characters", ge=1000, le=60_000)
-    page_min_chars: int = key(200, serves="STU-02", unit="characters", ge=1)
+    page_min_chars: int = key(500, serves="STU-02", unit="characters", ge=1)
     max_redirects: int = key(3, serves="SEC-31", unit="hops", ge=0, le=5)
     job_timeout_s: float = key(900.0, serves="ARC-12", unit="s", ge=60)  # §18.4: hard stop at 15 minutes
     retention_s: float = key(86_400.0, serves="PRV-25", unit="s", ge=60, le=86_400)  # §18.6: at most 24 hours
     excluded_domains: tuple[str, ...] = ()
+    excluded_suffixes: tuple[str, ...] = ()
     preferred_domains: tuple[str, ...] = ()
     preferred_suffixes: tuple[str, ...] = ()
 

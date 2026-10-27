@@ -91,7 +91,7 @@ class FakeResponses:
         return httpx.Response(200, json=reply)
 
 
-def article(title: str, words: int = 60, extra: str = "") -> str:
+def article(title: str, words: int = 120, extra: str = "") -> str:
     body = " ".join(f"word{i}" for i in range(words))
     return (f"<html><head><title>{title}</title><script>steal()</script></head><body><nav><a>Home</a></nav>"
             f"<header><h1>Site banner</h1></header><h1>{title}</h1><p>The heart pumps blood. {body}</p>"
@@ -255,6 +255,7 @@ def test_each_sub_question_is_one_plain_web_search_request_on_the_study_model(tm
         assert sent["model"] == "muse-spark-1.3"
         assert sent["tools"] == [{"type": "web_search"}] and sent["include"] == ["web_search_call.results"]
         assert sent["reasoning"] == {"effort": "low"} and "background" not in sent and "stream" not in sent
+        assert sent["max_tool_calls"] == 1 and sent["store"] is False and sent["max_output_tokens"] == 2048
         text = sent["input"][0]["content"][0]["text"]
         assert text.startswith("Question: What does part 0 of the heart do?") and "Focus: the valves" in text
         assert h.meta.headers[0]["authorization"] == f"Bearer {FAKE_KEYS['meta_api_key']}"
@@ -415,6 +416,9 @@ def test_the_source_policy_excludes_and_ranks_by_host() -> None:
         "https://blog.example.com/heart", "https://www.bbc.co.uk/news/health",
     ]  # fmt: skip
     assert not policy.allowed("https://m.facebook.com/page") and policy.allowed("https://box.com/x")
+    assert not policy.allowed("https://abcxyz.j555nbk2z9yz.quest/heart") and not policy.allowed(
+        "https://www.gauthmath.com/q"
+    )
 
 
 # --- the job ---

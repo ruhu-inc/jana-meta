@@ -163,6 +163,7 @@ class ResearchService:
             client or httpx.AsyncClient(follow_redirects=False, trust_env=False),
             timeout_s=self.spec.search_timeout_s,
             max_output_tokens=self.spec.search_output_tokens,
+            max_searches=self.spec.searches_per_call,
         )
         self.fetcher = fetcher or Fetcher(self.spec, SourcePolicy.of(self.spec))
         self.runs: dict[str, _Run] = {}
