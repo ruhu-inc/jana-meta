@@ -86,6 +86,11 @@ the network is usable. Otherwise the local sidecar serves the start, exactly as 
   `services/agent-core/tests/test_voc28_cloud_voice.py` is the end-to-end turn from the UI socket through the real
   bridge, engine and gateway over pinned TLS (`voc28_egress_announced`, `voc28_off_means_local`,
   `voc29_fallback_to_local`). `jana_tools.voice_latency` measures recorded questions end to end (SPEC §12).
+- **The tutor's conversation (JM-D20):** with Cloud voice on, the tutor screen names the `tutor` voice place, so the
+  voice bar offers a conversation there; every spoken turn is a tutor turn through the adapter's turn path (filler,
+  accepted spoken form). A held dictation rests as `listening` even where no conversation is offered, and opening a
+  profile re-checks whether cloud voice is ready. The voice URL names the session's subject (`?subject=`), which
+  orders Voice Transcribe's keywords.
 - **Live run (2026-10-27):** a recorded spoken question through the browser host (dictation, a checked turn on Spark,
   the reply read aloud by Kokoro) and the latency harness: SPEC §12.
 - **Open:** the client's rendering of the `voice.now_local` notice; the tunnel frames are not yet in the spec's Realtime

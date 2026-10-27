@@ -19,7 +19,7 @@ Work landed on `main` today, from this session and from parallel sessions merged
 | W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, the Google stack still registered (§8.1), turn latency (§12: speculative Solver done, ~4 s off a new question) |
 | W2 Vision | **Done**: SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed (parallel session); the diagram drill (§5.2, 2026-10-26) | Read time of a diagram (~15–20 s) |
 | W3 Glimmer | **Built 2026-10-27** (§7): launcher with projector and DFlash, router and recommendations entries, reasoning strength per request, lean offline turns, authored hints offline, power-cut fallback in seconds and return to the cloud; practice and mock papers measured offline | A typed question's first words in ≤ 8 s (now 30–48 s on a loaded machine; needs the owner's call on streaming before the gates, §7); the Wi-Fi-off run on the demo laptop |
-| W4 Speech | **Online done**: Muse Voice Transcribe in the gateway (paced, silence between turns, budgeted, per-turn re-checks; branch `claude/bold-bardeen-60a405`), Kokoro served by the gateway (Magpie development only), a 600 ms end-of-speech hold, a spoken checked turn in the browser host (§12) | The engine turn (the 4 s target), offline (§6.3), self-hosted Magpie (§15 item 3), spoken unit names |
+| W4 Speech | **Online done**: Muse Voice Transcribe in the gateway (paced, silence between turns, budgeted, per-turn re-checks; branch `claude/bold-bardeen-60a405`), Kokoro served by the gateway (Magpie development only), a 600 ms end-of-speech hold, subject-first keywords, the voice bar in the tutor (JM-D20), a spoken checked turn in the browser host (§12) | The engine turn (the 4 s target), the browser's filler at 2.6 s, offline (§6.3), self-hosted Magpie (§15 item 3), spoken unit names |
 | W5 Adult | Sign-up with date of birth, adult copy, parent sections removed, safety wording | Engine-side band check, remaining guardian copy (§17) |
 | W6 Bugs | #1, #4, #6 done; #5 partly (parallel session) | #2, #3, #7 |
 | W7 Research agent | **Built 2026-10-27, end-to-end check next**: the conversation and plan on the device (§18.1a), the gateway job (search, safe fetch, checkpoints, source steering; 4 questions → 16 s, 22 pages, $0.04), import into Study as one cited material with Study's verified parts, the Study UI and "Make a study pack" from the diagram drill | A full pack from the browser, timed; the podcast read by Kokoro on the device |
@@ -66,6 +66,7 @@ for schools once it has a public link.
 | JM-D17 | **Submission scope:** the organisers receive a perpetual licence to whatever is submitted (Official Rules, "Hackathon Submission"). Only what the entry needs is submitted (§9). The owner signs off on the scope before submission. |
 | JM-D18 | **English only** (owner, 2026-10-26). No Yoruba, Hausa, Igbo or Pidgin input in the entry; Voice Transcribe does not support the first three anyway. |
 | JM-D19 | **Meta-native presentation** (owner, 2026-10-26). The code, configuration names, interface copy and documentation read as a project built for Meta's models from the start: no Nebius, Nemotron, Tavily or earlier-hackathon framing remains (for example the keychain service is `jana-meta.cloud-gateway`, and the README is about Meta). |
+| JM-D20 | **Voice conversation in the tutor** (owner, 2026-10-27; replaces D130 on the tutor screen for this entry). With Cloud voice switched on, the tutor screen offers the voice bar ("Start a conversation", push to talk, hands-free): every spoken question is a full tutor turn, with the filler at 1.5 s and the accepted spoken form read sentence by sentence by Kokoro; every spoken word still comes from an accepted engine turn (JM-D6). Without Cloud voice the tutor keeps dictation and read-aloud only; Ask anything and Study keep their own conversations. |
 
 ## 3. Architecture
 
@@ -208,7 +209,7 @@ PCM silence between turns or reconnects; `endStream` ends the whole session.
 
 | File | Change |
 |---|---|
-| `cloud_gateway/providers/meta_speech.py` (new) | `MetaRecognizer` / `MetaRecognition` implementing `Recognizer` and `Recognition` from `providers/speech.py`. Done 2026-10-27 (branch `claude/bold-bardeen-60a405`); the server's end of speech is held at least 600 ms; keywords fit Meta's limits (at most 500, each at most 30 characters, measured live). |
+| `cloud_gateway/providers/meta_speech.py` (new) | `MetaRecognizer` / `MetaRecognition` implementing `Recognizer` and `Recognition` from `providers/speech.py`. Done 2026-10-27 (branch `claude/bold-bardeen-60a405`); the server's end of speech is held at least 600 ms; keywords fit Meta's limits (at most 500, each at most 30 characters, measured live), the session's subject first. |
 | `cloud_gateway/voice.py`, `config.py` | Build `SpeechStack(MetaRecognizer, live=None, <synthesizer>)`; replace `config.voice_google` with `config.voice_meta`; `voice_enabled=true` in the dev config. With `live=None` the TTS-only reader path is used (it already exists as the drift fallback). Done: the synthesizer is Kokoro by default (§6.4), `MagpieSynthesizer` with `voice_meta.tts = "magpie"` in dev only. |
 | `cloud_gateway/voice.py` (~1054–1067) | Re-check quota and credential every turn (review finding: sessions currently run past caps). Done (branch `claude/bold-bardeen-60a405`): credential, operations and quotas before each turn. |
 
@@ -501,8 +502,8 @@ characters (an `invalid_request_error`), which the glossary list of 1,368 terms 
   (before the hold, the 300 ms cloud filler and the replayed filler): transcript 0.67 s, filler 2.51 s, Kokoro 1.49 s
   under CPU contention, answer audio 13.3 s, 8/10 kept the rules (one question split at a sentence pause, one
   degraded turn).
-- *Browser demo host* (tutor screen: hold-to-dictate, then Send, with read-aloud on; D130 gives the tutor no voice
-  bar): draft in the composer **1.5 s** after the speech ends (the key released 1.0 s after it); a guided, checked
+- *Browser demo host* (tutor screen: hold-to-dictate, then Send, with read-aloud on; before JM-D20 the tutor had no
+  voice bar): draft in the composer **1.5 s** after the speech ends (the key released 1.0 s after it); a guided, checked
   reply (units checked, the board's Given and Find) read aloud **18.1 s** after Send: the turn took 16 s, a fresh
   voice connection waited 2 s for a Voice Transcribe stream it did not need (the dev config now waits 0.3 s), and
   Kokoro's first audio came 0.2–0.3 s after each sentence was requested.
@@ -515,6 +516,26 @@ characters (an `invalid_request_error`), which the glossary list of 1,368 terms 
   and accepting "Use online voice?" was not announced, so voice was not offered until the next network event.
 - Spend: Voice Transcribe about $0.03 for all runs (settled in the budget ledger); Spark about $1.05 (the harness
   runs and the browser turns; the ledger rose about $1.20 meanwhile, parallel sessions included). Kokoro and the Magpie trial cost nothing.
+
+**Measured 2026-10-27 (later), voice in the tutor (JM-D20)** (browser demo host on main c6b07c09 plus this work; the
+recorded car question):
+- *A spoken question on the tutor screen* ("Start a conversation", hands-free): the question was heard whole, the
+  filler's audio began **2.6 s** after the end of speech (1.4–1.5 s in the harness; the extra second in the browser is
+  not yet explained), and a guided, checked reply (worked out, units checked, the board updated) was spoken from
+  **18.4 s**: "A car speeds up from rest to 20 m/s in 5 s and we want its acceleration. What do you think the
+  acceleration is, with units?" The turn itself took about 15 s on Spark.
+- *Hold-to-dictate, twice on fresh connections*: the release reached the core both times and the draft appeared
+  **1.42 s and 1.45 s** after the end of speech. The hang (2 of 4 runs earlier) was a race: each dictation opens a
+  fresh connection, the press can reach the bridge before the endpoint's `session.created`, and the bridge then rested
+  as `idle` on the tutor screen; the client took that for the dictation's end and dropped the release. A held
+  dictation now rests as `listening`. A second cause of hangs in the test runs was the browser's six connections per
+  host: several open tabs of the app held them all, so a dictation's request queued.
+- *After a restart* the core offered voice only at the next connectivity change, so the voice bar and microphone were
+  missing for a profile that had already accepted Cloud voice; it now re-checks when a profile opens.
+- *Keywords*: Voice Transcribe's 500 are filled with the session's subject first (the device names it in the voice
+  URL), then the other demo subject; Accounting is never first.
+- Spend for this round: Voice Transcribe $0.003, one Spark turn; the ledger showed $8.76 of today's $10 afterwards
+  (spent and held, parallel sessions included).
 
 ## 13. Workstreams and plan
 
