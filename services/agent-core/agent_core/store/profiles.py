@@ -189,7 +189,7 @@ class ProfileDirectory:
         profile_id = api_id(internal)
         folder = self.data_dir / "profiles" / internal
         folder.mkdir(parents=True, exist_ok=False)
-        keystore_ref = f"jana.profile.{profile_id.lower()}"  # the contract's column; no key is stored (D68)
+        keystore_ref = f"jana-meta.profile.{profile_id.lower()}"  # the contract's column; no key is stored (D68)
         learner, applied = open_database(folder / "learner.db", "learner")
         try:
             record_migrations(self.device, "learner", f"profiles/{internal}/learner.db", applied, self.app_version,

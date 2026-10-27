@@ -869,7 +869,7 @@
   },
   "KeyRef": {
    "type": "string",
-   "pattern": "^jana\\.[a-z0-9._-]{2,76}$"
+   "pattern": "^jana-meta\\.[a-z0-9._-]{2,76}$"
   },
   "KeyValue": {
    "type": "string",

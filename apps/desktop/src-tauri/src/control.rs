@@ -83,9 +83,9 @@ mod tests {
             r#"{"type":"control.hello","protocol":{"major":1,"minor":4},"extra":1}"#,
             r#"{"type":"control.hello","protocol":{"major":"1","minor":4}}"#,
             r#"{"type":"control.hello","protocol":{"major":1,"minor":4,"patch":0}}"#,
-            r#"{"type":"control.keys","store":"os_keychain","entries":[{"ref":"jana.a","value":"x","more":1}]}"#,
+            r#"{"type":"control.keys","store":"os_keychain","entries":[{"ref":"jana-meta.a","value":"x","more":1}]}"#,
             r#"{"type":"control.keys","store":"somewhere","entries":[]}"#,
-            r#"{"type":"control.key_put","ref":"jana.device-db"}"#,
+            r#"{"type":"control.key_put","ref":"jana-meta.device-db"}"#,
             r#"{"type":"control.ready","protocol":{"major":1,"minor":4},"api_port":"80","epoch":"0123456789abcdef"}"#,
             r#"{"type":"control.download_state","download_id":"dl_1","state":"lost","bytes_done":0,"bytes_total":0}"#,
             r#"{"type":"control.unknown"}"#,
@@ -164,7 +164,7 @@ mod tests {
             ToCore::Keys(Keys {
                 store: KeyStoreKind::OsKeychain,
                 entries: vec![KeysEntriesItem {
-                    r#ref: "jana.device-db".into(),
+                    r#ref: "jana-meta.device-db".into(),
                     value: Redacted::new("launch-secret-value-0123456789abcdef"),
                 }],
             }),
@@ -175,7 +175,7 @@ mod tests {
             assert!(line(&frame).contains("launch-secret-value"));
         }
         let put = parse(
-            r#"{"type":"control.key_put","ref":"jana.device-db","value":"c2VjcmV0LXZhbHVl"}"#,
+            r#"{"type":"control.key_put","ref":"jana-meta.device-db","value":"c2VjcmV0LXZhbHVl"}"#,
         )
         .unwrap();
         assert!(!format!("{put:?}").contains("c2VjcmV0LXZhbHVl"));

@@ -72,7 +72,7 @@ def reindex_profiles(device: sqlite3.Connection, data_dir: Path) -> int:
             done = device.execute(
                 "INSERT OR IGNORE INTO profiles_index (profile_id, kind, display_name, avatar, db_file, keystore_ref,"
                 " created_at) VALUES (?, 'student', ?, ?, ?, ?, ?)",
-                (internal, name, avatar, f"profiles/{internal}/learner.db", f"jana.profile.prf_{internal.lower()}",
+                (internal, name, avatar, f"profiles/{internal}/learner.db", f"jana-meta.profile.prf_{internal.lower()}",
                  created),
             )  # fmt: skip
             listed += done.rowcount

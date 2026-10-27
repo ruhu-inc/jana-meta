@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Literal, Protocol
 
 _REF = re.compile(r"^[a-z][a-z0-9._-]{2,80}$")
-INSTALL_MARKER = "jana.install"
+INSTALL_MARKER = "jana-meta.install"
 StoreKind = Literal["os_keychain", "user_file"]
 
 
@@ -121,7 +121,7 @@ class ShellKeyStore:
 
     @staticmethod
     def _check(ref: str) -> str:
-        if not _REF.match(ref) or not ref.startswith("jana."):
+        if not _REF.match(ref) or not ref.startswith("jana-meta."):
             raise ValueError("not a key reference")
         return ref
 

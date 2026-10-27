@@ -254,7 +254,7 @@ fn arc02_process_tree_matches_table() {
 fn core_device_secrets_live_in_the_shell_key_store() {
     let data = scratch("keys");
     let keys = data.with_extension("keys");
-    let secret = keys.join("jana.device-db");
+    let secret = keys.join("jana-meta.device-db");
     let sup = Supervisor::start(core(&data), Policy::default(), None);
     sup.launch_info(Duration::from_secs(60)).expect("ready");
     let deadline = Instant::now() + Duration::from_secs(20);
