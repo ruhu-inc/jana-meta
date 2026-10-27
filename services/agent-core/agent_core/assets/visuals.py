@@ -224,7 +224,7 @@ def validate(
     view = View(spec["type"], spec["params"], computed, spec.get("steps", []), entry, ctx.locale)
     final = parts_of(view)
     spec = _final_parts(spec, final, repairs, entry)
-    _numbers(spec, ctx, computed)  # 8
+    _numbers(spec, ctx, computed, repairs)  # 8
     resolved = _resolve(spec, final, computed, repairs, ctx, entry)
     if len(json.dumps(resolved).encode()) > ctx.max_resolved_bytes:  # 9
         raise VisualError("visual_too_large", "resolved spec")
@@ -313,6 +313,7 @@ def _params(spec: dict[str, Any], kind: dict[str, Any], repairs: list[str], ctx:
         params = {**json.loads(json.dumps(preset.get("params", {}))), **(params if isinstance(params, dict) else {})}
     params = _scenario_start(spec["type"], params)
     params = _repair_units(params, repairs)
+    params = _repair_numbers(spec["type"], params, repairs)
     spec = {**spec, "params": params}
     problems = kind_param_errors(spec["type"], params)
     if problems:
@@ -361,6 +362,53 @@ def kind_param_errors(kind: str, params: Any) -> list[str]:
     if kind in KIND_SCHEMAS:
         return sorted(f"{e.json_path}: {e.message}" for e in _renderer_validator(kind).iter_errors(params))
     return []
+
+
+def _kind_validator(kind: str) -> Any:
+    schema_name = f"visuals/kinds/{kind}"
+    if f"https://jana.dev/contracts/{schema_name}" in schema_ids() or schema_name in schema_ids():
+        from agent_core.contracts._validation import validator
+
+        return validator(schema_name)
+    return _renderer_validator(kind) if kind in KIND_SCHEMAS else None
+
+
+def _repair_numbers(kind: str, params: Any, repairs: list[str]) -> Any:
+    """A JSON number where the kind takes an exact number as a string (`"t": 0` for `"t": "0"`) is the same value
+    written another way: it becomes its string when that string fits the field's pattern. Models write numbers; the
+    kinds keep exact values as strings. Only a number changes, so anything else that does not fit is still refused."""
+    check = _kind_validator(kind)
+    if check is None or not isinstance(params, dict):
+        return params
+    for _ in range(64):  # one field per pass: each repair can only remove an error
+        for error in check.iter_errors(params):
+            value = error.instance
+            if (error.validator != "type" or error.validator_value != "string" or isinstance(value, bool)
+                    or not isinstance(value, int | float) or "pattern" not in error.schema):  # fmt: skip
+                continue
+            text = _exact(value)
+            if text is None or re.search(str(error.schema["pattern"]), text) is None:
+                continue
+            node = params
+            *parents, last = list(error.absolute_path)
+            for key in parents:
+                node = node[key]
+            node[last] = text
+            repairs.append(f"number:{error.json_path}->{text}")
+            break
+        else:
+            return params
+    return params
+
+
+def _exact(value: int | float) -> str | None:
+    """A JSON number as an exact decimal string ("20" for 20.0, "2.5" for 2.5), or None when it is not finite."""
+    if isinstance(value, int):
+        return str(value)
+    if value != value or value in (float("inf"), float("-inf")):
+        return None
+    text = format(Decimal(repr(value)).normalize(), "f")
+    return text[:-2] if text.endswith(".0") else text
 
 
 def _repair_units(node: Any, repairs: list[str]) -> Any:
@@ -711,8 +759,11 @@ def _preset_values(spec: dict[str, Any], ctx: VisualContext) -> list[Fraction]:
     return values
 
 
-def _numbers(spec: dict[str, Any], ctx: VisualContext, computed: dict[str, Any]) -> None:
-    """VSL-12: every claim number equals a referenced value at its shown precision; claims bind to their check."""
+def _numbers(spec: dict[str, Any], ctx: VisualContext, computed: dict[str, Any],
+             repairs: list[str] | None = None) -> None:  # fmt: skip
+    """VSL-12: every claim number equals a referenced value at its shown precision; claims bind to their check. A
+    number that equals none of the cited values but is one of the problem's own knowns (the statement's givens) is
+    traced to that known: it is added to `numbers_from` and the repair recorded (the model left a citation out)."""
     sources: list[Fraction] = _preset_values(spec, ctx)
     for ref in [*spec.get("numbers_from", []), *_param_sources(spec)]:
         if ref.startswith("chk_"):
@@ -727,13 +778,26 @@ def _numbers(spec: dict[str, Any], ctx: VisualContext, computed: dict[str, Any])
         except ArithmeticError:
             traced = False
         if not traced:
-            raise VisualError("visual_untraced_number", f"{where} = {written}", hint=written)
+            known = next((ref for ref, value in ctx.knowns.items() if _given_equal(written, value, ctx)), None)
+            if known is None:
+                raise VisualError("visual_untraced_number", f"{where} = {written}", hint=written)
+            spec["numbers_from"] = [*spec.get("numbers_from", []), known]
+            sources.append(ctx.knowns[known])
+            if repairs is not None:
+                repairs.append(f"numbers_from:+{known}")
     caption = spec.get("caption", "")
     if "=" in caption:
         claim = _canonical(caption)
         cited = [ctx.check_claims.get(r) for r in spec.get("numbers_from", []) if r.startswith("chk_")]
         if not any(c is not None and c == claim for c in cited):
             raise VisualError("visual_untraced_number", f"caption claim {caption[:60]!r} differs from its check")
+
+
+def _given_equal(written: str, value: Fraction, ctx: VisualContext) -> bool:
+    try:
+        return _shown_equal(written, value, ctx.relative_tolerance)
+    except ArithmeticError:
+        return False
 
 
 def _param_sources(spec: dict[str, Any]) -> list[str]:

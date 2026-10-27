@@ -731,3 +731,20 @@ def test_agt09_live_coach_never_leaks(tmp_path: Path) -> None:
     )
     assert found == [], found
     assert not engine.state.solved
+
+
+def test_spelled_out_numbers_of_a_spoken_question_are_given() -> None:
+    """A spoken question reaches the engine as Voice Transcribe writes it ("in five seconds"): a plan step restating
+    its givens ("u = 0, v = 20, t = 5") computes nothing and is the statement's, as for a typed "5 s". Refusing it
+    cost a whole second Solver round on the demo question (2026-10-27, 6.7 s)."""
+    from types import SimpleNamespace
+
+    from agent_core.engine.turn import Engine
+
+    spoken = "A car speeds up from rest to 20 meters per second in five seconds. What's its acceleration?"
+    engine = SimpleNamespace(state=SimpleNamespace(problem=SimpleNamespace(statement=spoken)))
+    assert Engine._given(engine, "0, 20, 5")  # type: ignore[arg-type]
+    assert Engine._given(engine, "5")  # type: ignore[arg-type]
+    assert not Engine._given(engine, "4")  # the answer is never given  # type: ignore[arg-type]
+    typed = SimpleNamespace(state=SimpleNamespace(problem=SimpleNamespace(statement="A mass of twelve point five kg.")))
+    assert Engine._given(typed, "12.5") and not Engine._given(typed, "125")  # type: ignore[arg-type]
