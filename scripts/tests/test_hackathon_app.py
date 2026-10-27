@@ -83,7 +83,8 @@ def test_transport_streaming_auth_and_compatibility() -> None:
 def test_study_is_online_only_and_speech_is_not_billed() -> None:
     settings = host.settings_for_browser(Settings(study_offline_enabled=True))
     assert settings.study_workspace_enabled
-    assert not settings.study_offline_enabled and not settings.cloud_voice_enabled
+    assert not settings.study_offline_enabled
+    assert settings.cloud_voice_enabled  # spoken turns online through the local gateway (SPEC §6)
     assert settings.study_batch_char_limit == 16000
     assert settings.build_stage == "S3"
     from agent_core.config.support import settings_sections
