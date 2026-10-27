@@ -1,0 +1,21 @@
+services/agent-core/agent_core/engine/verbaliser.py
+  s_58e6259b5784bc::t_622f52bc4c1f0f 104-151,215-271,488
+services/agent-core/tests/test_spoken_units.py
+  s_58e6259b5784bc::t_c09153566c8808 1-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "24a4ad39cf019d0d43292c0ee2031841c4d27f07",
+  "prompts": {},
+  "sessions": {
+    "s_58e6259b5784bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ce01b4ce-c682-4015-a54d-2313db8bbb42",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
