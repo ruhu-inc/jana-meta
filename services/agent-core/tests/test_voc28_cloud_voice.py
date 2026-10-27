@@ -81,7 +81,6 @@ async def gateway(tmp: Path, pki: Any, speech: Speech, events: list[str]):
                          slots={"primary": "gemini"},
                          providers={"gemini": {"adapter": "gemini", "base_url": "https://gemini.stub/v1beta",
                                                "secret": "gemini_api_key", "models": models}},
-                         voice_google={"live_model": "voice-test-model"},
                          prices={m: {"input": 1.0, "cached_input": 0.1, "output": 4.0}
                                  for m in [*(model["id"] for model in models.values()), "voice-test-model"]},
                          quotas={"device_burst": 1000, "licence_burst": 10000})  # fmt: skip

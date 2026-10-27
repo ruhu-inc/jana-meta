@@ -3,19 +3,23 @@
   WS /v1/voice/realtime    Authorization: Bearer <access token>  (the same service credential as the cloud tier)
 
 The device's voice bridge speaks the Realtime wire subset of VOC-25 here exactly as it does to its local sidecar, so
-the bridge and the UI do not know which path they are on. The pipeline is Google's (D124):
+the bridge and the UI do not know which path they are on. The pipeline (D124, JM-D12):
 
-  hearing   Cloud Speech-to-Text v2 streaming recognition (Chirp). Its voice-activity events drive turn-taking and
-            barge-in (`speech_started` / `speech_stopped`); its final results are the student's transcript.
+  hearing   Muse Voice Transcribe realtime recognition (`providers/meta_speech.py`). Its speech events drive
+            turn-taking and barge-in (`speech_started` / `speech_stopped`); its completed turns are the student's
+            transcript.
   thinking  never a model here: each chat-completions request the local sidecar would send to the engine adapter
             (VOC-30) is forwarded down this connection to the device, whose engine runs the whole turn and every gate
             (VOC-31, VOC-32, VOC-33) and answers with the accepted spoken words only. Learner data stays on the device.
-  voice     a Gemini Live session (native audio) that is given only those accepted words, one sentence at a time,
-            under a fixed read-exactly instruction, and never the student's audio. Its output transcription is
-            compared with the sentence as it streams: any departure beyond whitespace, punctuation and letter case
-            cuts its audio before the next chunk is forwarded, and the rest of the turn is read by Cloud Text-to-Speech
-            streaming synthesis (Chirp 3 HD), which reads text verbatim. Two departures in one connection switch the
-            connection to Cloud Text-to-Speech only.
+  voice     the verbatim synthesizer reads those accepted words, one sentence at a time (the Meta stack has no Live
+            voice). A stack with a Live voice gives it the sentences under a fixed read-exactly instruction, never the
+            student's audio; its output transcription is compared with the sentence as it streams: any departure
+            beyond whitespace, punctuation and letter case cuts its audio before the next chunk is forwarded, and the
+            rest of the turn is read by the verbatim synthesizer. Two departures in one connection switch the
+            connection to the synthesizer only.
+
+Under a deployment inference budget, speech charges are reserved before they are incurred
+(a recognition stream's longest possible bill, each sentence's characters) and settled with what was used.
 
 Latency (the Codex practices adopted by D124): the recognition stream and the Live session are opened when the
 connection is, and `session.created` (which opens the device's microphone) waits for them up to a budget; audio that
@@ -57,12 +61,13 @@ from cloud_gateway.providers.base import UpstreamError, Usage
 from cloud_gateway.providers.speech import Heard, LiveSession, Recognition, SpeechStack
 
 FEATURE = "cloud_voice"
-PROVIDER = "google"  # the ledger's provider name for the speech services (operations can block it, OPS)
+PROVIDER = "meta"  # the ledger's provider name for speech to text (operations can block it, OPS)
+VOICE_PROVIDER = "google"  # the interim verbatim voice and a Live voice, until Magpie (SPEC §6.2)
 RATE = 24_000
 BYTES_PER_MS = 48  # 24 kHz mono PCM16
 WINDOW = 960  # 20 ms
 OUT_FRAME = 24_000  # at most half a second of audio per output delta
-STT_CHUNK = 4800  # 100 ms per recognition request (the provider takes at most 15360 bytes)
+STT_CHUNK = 4800  # 100 ms per recognition send
 MAX_IN_EVENT = 6400  # base64 characters of one input append (the wire subset's bound, VOC-25)
 MAX_FRAME = 64_000  # characters of one client text frame
 MAX_REPLY = 8000  # characters of one spoken reply
@@ -256,7 +261,19 @@ class Listener:
             if self.opening is None or self.opening.done():
                 self.opening = asyncio.create_task(self._open())
             return
-        await self._send(self.stream, pcm)
+        stream = self.stream
+        try:
+            await self._send(stream, pcm)
+        except UpstreamError:
+            # The stream closed under us (its session cap or a rate limit) before its reader saw it: this audio is
+            # held for the next stream, which opens now.
+            if self.stream is stream:
+                self.stream = None
+                self._close_later(stream)
+            self._hold(pcm)
+            if self.opening is None or self.opening.done():
+                self.opening = asyncio.create_task(self._open())
+            return
         if self.c.utterance is None and self.c.gw.clock() - self.opened_at >= self.config.voice_stt_rotate_s:
             self.rotate()
 
@@ -327,8 +344,14 @@ class Listener:
         assert recognizer is not None
         while not self.closed and not self.suspended:
             try:
+                hold = self.c.service.reserve_stt()
+            except UpstreamError:
+                await self.c.fail("quota_exceeded")
+                return
+            try:
                 stream = await asyncio.wait_for(recognizer.open(self.language), self.config.voice_connect_timeout_s)
             except (UpstreamError, TimeoutError) as failure:
+                self.c.service.release(hold)  # a stream that never opened bills nothing
                 self.failures += 1
                 log.warning("voice recognition open failed %s", getattr(failure, "reason", type(failure).__name__))
                 if self.failures >= 3:
@@ -338,11 +361,12 @@ class Listener:
                 continue
             if self.closed or self.suspended:
                 await self._close(stream)
+                self.c.service.release(hold)
                 return
             self.failures = 0
             self.base = self.held_from if self.held else self.position
             self.opened_at = self.c.gw.clock()
-            reader = asyncio.create_task(self._read(stream, self.base))
+            reader = asyncio.create_task(self._read(stream, self.base, hold))
             self.readers.add(reader)
             reader.add_done_callback(self.readers.discard)
             try:
@@ -362,7 +386,7 @@ class Listener:
             await stream.send(pcm[at : at + STT_CHUNK])
         self.sent[id(stream)] = self.sent.get(id(stream), 0) + len(pcm)
 
-    async def _read(self, stream: Recognition, base: int) -> None:
+    async def _read(self, stream: Recognition, base: int, hold: str | None) -> None:
         started, outcome = self.c.gw.clock(), "ok"
         try:
             async for heard in stream.events():
@@ -372,8 +396,9 @@ class Listener:
         except _Ended:
             return
         finally:
-            sent = self.sent.pop(id(stream), 0)
-            self.c.service.meter_stt(self.c.session, started, sent / (BYTES_PER_MS * 1000), outcome)
+            # Silence a recognizer sent to keep its stream at real time is billed like the student's audio.
+            sent = self.sent.pop(id(stream), 0) + getattr(stream, "padded_bytes", 0)
+            self.c.service.meter_stt(self.c.session, started, sent / (BYTES_PER_MS * 1000), outcome, hold)
         if stream is self.stream and not self.closed:
             self.stream = None  # the provider ended the stream (its time limit): open the next, holding audio
             if self.opening is None or self.opening.done():
@@ -469,7 +494,8 @@ class VoiceConnection:
         self.live_opening: asyncio.Task[LiveSession | None] | None = None
         self.live_sentences = 0
         self.departures = 0
-        self.live_off = self.stack.live is None
+        # A Live voice is billed by tokens only after it speaks, so a budgeted deployment reads with the synthesizer.
+        self.live_off = self.stack.live is None or self.gw.inference_budget is not None
         self.prewarm_s = 0.0
         # The adaptive idle timeout: the longest quiet stretch before the student spoke, times a factor.
         self.last_active = self.gw.clock()
@@ -705,7 +731,7 @@ class VoiceConnection:
     async def _hold(self, utterance: _Utterance) -> None:
         """The recognizer's end of speech, held for the rest of the session's `silence_duration_ms` (hold-to-think
         sends ten seconds): speech within it continues the same utterance."""
-        hold = max(0, self.silence_ms - self.gw.config.voice_google.stt_end_timeout_ms) / 1000
+        hold = max(0, self.silence_ms - self.gw.config.voice_meta.end_ms) / 1000
         if hold:
             await asyncio.sleep(hold)
         await self._stop(utterance)
@@ -890,6 +916,7 @@ class VoiceConnection:
             return
         tts = self.stack.tts
         assert tts is not None
+        hold = self.service.reserve_tts(len(text.strip()))  # raises UpstreamError when the budget is spent
         began, outcome, first = self.gw.clock(), "ok", True
         try:
             async with contextlib.aclosing(tts.synthesize(text.strip())) as stream:  # type: ignore[type-var]
@@ -903,7 +930,7 @@ class VoiceConnection:
             outcome = failure.reason
             raise
         finally:
-            self.service.meter_tts(self.session, began, len(text.strip()), outcome)
+            self.service.meter_tts(self.session, began, len(text.strip()), outcome, hold)
 
     async def respond(self, user_text: str, timing: _Timing) -> None:
         """Ask the device for the turn's spoken words and speak them. `response.created` follows the first accepted
@@ -1015,35 +1042,65 @@ class VoiceService:
         return (stack.recognizer is not None and stack.tts is not None
                 and not self.gw.operations.blocked(PROVIDER, "", ""))  # fmt: skip
 
-    def _meter(self, session: Session, model_id: str, role: str, started: float, usage: Usage, outcome: str,
-               cost: float | None) -> None:  # fmt: skip
+    # --- the deployment inference budget: holds for speech charges, settled with what was billed --------------------
+
+    def _reserve(self, usd: float, role: str, model: str) -> str | None:
+        budget = self.gw.inference_budget
+        return budget.reserve_flat(usd, role=role, model=model) if budget is not None else None
+
+    def reserve_stt(self) -> str | None:
+        """A recognition stream's longest bill: Voice Transcribe closes a session at 60 minutes."""
+        recognizer = self.stack.recognizer
+        assert recognizer is not None
+        return self._reserve(61 * recognizer.minute_usd(), "voice_stt", self.gw.config.voice_meta.model)
+
+    def reserve_tts(self, characters: int) -> str | None:
+        tts = self.stack.tts
+        assert tts is not None
+        return self._reserve(characters / 1_000_000 * tts.million_chars_usd(), "voice_tts", tts.voice)
+
+    def release(self, hold: str | None) -> None:
+        if hold is not None and self.gw.inference_budget is not None:
+            self.gw.inference_budget.release(hold)
+
+    def _settle(self, hold: str | None, cost: float) -> None:
+        if hold is not None and self.gw.inference_budget is not None:
+            self.gw.inference_budget.settle_flat(hold, cost)
+
+    def _meter(self, session: Session, provider: str, model_id: str, role: str, started: float, usage: Usage,
+               outcome: str, cost: float | None) -> None:  # fmt: skip
         from cloud_gateway.app import _Call
 
         device_hash = self.gw.store.device_hash(session.account, started)
-        call = _Call(session, device_hash, PROVIDER, None, ModelSpec(id=model_id), started, role,  # type: ignore[arg-type]
+        call = _Call(session, device_hash, provider, None, ModelSpec(id=model_id), started, role,  # type: ignore[arg-type]
                      feature=FEATURE)  # fmt: skip
         self.gw.finish(call, 200 if outcome == "ok" else 502, outcome, usage, cost=cost)
 
-    def meter_stt(self, session: Session, started: float, seconds: float, outcome: str) -> None:
+    def meter_stt(self, session: Session, started: float, seconds: float, outcome: str,
+                  hold: str | None = None) -> None:  # fmt: skip
         recognizer = self.stack.recognizer
         if recognizer is None or (seconds <= 0 and outcome == "ok"):
+            self.release(hold)
             return
-        # Billed by the second, rounded up per stream.
+        # Billed by the second ($0.18 per audio hour for Voice Transcribe), rounded up per stream.
         cost = math.ceil(seconds) / 60 * recognizer.minute_usd()
-        self._meter(session, self.gw.config.voice_google.stt_model, "voice_stt", started, Usage(), outcome, cost)
+        self._settle(hold, cost)
+        self._meter(session, PROVIDER, self.gw.config.voice_meta.model, "voice_stt", started, Usage(), outcome, cost)
 
-    def meter_tts(self, session: Session, started: float, characters: int, outcome: str) -> None:
+    def meter_tts(self, session: Session, started: float, characters: int, outcome: str,
+                  hold: str | None = None) -> None:  # fmt: skip
         tts = self.stack.tts
         if tts is None:
             return
         cost = characters / 1_000_000 * tts.million_chars_usd()
-        self._meter(session, tts.voice, "voice_tts", started, Usage(), outcome, cost)
+        self._settle(hold, cost)
+        self._meter(session, VOICE_PROVIDER, tts.voice, "voice_tts", started, Usage(), outcome, cost)
 
     def meter_live(self, session: Session, started: float, usage: Usage, outcome: str) -> None:
         live = self.stack.live
         if live is None:
             return
-        self._meter(session, live.model_id, "voice_live", started, usage, outcome, None)
+        self._meter(session, VOICE_PROVIDER, live.model_id, "voice_live", started, usage, outcome, None)
 
     async def serve(self, socket: WebSocket) -> None:
         config = self.gw.config
@@ -1093,9 +1150,9 @@ class VoiceService:
 
 def add_routes(app: FastAPI, gw: Any, stack: SpeechStack | Callable[[Any], SpeechStack] | None = None) -> VoiceService:
     if stack is None:
-        from cloud_gateway.providers.google_speech import google_stack
+        from cloud_gateway.providers.meta_speech import meta_stack
 
-        stack = google_stack(gw.config, gw.secrets) if gw.config.voice_enabled else SpeechStack()
+        stack = meta_stack(gw.config, gw.secrets) if gw.config.voice_enabled else SpeechStack()
     elif callable(stack):
         stack = stack(gw)
     service = VoiceService(gw, stack)

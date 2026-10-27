@@ -1,7 +1,7 @@
-"""Cloud voice endpoint (VOC-28, D124): the Realtime subset, the device tunnel, Google's speech services, zero
-retention.
+"""Cloud voice endpoint (VOC-28, D124): the Realtime subset, the device tunnel, the speech services, zero retention.
 
-Cloud Speech-to-Text, Gemini Live and Cloud Text-to-Speech are fakes (`cloud_gateway.speech_fakes`): the recognizer
+The speech services are fakes (`cloud_gateway.speech_fakes`; `test_meta_speech.py` drives the Voice Transcribe
+recognizer itself against a scripted server): the recognizer
 hears tone and silence by energy and returns a scripted transcript, Live reads sentences word by word (or departs on
 cue), and the verbatim voice returns tone. The device is this test, answering forwarded chat-completions requests the
 way the core's adapter does."""
@@ -317,8 +317,8 @@ def test_voc28_endpoint_zero_retention(tmp_path):
     with sqlite3.connect(GatewayStore(tmp_path / "store").path) as db:
         rows = db.execute("SELECT feature, model, status, cost_usd FROM requests").fetchall()
     models = {model for feature, model, status, _ in rows if feature == "cloud_voice" and status == 200}
-    assert {"chirp_3", "gemini-live-2.5-flash-native-audio", "en-GB-Chirp3-HD-Kore"} <= models
-    assert all(cost > 0 for _, model, _, cost in rows if model in ("chirp_3", "en-GB-Chirp3-HD-Kore"))
+    assert {"muse-voice-transcribe-1.0", "gemini-live-2.5-flash-native-audio", "en-GB-Chirp3-HD-Kore"} <= models
+    assert all(cost > 0 for _, model, _, cost in rows if model in ("muse-voice-transcribe-1.0", "en-GB-Chirp3-HD-Kore"))
 
 
 def test_voc28_recognition_failure_ends_the_connection_for_fallback(tmp_path):
