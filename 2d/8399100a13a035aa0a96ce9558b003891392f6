@@ -1,0 +1,21 @@
+packages/ui/src/learn/StudyGenerate.tsx
+  s_63b211029247d0::t_d2587b03b684d3 13
+packages/ui/src/learn/study.css
+  s_63b211029247d0::t_d2587b03b684d3 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2d8399100a13a035aa0a96ce9558b003891392f6",
+  "prompts": {},
+  "sessions": {
+    "s_63b211029247d0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eeaba4ba-62ef-4835-9cd8-1624a66fa8c2",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
