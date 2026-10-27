@@ -1,0 +1,38 @@
+services/agent-core/agent_core/api/study.py
+  s_c811fae2ae1a5a::t_f7d610e2ea8f5f 319
+packages/client-core/src/index.ts
+  s_c811fae2ae1a5a::t_1e147dfc63a01a 114
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_c811fae2ae1a5a::t_1e147dfc63a01a 408-410,412
+packages/client-core/test/study-workspace.test.ts
+  s_c811fae2ae1a5a::t_3a68b5be09b52c 2,56,62
+packages/i18n/src/check.ts
+  s_c811fae2ae1a5a::t_70492851a5afa6 87
+packages/ui/test/study-workspace.test.tsx
+  s_c811fae2ae1a5a::t_eff62328b2ad70 26
+  s_c811fae2ae1a5a::t_f87665fe19411f 352-353,355
+apps/desktop/src/App.tsx
+  s_c811fae2ae1a5a::t_3ba4af16f7f831 121
+packages/i18n/test/catalogue.test.ts
+  s_c811fae2ae1a5a::t_70492851a5afa6 54,57-59
+packages/client-core/src/study-workspace.ts
+  s_c811fae2ae1a5a::t_1e147dfc63a01a 21,78,80,486,491,497-499,505,508,510-513,515,520-522,524-525
+services/agent-core/VOICE.md
+  s_c811fae2ae1a5a::t_b102befd1c180b 56,80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0b3475af6bf06e9924f66f11c2bf7a1a50accec1",
+  "prompts": {},
+  "sessions": {
+    "s_c811fae2ae1a5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59bedd8f-e027-4722-b546-6260ce5ebe63",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
