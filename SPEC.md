@@ -426,6 +426,18 @@ fewer of them: running the guard alongside the Diagnoser (about 1.2 s; `test_agt
 the guard answers), the Coach alongside the Solver's plan (about 1.5 s; the opening note now depends on the plan), or
 streaming the Coach's `say` to speech before the gates finish.
 
+**Measured 2026-10-27 on main 51c07ec** (with the speculative Solver and the Checker's error-category line;
+`turn_latency --repeat 2 --wrong-answers`, the ten seeded turns plus five wrong answers that run the Checker): the ten
+seeded turns **median 7.2 s, p90 11.4 s** over 20 turns (openings 7.8 s); all 30 turns 7.4 s, p90 12.4 s; 30/30 kept
+the rules. Per call (median, seeded turns): input guard 1.15 s, Diagnoser 2.7 s, Solver 1.7 s, Coach 2.0 s, Checker
+1.8 s, rule matcher 1.4 s, title 1.3 s (on 2026-10-26: 1.25, 2.5, 1.6, 2.1, 1.6 s in the 8.7 s run; 1.19, 3.65, 2.44,
+2.24, 1.79 s in a 12.6 s run during a slow Spark period). The Solver now starts beside the Diagnoser, so an opening is
+four calls deep (guard, Diagnoser beside the Solver's tool call, Solver plan, Coach). Checker verdicts redone by a
+decode-only call: 6 of 13 (46%), none for the incorrect-needs-a-category rule (3 of 14 before the line), all six for an
+error category outside the contract's list (`calculation`, `calculation_error`, `wrong_value`, `substitution_error`),
+about 1.4 s each; the role prompt names no categories. The 30 turns spent $0.79 and left $0.37 of holds (dropped
+speculative and timed-out calls keep their bound).
+
 ## 13. Workstreams and plan
 
 Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter lands; W5 and W6 any time):
