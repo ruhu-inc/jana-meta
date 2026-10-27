@@ -13,7 +13,10 @@ import { ALERTS, DIGEST, HISTORY, OPENED, SESSION_KEPT, SESSION_PURGED, parentCo
 import { PROFILES } from "./profilecore.js";
 
 const ROOT = path.resolve(import.meta.dirname, "../../..");
-const additions = JSON.parse(fs.readFileSync(path.join(ROOT, "contract-additions-m33a.json"), "utf8")) as { additions: { pointer: string; value: unknown }[] };
+// The proposed additions are not in the hackathon submission's tree, which leaves them out; their checks skip there.
+const ADDITIONS = path.join(ROOT, "contract-additions-m33a.json");
+const held = fs.existsSync(ADDITIONS);
+const additions = (held ? JSON.parse(fs.readFileSync(ADDITIONS, "utf8")) : { additions: [] }) as { additions: { pointer: string; value: unknown }[] };
 const defs = Object.fromEntries(additions.additions.filter((a) => a.pointer.startsWith("/$defs/")).map((a) => [a.pointer.slice("/$defs/".length), a.value]));
 const STEP_STATUS = { enum: ["draft", "final", "awaiting", "checking", "correct", "incorrect", "equivalent_unsimplified", "unchecked"] };
 
@@ -32,7 +35,7 @@ async function setup() {
   return { ...fake, profiles, parents: new ParentController(profiles), history: new HistoryController(profiles) };
 }
 
-describe("contract-additions-m33a.json", () => {
+describe.skipIf(!held)("contract-additions-m33a.json", () => {
   test("the local checks agree with the proposed definitions", () => {
     const cases: [string, unknown, (v: unknown) => unknown][] = [
       ["ParentDigest", DIGEST, readDigest], ["AlertList", { alerts: ALERTS }, readAlerts], ["HistoryList", HISTORY, readHistoryList],

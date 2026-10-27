@@ -264,8 +264,11 @@ describe("VSL-47 comparison", () => {
   }, 60_000);
 });
 
+// A tree built without one of the scenarios' packs (the hackathon submission may leave Chemistry out) skips the tie-in.
+const PACKS_PRESENT = SCENARIOS.every((s) => fs.existsSync(path.join(ROOT, "content/curriculum", SUBJECT_DIRS[s.subject]!, "o")));
+
 describe("VSL-47 misconception tie-in", () => {
-  test("vsl47_scenarios_tied_to_pack_misconceptions", () => {
+  test.skipIf(!PACKS_PRESENT)("vsl47_scenarios_tied_to_pack_misconceptions", () => {
     const kinds = new Set(SCENARIOS.map((s) => s.kind));
     expect(kinds.has("circuit_sim") && kinds.has("titration_sim"), "one physics and one chemistry scenario").toBe(true);
     for (const s of SCENARIOS) {
