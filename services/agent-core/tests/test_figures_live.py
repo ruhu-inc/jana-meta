@@ -157,7 +157,8 @@ def test_demo_acceleration_question_draws_a_checked_vt_graph_and_points_at_its_s
 
 
 def test_a_coach_figure_with_an_untraced_number_is_refused(tmp_path: Path) -> None:
-    """A number no given or check states (here 30 m/s) never reaches the screen: the reply goes on in words."""
+    """A number no given or check states (here 30 m/s) never reaches the screen: the reply goes on in words, and
+    those words never speak of the graph that is not there (VSL-16)."""
 
     def invents(body: dict[str, Any]) -> dict[str, Any]:
         graph = {"spec_version": 1, "type": "motion_graph", "numbers_from": ["kn_01", "kn_03"],
@@ -165,7 +166,8 @@ def test_a_coach_figure_with_an_untraced_number_is_refused(tmp_path: Path) -> No
                                                                  {"id": "B", "t": "5", "value": "30"}]}}  # fmt: skip
         return tutor("Here is the graph. What does its slope tell you?", visual=[graph])
 
-    script = {"diagnoser": [_diagnosis], "solver": _solver(), "coach": [invents, invents]}
+    # The figure, its one correction, then the one words-only ask: still claimed, so the claim is taken out.
+    script = {"diagnoser": [_diagnosis], "solver": _solver(), "coach": [invents, invents, invents]}
 
     async def scenario() -> list[dict[str, Any]]:
         engine, _ = await make_engine(tmp_path, script)
@@ -178,6 +180,8 @@ def test_a_coach_figure_with_an_untraced_number_is_refused(tmp_path: Path) -> No
 
     events = run(scenario())
     assert not [e for e in events if e["type"] == "visual.spec"]
+    said = " ".join(e["delta"] for e in events if e["type"] == "text.delta")
+    assert "graph" not in said and "?" in said
 
 
 def test_a_pack_question_shows_its_own_figure_before_the_coach_speaks(tmp_path: Path) -> None:
