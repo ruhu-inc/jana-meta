@@ -1,0 +1,40 @@
+services/agent-core/agent_core/api/voice_adapter.py
+  s_90e8c141128f7b::t_f9760f42884dda 620
+  s_90e8c141128f7b::t_67d55c950dba9f 30,559,619,621-643,704-705,765-766
+  s_90e8c141128f7b::t_b2abbfd3224d46 158,160-164,168-173,266-273,359-361,369-371
+  s_90e8c141128f7b::t_c5c08351332fa6 159,165-167
+  s_90e8c141128f7b::t_bf4768d92cc2a4 58-67,112,616,659-663,715-717,722-764,809-811
+  s_90e8c141128f7b::t_2b99c6943e8f16 713-714
+  s_90e8c141128f7b::t_c412207d154b35 57
+services/agent-core/agent_core/engine/voice_turn.py
+  s_90e8c141128f7b::t_6125f9930e88fc 79-89,91,93-94,168-179
+  s_90e8c141128f7b::t_b6c0ec4862e258 180
+services/agent-core/tests/test_m32_voice_turn_parity.py
+  s_90e8c141128f7b::t_075019012f4edf 191
+  s_90e8c141128f7b::t_f657279fe8ced8 177-190,192-228
+  s_90e8c141128f7b::t_d574d2428a871f 153-155,157-158
+services/agent-core/tests/test_voc28_cloud_voice.py
+  s_90e8c141128f7b::t_257cbd12730377 137-139
+services/agent-core/agent_core/api/voice.py
+  s_90e8c141128f7b::t_6707d30c702bbe 148
+  s_90e8c141128f7b::t_67d55c950dba9f 141-147,149-151
+services/agent-core/tests/test_m32_adapter.py
+  s_90e8c141128f7b::t_4119ce77357e2f 249-250,269-278,280-281,284-300,303-310
+  s_90e8c141128f7b::t_257cbd12730377 279,282-283,301-302
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6599dbb9232d50c135efb502ac37dc53320fffe7",
+  "prompts": {},
+  "sessions": {
+    "s_90e8c141128f7b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee769e16-6029-4d6b-a61b-cc87edc1ef36",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
