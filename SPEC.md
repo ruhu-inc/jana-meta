@@ -10,21 +10,22 @@ Every Meta API detail marked **(verify)** must be confirmed with a real key on d
 2026-10-26 the Meta docs (dev.meta.ai/docs) confirmed or corrected most of them; §16 records what they say, and items
 still marked (verify) are not documented and need a real call.
 
-## Status (updated 2026-10-26, evening)
+## Status (updated 2026-10-28)
 
 Work landed on `main` today, from this session and from parallel sessions merged at 17:33–17:41:
 
 | W | State | Remaining |
 |---|---|---|
-| W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, the Google stack still registered (§8.1), turn latency (§12: speculative Solver done, ~4 s off a new question) |
+| W1 Muse Spark | **Done**: Meta adapter, Nebius and Tavily removed, live typed maths and physics turns, latency halved (12.8–15 s), effort per alias, schemas self-contained, input guard on Spark, budget holds released for unbilled refusals | Dropped-stream accounting (§4.3), health probes spending credit, turn latency (§12: speculative Solver done, ~4 s off a new question) |
 | W2 Vision | **Done**: SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed (parallel session); the diagram drill (§5.2, 2026-10-26) | Read time of a diagram (~15–20 s) |
 | W3 Glimmer | **Built 2026-10-27** (§7): launcher with projector and DFlash, router and recommendations entries, reasoning strength per request, lean offline turns, authored hints offline, power-cut fallback in seconds and return to the cloud; practice and mock papers measured offline | A typed question's first words in ≤ 8 s (now 30–48 s on a loaded machine; needs the owner's call on streaming before the gates, §7); the Wi-Fi-off run on the demo laptop |
-| W4 Speech | **Online done**: Muse Voice Transcribe in the gateway (paced, silence between turns, budgeted, per-turn re-checks; branch `claude/bold-bardeen-60a405`), Kokoro served by the gateway (Magpie development only), a 600 ms end-of-speech hold, subject-first keywords, the voice bar in the tutor (JM-D20), a spoken checked turn in the browser host (§12) | The engine turn (the 4 s target), the browser's filler at 2.6 s, offline (§6.3), self-hosted Magpie (§15 item 3), spoken unit names |
+| W4 Speech | **Online done**: Muse Voice Transcribe in the gateway (paced, silence between turns, budgeted, per-turn re-checks; branch `claude/bold-bardeen-60a405`), Kokoro served by the gateway (the only online voice; NVIDIA's trial voice retired 2026-10-28), a 600 ms end-of-speech hold, subject-first keywords, the voice bar in the tutor (JM-D20), a spoken checked turn in the browser host (§12) | The engine turn (the 4 s target), the browser's filler at 2.6 s, offline (§6.3), spoken unit names |
 | W5 Adult | Sign-up with date of birth, adult copy, parent sections removed, safety wording | Engine-side band check, remaining guardian copy (§17) |
 | W6 Bugs | #1, #4, #6 done; #5 partly (parallel session) | #2, #3, #7 |
 | W7 Research agent | **Built 2026-10-27, end-to-end check next**: the conversation and plan on the device (§18.1a), the gateway job (search, safe fetch, checkpoints, source steering; 4 questions → 16 s, 22 pages, $0.04), import into Study as one cited material with Study's verified parts, the Study UI and "Make a study pack" from the diagram drill | A full pack from the browser, timed; the podcast read by Kokoro on the device |
 | Standout features (parallel session) | Checked figures, gap tracing, explain-back, predict-before-you-see sims merged | — |
 | Glimmer-free check | `phys_circuit`'s recursive schema unrolled for Spark (§16) | — |
+| Meta-only entry (JM-D12, JM-D14, JM-D19) | **Done 2026-10-28**: NVIDIA's trial voice and the podcast's neural speech path removed (podcasts use the installed voice), the Google/Gemini stack and the old production release material deleted, only Muse Glimmer recommended offline, key references renamed `jana-meta.` | — |
 
 ## 1. What we are building
 
@@ -58,14 +59,14 @@ for schools once it has a public link.
 | JM-D9 | **Online reasoning is Muse Spark** for the engine roles that may leave the device (Coach, Diagnoser, Solver, Checker, the input guard and other auxiliary roles; the Reflector stays local because it reads private notes), for Study and for the research agent (§18). No other cloud language model is configured. |
 | JM-D10 | **Online vision is Muse Spark + SAM 3.1.** Muse Spark reads the photo (what the question is, which regions matter); SAM 3.1 turns those regions into exact masks so Jana can crop for a second, sharper read and point at the exact place on the learner's own photo. |
 | JM-D11 | **Local inference is Muse Glimmer 30B** (Apache-2.0, official GGUF Q4_K_M, ~16.8 GB) under the existing llama-server supervisor, on 32 GB+ machines. Smaller machines run online only. No non-Meta local language model ships in the entry (offline speech models are covered by JM-D12 and JM-D13). |
-| JM-D12 | **Speech to text is Meta.** Online: Muse Voice Transcribe (realtime). Offline: Meta **Omnilingual ASR** (Apache-2.0) if it passes the latency gate in §6.3; otherwise faster-whisper stays as the offline fallback. English only (JM-D18). |
-| JM-D13 | **Text to speech is not Meta**, because Meta has no commercially usable TTS (MMS-TTS is CC-BY-NC and not streaming). Online: **NVIDIA Magpie TTS** (self-hosted open weights for anything judges see; §6.4). Offline, and for every podcast (study packs, §18): **Kokoro-82M** (Apache-2.0, already in the speech pack), read on the device. |
-| JM-D14 | **Removed:** Nebius Token Factory, all Nemotron models, Tavily web search, and the Google/Gemini cloud stack (Gemini models, Gemini Live, Chirp STT/TTS) from configuration and from the submission. |
+| JM-D12 | **Speech to text is Meta.** Online: Muse Voice Transcribe (realtime). Offline: Meta **Omnilingual ASR** (Apache-2.0) if it passes the latency gate in §6.3; otherwise faster-whisper stays as the offline fallback. English only (JM-D18). Speech out is Kokoro-82M (JM-D13): the NVIDIA trial voice was retired 2026-10-28 and its code removed. |
+| JM-D13 | **Text to speech is not Meta**, because Meta has no commercially usable TTS (MMS-TTS is CC-BY-NC and not streaming). Online and offline: **Kokoro-82M** (Apache-2.0, already in the speech pack), served by the gateway online and read on the device offline. Podcasts (study packs, §18) are read by the device's installed voice until Kokoro reads them there. (NVIDIA's trial voice was used in development until 2026-10-28; its audio could not be distributed, and it is removed.) |
+| JM-D14 | **Removed:** Nebius Token Factory, all Nemotron models, Tavily web search, and the Google/Gemini cloud stack (Gemini models, Gemini Live, Chirp STT/TTS) from configuration and from the submission. Done: the Google stack's code, tests and release material were deleted 2026-10-28 (§8.1). |
 | JM-D15 | **Adult product:** every profile is `18_plus`; guardian consent, parent summaries, family plan and under-18 Ask policies are hidden or removed. Sign-up asks for date of birth and blocks under-18s. |
 | JM-D16 | **Muse Spark Standard mode only**, never Contributor mode (Meta trains on Contributor data). Contributor mode is a separate model id (`muse-spark-1.3-contributor`), so the gateway configures only Standard ids. Zero data retention for the project account is requested only if the owner chooses it over the research agent (§15 item 2): it disables search grounding, background and stored requests, and file uploads. Muse Code, if used, must not run in Contributor mode on this repository: **Muse Code subscriptions default to Contributor mode**, so run it with `--contributor-mode off` or `MUSE_CONTRIBUTOR_MODE=0`. |
 | JM-D17 | **Submission scope:** the organisers receive a perpetual licence to whatever is submitted (Official Rules, "Hackathon Submission"). Only what the entry needs is submitted (§9). The owner signs off on the scope before submission. |
 | JM-D18 | **English only** (owner, 2026-10-26). No Yoruba, Hausa, Igbo or Pidgin input in the entry; Voice Transcribe does not support the first three anyway. |
-| JM-D19 | **Meta-native presentation** (owner, 2026-10-26). The code, configuration names, interface copy and documentation read as a project built for Meta's models from the start: no Nebius, Nemotron, Tavily or earlier-hackathon framing remains (for example the keychain service is `jana-meta.cloud-gateway`, and the README is about Meta). |
+| JM-D19 | **Meta-native presentation** (owner, 2026-10-26). The code, configuration names, interface copy and documentation read as a project built for Meta's models from the start: no Nebius, Nemotron, Tavily or earlier-hackathon framing remains (for example the keychain service is `jana-meta.cloud-gateway`, and the README is about Meta). Done 2026-10-28: identifier `app.jana-meta.desktop`, key references `jana-meta.`, no NVIDIA, Google, Qwen or Gemma in what ships (§17 Identity). |
 | JM-D20 | **Voice conversation in the tutor** (owner, 2026-10-27; replaces D130 on the tutor screen for this entry). With Cloud voice switched on, the tutor screen offers the voice bar ("Start a conversation", push to talk, hands-free): every spoken question is a full tutor turn, with the filler at 1.5 s and the accepted spoken form read sentence by sentence by Kokoro; every spoken word still comes from an accepted engine turn (JM-D6). Without Cloud voice the tutor keeps dictation and read-aloud only; Ask anything and Study keep their own conversations. |
 
 ## 3. Architecture
@@ -77,7 +78,7 @@ for schools once it has a public link.
                                               │       ▼        privacy mask, ≤1600 px JPEG
  ┌──────────── cloud gateway (jana-meta) ─────┴──────────────────┐        │
  │ voice WS: Muse Voice Transcribe (STT) ─► transcript ──────────┼──► Jana engine (agent-core, on device)
- │           Magpie or Kokoro ◄── accepted say_spoken only ◄─────┼─── input guard → Diagnoser → Solver + tools
+ │           Kokoro-82M ◄──────── accepted say_spoken only ◄─────┼─── input guard → Diagnoser → Solver + tools
  │ chat:     Muse Spark, Chat Completions (api.meta.ai/v1) ◄─────┼─── → Checker → Coach → release gates
  │ vision:   Muse Spark (read) ⇄ SAM 3.1 at /v1/vision/segment ◄──┼─── PhotoReader (engine/vision.py)
  │ research: agent jobs on the Responses API + web_search (§18) ◄─┼─── Study: Learn from a picture / Research a topic
@@ -210,15 +211,16 @@ PCM silence between turns or reconnects; `endStream` ends the whole session.
 | File | Change |
 |---|---|
 | `cloud_gateway/providers/meta_speech.py` (new) | `MetaRecognizer` / `MetaRecognition` implementing `Recognizer` and `Recognition` from `providers/speech.py`. Done 2026-10-27 (branch `claude/bold-bardeen-60a405`); the server's end of speech is held at least 600 ms; keywords fit Meta's limits (at most 500, each at most 30 characters, measured live), the session's subject first. |
-| `cloud_gateway/voice.py`, `config.py` | Build `SpeechStack(MetaRecognizer, live=None, <synthesizer>)`; replace `config.voice_google` with `config.voice_meta`; `voice_enabled=true` in the dev config. With `live=None` the TTS-only reader path is used (it already exists as the drift fallback). Done: the synthesizer is Kokoro by default (§6.4), `MagpieSynthesizer` with `voice_meta.tts = "magpie"` in dev only. |
+| `cloud_gateway/voice.py`, `config.py` | Build `SpeechStack(MetaRecognizer, live=None, <synthesizer>)`; replace `config.voice_google` with `config.voice_meta`; `voice_enabled=true` in the dev config. With `live=None` the TTS-only reader path is used (it already exists as the drift fallback). Done: the synthesizer is Kokoro (§6.4); the development-only NVIDIA synthesizer was removed 2026-10-28. |
 | `cloud_gateway/voice.py` (~1054–1067) | Re-check quota and credential every turn (review finding: sessions currently run past caps). Done (branch `claude/bold-bardeen-60a405`): credential, operations and quotas before each turn. |
 
-### 6.2 Online text to speech: NVIDIA Magpie
+### 6.2 Online text to speech: Kokoro-82M
 
-`cloud_gateway/podcast_speech.py` already calls Magpie (NVCF HTTP, LINEAR_PCM 22.05 kHz). Generalise it into a
-`MagpieSynthesizer` implementing `Synthesizer`: one request per accepted sentence, resample 22.05 → 24 kHz for the
-bridge, voice `Magpie-Multilingual.EN-US.Aria.Calm` (Neutral as fallback). Podcasts move to Kokoro on the device
-(§18): the trial's audio cannot be shown, and Kokoro plays offline.
+The gateway reads accepted sentences with Kokoro-82M (`providers/kokoro_speech.py`, a worker under the speech
+runtime's interpreter), resampled for the bridge. NVIDIA's API-catalog trial voice was used in development until
+2026-10-28; the trial forbids distributing its audio, so it was retired and its gateway route, synthesizer, key
+source and the podcast's neural speech path on the device were deleted. Podcasts are read by the device's installed
+voice; reading them with Kokoro on the device is §18's open item.
 
 ### 6.3 Offline speech to text: Omnilingual ASR, gated
 
@@ -234,10 +236,7 @@ offline default. English only (JM-D18): no other input language is offered.
 ### 6.4 Offline text to speech, and the licence rule for demo audio
 
 - Offline: Kokoro-82M (`af_heart`), unchanged.
-- The NVIDIA API-catalog trial forbids distributing generated audio. **Anything judges hear (live demo, video) uses
-  self-hosted Magpie open weights** (`nvidia/magpie_tts_multilingual_357m`, NVIDIA Open Model License) on a Modal or
-  Baseten GPU from the partner credits, unless NVIDIA confirms trial use is fine. Development may use the trial.
-  If self-hosting is not ready by Nov 2, the demo uses Kokoro served from the gateway (Apache-2.0).
+- Online: Kokoro-82M served by the gateway (Apache-2.0), so the audio judges hear is licence-clean.
 
 **Done when:** a spoken physics question gets a spoken, checked answer online in ≤ 4 s typical from end of speech
 (filler at 1.5 s), barge-in stops playback, and the same works offline after the network is pulled.
@@ -246,7 +245,7 @@ offline default. English only (JM-D18): no other input language is offered.
 
 | File | Change |
 |---|---|
-| `agent_core/router/recommended_models.json` | Replace the Qwen/Gemma entries with `muse-glimmer-30b` (dense 30B; GGUF `meta-models/Muse-Glimmer-30B-GGUF`, file `Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf`, 16.8 GB), class `high` only (32 GB+), `context_for_agents` 16384 (native 131,072), `max_output` at least 8192 (long reasoning can use up 4096 and return empty content with `finish_reason: "length"`), `thinking.available: true`, `default: on` (reasoning cannot be turned off), sampling temperature 1.0, top_p 0.95, top_k 64. One tool call per turn (no parallel calls). |
+| `agent_core/router/recommended_models.json` | Replace the Qwen/Gemma entries with `muse-glimmer-30b` (dense 30B; GGUF `meta-models/Muse-Glimmer-30B-GGUF`, file `Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf`, 16.8 GB), class `high` only (32 GB+), `context_for_agents` 16384 (native 131,072), `max_output` at least 8192 (long reasoning can use up 4096 and return empty content with `finish_reason: "length"`), `thinking.available: true`, `default: on` (reasoning cannot be turned off), sampling temperature 1.0, top_p 0.95, top_k 64. One tool call per turn (no parallel calls). Done 2026-10-28: the Qwen and Gemma entries are removed; the router keeps their ids only for an already installed model. |
 | `agent_core/router/router.yaml` (`local:`) | Budget Glimmer's reasoning rather than disable it: `chat_template_kwargs.reasoning_strength` (`low`…`xhigh`, default `high`) per request, and a hard cap with llama-server `--reasoning-budget N` (`reasoning_effort` is not implemented by llama.cpp); `thinking_budget` must still equal the `keys.py` value its test checks. Tiers list only `local:muse-glimmer-30b`. |
 | `agent_core/providers/llama.py` | Use the chat template embedded in the GGUF (no `--chat-template-file`); llama.cpp `b10353` or newer with `-a muse-glimmer`; reasoning arrives in `message.reasoning_content` and must stay out of the released text. Whether a JSON-schema grammar works from the first token with a model that always reasons is **(verify)**. |
 | `scripts/jana_tools/hackathon_dev.py` | `--local-model` takes the official Glimmer GGUF instead of Nemotron Nano 4B; Meta publishes no SHA-256, so record it on first use and pin it (whether the launcher may download weights itself, against its current "never downloads" rule, is an owner decision, §15). Drop `--reasoning off`; size `--ctx-size`/`--parallel` for 32 GB. `hackathon_app.connect()` keeps the `local` provider so offline works. |
@@ -326,11 +325,11 @@ Glimmer reply with its first words within ~8 s. A spoken offline turn is a stret
 |---|---|
 | Nebius adapter, Nemotron ids and prices | `providers/nebius.py`, `providers/__init__.py`, `config.py`, `defaults.toml`, `custody.py`, `cloud_models.json`, `deploy/nebius-dev.toml`, `test_nebius.py` |
 | Tavily | `cloud_gateway/tavily.py`; `app.py` (~126–128, routes ~434–440); `ask.py` (branches ~213–249, ~316); `config.py` (`TavilySettings`, validator ~377–387); `custody.py`; `secret_scan.py`; `agent_core/api/study.py` (`/v1/study/web` ~593–656); `client-core/src/study-workspace.ts` (~291); `client-core/src/ask-anything.ts` (`web_confirmed`); UI `StudyWorkspace.tsx` (~243); i18n `ask.web_permission`, `ask.search_web`, `study.web_consent`, `study.import_web`; tests `test_tavily.py`, `test_study_web.py` |
-| Google/Gemini cloud stack | `providers/gemini.py`, `vertex.py`, `gemini_live.py`, `google_speech.py` out of configuration (deleted before submission if time allows); `config.voice_google` |
+| Google/Gemini cloud stack | Deleted 2026-10-28: the Gemini and Vertex adapters, their tests, the Gemini-shaped test stub (the gateway's tests now use a Meta stand-in), the live Gemini and Vertex staging tests, the old production release material (`M42.md`, the release handoff, `deploy/m42-*`, the systemd unit, `jana_tools/release/m42.py` and `m42_quality.py`, which named the production GCP project and an IAP command with the owner's email) and the Google mypy override. Kept: the secret scanner's Google and NVIDIA key patterns, and the authoring records of curriculum items and quantity proposals that name the model that drafted them. |
 
 **Ask anything after Tavily:** out of the demo (§14). Without a search backend `/v1/ask` returns "unavailable"; web
 research lives in the research agent (§18). **Study:** file and paste import stay; web-page import is removed (done).
-Tavily removal: done. Google stack: still registered as adapters (not configured); delete before submission.
+Tavily removal: done. Google stack: deleted (2026-10-28).
 
 ### 8.2 Adult product
 
@@ -405,15 +404,15 @@ visual-answer routes). Status 2026-10-27: #2, #3 and #7 done.
 
 ## 11. Tests to update
 
-- Gateway: `test_nebius.py` → `test_meta.py`; `test_m19_gw_conformance.py`, `test_m19_gw_gemini.py`,
-  `test_m19_gw_keys.py`, `test_inference_budget.py` (images allowed), `test_m42_study.py`,
-  `test_study_math_format.py`, `test_podcast_speech.py`, `gateway_stubs.py`; remove `test_tavily.py`. New:
+- Gateway: `test_nebius.py` → `test_meta.py`; `test_m19_gw_conformance.py`, `test_m19_gw_keys.py`,
+  `test_inference_budget.py` (images allowed), `test_m42_study.py`, `test_study_math_format.py`, `gateway_stubs.py`
+  (Meta stand-in); removed `test_tavily.py`, the Gemini and Vertex adapter tests and the podcast speech test. New:
   `test_meta_speech.py` (Recognizer against a fake socket), `test_sam.py` (segment route, budget).
-- Agent core: remove `test_study_web.py`; update `test_a1_input_routes.py`, `test_study_podcast_speech.py`; new tests
+- Agent core: remove `test_study_web.py`; update `test_a1_input_routes.py` (the podcast speech test is removed); new tests
   for `photo_region` pointing and the Glimmer model entry.
 - Scripts: `test_hackathon_app.py`, `test_m42_release_preparation.py`.
 - TypeScript: `client-core` `ask-anything.test.ts`, `study-workspace.test.ts`; `ui` `ask-anything.test.tsx`,
-  `study-workspace.test.tsx`; `i18n` catalogue checks; `apps/desktop/test/podcast-audio.test.ts`.
+  `study-workspace.test.tsx`; `i18n` catalogue checks.
 
 ## 12. Latency budget (measure on days 1–3)
 
@@ -453,7 +452,7 @@ place; nothing is shown before the guard passes), and the Solver's two sequentia
 | End of speech → final transcript (Voice Transcribe) | ≤ 0.7 s |
 | Filler if no reply yet | at 1.5 s |
 | Engine turn on Muse Spark (guard, tools, Coach, gates) | ≤ 3 s typical |
-| Magpie first audio after an accepted sentence | ≤ 0.4 s |
+| Kokoro first audio after an accepted sentence | ≤ 0.4 s |
 | **End of speech → first answer audio** | **≤ 4 s typical** |
 | Photo upload → highlighted line (Spark + SAM) | ≤ 6 s |
 
@@ -534,7 +533,7 @@ characters (an `invalid_request_error`), which the glossary list of 1,368 terms 
   an adult turning on Cloud voice never recorded the profile's `cloud_voice` consent (and no notice existed for it),
   and accepting "Use online voice?" was not announced, so voice was not offered until the next network event.
 - Spend: Voice Transcribe about $0.03 for all runs (settled in the budget ledger); Spark about $1.05 (the harness
-  runs and the browser turns; the ledger rose about $1.20 meanwhile, parallel sessions included). Kokoro and the Magpie trial cost nothing.
+  runs and the browser turns; the ledger rose about $1.20 meanwhile, parallel sessions included). Kokoro and the NVIDIA trial voice (since removed) cost nothing.
 
 **Measured 2026-10-27 (later), voice in the tutor (JM-D20)** (browser demo host on main c6b07c09 plus this work; the
 recorded car question):
@@ -596,7 +595,7 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
 | W1 | Meta provider, routing, budget, removal of Nebius and Tavily | 4, 8.1, 8.3 |
 | W2 | Vision: SAM route, PhotoReader, photo pointing | 5 |
 | W3 | Local: Glimmer entry, launcher, offline switch | 7 |
-| W4 | Speech: Voice Transcribe, Magpie synthesizer, Omnilingual gate | 6 |
+| W4 | Speech: Voice Transcribe, Kokoro in the gateway, Omnilingual gate | 6 |
 | W5 | Adult product and copy | 8.2 |
 | W6 | Demo bugs | 10 |
 | W7 | Research agent: a long-running agent that builds study packs (Learn from a picture, Research a topic) | 18 |
@@ -606,7 +605,7 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
 | Oct 26 | Done: W1 (Spark live, latency halved), W5 sign-up and copy, W6 #1/#4/#6, input guard on Spark, Glimmer downloaded and measured |
 | Oct 27 | Turn latency (§12): speculative Solver done Oct 26; the input guard and the Solver's two calls next; diagram drill done Oct 26 (§5.2) |
 | Oct 28 – Nov 1 | W7 research agent (§18): Responses client and fakes, the gateway job, synthesis and verification, device import and UI, Kokoro podcast |
-| Oct 31 – Nov 1 | W4 voice online (reduced: Voice Transcribe in, Magpie or Kokoro out); W3 lean offline path (pack hints instant, Glimmer for free-form questions) |
+| Oct 31 – Nov 1 | W4 voice online (reduced: Voice Transcribe in, Kokoro out); W3 lean offline path (pack hints instant, Glimmer for free-form questions) |
 | Nov 2–3 | Polish, safety checks, eval run, record the video; owner signs off the §9 scope |
 | Nov 4 | Build the submission repo (§9) and submit by 9:00 PM ET |
 (Re-planned 2026-10-26 with the owner: W2, then W7, ahead of voice and the offline model; W2 then landed from a
@@ -641,7 +640,7 @@ checks every step with code, keeps working without power or internet, and uses M
    The Startup track's Representative must be an active employee of the startup.
 2. Meta API key (done 2026-10-26) and credit claim. Zero data retention or research: Meta's zero data retention turns
    off search grounding, background and stored requests, which the research agent (§18) needs. Decide one.
-3. NVIDIA: is trial audio allowed in the video? If not, approve the self-hosted Magpie spend (Modal/Baseten credits).
+3. NVIDIA trial audio: settled 2026-10-28; the trial voice is removed and Kokoro is the only voice.
 4. Submission scope in §9 (which subjects; whether Study stays). §9 as written does not install (§17).
 5. Hosting: GCP project `jana-meta` (JM-D7) or partner credits only.
 6. Photo demo (§5): handwritten working goes to the cloud after the local privacy pass and the per-photo notice
@@ -650,8 +649,8 @@ checks every step with code, keeps working without power or internet, and uses M
 8. Ask anything: leave it out of the demo (anti-project list, §14); the research agent (§18) is the web-research feature.
 9. Budget dates: resolved (valid until 2026-11-09; ledger in `~/.jana-meta/gateway`).
 10. Research agent decisions: settled (§18.10).
-11. Before submission: rewrite the README as a Meta project (JM-D19), rename the app identifier and keychain prefix
-    (§17 Identity), and a trial `git archive` install and test of the §9 scope by Nov 1. Done 2026-10-27; still the
+11. Before submission: rewrite the README as a Meta project (JM-D19), rename the app identifier and key references
+    (§17 Identity, done 2026-10-28), and a trial `git archive` install and test of the §9 scope by Nov 1. Done 2026-10-27; still the
     owner's: sign off the §9 list (pack-builder and signing-service now ship; Chemistry or not).
 
 ## 16. Meta facts confirmed from the docs (2026-10-26)
@@ -746,13 +745,12 @@ demo, §8.1), health probes, W4, the rest of W5, W6 #2, #3, #7, §9, Identity.
   on `main` too (`tol17`, `sec07`–`sec09`, `arc28`, `lrn43`, `tol05`, two `d95` speech-pack signing tests, and one
   deselected); TypeScript and Rust passed; the browser host ran from it (packs built and signed from the tree,
   practice marked).
-- **Identity**: the desktop app shares Jana's identifier `app.jana.desktop` and keychain prefix `jana.`; rename both
-  (JM-D7, JM-D19). Done 2026-10-27: the identifier is `app.jana-meta.desktop` (so the keychain service is too), the
-  key fallback folder `jana-meta`, the gateway's default keychain service `jana-meta.cloud-gateway`, and the Windows
-  installer's folders follow. The first start copies, never moves, the core's data and the device keys from the
-  former names when the new ones hold none (`src-tauri/src/identity.rs`), since Jana's own install may still use
-  them. The key references inside a service keep their contract prefix `jana.` (`$defs/KeyRef`); they no longer
-  collide, because the service differs.
+- **Identity**: the desktop app shared Jana's identifier and keychain names; rename both (JM-D7, JM-D19). Done: the
+  identifier is `app.jana-meta.desktop` (so the keychain service is too), the key fallback folder `jana-meta`, the
+  gateway's default keychain service `jana-meta.cloud-gateway`, and the Windows installer's folders follow (2026-10-27).
+  On 2026-10-28 the key references became `jana-meta.` too (`$defs/KeyRef`, the shell's key store, the core's device
+  database, service credential, install marker and profile references), and the first-start copy of data and keys
+  from the former identifier was removed: this entry has no earlier users to carry over, so the renames are plain.
 - **Claims**: the packs follow Cambridge 5054/5070, not WAEC; JAMB is a university-entry exam, not O level. Word the
   pitch and §1 accordingly.
 - **Budget arithmetic**: $10 a day over about 9.4 days is $94, so the $120 total never binds and the $30 kept for
