@@ -30,6 +30,7 @@ from cloud_gateway.providers.meta_speech import MetaRecognizer, glossary_keyword
 from cloud_gateway.providers.speech import Heard, SpeechStack
 from cloud_gateway.speech_fakes import FakeTts, tone
 from gateway_stubs import FakeSecrets, gateway_config
+from starlette.websockets import WebSocketDisconnect
 from test_gateway_voc28_cloud_voice import HEARD, SAID, answer, connect, opened, scripted_turn, setup, speak, until
 
 GLOSSARY = Path(__file__).resolve().parents[3] / "content" / "agent" / "glossary" / "en.yaml"
@@ -447,6 +448,55 @@ def test_default_stack_is_meta_without_google(tmp_path: Path) -> None:
 def test_voice_transcribe_is_priced_per_second() -> None:
     rec = recognizer(FakeServer())
     assert rec.minute_usd() * 60 == pytest.approx(0.18)  # $0.18 per audio hour
+
+
+# --- every turn re-checks the credential and the quotas (§6.1 review finding) ----------------------------------------
+
+
+def test_a_revoked_credential_ends_the_connection_at_the_next_turn(tmp_path: Path) -> None:
+    server = FakeServer()
+    client, device, _ = meta_setup(tmp_path, server)
+    with client, connect(client, device) as ws:
+        opened(ws)
+        scripted_turn(ws)
+        assert client.app.state.gateway.auth.revoke(device.credential_id)
+        seen: list[dict[str, Any]] = []
+        speak(ws)
+        error = until(ws, "error", seen)
+        with pytest.raises(WebSocketDisconnect) as closed:
+            until(ws, "never", seen)
+    assert error["error"]["code"] == "unauthorized" and closed.value.code == 4401
+    assert not any(e["type"] == "jana.voice_llm.request" for e in seen)  # the turn never reached the device
+
+
+def test_a_spent_cap_ends_the_connection_at_the_next_turn(tmp_path: Path) -> None:
+    server = FakeServer()
+    quotas = {"device_burst": 1000, "licence_burst": 10000, "device_daily_spend_usd": 0.000001}
+    client, device, _ = meta_setup(tmp_path, server, quotas=quotas)
+    with client, connect(client, device) as ws:
+        opened(ws)
+        scripted_turn(ws)  # admitted with nothing spent; its spoken sentences are metered
+        seen: list[dict[str, Any]] = []
+        speak(ws)
+        error = until(ws, "error", seen)
+        with pytest.raises(WebSocketDisconnect) as closed:
+            until(ws, "never", seen)
+    assert error["error"]["code"] == "quota_exceeded" and closed.value.code == 4429
+
+
+def test_a_directive_turn_is_re_checked_too(tmp_path: Path) -> None:
+    server = FakeServer()
+    client, device, _ = meta_setup(tmp_path, server)
+    with client, connect(client, device) as ws:
+        opened(ws)
+        assert client.app.state.gateway.auth.revoke(device.credential_id)
+        ws.send_json({"type": "conversation.item.create", "item": {"type": "message", "role": "user", "content": [
+            {"type": "input_text", "text": "jana-speak: utt_" + "0" * 26}]}})  # fmt: skip
+        ws.send_json({"type": "response.create"})
+        seen: list[dict[str, Any]] = []
+        error = until(ws, "error", seen)
+    assert error["error"]["code"] == "unauthorized"
+    assert not any(e["type"] == "jana.voice_llm.request" for e in seen)
 
 
 # --- the deployment inference budget ----------------------------------------------------------------------------------

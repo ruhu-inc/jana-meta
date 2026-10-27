@@ -18,7 +18,8 @@ the bridge and the UI do not know which path they are on. The pipeline (D124, JM
             rest of the turn is read by the verbatim synthesizer. Two departures in one connection switch the
             connection to the synthesizer only.
 
-Under a deployment inference budget, speech charges are reserved before they are incurred
+Every turn re-checks the credential and the quotas, as each request does, so a connection never outlives a revoked
+credential or a spent cap. Under a deployment inference budget, speech charges are reserved before they are incurred
 (a recognition stream's longest possible bill, each sentence's characters) and settled with what was used.
 
 Latency (the Codex practices adopted by D124): the recognition stream and the Live session are opened when the
@@ -496,6 +497,8 @@ class VoiceConnection:
         self.departures = 0
         # A Live voice is billed by tokens only after it speaks, so a budgeted deployment reads with the synthesizer.
         self.live_off = self.stack.live is None or self.gw.inference_budget is not None
+        self.authorization = socket.headers.get("authorization")
+        self.refused: int | None = None  # the close code when a turn's re-check refused the connection
         self.prewarm_s = 0.0
         # The adaptive idle timeout: the longest quiet stretch before the student spoke, times a factor.
         self.last_active = self.gw.clock()
@@ -609,7 +612,8 @@ class VoiceConnection:
                 return
             directive, self.directive = self.directive, None
             await self.cancel("client_cancelled")
-            self.work = asyncio.create_task(self.respond(directive, _Timing()))
+            if await self.admitted():
+                self.work = asyncio.create_task(self.respond(directive, _Timing()))
         elif kind == "response.cancel":
             await self.cancel("client_cancelled")
 
@@ -776,7 +780,19 @@ class VoiceConnection:
             await self.cancel("turn_detected")
         elif self.work is not None and not self.work.done():
             return  # the reply plays on: no barge-in without echo cancellation (VOC-11)
-        self.work = asyncio.create_task(self.respond(text, utterance.timing))
+        if await self.admitted():
+            self.work = asyncio.create_task(self.respond(text, utterance.timing))
+
+    async def admitted(self) -> bool:
+        """Re-check the credential and the quotas before a turn, as every request is checked (§6.1 review finding:
+        a connection admitted once must not run past a revocation, a lapse or a spent cap). A refusal ends the
+        connection with the code a new connection would get."""
+        code = self.service.refusal(self.authorization)[0]
+        if code is None:
+            return True
+        self.refused = code
+        await self.fail("quota_exceeded" if code == 4429 else "unauthorized" if code == 4401 else "voice_unavailable")
+        return False
 
     # --- idle: release the upstream sessions while nobody speaks ----------------------------------------------------
 
@@ -1042,6 +1058,20 @@ class VoiceService:
         return (stack.recognizer is not None and stack.tts is not None
                 and not self.gw.operations.blocked(PROVIDER, "", ""))  # fmt: skip
 
+    def refusal(self, authorization: str | None) -> tuple[int | None, Session | None]:
+        """The close code refusing a connection or a turn now (None when admitted), and the credential's session."""
+        try:
+            session = self.gw.auth.authenticate(authorization)
+        except AuthError:
+            return 4401, None
+        now = self.gw.clock()
+        if self.gw.operations.blocked("", "", session.licence_id) or not self.available():
+            return 4503, session
+        device_hash = self.gw.store.device_hash(session.account, now)
+        over = self.gw.quotas.refusal(session.account, device_hash, session.licence_id, now,
+                                      period_start=session.period_start, seats=session.seats)  # fmt: skip
+        return (4429 if over is not None else None), session
+
     # --- the deployment inference budget: holds for speech charges, settled with what was billed --------------------
 
     def _reserve(self, usd: float, role: str, model: str) -> str | None:
@@ -1107,20 +1137,9 @@ class VoiceService:
         if not config.voice_enabled:
             await socket.close(code=4404)
             return
-        try:
-            session = self.gw.auth.authenticate(socket.headers.get("authorization"))
-        except AuthError:
-            await socket.close(code=4401)
-            return
-        now = self.gw.clock()
-        if self.gw.operations.blocked("", "", session.licence_id) or not self.available():
-            await socket.close(code=4503)
-            return
-        device_hash = self.gw.store.device_hash(session.account, now)
-        over = self.gw.quotas.refusal(session.account, device_hash, session.licence_id, now,
-                                      period_start=session.period_start, seats=session.seats)  # fmt: skip
-        if over is not None:
-            await socket.close(code=4429)
+        refused, session = self.refusal(socket.headers.get("authorization"))
+        if refused is not None or session is None:
+            await socket.close(code=refused or 4401)
             return
         await socket.accept()
         old = self.live.get(session.credential_id)
@@ -1134,7 +1153,7 @@ class VoiceService:
         try:
             await connection.run()
             if connection.failure is not None:
-                code = 1011
+                code = connection.refused or 1011
         except (WebSocketDisconnect, _Ended):
             pass
         except Exception as raised:  # logged by type only: never a frame, transcript or audio (OBS-22)
