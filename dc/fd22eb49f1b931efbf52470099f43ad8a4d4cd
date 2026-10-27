@@ -1,0 +1,19 @@
+scripts/build-submission.sh
+  s_4860f8d432bbd3::t_c1cba8d3f26cef 139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "dcfd22eb49f1b931efbf52470099f43ad8a4d4cd",
+  "prompts": {},
+  "sessions": {
+    "s_4860f8d432bbd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "11cf0443-6440-4570-b1cb-b8e7f684aea0",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
