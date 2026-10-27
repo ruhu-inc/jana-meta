@@ -1,6 +1,6 @@
 // M23's UI pieces in Settings, over the fake core: the study screen's research consents below the online features
-// (PRV-06, D87: on a profile under 18 "Turn on" waits for the parent or guardian's agreement; any profile pauses and
-// resumes its own consent with no guardian step), the research export with the study host's approvals and the student's
+// (PRV-06, D87, W5: the student of 18 or over agrees for themselves, never a guardian; any profile pauses and resumes
+// its own consent in one step), the research export with the study host's approvals and the student's
 // assent (EVL-22, `CreateExport.research_approval`), and what a usage report holds, read from the published schema in
 // "What leaves this device" (OBS-20, PRV-09).
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -31,27 +31,27 @@ async function family(adult = false) {
 }
 
 describe("PRV-06", () => {
-  test("test_prv06_study_screen_guardian_agreement", async () => {
-    const { core, study, chosen } = await family();
+  test("test_prv06_study_screen_own_agreement", async () => {
+    const { core, study, chosen } = await family(true);
     expect(study.dataset.studyState).toBe("off");
     expect(study.textContent).toContain("Help a study of whether the tutor helps students learn.");
     fireEvent.click(within(study).getByRole("button", { name: "Turn on…" }));
     const dialog = await screen.findByRole("dialog", { name: "A learning study" });
     const turnOn = within(dialog).getByRole("button", { name: "Turn on" }) as HTMLButtonElement;
-    // "Turn on" stays disabled until an agreement is ticked.
+    // "Turn on" stays disabled until the agreement is ticked.
     expect(turnOn.disabled).toBe(true);
-    // The profile's band is a minor's (read with its own token, D93): only the parent or guardian's agreement shows.
-    expect(within(dialog).queryByRole("checkbox", { name: "I'm the student, I'm 18 or over, and I agree to this study." })).toBeNull();
+    // The profile's band is read with its own token (D93): the student's own agreement is the only one (W5).
     expect(within(dialog).getAllByRole("checkbox")).toHaveLength(1);
+    expect(dialog.querySelector("[data-agree='guardian']")).toBeNull();
+    expect(dialog.textContent).not.toContain("guardian");
     expect(core.log.some((r) => r.method === "GET" && r.path === `/v1/profiles/${BEN.profile_id}`)).toBe(true);
-    // The parent or guardian ticks the agreement; the student's Turn on is their assent (D87).
-    fireEvent.click(within(dialog).getByRole("checkbox", { name: "I'm this student's parent or guardian and I agree to this study." }));
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: "I'm the student, I'm 18 or over, and I agree to this study." }));
     fireEvent.click(turnOn);
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(core.consentSwitches.at(-1)).toEqual({ scope: "research_use", action: "on", guardian_agreed: true });
+    expect(core.consentSwitches.at(-1)).toEqual({ scope: "research_use", action: "on" });
     await waitFor(() => expect(study.dataset.studyState).toBe("on"));
-    expect(core.consents.get(BEN.profile_id)!.find((c) => c.scope === "research_use")).toMatchObject({ granted_by_role: "guardian", method: "in_app_guardian" });
-    // Pause, then switch it back on with no guardian step.
+    expect(core.consents.get(BEN.profile_id)!.find((c) => c.scope === "research_use")).toMatchObject({ granted_by_role: "student_18_plus", method: "in_app_notice" });
+    // Pause, then switch it back on in one step.
     fireEvent.click(within(study).getByRole("button", { name: "Pause" }));
     await waitFor(() => expect(study.dataset.studyState).toBe("paused"));
     fireEvent.click(within(study).getByRole("button", { name: "Turn back on" }));
@@ -77,6 +77,17 @@ describe("PRV-06", () => {
       kind: "research_export", profile_ids: [BEN.profile_id], destination: { kind: "file", path: "/synthetic/study-folder" },
       research_approval: { student_assent: true, school_approval_ref: "SCH-2026-014", protocol_ref: "PROT-7" },
     }]);
+  });
+
+  test("a profile not read as 18 or over is told it can't take part, with no guardian agreement", async () => {
+    const { core, study } = await family();
+    fireEvent.click(within(study).getByRole("button", { name: "Turn on…" }));
+    const dialog = await screen.findByRole("dialog", { name: "A learning study" });
+    expect(dialog.textContent).toContain("Only learners aged 18 or over can agree to a study, so this profile can't take part.");
+    expect(within(dialog).queryAllByRole("checkbox")).toHaveLength(0);
+    expect(dialog.textContent).not.toContain("guardian");
+    expect((within(dialog).getByRole("button", { name: "Turn on" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(core.consentSwitches).toEqual([]);
   });
 
   test("a student of 18 or over agrees for themselves, and can withdraw", async () => {

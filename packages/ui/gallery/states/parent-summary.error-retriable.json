@@ -1,6 +1,6 @@
 {
   "id": "parent-summary.error-retriable",
-  "title": "Parent summary, could not load",
+  "title": "Weekly summary, could not load",
   "component": "ParentSummary",
   "note": "The core could not give the digest; Try again reads it again.",
   "state": "error-retriable",

@@ -75,8 +75,8 @@ describe("UXS-33", () => {
     const before = window.print;
     window.print = print;
     render(<LocaleProvider locale="en"><ParentSummary profiles={profiles} controller={new ParentController(profiles)} /></LocaleProvider>);
-    await screen.findByText("This week Ada studied for 2 h 15 min across 4 days and secured 1 new idea in Physics.");
-    expect(screen.getByText("Ask Ada to show you one thing about Inside the atom that still feels tricky.")).toBeTruthy();
+    await screen.findByText("This week you studied for 2 h 15 min across 4 days and secured 1 new idea in Physics.");
+    expect(screen.getByText("Pick one thing about Inside the atom that still feels tricky and work through it again.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Print or save as PDF" }));
     expect(print).toHaveBeenCalledOnce();
     window.dispatchEvent(new Event("beforeprint"));
@@ -94,7 +94,7 @@ describe("UXS-33", () => {
     expect(document.querySelector("table")).toBeNull();
     cleanup();
     render(<LocaleProvider locale="en"><ParentSummaryContent view={{ digestStatus: "ready", digest: { ...DIGEST, activity: "low", minutes_total: 12 } }} name="Ama" onRetry={() => undefined} /></LocaleProvider>);
-    expect(screen.getByText("Not enough activity this week to summarise. Ama studied for 12 minutes.")).toBeTruthy();
+    expect(screen.getByText("Not enough activity this week to summarise. You studied for 12 minutes.")).toBeTruthy();
     expect(screen.queryByText("Ideas secured")).toBeNull(); // time studied only (JRN-13 F1)
     expect(document.querySelectorAll("[data-parent-day]")).toHaveLength(7);
   });

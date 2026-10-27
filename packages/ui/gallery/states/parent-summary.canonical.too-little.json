@@ -1,6 +1,6 @@
 {
   "id": "parent-summary.canonical.too-little",
-  "title": "Parent summary, too little to summarise",
+  "title": "Weekly summary, too little to summarise",
   "component": "ParentSummary",
   "note": "JRN-13 F1: a week with too little activity says so and shows the time studied only.",
   "state": "canonical",
@@ -71,7 +71,7 @@
     "page"
   ],
   "expectText": [
-    "Not enough activity this week to summarise. Ama studied for 12 minutes.",
+    "Not enough activity this week to summarise. You studied for 12 minutes.",
     "Wednesday",
     "12 min"
   ]

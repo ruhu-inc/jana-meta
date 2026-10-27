@@ -1,6 +1,6 @@
 {
   "id": "printed-report.canonical",
-  "title": "Parent summary as printed",
+  "title": "Weekly summary as printed",
   "component": "PrintedReport",
   "note": "DSN-22: the summary as it prints on A4, with the report header (the product's lockup and name, and the date generated) and without the on-screen actions; the page footer is the print stylesheet's.",
   "state": "canonical",
