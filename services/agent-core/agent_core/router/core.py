@@ -259,6 +259,10 @@ class Router:
     def _cloud_allowed(self, role: str) -> bool:
         return self._cloud_block(role) is None
 
+    def serves_locally(self, role: str) -> bool:
+        """The role's call would go to the device's own runtime now: there is one, and no cloud candidate may serve."""
+        return "local" in self.providers and not self._cloud_allowed(role)
+
     async def _drop_reason(
         self, candidate: Candidate, role: str, requires: dict[str, Any], installed: list[list[str]]
     ) -> str | None:

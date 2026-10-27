@@ -239,6 +239,10 @@ class Settings(BaseModel):
     # D128: the hardware classes that run the lean turn (`engine/lean.py`): lean decode shapes, a Coach without tools
     # or visuals, fewer Diagnoser candidates, and a reply with more than one ask repaired rather than regenerated.
     lean_classes: tuple[str, ...] = key(("low",), serves="AGT-28", layers=ENGINEERING, unit="hardware classes")
+    # W3 (SPEC §7): device classes whose turns run as the low class (its short prompts, lean shapes and fewer calls)
+    # while the Coach is served on the device: Muse Glimmer reads ~230 prompt tokens/s and reasons before every reply,
+    # so the full turn would take minutes. The session's own class returns with the cloud. Empty: never.
+    offline_lean_classes: tuple[str, ...] = key((), serves="AGT-28", layers=ENGINEERING, unit="hardware classes")
     one_ask_regenerations_lean: int = key(0, serves="PED-28", layers=ENGINEERING, unit="regenerations", ge=0, le=4)
     leak_relative_tolerance: float = key(1e-6, serves="PED-08", layers=ENGINEERING, ge=0, le=0.1)
     budget_reminder_fractions: tuple[float, ...] = key((0.5, 0.85), serves="AGT-08", layers=ENGINEERING)

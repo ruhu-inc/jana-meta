@@ -116,3 +116,26 @@ def test_a_turn_while_offline_asks_for_a_probe_once_the_last_check_is_old_enough
     connectivity.checked_ms -= 61_000
     connectivity.recheck_soon(60)
     assert connectivity._due < due  # old enough: probe now
+
+
+def test_an_offline_turn_on_a_listed_class_runs_as_the_low_class_and_the_class_returns_with_the_cloud() -> None:
+    from types import SimpleNamespace
+
+    from agent_core.engine.turn import Engine
+
+    network = {"now": "offline"}
+    caps = {m: cloud_capabilities(131072, 16384) for m in ("fast-model", "strong-model")}
+    router, _ = _router(ScriptedProvider([], kind="cloud", caps=caps), network)
+    engine = SimpleNamespace(deps=SimpleNamespace(router=router, settings=Settings(offline_lean_classes=("high",))),
+                             state=SimpleNamespace(hardware_class="high"))  # fmt: skip
+    Engine._class_for_turn(engine)  # type: ignore[arg-type]
+    assert engine.state.hardware_class == "low"  # Glimmer serves: short prompts, lean shapes, fewer calls
+    Engine._class_for_turn(engine)  # type: ignore[arg-type]
+    assert engine.state.hardware_class == "low"
+    network["now"] = "online"
+    Engine._class_for_turn(engine)  # type: ignore[arg-type]
+    assert engine.state.hardware_class == "high"  # Spark serves: the session's own class
+    engine.deps.settings = Settings()  # not listed: the class never changes
+    network["now"] = "offline"
+    Engine._class_for_turn(engine)  # type: ignore[arg-type]
+    assert engine.state.hardware_class == "high"

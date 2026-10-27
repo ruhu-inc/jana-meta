@@ -149,6 +149,8 @@ def settings_for_browser(settings: Settings) -> Settings:
             "study_batch_char_limit": 16000,
             "consent_dpia_ref": "local-synthetic-hackathon-notice",
             "cloud_voice_enabled": False,
+            # Offline (W3), a turn on Muse Glimmer runs as the low class: its short prompts and fewer calls.
+            "offline_lean_classes": ("mid", "high"),
         }
     )
 
