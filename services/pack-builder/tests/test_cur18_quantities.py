@@ -329,7 +329,7 @@ def test_cur18_proposal_needs_the_developer_key(tmp_path: Path, monkeypatch: pyt
 
 
 def test_quantity_proposals_refuse_a_non_gemini_transport() -> None:
-    model = proposals.Model("nebius", "test-model", "https://provider.invalid/v1", None, 1, 3)
+    model = proposals.Model("synthetic", "test-model", "https://provider.invalid/v1", None, 1, 3)
     with pytest.raises(ValueError, match="require a Gemini provider"):
         proposals.gemini_transport(model, "test-key-not-real", 5)
 

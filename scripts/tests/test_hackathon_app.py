@@ -100,9 +100,9 @@ def test_local_model_pin_keeps_cloud_candidates() -> None:
             "strong": ["cloud:primary/strong-model", "local:old"],
         }
     }
-    _pin(data, "nvidia-nemotron-nano-4b")
-    assert data["tiers"]["fast"] == ["local:nvidia-nemotron-nano-4b", "cloud:primary/fast-model"]
-    assert data["tiers"]["strong"] == ["local:nvidia-nemotron-nano-4b", "cloud:primary/strong-model"]
+    _pin(data, "muse-glimmer")
+    assert data["tiers"]["fast"] == ["local:muse-glimmer", "cloud:primary/fast-model"]
+    assert data["tiers"]["strong"] == ["local:muse-glimmer", "cloud:primary/strong-model"]
 
 
 def test_sponsor_never_grants_consent_and_restart_keeps_credential(
