@@ -73,6 +73,10 @@ REASONING_HEADROOM = {"none": 1536, "low": 2048, "medium": 4096, "high": 8192}
 # A local model that always reasons (Muse Glimmer at reasoning_strength low, JM-D11) uses ~150-600 output tokens on
 # reasoning before its reply (SPEC §7), so the role's cap gets this much room on top.
 LOCAL_REASONING_HEADROOM = 1024
+# A cloud call still unanswered after this long has the network probed again; if the probe finds it gone the call is
+# dropped and served locally, so a power cut costs seconds rather than the request timeout (W3, MDL-24).
+CLOUD_STALL_CHECK_S = 5.0
+USABLE_NETWORK = ("online", "metered")
 
 
 class RouterOutsideEngineContextError(RuntimeError):
@@ -204,6 +208,10 @@ class Router:
     shared: Shared = field(default_factory=Shared)
     # The connectivity layer's state (ARC-08): offline or limited skips cloud candidates without waiting (MDL-24).
     network: Callable[[], str] | None = None
+    # Probe now and return the new state: a cloud call that stalls asks whether the network is still there (W3).
+    recheck: Callable[[], Awaitable[str]] | None = None
+    # Probe soon while offline: a call the cloud would have served, so the cloud returns once the network does.
+    recheck_soon: Callable[[], None] | None = None
     # Cloud cost budgets and the term's allowance (MDL-29, BIZ-07): over a limit, cloud candidates are skipped.
     budget: Any = None
     # UXS-03, MDL-05: the student chose "Use the faster tutor" on this computer: a role of the strong tier is served
@@ -235,7 +243,12 @@ class Router:
             return "cloud tier off"
         if not self.cloud_on(role):
             return "cloud tier off"
-        if self.cloud_offline or (self.network is not None and self.network() not in ("online", "metered")):
+        online = self.network is None or self.network() in USABLE_NETWORK
+        if self.cloud_offline and self.network is not None and online:
+            self.cloud_offline = False  # a probe found the network again after the failure that marked it (W3)
+        if self.cloud_offline or not online:
+            if self.recheck_soon is not None:
+                self.recheck_soon()
             return "offline"
         if self.cloud_paused:
             return "paused"
@@ -682,6 +695,39 @@ class Router:
         raise _Fallback(trigger, local_only)
 
     async def _call(
+        self,
+        provider: Any,
+        model: str,
+        messages: list[Message],
+        tools: list[ToolSchema],
+        settings: dict[str, Any],
+        stream: bool,
+        on_text: Callable[[str], None] | None,
+    ) -> AssistantTurn:
+        pending = self._request(provider, model, messages, tools, settings, stream, on_text)
+        if getattr(provider, "kind", "local") != "cloud" or self.recheck is None:
+            return await pending
+        return await self._watched(pending)
+
+    async def _watched(self, pending: Awaitable[AssistantTurn]) -> AssistantTurn:
+        """A cloud call that has not finished after `CLOUD_STALL_CHECK_S` has the network probed (again each time);
+        when the probe finds it gone the call is dropped as `network_unavailable`, which marks the cloud offline and
+        serves the call locally (W3: Wi-Fi off mid-call must not wait out the request timeout)."""
+        assert self.recheck is not None
+        call = asyncio.ensure_future(pending)
+        try:
+            while True:
+                done, _ = await asyncio.wait({call}, timeout=CLOUD_STALL_CHECK_S)
+                if done:
+                    return call.result()
+                if await self.recheck() not in USABLE_NETWORK:
+                    raise ProviderError("network_unavailable", "the network went while the cloud call was waiting")
+        finally:
+            if not call.done():
+                call.cancel()
+                await asyncio.gather(call, return_exceptions=True)
+
+    async def _request(
         self,
         provider: Any,
         model: str,

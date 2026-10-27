@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import datetime
 import json
-from collections.abc import Callable, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -23,6 +23,8 @@ from agent_core.router.budget import CloudBudget, MemorySpend, SpendStore
 
 MODELS_FILE = Path(__file__).with_name("cloud_models.json")
 SLOTS = ("primary", "fallback")
+# While offline, a turn the cloud would have served asks for a probe once the last check is this old (W3, MDL-24).
+RECHECK_AFTER_S = 10.0
 
 __all__ = ["SLOTS", "CloudSession", "OnlineLayer", "cloud_models", "cloud_session"]
 
@@ -38,6 +40,8 @@ class CloudSession:
     providers: dict[str, GatewayProvider]
     budget: CloudBudget
     network: Callable[[], str]
+    recheck: Callable[[], Awaitable[str]] | None = None  # probe now and return the state (a stalled cloud call)
+    recheck_soon: Callable[[], None] | None = None  # probe soon while offline (a turn the cloud would have served)
 
 
 def today() -> str:
@@ -76,4 +80,6 @@ def cloud_session(
     budget = CloudBudget(settings.cloud_budget_session_usd, settings.cloud_budget_student_day_usd,
                          tuple(settings.cloud_budget_reminders), spend or MemorySpend(), today,
                          allowance_tokens=allowance_tokens, on_reminder=on_reminder)  # fmt: skip
-    return CloudSession(providers, budget, lambda: layer.connectivity.state)
+    connectivity = layer.connectivity
+    return CloudSession(providers, budget, lambda: connectivity.state, connectivity.check,
+                        lambda: connectivity.recheck_soon(RECHECK_AFTER_S))  # fmt: skip

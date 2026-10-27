@@ -13,6 +13,8 @@ Cloud voice (VOC-28, `cloud_gateway.voice`):
   WS /v1/voice/realtime                             the Realtime wire subset (VOC-25) plus the device voice tunnel
 Probes (ARC-08, OBS-22):
   GET /v1/ping -> 204;  GET /v1/status -> {status: ok | degraded | outage}
+  GET /v1/ping?upstream=1 -> 204, or 503 provider_unavailable when the primary provider's host takes no connection
+                             (the device's connectivity probe: a gateway on the same laptop answers with Wi-Fi off)
 
 Every device-facing body is read through the gateway contract and every reply built through its models (D39):
 `DeviceRegistration`, `ChallengeRequest`, `TokenRequest` and `ChatCompletionRequest` in; `DeviceRegistered`,
@@ -31,9 +33,10 @@ import hmac
 import json
 import logging
 import time
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -67,6 +70,20 @@ FEATURE = "cloud_tier"
 PSEUDONYM_HEADER = "x-session-pseudonym"
 CONTRACT = "cloud/gateway#/$defs/"
 log = logging.getLogger("cloud_gateway")
+UPSTREAM_CHECK_TTL_S = 5.0
+UPSTREAM_CHECK_TIMEOUT_S = 2.0
+
+
+async def tcp_reachable(host: str, port: int, timeout_s: float) -> bool:
+    """A TCP connection to `host:port` opens within the timeout (a name that does not resolve fails at once)."""
+    try:
+        _, writer = await asyncio.wait_for(asyncio.open_connection(host, port), timeout_s)
+    except (OSError, TimeoutError):
+        return False
+    writer.close()
+    with contextlib.suppress(OSError):
+        await writer.wait_closed()
+    return True
 
 
 def _error(error: DeviceError) -> JSONResponse:
@@ -128,8 +145,22 @@ class Gateway:
         self.quotas = Quotas(config, self.store, alerts)
         self.operations = GatewayOperations(config.storage_dir, config.operations, alerts=alerts)
         self.health = UpstreamHealth(config.objectives)
+        self.reach: Callable[[str, int, float], Awaitable[bool]] = tcp_reachable
+        self._upstream: tuple[float, bool] | None = None  # (checked at, reachable)
         self.purge(clock())
         self._purged_hour = int(clock() // 3600)
+
+    async def upstream_reachable(self) -> bool:
+        """The primary provider's host takes a TCP connection now (ARC-08): no request, no key, no credit. The answer
+        is kept for a few seconds, so many devices probing at once cost one connection."""
+        now = time.monotonic()
+        if self._upstream is not None and now - self._upstream[0] < UPSTREAM_CHECK_TTL_S:
+            return self._upstream[1]
+        spec = self.config.providers.get(self.config.slots.get("primary", ""))
+        host = urlsplit(spec.base_url).hostname if spec is not None else None
+        reachable = bool(host) and await self.reach(str(host), 443, UPSTREAM_CHECK_TIMEOUT_S)
+        self._upstream = (time.monotonic(), reachable)
+        return reachable
 
     async def json_body(self, request: Request, limit: int | None = None) -> dict[str, Any] | JSONResponse:
         """The JSON object body, read no further than `limit` bytes (the declared length is checked first, then the
@@ -536,7 +567,9 @@ def create_app(
         return await gw.chat(request)
 
     @app.get("/v1/ping")
-    async def ping() -> Response:
+    async def ping(request: Request) -> Response:
+        if request.query_params.get("upstream") == "1" and not await gw.upstream_reachable():
+            return _plain_error(503, "provider_unavailable", "Cloud service is unavailable; continue locally.")
         return Response(status_code=204, headers={"Cache-Control": "no-store"})
 
     @app.get("/v1/status")

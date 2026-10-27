@@ -6,7 +6,9 @@ import asyncio
 import base64
 from pathlib import Path
 
+import pytest
 from agent_core.providers.errors import classify_http
+from cloud_gateway import app as gateway_app
 from gateway_stubs import FAKE_KEYS, Clock, Device, Output, gateway_config, harness
 
 CHAT = {"model": "primary/fast-model", "messages": [{"role": "user", "content": "Hello"}]}
@@ -105,6 +107,39 @@ def test_access_token_expires(tmp_path: Path) -> None:
         assert (await device.chat(h.client, CHAT)).status_code == 401
         await device.login(h.client)
         assert (await device.chat(h.client, CHAT)).status_code == 200
+
+    asyncio.run(main())
+
+
+def test_ping_with_upstream_reports_whether_the_provider_can_be_reached(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A gateway on the same laptop answers its own ping with Wi-Fi off; `upstream=1` asks whether the primary
+    provider's host takes a connection, so the device's probe sees the power cut (W3, ARC-08)."""
+    reachable = {"now": False}
+    asked: list[tuple[str, int]] = []
+
+    async def reach(host: str, port: int, timeout_s: float) -> bool:
+        asked.append((host, port))
+        return reachable["now"]
+
+    monkeypatch.setattr(gateway_app, "tcp_reachable", reach)
+
+    async def main() -> None:
+        h = harness(gateway_config(tmp_path))
+        assert (await h.client.get("/v1/ping")).status_code == 204  # the plain ping never looks upstream
+        assert asked == []
+        down = await h.client.get("/v1/ping", params={"upstream": "1"})
+        assert down.status_code == 503 and down.json()["error"]["code"] == "provider_unavailable"
+        assert classify_http(down.status_code, down.json()) == "overloaded" and asked[0][1] == 443
+        reachable["now"] = True
+        assert (await h.client.get("/v1/ping", params={"upstream": "1"})).status_code == 503  # kept a few seconds
+        assert len(asked) == 1
+        gateway_app.UPSTREAM_CHECK_TTL_S, saved = 0.0, gateway_app.UPSTREAM_CHECK_TTL_S
+        try:
+            assert (await h.client.get("/v1/ping", params={"upstream": "1"})).status_code == 204
+        finally:
+            gateway_app.UPSTREAM_CHECK_TTL_S = saved
 
     asyncio.run(main())
 

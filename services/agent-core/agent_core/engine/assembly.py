@@ -981,6 +981,8 @@ class AppRuntime:
         engine.deps.router.prefer_fast = self.faster_tutor_preference  # "Use the faster tutor", remembered (UXS-03)
         if cloud is not None:
             engine.deps.router.network = cloud.network
+            engine.deps.router.recheck = cloud.recheck
+            engine.deps.router.recheck_soon = cloud.recheck_soon
             engine.deps.router.budget = cloud.budget
         if self.online is not None:
             profile = self.public_profile()

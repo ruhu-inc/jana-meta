@@ -100,6 +100,15 @@ class Connectivity:
         self._delay_s = self.interval_s
         self._due = self.clock() + self._delay_s
 
+    def recheck_soon(self, min_age_s: float) -> None:
+        """Something would use the network now (a turn the cloud would have served): while offline or limited, probe
+        again as soon as the last check is `min_age_s` old, rather than waiting out the backoff (W3: the cloud tutor
+        returns on the next turn after Wi-Fi comes back)."""
+        if self.state not in ("offline", "limited"):
+            return
+        if time.time() * 1000 - self.checked_ms >= min_age_s * 1000:
+            self._poke()
+
     # --- probing ------------------------------------------------------------------------------------------------
 
     async def check(self) -> NetworkState:

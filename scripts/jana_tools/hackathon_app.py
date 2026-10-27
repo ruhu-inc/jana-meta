@@ -12,6 +12,7 @@ import logging
 import os
 import secrets
 import time
+from functools import partial
 from pathlib import Path
 
 import httpx
@@ -21,6 +22,7 @@ from agent_core.config import Settings
 from agent_core.engine.assembly import AppRuntime
 from agent_core.net.credentials import ID_REF
 from agent_core.net.layer import OnlineLayer
+from agent_core.net.state import ProbeOutcome
 from agent_core.router.hardware import TutorPath
 from agent_core.store import subscription as subscriptions
 from agent_core.store.keystore import FileKeyStore, KeyStore, MemoryKeyStore
@@ -117,6 +119,7 @@ class SponsoredRuntime(AppRuntime):
         layer.client._client = httpx.AsyncClient(
             transport=GatewayHop(self.gateway_port), trust_env=False, follow_redirects=False, timeout=180
         )
+        layer.probe = partial(upstream_probe, self.gateway_port)
         return layer
 
     def tutor_path(self) -> TutorPath:
@@ -148,6 +151,18 @@ def settings_for_browser(settings: Settings) -> Settings:
             "cloud_voice_enabled": False,
         }
     )
+
+
+async def upstream_probe(port: int, _host: str) -> ProbeOutcome:
+    """The connectivity probe (ARC-08) for a gateway on this laptop: it answers its own ping with Wi-Fi off, so the
+    probe asks it whether Meta answers too (W3). Offline, the router serves every call on the local model and the
+    connectivity layer keeps probing, so the cloud tutor returns once Meta can be reached again."""
+    try:
+        async with httpx.AsyncClient(trust_env=False) as probe:
+            reply = await probe.get(f"http://127.0.0.1:{port}/v1/ping", params={"upstream": "1"}, timeout=4)
+    except httpx.HTTPError:
+        return "failed"
+    return "ok" if reply.status_code == 204 else "failed"
 
 
 async def check_gateway(port: int) -> None:
@@ -226,7 +241,8 @@ async def connect(runtime: AppRuntime, core: CoreService) -> None:
 
     sponsor()
     core.on_profile_created.append(sponsor)
-    # No local scripted or downloaded model is substituted for live cloud calls.
+    # No scripted model stands in for live cloud calls. A local Muse Glimmer runtime the launcher started arrives after
+    # ready (control.runtime_endpoint) and serves when the cloud cannot: the power cut (W3, SPEC §7).
     runtime.providers.pop("local", None)
     if runtime.link is not None:
         runtime.link = None
