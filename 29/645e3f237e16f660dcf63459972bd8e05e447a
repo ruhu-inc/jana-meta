@@ -1,0 +1,37 @@
+services/tool-worker/tool_worker/functions/units.py
+  s_6faae931e6860d::t_2ebaa04e7d0a44 55,116-117
+  s_6faae931e6860d::t_14ead1510b2f6d 59,61-93,95-96
+  s_6faae931e6860d::t_f1db9dc788c4b1 60
+services/tool-worker/tests/test_false_accepts.py
+  s_6faae931e6860d::t_1b0bd274a29bba 173-176
+  s_6faae931e6860d::t_f1db9dc788c4b1 116-119
+  s_6faae931e6860d::t_48ce0e50c52220 177-178
+  s_6faae931e6860d::t_1b33be9ef6870e 1-53,57-113,115,124-142,146-150,154-157,159-167,169
+  s_6faae931e6860d::t_f72bfba8e193e1 54-56,143-145
+  s_6faae931e6860d::t_38c6626a3dd9e1 114
+  s_6faae931e6860d::t_2ebaa04e7d0a44 120-123,151-153
+  s_6faae931e6860d::t_1d3deb5d89405d 168,170-172
+  s_6faae931e6860d::t_14ead1510b2f6d 158
+services/tool-worker/tool_worker/functions/answers.py
+  s_6faae931e6860d::t_1b0bd274a29bba 165-174,176-177,431
+  s_6faae931e6860d::t_d27047e6380567 191-192
+services/tool-worker/tool_worker/functions/maths.py
+  s_6faae931e6860d::t_9ac270451881c6 21,202-210,214-215,217,220-224,239
+  s_6faae931e6860d::t_38c6626a3dd9e1 109-119,121-128,132-133,141,144-147,150-155,157,1256-1267,1300-1302
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "29645e3f237e16f660dcf63459972bd8e05e447a",
+  "prompts": {},
+  "sessions": {
+    "s_6faae931e6860d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d1b3406-56cb-46bc-b45f-ac1d14574342",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
