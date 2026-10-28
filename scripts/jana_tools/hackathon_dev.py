@@ -86,9 +86,9 @@ def main() -> int:
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port must be between 1 and 65535")
-    # Only the gateway may hold a provider key: none reaches the app, its core or the local model runtime.
-    provider_keys = {"META_API_KEY", "MODEL_API_KEY", "NVIDIA_API_KEY", "NEBIUS_API_KEY", "TAVILY_API_KEY"}
-    env = {key: value for key, value in os.environ.items() if key not in provider_keys}
+    # Only the gateway may hold a provider key: none reaches the app, its core or the local model runtime, so every
+    # `*_API_KEY` in the shell (META_API_KEY, Meta's MODEL_API_KEY, NVIDIA_API_KEY, any other) is left out.
+    env = {key: value for key, value in os.environ.items() if not key.upper().endswith("_API_KEY")}
     env.update(
         JANA_META_GATEWAY_CONFIG="services/cloud-gateway/deploy/meta-dev.toml",
         JANA_DEV_DATA_DIR=str(args.data_dir.resolve()),
