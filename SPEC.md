@@ -586,6 +586,24 @@ recorded car question):
 - Spend for this investigation: about $0.50 of Spark (three harness variants, two replays, three browser turns); the
   ledger showed $9.39 of the day's $10 afterwards, parallel sessions included.
 
+**Measured 2026-10-27/28, demo rehearsal** (§14 in the browser demo host on main, 1280×800, its own gateway on the
+shared ledger, Glimmer loaded with projector and DFlash; test profile "Ada", born 1994). The paid steps waited for the
+UTC day (the 10-27 ledger had $5.18 spent and $4.64 of unreleased holds against the $10 cap) and for the owner's
+in-app consents. Offline and on Glimmer, with the cloud tutor off:
+
+| Step | Measured | Target |
+|---|---|---|
+| Sign-up | an under-18 date refused in place; an adult date reaches "You're ready" | — |
+| Practice: answer → mark | under 1 s, no model call | instant ✔ |
+| Mock paper (Physics Paper 1, set 1) | listed → opened 2.6 s (load 430); Start → question 1 94 ms; submit → marks by topic 339 ms | ✔ |
+| Glimmer, short definition ("What is the unit of force?"), warm | **16.0 s**: Diagnoser 7.5 s + Coach 8.5 s (prompts from cache in < 1 s; ~200 output tokens each at 27–36 tok/s) | ≤ 8 s ✘ |
+| Glimmer, same kind, first turn after a restart | 29.3 s (Diagnoser 11.3 s + Coach 17.9 s) | ✘ |
+| Glimmer, "How do I solve 2x + 3 = 11?" at load average 430 | 123 s (Diagnoser 25 s, Solver 31 + 21 s, Coach 43 s; prompts read at ~67 tok/s) | ✘ |
+
+The owner's call for the video (2026-10-27): practice and the mock paper live, then one short Glimmer reply sped up
+with an on-screen label saying so; unchecked words are never streamed. Warm Glimmer with one question before
+recording. Spend for the offline half: $0.
+
 ## 13. Workstreams and plan
 
 Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter lands; W5 and W6 any time):
@@ -629,6 +647,18 @@ checks every step with code, keeps working without power or internet, and uses M
 5. **Power cut:** the network drops; practice keeps marking instantly from the signed packs, a mock paper opens, and
    one Muse Glimmer reply shows the tutor still works on the laptop.
 6. Close: Meta for seeing, reasoning, researching and offline; every number checked; never the answer handed over.
+
+**Rehearsal punch list** (2026-10-27/28, browser demo host on main; numbers in §12), worst on camera first:
+
+| # | Seen | State |
+|---|---|---|
+| 1 | With Glimmer running, first run said "No tutor model is installed yet" and Home "the tutor can't take questions"; with the network gone the composer would have been hidden, so no Glimmer reply in the power cut | Fixed (c790ea3): a runtime the shell attaches without a launch plan is listed as installed and serving |
+| 2 | A Glimmer reply takes 16 s warm, 29 s cold | Owner: sped up in the video with a label |
+| 3 | "Saving battery: shorter answers" banner (the laptop was on battery), and answers really are shorter | Record plugged in |
+| 4 | Board's Given line "2x+3=11 = 2x + 3 = 11" | Fixed (5cc7115) |
+| 5 | Next up offers a Physics lesson with Mathematics selected on a new profile; the mock report's "39 for answers marked on their own" for 39 unanswered; the guardian wording flashing while Online features loads | Cleanup session |
+| 6 | Definition replies open "Let me look at this problem." and offer "Hint 1 of 5"; "F = m a" breaks across a line | Open, minor |
+| 7 | The profile closes after ~15 min idle ("Choose your profile again"); the profile menu's items have no accessible names | Open, minor |
 
 ## 15. Open items for the owner
 
