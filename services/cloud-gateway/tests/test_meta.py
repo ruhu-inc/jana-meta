@@ -110,7 +110,7 @@ def test_meta_key_comes_from_the_gateway_environment_only_and_never_shows(enviro
     key = source.get("meta_api_key")
     assert key is not None and key.reveal() == "fake-meta-key"
     assert "fake-meta-key" not in repr(key) and "fake-meta-key" not in repr(source)
-    assert source.get("nebius_api_key") is None
+    assert source.get("openai_api_key") is None
 
 
 def test_secret_scanner_finds_a_meta_key() -> None:
