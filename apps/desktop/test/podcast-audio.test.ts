@@ -10,7 +10,7 @@ function context(decode: Promise<unknown>) {
   return { node, value };
 }
 
-test("decoded NVIDIA audio plays at the existing speech rate and Stop releases the playback node", async () => {
+test("decoded Podcast audio plays at the existing speech rate and Stop releases the playback node", async () => {
   const { node } = context(Promise.resolve({ duration: 4, numberOfChannels: 1 }));
   const player = new BrowserPodcastAudio(), callbacks = { end: vi.fn(), error: vi.fn() };
   player.activate();

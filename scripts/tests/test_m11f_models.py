@@ -62,14 +62,13 @@ def mdl27_bakeoff_record_required() -> None:
     # A model the record excluded on that class (here: it does not fit the minimum laptop) is refused there.
     excluded = {
         "version": 2,
-        "models": [_entry("gemma-4-31b", {"low": {"tiers": ["fast"], "bakeoff": "bko_test"}})],
+        "models": [_entry("synthetic-31b", {"low": {"tiers": ["fast"], "bakeoff": "bko_test"}})],
     }
     assert any("did not run it on this class" in e for e in bakeoff_errors(excluded, recorded))
-    # The shipped file today: D6's assignments and Muse Glimmer's (JM-D11) rest on no complete bake-off record, so
-    # the release check refuses every one of them.
+    # The shipped file today: Muse Glimmer's assignment (JM-D11) rests on no complete bake-off record, so the
+    # release check refuses it.
     shipped = release_errors()
-    assert {e.split(":")[0] for e in shipped} == {"qwen3-vl-8b@low", "gemma-4-12b@mid", "gemma-4-12b@high",
-                                                 "muse-glimmer-30b@high"}
+    assert {e.split(":")[0] for e in shipped} == {"muse-glimmer-30b@high"}
     assert all("no bake-off record" in e for e in shipped)
 
 

@@ -17,12 +17,50 @@ import httpx
 
 from cloud_gateway.config import VoiceTts
 from cloud_gateway.custody import Secret
-from cloud_gateway.podcast_speech import SpeechError, magpie_wav
+from cloud_gateway.podcast_speech import MAX_AUDIO, SpeechError, validate_audio
 from cloud_gateway.providers.base import UpstreamError
 
+BASE = "https://877104f7-e885-42b9-8de8-f6e4c6303969.invocation.api.nvcf.nvidia.com"
 SOURCE_RATE, RATE = 22_050, 24_000
 CHUNK = 12_000 * 2  # half a second of output per yield
-MAX_TEXT = 600  # the function's own bound (podcast_speech.MAX_TEXT)
+MAX_TEXT = 600  # the function's own bound
+
+
+async def magpie_wav(client: httpx.AsyncClient, key: str, text: str, voice: str) -> bytes:
+    """One Magpie synthesis on the API-catalog function: a validated 22.05 kHz mono PCM16 WAV of exactly `text`."""
+    try:
+        async with client.stream(
+            "POST",
+            BASE + "/v1/audio/synthesize",
+            headers={"authorization": "Bearer " + key},
+            files={
+                k: (None, v)
+                for k, v in {
+                    "text": text,
+                    "language": "en-US",
+                    "voice": voice,
+                    "encoding": "LINEAR_PCM",
+                    "sample_rate_hz": "22050",
+                }.items()
+            },
+        ) as reply:
+            if reply.status_code in (401, 403):
+                raise SpeechError("neural_speech_key_rejected")
+            if reply.status_code == 429:
+                raise SpeechError("neural_speech_limit")
+            if reply.status_code != 200:
+                raise SpeechError("neural_speech_unavailable")
+            data, size = [], 0
+            async for part in reply.aiter_bytes():
+                size += len(part)
+                if size > MAX_AUDIO:
+                    raise SpeechError("neural_speech_invalid_audio")
+                data.append(part)
+            audio = b"".join(data)
+    except httpx.HTTPError:
+        raise SpeechError("neural_speech_unavailable") from None
+    validate_audio(audio, SOURCE_RATE)
+    return audio
 
 
 def resample(pcm: bytes, source: int = SOURCE_RATE, target: int = RATE) -> bytes:

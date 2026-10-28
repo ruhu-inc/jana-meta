@@ -473,7 +473,6 @@ def create_app(
             for connection in list(app.state.voice.live.values()):
                 await connection.close()
             await app.state.voice.stack.aclose()
-            await app.state.podcast_speech.client.aclose()
             await app.state.segment.sam.aclose()
             await app.state.research.aclose()
             await gw.providers.aclose()

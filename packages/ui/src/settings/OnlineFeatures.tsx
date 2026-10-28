@@ -19,9 +19,10 @@ import { useProfiles } from "../profiles/ProfilePicker.js";
 type Run = (work: () => Promise<unknown>) => void;
 type Sub = CloudSubscription | "loading" | "failed";
 
-function Cloud({ subscription, names, selfConsent, onConsent, onEnd }: { subscription: Sub; names: string[]; selfConsent: boolean; onConsent: () => void; onEnd: () => void }) {
+function Cloud({ subscription, names, selfConsent, known, onConsent, onEnd }: { subscription: Sub; names: string[]; selfConsent: boolean; known: boolean; onConsent: () => void; onEnd: () => void }) {
   const t = useT();
-  if (subscription === "loading") return <Skeleton lines={1} />;
+  // Whose consent is awaited depends on the profile, so nothing is said about it until the profile is read.
+  if (subscription === "loading" || (subscription !== "failed" && subscription.state === "pending_consent" && !known)) return <Skeleton lines={1} />;
   if (subscription === "failed") return <p className="text-ui text-ink">{t("settings.online.cloud.unavailable")}</p>;
   if (subscription.state === "active") {
     return (
@@ -129,7 +130,7 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
             <p className="text-ui text-ink">{t(adult === false ? "study.access.settings_guardian" : "study.access.settings_self")}</p>
             {adult && <Button onClick={() => setAsking("study_materials")}>{t("study.access.review_consent")}</Button>}
           </div>}
-          {feature === "cloud_tier" && <Cloud subscription={subscription} names={names} selfConsent={selfConsent} onConsent={() => setDialog("consent")} onEnd={() => setDialog("end")} />}
+          {feature === "cloud_tier" && <Cloud subscription={subscription} names={names} selfConsent={selfConsent} known={adult !== null || view.active === null} onConsent={() => setDialog("consent")} onEnd={() => setDialog("end")} />}
         </div>
       ))}
       <div className="border-t border-line pt-2">

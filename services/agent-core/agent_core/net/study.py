@@ -143,7 +143,6 @@ class StudyCloud:
                 "request_id": request_id,
                 "text": text,
                 "voice_index": voice_index,
-                "nvidia_consent": True,
             },
         )
         if not isinstance(reply, dict) or not isinstance(reply.get("audio_base64"), str):

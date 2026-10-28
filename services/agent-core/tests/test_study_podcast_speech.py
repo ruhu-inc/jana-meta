@@ -53,7 +53,7 @@ class Cloud:
 
     async def send(self, conn, method, path):
         self.guard(conn)
-        return {"enabled": True, "configured": True, "provider": "nvidia_magpie"}
+        return {"enabled": True, "configured": True, "provider": "kokoro"}
 
     async def podcast_audio(self, conn, text, key, voice_index):
         self.guard(conn)
@@ -75,10 +75,9 @@ def test_native_neural_audio_uses_the_saved_passage_not_client_text_and_requires
             "claim": 0,
             "offset": 0,
             "text_sha256": hashlib.sha256(passage["text"].encode()).hexdigest(),
-            "nvidia_consent": True,
         }
         assert (await api.call("POST", path, body)).status_code == 401
-        for change in ({"text": "invented text"}, {"text_sha256": "0" * 64}, {"nvidia_consent": False}):
+        for change in ({"text": "invented text"}, {"text_sha256": "0" * 64}, {"nvidia_consent": True}):
             assert (await api.call("POST", path, {**body, **change}, profile=token, headers=headers)).status_code != 200
         assert cloud.sent == []
         cloud.allowed = False
@@ -92,7 +91,7 @@ def test_native_neural_audio_uses_the_saved_passage_not_client_text_and_requires
     with_api(tmp_path, run, settings())
 
 
-def test_private_marked_sources_never_reach_the_nvidia_trial(tmp_path):
+def test_private_marked_sources_are_never_sent_for_online_narration(tmp_path):
     async def run(api, runtime):
         token, aid, headers, passage = await podcast(api, runtime, private=True)
         cloud = Cloud()
@@ -101,7 +100,6 @@ def test_private_marked_sources_never_reach_the_nvidia_trial(tmp_path):
             "claim": 0,
             "offset": 0,
             "text_sha256": hashlib.sha256(passage["text"].encode()).hexdigest(),
-            "nvidia_consent": True,
         }
         result = await api.call(
             "POST", f"/v1/study/aids/{aid['aid_id']}/neural-speech", body, profile=token, headers=headers
@@ -129,7 +127,6 @@ def test_consent_withdrawal_during_synthesis_withholds_audio(tmp_path):
             "claim": 0,
             "offset": 0,
             "text_sha256": hashlib.sha256(passage["text"].encode()).hexdigest(),
-            "nvidia_consent": True,
         }
         pending = asyncio.create_task(
             api.call("POST", f"/v1/study/aids/{aid['aid_id']}/neural-speech", body, profile=token, headers=headers)
@@ -152,5 +149,15 @@ def test_buffered_passage_rechecks_consent_before_playback_without_synthesizing_
         cloud.allowed = False
         assert (await api.call("GET", path, profile=token, headers=headers)).status_code == 403
         assert cloud.sent == []
+
+    with_api(tmp_path, run, settings())
+
+
+def test_the_podcast_voice_status_names_the_gateways_own_voice(tmp_path):
+    async def run(api, runtime):
+        token, _, _, _ = await podcast(api, runtime)
+        runtime.core.study.cloud = Cloud()
+        status = await api.call("GET", "/v1/study/podcast-voice", profile=token)
+        assert status.json() == {"enabled": True, "configured": True, "provider": "kokoro"}
 
     with_api(tmp_path, run, settings())

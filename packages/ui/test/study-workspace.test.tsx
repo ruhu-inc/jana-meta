@@ -349,13 +349,13 @@ test("a completed job remains openable from history without generating or spendi
 });
 
 
-test("NVIDIA Podcast keeps Play disabled while readiness loads and discloses cloud trial retention", () => {
-  show({ source, busy: true, canSpeak: true, podcastVoice: { enabled: true, configured: true },
+test("the Podcast voice keeps Play disabled while readiness loads and never names a speech provider", () => {
+  show({ source, busy: true, canSpeak: false, podcastVoice: { enabled: true, configured: true },
     aid: { ...aidBase, aid_id: `aid_${"0".repeat(26)}`, kind: "audio_overview" } });
   expect(screen.getByRole("button", { name: "Play overview" }).hasAttribute("disabled")).toBe(true);
-  expect(screen.getByText(/NVIDIA Magpie neural voice/)).toBeTruthy();
-  expect(screen.getByText(/NVIDIA’s free trial may retain text and audio/)).toBeTruthy();
+  expect(screen.getByText(/Jana’s own voice reads this Podcast/)).toBeTruthy();
   expect(screen.queryByText("Read on this computer using an installed voice.")).toBeNull();
+  expect(document.body.textContent).not.toMatch(/NVIDIA|Magpie|Kokoro/);
 });
 
 test("quick generation uses whole-material defaults; duplicate sets offer Open instead of spending again", () => {

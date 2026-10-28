@@ -115,7 +115,7 @@ export class StudyWorkspaceController {
     const generation = this.profiles.generation;
     try {
       const status = await this.commands().get<{ enabled: boolean; configured: boolean; provider: string }>("/v1/study/podcast-voice");
-      if (generation !== this.profiles.generation || typeof status.enabled !== "boolean" || typeof status.configured !== "boolean" || status.provider !== "nvidia_magpie") return;
+      if (generation !== this.profiles.generation || typeof status.enabled !== "boolean" || typeof status.configured !== "boolean" || typeof status.provider !== "string") return;
       this.patch({ podcastVoice: { enabled: status.enabled, configured: status.configured }, canSpeak: status.enabled ? status.configured && !!this.podcastAudio?.available() : this.speech?.available() ?? false });
     } catch { /* Older cores retain their installed-voice path; configured neural failures never downgrade silently. */ }
   }
@@ -553,7 +553,7 @@ export class StudyWorkspaceController {
       if (neural) {
         const text_sha256 = await sha(new TextEncoder().encode(passage.text));
         if (!current()) return null;
-        audio = await this.commands().request<Blob>("POST", `/v1/study/aids/${aid.aid_id}/neural-speech`, { claim, offset, text_sha256, nvidia_consent: true }, clientId(), this.headers(), true);
+        audio = await this.commands().request<Blob>("POST", `/v1/study/aids/${aid.aid_id}/neural-speech`, { claim, offset, text_sha256 }, clientId(), this.headers(), true);
         if (!current()) return null;
         if (audio.type !== "audio/wav" || audio.size < 44 || audio.size > 6000000) throw new Error("invalid neural audio");
       }
