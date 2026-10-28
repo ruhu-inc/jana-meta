@@ -117,21 +117,21 @@ def sec17_release_core_needs_shell_keys(tmp_path: Path) -> None:
 def test_shell_key_store_round_trip_and_results() -> None:
     sent: list[dict[str, Any]] = []
     keys = ShellKeyStore.from_control({"type": "control.keys", "store": "os_keychain",
-                                       "entries": [{"ref": "jana.device-db", "value": encode_secret(b"k" * 32)}]},
+                                       "entries": [{"ref": "jana-meta.device-db", "value": encode_secret(b"k" * 32)}]},
                                       sent.append)  # fmt: skip
-    assert keys.get("jana.device-db") == b"k" * 32 and keys.os_keychain
-    keys.put("jana.service-credential.id", b"dcr_example")
-    keys.delete("jana.device-db")
-    assert sent == [{"type": "control.key_put", "ref": "jana.service-credential.id",
+    assert keys.get("jana-meta.device-db") == b"k" * 32 and keys.os_keychain
+    keys.put("jana-meta.service-credential.id", b"dcr_example")
+    keys.delete("jana-meta.device-db")
+    assert sent == [{"type": "control.key_put", "ref": "jana-meta.service-credential.id",
                      "value": encode_secret(b"dcr_example")},
-                    {"type": "control.key_delete", "ref": "jana.device-db"}]  # fmt: skip
+                    {"type": "control.key_delete", "ref": "jana-meta.device-db"}]  # fmt: skip
     assert all(errors("control/control#/$defs/ToShell", m) == [] for m in sent)
-    assert keys.refs() == ["jana.service-credential.id"] and keys.get("jana.device-db") is None
+    assert keys.refs() == ["jana-meta.service-credential.id"] and keys.get("jana-meta.device-db") is None
     assert "dcr_example" not in repr(keys) and encode_secret(b"dcr_example") not in repr(keys)
-    keys.on_result({"type": "control.key_result", "ref": "jana.service-credential.id", "op": "put", "ok": False,
+    keys.on_result({"type": "control.key_result", "ref": "jana-meta.service-credential.id", "op": "put", "ok": False,
                     "store": "os_keychain"})  # fmt: skip
     assert not keys.os_keychain  # a secret the shell could not keep: the keychain line shows (OBS-15)
-    keys.on_result({"type": "control.key_result", "ref": "jana.service-credential.id", "op": "put", "ok": True,
+    keys.on_result({"type": "control.key_result", "ref": "jana-meta.service-credential.id", "op": "put", "ok": True,
                     "store": "user_file"})  # fmt: skip
     assert not keys.os_keychain and keys.store == "user_file"  # the SEC-17 file fallback
     with pytest.raises(ValueError):

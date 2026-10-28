@@ -321,7 +321,7 @@
     "label": "example_14",
     "value": {
       "type": "control.key_put",
-      "ref": "jana.service-credential.id",
+      "ref": "jana-meta.service-credential.id",
       "value": "ZGNyX2V4YW1wbGU"
     }
   },
@@ -330,7 +330,7 @@
     "label": "example_15",
     "value": {
       "type": "control.key_result",
-      "ref": "jana.service-credential.id",
+      "ref": "jana-meta.service-credential.id",
       "op": "put",
       "ok": true,
       "store": "os_keychain"
@@ -341,7 +341,7 @@
     "label": "example_16",
     "value": {
       "type": "control.key_delete",
-      "ref": "jana.service-credential.id"
+      "ref": "jana-meta.service-credential.id"
     }
   },
   {
@@ -352,7 +352,7 @@
       "store": "os_keychain",
       "entries": [
         {
-          "ref": "jana.device-db",
+          "ref": "jana-meta.device-db",
           "value": "ZXhhbXBsZV9vbmx5X25vdF9hX3JlYWxfa2V5X3ZhbHVlXzAx"
         }
       ]

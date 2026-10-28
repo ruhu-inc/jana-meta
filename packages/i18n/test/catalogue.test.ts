@@ -51,12 +51,12 @@ describe("UXS-05", () => {
     expect(copyLintErrors({
       "study.web_url": "Public web page URL",
       "study.web_help": "Use a public HTTPS page link.",
-      "study.audio_help": "Check NVIDIA’s API access.",
+      "study.audio_help": "Check the API access in the PDF.",
     })).toEqual([]);
     expect(copyLintErrors({
-      "study.audio_status": "NVIDIA AUDIO READY",
-      "study.audio_help": "Check NVIDIA API access!",
-      "study.feedback": "NVIDIA says your answer is wrong.",
+      "study.audio_status": "API AUDIO READY",
+      "study.audio_help": "Check API access!",
+      "study.feedback": "The API says your answer is wrong.",
     })).toEqual([
       "study.audio_status: all-caps word",
       "study.audio_help: exclamation mark in interface copy",
@@ -74,7 +74,7 @@ describe("UXS-05", () => {
 describe("JM-D13", () => {
   test("learner copy never names a speech provider", () => {
     // Podcasts are read by Jana's own voice (Kokoro-82M); a development-only trial is never shown to learners.
-    const named = Object.entries(BASE).filter(([, text]) => /NVIDIA|Magpie|Kokoro/.test(text));
+    const named = Object.entries(BASE).filter(([, text]) => /NVIDIA|Kokoro/.test(text));
     expect(named.map(([key]) => key)).toEqual([]);
   });
 });

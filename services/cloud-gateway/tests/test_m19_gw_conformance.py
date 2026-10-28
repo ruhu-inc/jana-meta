@@ -171,9 +171,9 @@ def _run(config_slots: dict[str, str], tmp: Path) -> dict[str, str]:
     return asyncio.run(main())
 
 
-@pytest.mark.parametrize("provider", ["gemini", "openai_compat", "meta"])
+@pytest.mark.parametrize("provider", ["openai_compat", "meta"])
 def test_conformance_per_adapter(provider: str, tmp_path: Path) -> None:
-    other = "openai_compat" if provider == "gemini" else "gemini"
+    other = "openai_compat" if provider == "meta" else "meta"
     served = _run({"primary": provider, "fallback": other}, tmp_path)
     assert served["primary"] == provider
 
@@ -181,7 +181,7 @@ def test_conformance_per_adapter(provider: str, tmp_path: Path) -> None:
 def mdl26_provider_swap(tmp_path: Path) -> None:
     """The same suite passes with the primary and fallback providers swapped in config only, and a device request
     for primary/strong-model reaches the adapter the config names."""
-    as_decided = _run({"primary": "gemini", "fallback": "openai_compat"}, tmp_path / "a")
-    swapped = _run({"primary": "openai_compat", "fallback": "gemini"}, tmp_path / "b")
-    assert as_decided == {"primary": "gemini", "fallback": "openai_compat"}
-    assert swapped == {"primary": "openai_compat", "fallback": "gemini"}
+    as_decided = _run({"primary": "meta", "fallback": "openai_compat"}, tmp_path / "a")
+    swapped = _run({"primary": "openai_compat", "fallback": "meta"}, tmp_path / "b")
+    assert as_decided == {"primary": "meta", "fallback": "openai_compat"}
+    assert swapped == {"primary": "openai_compat", "fallback": "meta"}

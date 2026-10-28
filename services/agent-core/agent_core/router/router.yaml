@@ -1,8 +1,8 @@
 # Router configuration shipped with the agent core (validated against agents/router-config at load).
-# Local model ids are the D58 candidates, provisional until the M7 bake-off decides D6: every local model is 7B or
-# larger, and the fast tier leads with the 8B class the minimum laptop runs. An enabled, consented online tier prefers
-# Meta's Muse Spark through the gateway for every role (JM-D9); offline, Muse Glimmer 30B leads the local candidates on
-# the high class (JM-D11), and the others remain for smaller machines. Retry and backoff values
+# An enabled, consented online tier prefers Meta's Muse Spark through the gateway for every role (JM-D9); offline, Muse
+# Glimmer 30B (JM-D11) leads the local ids of every tier and is the only local model the entry recommends or downloads
+# (recommended_models.json). The other local ids are the generic llama.cpp runtime's earlier candidates: they are used
+# only when that model is already installed, and the tests' scripted local runtime lists them. Retry and backoff values
 # must equal the configuration keys router_retry_same_model and router_backoff_* (test: router_yaml_matches_keys).
 version: 1
 tiers:

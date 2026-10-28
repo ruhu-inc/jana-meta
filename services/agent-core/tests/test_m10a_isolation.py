@@ -127,7 +127,7 @@ def tch13_no_adult_pin(tmp_path: Path):
         assert "adult_pin" not in tables
         columns = {row[1] for row in device.execute("PRAGMA table_info(profiles_index)")}
         assert not [c for c in columns if "pin" in c], columns
-        assert set(r.runtime.directory.keys.secrets) <= {"jana.install"}  # no PIN or recovery secret is held
+        assert set(r.runtime.directory.keys.secrets) <= {"jana-meta.install"}  # no PIN or recovery secret is held
 
     with_api(tmp_path, scenario, worker=False)
 
@@ -336,7 +336,7 @@ def sec32_no_hub_keys(tmp_path: Path):
                      strict=True)) for row in r.runtime.stores.device.execute("SELECT * FROM device")]  # fmt: skip
 
     keys, device = with_api(tmp_path, scenario, worker=False)
-    assert set(keys) <= {"jana.install"}  # there are no role or hub credentials
+    assert set(keys) <= {"jana-meta.install"}  # there are no role or hub credentials
     names = " ".join(device[0]).lower() if device else ""
     for word in ("hub", "class_", "teacher", "school", "staff", "enrol", "pairing"):
         assert word not in names, word

@@ -1,6 +1,6 @@
 """Cloud voice (VOC-28, D124) end to end: the UI's voice socket, the real bridge and tutor engine on the device, the
-real cloud gateway over pinned TLS on loopback, and fakes for Google's speech services (streaming speech to text,
-the Gemini Live voice and the verbatim Cloud Text-to-Speech voice).
+real cloud gateway over pinned TLS on loopback, and fakes for the speech services (streaming speech to text, a Live
+voice and the verbatim text-to-speech voice).
 
 Nothing reaches the internet: our voice host is dialled at 127.0.0.1, its certificate comes from a throwaway CA, and
 the speech services are `cloud_gateway.speech_fakes`. The student's audio is a synthetic tone; the fake recognizer
@@ -56,7 +56,7 @@ def tone(ms: int, loud: bool = True) -> bytes:
 
 
 class Speech:
-    """Google's speech services for one gateway: what they heard and what they were given to say."""
+    """The speech services for one gateway: what they heard and what they were given to say."""
 
     def __init__(self) -> None:
         self.stack, self.recognizer, self.live, self.tts = fake_stack(recognizer=FakeRecognizer([HEARD]))
@@ -67,20 +67,20 @@ class Speech:
 
 class _Secrets:
     def get(self, name: str) -> Secret | None:
-        return Secret("stub-gemini-key-not-real") if name == "gemini_api_key" else None
+        return Secret("stub-meta-key-not-real") if name == "meta_api_key" else None
 
 
 @contextlib.asynccontextmanager
 async def gateway(tmp: Path, pki: Any, speech: Speech, events: list[str]):
     """The real cloud gateway app, served over TLS on loopback for every service host."""
     signer = dev_signer(Purpose.LICENCE)
-    models = {"fast-model": {"id": "gem-flash"}, "small-model": {"id": "gem-lite"}}
+    models = {"fast-model": {"id": "muse-stub-fast"}, "small-model": {"id": "muse-stub-small"}}
     config = load_config(None, environment="staging", audience_host=HOSTS["gateway"],
                          voice_audience_host=HOSTS["voice"], voice_enabled=True, storage_dir=tmp / "gateway",
                          entitlement_keys={signer.key_id: dev_trust().certificates[signer.key_id].public_key},
-                         slots={"primary": "gemini"},
-                         providers={"gemini": {"adapter": "gemini", "base_url": "https://gemini.stub/v1beta",
-                                               "secret": "gemini_api_key", "models": models}},
+                         slots={"primary": "meta"},
+                         providers={"meta": {"adapter": "meta", "base_url": "https://meta.stub/v1",
+                                             "secret": "meta_api_key", "models": models}},
                          prices={m: {"input": 1.0, "cached_input": 0.1, "output": 4.0}
                                  for m in [*(model["id"] for model in models.values()), "voice-test-model"]},
                          quotas={"device_burst": 1000, "licence_burst": 10000})  # fmt: skip
@@ -238,7 +238,8 @@ def test_voc28_the_tutor_screen_holds_a_spoken_tutor_turn(tmp_path):
 
 def voc28_egress_announced(tmp_path):
     """A full voice turn over cloud voice: the student is told before any audio leaves, the device's engine writes
-    the reply, Google's services only hear and speak, and the turn lands like a local one (same bridge, same events)."""
+    the reply, the speech services only hear and speak, and the turn lands like a local one (same bridge, same
+    events)."""
 
     async def scenario() -> None:
         pki = make_pki(sorted(set(HOSTS.values())))

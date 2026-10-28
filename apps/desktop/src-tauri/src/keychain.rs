@@ -21,10 +21,10 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 /// The keychain item listing the references the shell holds (keychains cannot list their items portably). It is
-/// not a reference itself: references always start with `jana.`.
+/// not a reference itself: references always start with `jana-meta.`.
 const INDEX_ACCOUNT: &str = "index";
 /// The reference prefix and the bounds of what follows it (`$defs/KeyRef`).
-const REF_PREFIX: &str = "jana.";
+const REF_PREFIX: &str = "jana-meta.";
 const REF_TAIL: std::ops::RangeInclusive<usize> = 2..=76;
 /// The longest value the contract carries (`$defs/KeyValue`).
 const VALUE_MAX: usize = 4096;
@@ -711,30 +711,30 @@ mod tests {
 
     #[test]
     fn references_follow_the_contract() {
-        assert!(is_ref("jana.device-db"));
-        assert!(is_ref("jana.service-credential.ed25519"));
+        assert!(is_ref("jana-meta.device-db"));
+        assert!(is_ref("jana-meta.service-credential.ed25519"));
         for bad in [
-            "jana.",
-            "jana.a",
+            "jana-meta.",
+            "jana-meta.a",
             "device-db",
-            "jana.Upper",
-            "jana.a/b",
-            "jana.a\\b",
+            "jana-meta.Upper",
+            "jana-meta.a/b",
+            "jana-meta.a\\b",
             "index",
         ] {
             assert!(!is_ref(bad), "{bad}");
         }
-        assert!(!is_ref(&format!("jana.{}", "a".repeat(77))));
+        assert!(!is_ref(&format!("jana-meta.{}", "a".repeat(77))));
     }
 
     #[test]
     fn answers_follow_every_request_in_order() {
         let store = KeyStore::memory();
         let requests = [
-            put_frame("jana.device-db", "ZGJfa2V5"),
-            put_frame("jana.service-credential.id", "ZGNyX2V4YW1wbGU"),
+            put_frame("jana-meta.device-db", "ZGJfa2V5"),
+            put_frame("jana-meta.service-credential.id", "ZGNyX2V4YW1wbGU"),
             ToShell::KeyDelete(KeyDelete {
-                r#ref: "jana.device-db".into(),
+                r#ref: "jana-meta.device-db".into(),
             }),
             put_frame("not-a-ref", "ZGJfa2V5"),
         ];
@@ -748,9 +748,9 @@ mod tests {
         assert_eq!(
             answers,
             [
-                ("jana.device-db".into(), KeyResultOp::Put, true),
-                ("jana.service-credential.id".into(), KeyResultOp::Put, true),
-                ("jana.device-db".into(), KeyResultOp::Delete, true),
+                ("jana-meta.device-db".into(), KeyResultOp::Put, true),
+                ("jana-meta.service-credential.id".into(), KeyResultOp::Put, true),
+                ("jana-meta.device-db".into(), KeyResultOp::Delete, true),
                 ("not-a-ref".into(), KeyResultOp::Put, false),
             ]
         );
@@ -759,7 +759,7 @@ mod tests {
         };
         assert_eq!(keys.store, KeyStoreKind::OsKeychain);
         assert_eq!(keys.entries.len(), 1);
-        assert_eq!(keys.entries[0].r#ref, "jana.service-credential.id");
+        assert_eq!(keys.entries[0].r#ref, "jana-meta.service-credential.id");
         assert_eq!(keys.entries[0].value.reveal(), "ZGNyX2V4YW1wbGU");
         assert!(
             store
@@ -779,25 +779,25 @@ mod tests {
             backend: Backend::Unavailable,
         };
         assert_eq!(nowhere.kind(), KeyStoreKind::UserFile);
-        assert!(!nowhere.put("jana.device-db", &Redacted::new("ZGJfa2V5")));
+        assert!(!nowhere.put("jana-meta.device-db", &Redacted::new("ZGJfa2V5")));
         assert!(nowhere.entries().is_empty());
         let dir = root.join("config/jana/keys");
         let store = KeyStore::files(dir.clone(), &data).unwrap();
         assert_eq!(store.kind(), KeyStoreKind::UserFile);
-        assert!(store.put("jana.device-db", &Redacted::new("ZGJfa2V5")));
+        assert!(store.put("jana-meta.device-db", &Redacted::new("ZGJfa2V5")));
         assert!(store.put(
-            "jana.service-credential.id",
+            "jana-meta.service-credential.id",
             &Redacted::new("ZGNyX2V4YW1wbGU")
         ));
-        assert!(!store.put("jana.bad", &Redacted::new("not base64!")));
+        assert!(!store.put("jana-meta.bad", &Redacted::new("not base64!")));
         // The core's FileKeyStore layout: the raw secret, one file per reference, and nothing else.
-        assert_eq!(fs::read(dir.join("jana.device-db")).unwrap(), b"db_key");
+        assert_eq!(fs::read(dir.join("jana-meta.device-db")).unwrap(), b"db_key");
         let mut names: Vec<_> = fs::read_dir(&dir)
             .unwrap()
             .map(|e| e.unwrap().file_name().into_string().unwrap())
             .collect();
         names.sort();
-        assert_eq!(names, ["jana.device-db", "jana.service-credential.id"]);
+        assert_eq!(names, ["jana-meta.device-db", "jana-meta.service-credential.id"]);
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -822,13 +822,13 @@ mod tests {
         assert_eq!(
             held,
             [
-                ("jana.device-db", "ZGJfa2V5"),
-                ("jana.service-credential.id", "ZGNyX2V4YW1wbGU")
+                ("jana-meta.device-db", "ZGJfa2V5"),
+                ("jana-meta.service-credential.id", "ZGNyX2V4YW1wbGU")
             ]
         );
-        assert!(again.delete("jana.device-db"));
-        assert!(again.delete("jana.device-db"));
-        assert!(!dir.join("jana.device-db").exists());
+        assert!(again.delete("jana-meta.device-db"));
+        assert!(again.delete("jana-meta.device-db"));
+        assert!(!dir.join("jana-meta.device-db").exists());
         assert_eq!(again.entries().len(), 1);
         fs::remove_dir_all(root).unwrap();
     }
@@ -837,15 +837,15 @@ mod tests {
     fn values_never_show_in_debug_output() {
         let root = scratch("debug");
         let store = KeyStore::files(root.join("keys"), &root.join("data")).unwrap();
-        assert!(store.put("jana.device-db", &Redacted::new("c2VjcmV0X2NhbmFyeQ")));
+        assert!(store.put("jana-meta.device-db", &Redacted::new("c2VjcmV0X2NhbmFyeQ")));
         let shown = format!(
             "{store:?} {:?} {:?} {:?}",
             store.keys_frame(),
             store.entries(),
-            store.answer(&put_frame("jana.device-db", "c2VjcmV0X2NhbmFyeQ"))
+            store.answer(&put_frame("jana-meta.device-db", "c2VjcmV0X2NhbmFyeQ"))
         );
         assert!(!shown.contains("c2VjcmV0X2NhbmFyeQ"), "{shown}");
-        assert!(shown.contains("jana.device-db"));
+        assert!(shown.contains("jana-meta.device-db"));
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -854,12 +854,12 @@ mod tests {
     #[test]
     fn test_plt24_uninstall_clears_the_apps_keys() {
         let store = KeyStore::memory();
-        assert!(store.put("jana.device-db", &Redacted::new("ZGJfa2V5")));
-        assert!(store.put("jana.profile.synthetic", &Redacted::new("c3ludGg")));
+        assert!(store.put("jana-meta.device-db", &Redacted::new("ZGJfa2V5")));
+        assert!(store.put("jana-meta.profile.synthetic", &Redacted::new("c3ludGg")));
         let listed = store.clear(true);
         assert_eq!(
             listed.keychain,
-            ["jana.device-db", "jana.profile.synthetic"]
+            ["jana-meta.device-db", "jana-meta.profile.synthetic"]
         );
         assert_eq!(store.entries().len(), 2, "a dry run removes nothing");
         let cleared = store.clear(false);
@@ -870,15 +870,15 @@ mod tests {
         let data = root.join("data");
         let dir = root.join("config/jana/keys");
         let files = KeyStore::files(dir.clone(), &data).unwrap();
-        assert!(files.put("jana.device-db", &Redacted::new("ZGJfa2V5")));
-        fs::write(dir.join("jana.install-marker.tmp"), b"half written").unwrap();
+        assert!(files.put("jana-meta.device-db", &Redacted::new("ZGJfa2V5")));
+        fs::write(dir.join("jana-meta.install-marker.tmp"), b"half written").unwrap();
         let listed = files.clear(true);
-        assert_eq!(listed.files, ["jana.device-db", "jana.install-marker.tmp"]);
-        assert!(dir.join("jana.device-db").exists());
+        assert_eq!(listed.files, ["jana-meta.device-db", "jana-meta.install-marker.tmp"]);
+        assert!(dir.join("jana-meta.device-db").exists());
         fs::write(dir.join("notes.txt"), b"not the app's").unwrap();
         let cleared = files.clear(false);
         assert!(cleared.ok(), "{cleared:?}");
-        assert!(!dir.join("jana.device-db").exists() && dir.join("notes.txt").exists());
+        assert!(!dir.join("jana-meta.device-db").exists() && dir.join("notes.txt").exists());
         fs::remove_file(dir.join("notes.txt")).unwrap();
         assert!(files.clear(false).files.is_empty());
         assert!(!dir.exists(), "the empty fallback folder is removed");
@@ -886,7 +886,7 @@ mod tests {
         let dir = root.join("config/jana/keys-again");
         let files = KeyStore::files(dir.clone(), &data).unwrap();
         assert!(files.put(
-            "jana.service-credential.id",
+            "jana-meta.service-credential.id",
             &Redacted::new("ZGNyX2V4YW1wbGU")
         ));
         let report = KeyStore {
@@ -895,7 +895,7 @@ mod tests {
         .clear(false)
         .report(false);
         let report: serde_json::Value = serde_json::from_str(&report).unwrap();
-        assert_eq!(report["files"][0], "jana.service-credential.id");
+        assert_eq!(report["files"][0], "jana-meta.service-credential.id");
         assert!(
             !report.to_string().contains("ZGNyX2V4YW1wbGU"),
             "no value in the report"
@@ -949,11 +949,11 @@ mod tests {
             std::process::id()
         );
         let store = KeyStore::keychain(&service).expect("a keychain service");
-        assert!(store.put("jana.test-a", &Redacted::new("dGVzdA")));
-        assert!(store.put("jana.test-b", &Redacted::new("dGVzdA")));
+        assert!(store.put("jana-meta.test-a", &Redacted::new("dGVzdA")));
+        assert!(store.put("jana-meta.test-b", &Redacted::new("dGVzdA")));
         let nowhere = std::env::temp_dir().join(format!("jana-no-keys-{}", std::process::id()));
         let listed = uninstall_keys(&service, &nowhere, true);
-        assert_eq!(listed.keychain, ["jana.test-a", "jana.test-b", "index"]);
+        assert_eq!(listed.keychain, ["jana-meta.test-a", "jana-meta.test-b", "index"]);
         assert_eq!(KeyStore::keychain(&service).unwrap().entries().len(), 2);
         let cleared = uninstall_keys(&service, &nowhere, false);
         assert!(cleared.ok(), "{cleared:?}");
@@ -970,10 +970,10 @@ mod tests {
     fn keychain_round_trip() {
         let service = format!("app.jana-meta.desktop.test-{}", std::process::id());
         let store = KeyStore::keychain(&service).expect("a keychain service");
-        assert!(store.put("jana.test-secret", &Redacted::new("dGVzdA")));
+        assert!(store.put("jana-meta.test-secret", &Redacted::new("dGVzdA")));
         let again = KeyStore::keychain(&service).unwrap();
         assert_eq!(again.entries().len(), 1);
-        assert!(again.delete("jana.test-secret"));
+        assert!(again.delete("jana-meta.test-secret"));
         assert!(again.entries().is_empty());
     }
 }

@@ -100,7 +100,7 @@ def test_only_verified_concepts_and_relations_with_both_ends_reach_the_device(tm
         device = Device()
         await device.login(h.client)
         # Jerk is not in the source; the reversed "causes" relation is not stated. The relation to Jerk goes with it.
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft())), Output(text=json.dumps(verdict([True, True, False], [True, False, True])))
         )
         reply = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
@@ -117,7 +117,7 @@ def test_only_verified_concepts_and_relations_with_both_ends_reach_the_device(tm
         citation = kept["concepts"][1]["summary"]["citations"][0]
         assert citation["quote"] == TEXT and citation["source_id"] == SID and citation["chunk_id"] == CID
         # The draft call asked for the concept map's schema; the verifier for one flag per concept and relation.
-        drafted, checked = h.stubs["gemini"].seen[-2:]
+        drafted, checked = h.stubs["meta"].seen[-2:]
         assert "concept_map" in drafted.schema["required"]
         assert "builds_on" in json.dumps(drafted.schema) and "concept_support" in checked.system
         assert {"concept_support", "relation_support"} <= set(checked.schema["required"])
@@ -130,7 +130,7 @@ def test_a_concept_map_with_no_verified_concept_is_withheld(tmp_path):
         h = harness(gateway_config(tmp_path))
         device = Device()
         await device.login(h.client)
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(text=json.dumps(draft())), Output(text=json.dumps(verdict([False] * 3, [False] * 3)))
         )
         reply = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
@@ -159,7 +159,7 @@ def test_a_typed_topic_gets_one_uncited_concept_map_call_settled_once(tmp_path):
             ],
             "relations": [{"from": "c1", "to": "c2", "type": "related_to"}],
         }
-        h.stubs["gemini"].say(Output(text=json.dumps(topic)))
+        h.stubs["meta"].say(Output(text=json.dumps(topic)))
         reply = await h.client.post(
             "/v1/study/concept-topic", json={"request_id": TOPIC_REQ, "topic": "refraction"}, headers=device.headers()
         )
@@ -167,7 +167,7 @@ def test_a_typed_topic_gets_one_uncited_concept_map_call_settled_once(tmp_path):
         result = reply.json()
         assert [c["name"] for c in result["concepts"]] == ["Refraction", "Refractive index"]
         assert "citations" not in json.dumps(result) and result["usage"]["receipt_id"]
-        (seen,) = h.stubs["gemini"].seen
+        (seen,) = h.stubs["meta"].seen
         assert "no source document" in seen.system and "refraction" in seen.user_texts[0]
         # The same attempt is never sent twice; a relation to an unknown concept is withheld.
         again = await h.client.post(
@@ -175,7 +175,7 @@ def test_a_typed_topic_gets_one_uncited_concept_map_call_settled_once(tmp_path):
         )
         assert again.status_code == 409
         broken = {**topic, "request_id": "req_" + "4" * 26, "relations": [{"from": "c1", "to": "c9", "type": "causes"}]}
-        h.stubs["gemini"].say(Output(text=json.dumps(broken)))
+        h.stubs["meta"].say(Output(text=json.dumps(broken)))
         bad = await h.client.post(
             "/v1/study/concept-topic",
             json={"request_id": "req_" + "4" * 26, "topic": "refraction"},

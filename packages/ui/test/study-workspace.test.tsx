@@ -355,7 +355,7 @@ test("the Podcast voice keeps Play disabled while readiness loads and never name
   expect(screen.getByRole("button", { name: "Play overview" }).hasAttribute("disabled")).toBe(true);
   expect(screen.getByText(/Jana’s own voice reads this Podcast/)).toBeTruthy();
   expect(screen.queryByText("Read on this computer using an installed voice.")).toBeNull();
-  expect(document.body.textContent).not.toMatch(/NVIDIA|Magpie|Kokoro/);
+  expect(document.body.textContent).not.toMatch(/NVIDIA|Kokoro/);
 });
 
 test("quick generation uses whole-material defaults; duplicate sets offer Open instead of spending again", () => {

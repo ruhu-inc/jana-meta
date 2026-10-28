@@ -38,9 +38,9 @@ for line in sys.stdin:
     if message["type"] == "control.secret":
         say = lambda frame: print(json.dumps(frame), flush=True)
         if not sys.argv[2:]:
-            say({"type": "control.key_put", "ref": "jana.device-db", "value": "ZGJfa2V5X3ZhbHVl"})
-            say({"type": "control.key_put", "ref": "jana.service-credential.id", "value": "ZGNyX2V4YW1wbGU"})
-            say({"type": "control.key_delete", "ref": "jana.device-db"})
+            say({"type": "control.key_put", "ref": "jana-meta.device-db", "value": "ZGJfa2V5X3ZhbHVl"})
+            say({"type": "control.key_put", "ref": "jana-meta.service-credential.id", "value": "ZGNyX2V4YW1wbGU"})
+            say({"type": "control.key_delete", "ref": "jana-meta.device-db"})
         say({"type": "control.ready", "protocol": {"major": 1, "minor": 4}, "api_port": 9,
              "epoch": "0123456789abcdef"})
     elif message["type"] == "control.shutdown":
@@ -152,9 +152,9 @@ fn key_bridge_and_network_hint_on_the_control_channel() {
     assert_eq!(
         results,
         [
-            ("jana.device-db", "put", true, "user_file"),
-            ("jana.service-credential.id", "put", true, "user_file"),
-            ("jana.device-db", "delete", true, "user_file"),
+            ("jana-meta.device-db", "put", true, "user_file"),
+            ("jana-meta.service-credential.id", "put", true, "user_file"),
+            ("jana-meta.device-db", "delete", true, "user_file"),
         ]
     );
     // A changed network hint reaches the running core.
@@ -177,7 +177,7 @@ fn key_bridge_and_network_hint_on_the_control_channel() {
     assert_eq!(seen[1]["type"], "control.keys");
     assert_eq!(
         seen[1]["entries"],
-        serde_json::json!([{"ref": "jana.service-credential.id", "value": "ZGNyX2V4YW1wbGU"}])
+        serde_json::json!([{"ref": "jana-meta.service-credential.id", "value": "ZGNyX2V4YW1wbGU"}])
     );
     assert_eq!(seen[4]["online"], true);
     sup.shutdown();
@@ -186,7 +186,7 @@ fn key_bridge_and_network_hint_on_the_control_channel() {
         .unwrap()
         .map(|e| e.unwrap().file_name().into_string().unwrap())
         .collect();
-    assert_eq!(names, ["jana.service-credential.id"]);
+    assert_eq!(names, ["jana-meta.service-credential.id"]);
     assert!(
         std::fs::read_dir(root.join("data"))
             .unwrap()

@@ -79,11 +79,6 @@ module = ["sympy", "sympy.*", "pint", "pint.*", "mpmath", "yaml"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-# Cloud voice's gRPC clients are the gateway's optional `google-voice` extra (D124), absent from the default install.
-module = ["google.*"]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
 # Two known limits of datamodel-code-generator 0.83 in generated bindings: constrained dict keys written as
 # constr() calls, and plain defaults on constrained root models. Every other strict check still applies.
 module = ["agent_core.contracts.*", "tool_worker.contracts.*", "ingest.contracts.*", "cloud_gateway.contracts.*"]

@@ -135,25 +135,25 @@ def test_secret_never_shows_its_value() -> None:
 
 
 def test_environment_keys_only_in_dev(tmp_path: Path) -> None:
-    environ = {"JANA_DEV_GEMINI_API_KEY": "dev-own-key"}
+    environ = {"JANA_DEV_META_API_KEY": "dev-own-key"}
     none = KeychainSecrets(system="Plan9")
     for environment in ("staging", "pilot", "production"):
         source = secret_source(load_config(None, environment=environment), environ, none)
-        assert source.get("gemini_api_key") is None
+        assert source.get("meta_api_key") is None
     dev = secret_source(load_config(None, environment="dev"), environ, none)
-    found = dev.get("gemini_api_key")
+    found = dev.get("meta_api_key")
     assert found is not None and found.reveal() == "dev-own-key"
-    assert DevEnvironmentSecrets({}).get("gemini_api_key") is None
+    assert DevEnvironmentSecrets({}).get("meta_api_key") is None
 
 
 def test_mounted_secret_files(tmp_path: Path) -> None:
     mount = tmp_path / "mount"
     mount.mkdir()
-    (mount / "gemini_api_key").write_text("mounted-key\n")
+    (mount / "meta_api_key").write_text("mounted-key\n")
     source = secret_source(load_config(None, environment="production", secrets_dir=mount))
-    found = source.get("gemini_api_key")
+    found = source.get("meta_api_key")
     assert found is not None and found.reveal() == "mounted-key"
-    assert source.get("../gemini_api_key") is None and source.get("missing") is None
+    assert source.get("../meta_api_key") is None and source.get("missing") is None
     with pytest.raises(ValueError, match="git working tree"):
         MountedSecretFiles(REPO / "services")
 
@@ -176,7 +176,7 @@ def test_keychain_lookup_commands() -> None:
     assert ChainedSecrets((missing,)).get("meta_api_key") is None
 
 
-@pytest.mark.parametrize("name", ["meta_api_key", "nvidia_api_key"])
+@pytest.mark.parametrize("name", ["meta_api_key"])
 def test_hackathon_keychain_uses_dedicated_service_without_environment(name: str) -> None:
     config = load_config(REPO / "services/cloud-gateway/deploy/meta-dev.toml")
     calls = []
@@ -206,12 +206,12 @@ def test_keys_stay_out_of_logs_errors_and_storage(tmp_path: Path) -> None:
             Output(error=(403, {"error": {"message": "bad key"}})),
             Output(error=(400, {"error": {"message": "API key not valid."}})),
         ):
-            h.stubs["gemini"].say(out)
+            h.stubs["meta"].say(out)
             reply = await device.chat(
                 h.client, {"model": "primary/fast-model", "messages": [{"role": "user", "content": "hi"}]}
             )
             texts.append(reply.text)
-        assert h.stubs["gemini"].seen[0].headers["x-goog-api-key"] == FAKE_KEYS["gemini_api_key"]
+        assert h.stubs["meta"].seen[0].headers["authorization"] == f"Bearer {FAKE_KEYS['meta_api_key']}"
         return texts
 
     texts = asyncio.run(main())

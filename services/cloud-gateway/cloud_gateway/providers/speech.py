@@ -3,8 +3,7 @@
   Recognizer   streaming speech to text with speech events (Muse Voice Transcribe, `meta_speech.py`)
   Live         an optional voice that reads accepted sentences aloud and reports what it said (none is configured:
                the Meta stack reads with the synthesizer)
-  Synthesizer  verbatim streaming text to speech (Kokoro-82M, `kokoro_speech.py`; Magpie in development,
-               `magpie_speech.py`)
+  Synthesizer  verbatim streaming text to speech (Kokoro-82M, `kokoro_speech.py`)
 
 Tests give fakes with the same shape (`speech_fakes.py`). Nothing here
 holds audio or text beyond the call that carries it, and nothing here logs either."""

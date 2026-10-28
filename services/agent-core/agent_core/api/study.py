@@ -361,7 +361,7 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
         if enabled and core.study.cloud is not None:
             try:
                 remote = await core.study.cloud.send(d.conn, "GET", "/v1/podcast/voice")
-                if isinstance(remote, dict) and remote.get("provider") in ("kokoro", "magpie"):
+                if isinstance(remote, dict) and remote.get("provider") == "kokoro":
                     status["provider"] = remote["provider"]
                     status["configured"] = remote.get("enabled") is True and remote.get("configured") is True
             except ValueError:

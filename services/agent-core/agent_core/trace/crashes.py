@@ -43,7 +43,7 @@ from agent_core.store.ids import new_ulid
 from agent_core.store.keystore import KeyStore
 from agent_core.trace.logs import HOME, SECRET_VALUES, diagnostic_lines, print_exception
 
-DEVICE_KEY_REF = "jana.device-db"  # the device database key (TABLE SEC-32a), held by reference (SEC-17)
+DEVICE_KEY_REF = "jana-meta.device-db"  # the device database key (TABLE SEC-32a), held by reference (SEC-17)
 DUMP_MAGIC = b"JANADMP1"
 PROCESSES = ("shell", "core", "worker", "runtime")
 KINDS = ("panic", "signal", "exception", "fatal_error", "runtime_exit", "worker_limit")

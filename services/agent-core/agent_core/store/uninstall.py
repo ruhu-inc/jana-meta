@@ -22,7 +22,7 @@ from typing import Any
 
 from agent_core.store.keystore import KeyStore
 
-KEY_PREFIX = "jana."
+KEY_PREFIX = "jana-meta."
 # What is learner data (kept on "keep"); everything else in the data folder is packs, models, caches or logs.
 LEARNER_DATA = ("device.db", "device.db-wal", "device.db-shm", "profiles", "updates/snapshots")
 CHOICES = ("keep", "delete")

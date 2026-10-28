@@ -35,7 +35,7 @@ def _installation(tmp_path: Path) -> tuple[Path, Path, FileKeyStore]:
         (data / name).parent.mkdir(parents=True, exist_ok=True)
         (data / name).write_bytes(b"synthetic")
     keys = FileKeyStore(tmp_path / "Keychain", data)
-    for ref in (INSTALL_MARKER, DEVICE_KEY_REF, "jana.service-credential.ed25519", "jana.profile.synthetic"):
+    for ref in (INSTALL_MARKER, DEVICE_KEY_REF, "jana-meta.service-credential.ed25519", "jana-meta.profile.synthetic"):
         keys.put(ref, b"synthetic secret")
     keys.put("other.app.secret", b"not ours")
     return install, data, keys

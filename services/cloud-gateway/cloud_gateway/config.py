@@ -18,7 +18,7 @@ from cloud_gateway.operations import OperationsPolicy
 
 DEFAULTS = Path(__file__).with_name("defaults.toml")
 Environment = Literal["dev", "staging", "pilot", "production"]
-AdapterKind = Literal["gemini", "vertex", "openai_compat", "meta"]
+AdapterKind = Literal["openai_compat", "meta"]
 Effort = Literal["none", "low", "medium", "high"]
 
 
@@ -180,11 +180,10 @@ class MetaVoice(_Strict):
 
 
 class VoiceTts(_Strict):
-    """Cloud voice's verbatim voice (JM-D13, SPEC §6.4): Kokoro-82M (Apache-2.0, the speech pack's own voice, run here)
-    so the audio judges hear is licence-clean. NVIDIA Magpie through the API-catalog trial is for development only:
-    its audio may not be distributed, so the configuration refuses it outside the dev environment."""
+    """Cloud voice's verbatim voice (JM-D12, JM-D13, SPEC §6.4): Kokoro-82M (Apache-2.0, the speech pack's own voice,
+    run here), so the audio anyone hears is licence-clean."""
 
-    engine: Literal["kokoro", "magpie"] = "kokoro"
+    engine: Literal["kokoro"] = "kokoro"
     # Kokoro runs in a worker under the speech runtime's interpreter (torch, kokoro, misaki), from local files only.
     kokoro_python: str = "~/.cache/jana-speech/venv/bin/python"
     kokoro_model_dir: str = "~/.cache/jana-speech/packs/sp.en.0_1/models/kokoro-82m"
@@ -196,9 +195,6 @@ class VoiceTts(_Strict):
     # Engine-owned keyed phrases (no learner content: the VOC-12 filler) read once at startup and replayed, so the
     # filler's audio starts the moment it is accepted. Any other text is synthesised when it is given and not kept.
     fixed_phrases: tuple[str, ...] = ("Let me work that out.",)
-    magpie_secret: str = "nvidia_api_key"  # noqa: S105 -- the secret's name in the secret source, not a key
-    magpie_voice: str = "Magpie-Multilingual.EN-US.Aria.Calm"
-    magpie_fallback_voice: str = "Magpie-Multilingual.EN-US.Aria.Neutral"
 
 
 class Quotas(_Strict):
@@ -402,7 +398,7 @@ class GatewayConfig(_Strict):
     # Trusted deployment command, including its OS sandbox wrapper. Never supplied by a device request.
     study_worker_command: tuple[str, ...] = ()
     # Cloud voice (VOC-28, D124): our hosted Realtime endpoint. Speech to text is Muse Voice Transcribe
-    # (`voice_meta`, JM-D12); the verbatim voice is `voice_tts` (Kokoro; Magpie in development). The tutor's words come
+    # (`voice_meta`, JM-D12); the verbatim voice is `voice_tts` (Kokoro). The tutor's words come
     # from the device's own engine through the connection, never from a model here. Audio and transcripts stay in
     # memory for the length of one utterance or one spoken reply.
     voice_enabled: bool = False
@@ -472,8 +468,6 @@ class GatewayConfig(_Strict):
             # Cloud voice reserves its speech charges against the budget (`cloud_gateway.voice`); search does not.
             if self.ask_search is not None:
                 raise ValueError("the inference budget does not cover search service charges; disable search")
-        if self.voice_enabled and self.voice_tts.engine == "magpie" and self.environment != "dev":
-            raise ValueError("Magpie trial audio may not be distributed: it is a development voice only (SPEC §6.4)")
         if self.voice_enabled and self.voice_first_words_ms > self.voice_meta.ahead_ms:
             raise ValueError("held first words must fit within what speech to text takes ahead of real time")
         return self

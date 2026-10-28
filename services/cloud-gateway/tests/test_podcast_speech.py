@@ -157,4 +157,3 @@ def test_invalid_audio_is_withheld(audio):
 def test_the_development_config_never_turns_on_a_hosted_podcast_trial():
     text = (DEPLOY / "meta-dev.toml").read_text()
     assert "free_prototyping" not in text and "NVIDIA" not in text
-    assert 'engine = "magpie"' not in text

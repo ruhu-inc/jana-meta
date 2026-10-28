@@ -1,5 +1,5 @@
 """Test doubles for cloud voice's speech services (VOC-28, D124): the gateway's and the core's tests drive a real
-voice connection against these, never Google. Not used by the running gateway.
+voice connection against these, never a real speech service. Not used by the running gateway.
 
   FakeRecognizer  hears 20 ms windows by energy, like a provider's voice-activity detector: `begin` after two loud
                   windows, `end` after `end_ms` of quiet, then the scripted transcript as a final result.
@@ -150,7 +150,7 @@ class FakeLiveSession:
 
 
 class FakeLive:
-    model_id = "gemini-live-2.5-flash-native-audio"
+    model_id = "live-voice-stub"
 
     def __init__(self, *, open_delay: float = 0.0, delay: float = 0.0) -> None:
         self.open_delay, self.delay = open_delay, delay

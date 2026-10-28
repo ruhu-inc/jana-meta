@@ -52,7 +52,7 @@ def test_recording_real_sandbox_timestamp_uncertainty_and_cleanup(tmp_path):
                 headers=device.headers(),
             )
             assert response.status_code == 200
-        h.stubs["gemini"].say(
+        h.stubs["meta"].say(
             Output(
                 text=json.dumps({"text": "Enzymes are biological catalysts.", "uncertain": False, "language": "en"})
             ),
@@ -73,7 +73,7 @@ def test_recording_real_sandbox_timestamp_uncertainty_and_cleanup(tmp_path):
         assert "uncertain words" not in result.text
         assert value["usage"]["cost_usd"] > 0
         assert (await h.client.post("/v1/study/extract", json=body, headers=device.headers())).json() == value
-        assert len(h.stubs["gemini"].seen) == 2
+        assert len(h.stubs["meta"].seen) == 2
         assert (await h.client.delete("/v1/study/requests/" + JID, headers=device.headers())).status_code == 204
         assert not h.client._transport.app.state.study.buffers
         for path in tmp_path.rglob("*"):

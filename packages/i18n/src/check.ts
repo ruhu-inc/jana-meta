@@ -84,7 +84,7 @@ export function pluralErrors(locale: string, catalogue: Record<string, string>):
 
 /** Conventional uppercase terms and brand names, not shouted copy. Keep these exact so other all-caps words in the
  * same message still fail the sentence-case check. */
-const UPPERCASE_TERMS = new Set(["USB", "JPEG", "PNG", "PDF", "URL", "HTTPS", "API", "NVIDIA"]);
+const UPPERCASE_TERMS = new Set(["USB", "JPEG", "PNG", "PDF", "URL", "HTTPS", "API"]);
 
 /** UXS-05: sentence case (no all-caps), never "wrong", no exclamation marks in interface copy. */
 export function copyLintErrors(catalogue: Record<string, string>): string[] {

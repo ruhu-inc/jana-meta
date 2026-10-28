@@ -11,7 +11,7 @@ the bridge and the UI do not know which path they are on. The pipeline (D124, JM
   thinking  never a model here: each chat-completions request the local sidecar would send to the engine adapter
             (VOC-30) is forwarded down this connection to the device, whose engine runs the whole turn and every gate
             (VOC-31, VOC-32, VOC-33) and answers with the accepted spoken words only. Learner data stays on the device.
-  voice     the verbatim synthesizer (Kokoro-82M; Magpie in development) reads those accepted words, one sentence at
+  voice     the verbatim synthesizer (Kokoro-82M) reads those accepted words, one sentence at
             a time, as they arrive (the Meta stack has no Live voice). A stack with a Live voice gives it the
             sentences under a fixed read-exactly instruction, never the student's audio; its output transcription is
             compared with the sentence as it streams: any departure beyond whitespace, punctuation and letter case
@@ -64,7 +64,7 @@ from cloud_gateway.providers.speech import Heard, LiveSession, Recognition, Spee
 
 FEATURE = "cloud_voice"
 PROVIDER = "meta"  # the ledger's provider name for speech to text (operations can block it, OPS)
-VOICE_PROVIDER = "speech"  # the ledger's provider name for the verbatim voice (Kokoro here; Magpie in development)
+VOICE_PROVIDER = "speech"  # the ledger's provider name for the verbatim voice (Kokoro-82M)
 RATE = 24_000
 BYTES_PER_MS = 48  # 24 kHz mono PCM16
 WINDOW = 960  # 20 ms

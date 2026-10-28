@@ -1,8 +1,8 @@
 """Stub provider servers and a device-side client for the gateway tests. No test reaches a real provider.
 
-Each stub is an httpx transport handler that records every request and replays provider-shaped replies (Gemini's
-REST API or an OpenAI-compatible endpoint) for a scripted model output, so the same conformance checks can run
-against either adapter. The keys here are obviously fake and never match a provider key pattern."""
+Each stub is an httpx transport handler that records every request and replays provider-shaped replies (Meta's
+Chat Completions or another OpenAI-compatible endpoint) for a scripted model output, so the same conformance checks
+can run against either adapter. The keys here are obviously fake and never match a provider key pattern."""
 
 from __future__ import annotations
 
@@ -45,7 +45,6 @@ def entitlement(subscription: str, licence: str = LICENCE, period: tuple[str, st
 
 FAKE_KEYS = {
     "meta_api_key": "stub-meta-key-not-real",
-    "gemini_api_key": "stub-gemini-key-not-real",
     "openai_api_key": "stub-openai-key-not-real",
     "admin_token": "stub-admin-token-not-real",
 }
@@ -107,15 +106,13 @@ class StubProvider:
     # --- per provider ---
 
     def _normalise(self, request: httpx.Request, body: dict[str, Any]) -> Seen:
-        if self.kind == "gemini":
-            return _gemini_seen(request, body)
         return _openai_seen(request, body)
 
     def _reply(self, seen: Seen, out: Output) -> dict[str, Any]:
-        return _gemini_reply(seen, out) if self.kind == "gemini" else _openai_reply(seen, out)
+        return _openai_reply(seen, out)
 
     def _sse(self, seen: Seen, out: Output) -> list[bytes]:
-        return _gemini_sse(seen, out) if self.kind == "gemini" else _openai_sse(seen, out)
+        return _openai_sse(seen, out)
 
 
 class _ByteStream(httpx.AsyncByteStream):
@@ -127,93 +124,6 @@ class _ByteStream(httpx.AsyncByteStream):
             if event == b"!fail":
                 raise httpx.ReadError("connection reset by stub")
             yield event
-
-
-# --- Gemini shape ---
-
-
-def _gemini_seen(request: httpx.Request, body: dict[str, Any]) -> Seen:
-    path = request.url.path
-    model, _, method = path.rsplit("/", 1)[-1].partition(":")
-    system = " ".join(p.get("text", "") for p in (body.get("systemInstruction") or {}).get("parts", []))
-    user_texts, results, calls = [], [], []
-    for content in body.get("contents", []):
-        for part in content.get("parts", []):
-            if content["role"] == "user" and "text" in part:
-                user_texts.append(part["text"])
-            if "functionResponse" in part:
-                results.append((part["functionResponse"]["name"], part["functionResponse"]["response"]))
-            if "functionCall" in part:
-                calls.append(
-                    {
-                        "name": part["functionCall"]["name"],
-                        "args": part["functionCall"]["args"],
-                        "signature": part.get("thoughtSignature"),
-                    }
-                )
-    generation = body.get("generationConfig") or {}
-    tools = [d["name"] for t in body.get("tools", []) for d in t.get("functionDeclarations", [])]
-    return Seen(
-        str(request.url),
-        dict(request.headers),
-        body,
-        model,
-        method.startswith("streamGenerateContent"),
-        system,
-        user_texts,
-        results,
-        calls,
-        generation.get("responseJsonSchema"),
-        tools,
-    )
-
-
-def _gemini_usage(out: Output) -> dict[str, int]:
-    return {
-        "promptTokenCount": out.usage[0],
-        "candidatesTokenCount": out.usage[1],
-        "cachedContentTokenCount": out.usage[2],
-        "totalTokenCount": out.usage[0] + out.usage[1],
-    }
-
-
-def _gemini_parts(out: Output) -> list[dict[str, Any]]:
-    if out.tool is not None:
-        return [{"functionCall": {"name": out.tool[0], "args": out.tool[1]}, "thoughtSignature": "c2lnLXN0dWI="}]
-    return [{"text": out.text}]
-
-
-def _gemini_reply(seen: Seen, out: Output) -> dict[str, Any]:
-    return {
-        "candidates": [{"content": {"role": "model", "parts": _gemini_parts(out)}, "finishReason": "STOP"}],
-        "usageMetadata": _gemini_usage(out),
-        "modelVersion": seen.model,
-        "responseId": secrets.token_hex(6),
-    }
-
-
-def _gemini_sse(seen: Seen, out: Output) -> list[bytes]:
-    if out.tool is not None:
-        pieces = [
-            {
-                "candidates": [{"content": {"role": "model", "parts": _gemini_parts(out)}, "finishReason": "STOP"}],
-                "usageMetadata": _gemini_usage(out),
-                "modelVersion": seen.model,
-            }
-        ]
-    else:
-        third = max(1, len(out.text) // 3)
-        chunks = [out.text[:third], out.text[third : 2 * third], out.text[2 * third :]]
-        pieces = [
-            {"candidates": [{"content": {"role": "model", "parts": [{"text": c}]}}], "modelVersion": seen.model}
-            for c in chunks
-        ]
-        pieces[-1]["candidates"][0]["finishReason"] = "STOP"
-        pieces[-1]["usageMetadata"] = _gemini_usage(out)
-    events = [b"data: " + json.dumps(p).encode() + b"\r\n\r\n" for p in pieces]
-    if out.fail_mid_stream:
-        events = [*events[:1], b"!fail"]
-    return events
 
 
 # --- OpenAI shape ---
@@ -385,16 +295,7 @@ PROVIDERS = {
         "models": {
             "strong-model": {"id": "muse-stub-strong"},
             "fast-model": {"id": "muse-stub-fast"},
-        },
-    },
-    "gemini": {
-        "adapter": "gemini",
-        "base_url": "https://gemini.stub/v1beta",
-        "secret": "gemini_api_key",
-        "models": {
-            "strong-model": {"id": "gemini-stub-pro", "thinking": {"kind": "level", "low": "low", "high": "high"}},
-            "fast-model": {"id": "gemini-stub-flash"},
-            "small-model": {"id": "gemini-stub-lite", "thinking": {"kind": "budget", "none": 0, "high": 2048}},
+            "small-model": {"id": "muse-stub-small"},
         },
     },
     "openai_compat": {
@@ -423,7 +324,7 @@ def gateway_config(storage: Path, slots: dict[str, str] | None = None, **overrid
         "storage_dir": storage,
         "licences": [LICENCE, "lic_school_two"],
         "entitlement_keys": licence_keys(),
-        "slots": slots or {"primary": "gemini", "fallback": "openai_compat"},
+        "slots": slots or {"primary": "meta", "fallback": "openai_compat"},
         "providers": PROVIDERS,
         "study_model": "primary/fast-model",
         "prices": PRICES,

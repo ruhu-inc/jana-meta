@@ -35,8 +35,8 @@ from agent_core.contracts.cloud.gateway import (
 from agent_core.net.client import EgressClient
 from agent_core.store.keystore import KeyStore
 
-KEY_REF = "jana.service-credential.ed25519"  # the purpose-specific keystore entry (SEC-21)
-ID_REF = "jana.service-credential.id"
+KEY_REF = "jana-meta.service-credential.ed25519"  # the purpose-specific keystore entry (SEC-21)
+ID_REF = "jana-meta.service-credential.id"
 AUTH_CONTEXT = b"jana-gateway-auth\n"
 FEATURE = "cloud_tier"
 PAYLOAD = "service_auth"

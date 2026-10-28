@@ -35,7 +35,7 @@ def test_profile_data_is_refused_before_any_provider(tmp_path: Path) -> None:
             "/v1/chat/completions", json=CHAT, headers={"Authorization": f"Bearer {device.token}"}
         )
         assert missing.status_code == 400 and missing.json()["error"]["code"] == "pseudonym_required"
-        assert not h.stubs["gemini"].seen
+        assert not h.stubs["meta"].seen
 
     asyncio.run(main())
 
@@ -52,13 +52,13 @@ def test_only_allow_listed_fields_and_the_pseudonym_reach_a_provider(tmp_path: P
         outside = {**CHAT, "user": "device-chosen-user", "metadata": {"school": "Somewhere"}}
         refused = await h.client.post("/v1/chat/completions", json=outside, headers=headers)
         assert refused.status_code == 400 and classify_http(400, refused.json()) == "format_error"
-        assert not h.stubs["gemini"].seen and not h.stubs["openai_compat"].seen
+        assert not h.stubs["meta"].seen and not h.stubs["openai_compat"].seen
         body = {"messages": [{"role": "user", "content": "Hi", "name": "Learner_Name"}], "temperature": 0.1}
         for model in ("primary/fast-model", "fallback/fast-model"):
             reply = await h.client.post("/v1/chat/completions", json={**body, "model": model}, headers=headers)
             assert reply.status_code == 200, reply.text
-        gemini, openai = h.stubs["gemini"].seen[-1], h.stubs["openai_compat"].seen[-1]
-        for seen in (gemini, openai):
+        meta, openai = h.stubs["meta"].seen[-1], h.stubs["openai_compat"].seen[-1]
+        for seen in (meta, openai):
             sent = json.dumps(seen.body) + json.dumps(seen.headers)
             for leaked in (
                 "Learner_Name",
@@ -70,7 +70,7 @@ def test_only_allow_listed_fields_and_the_pseudonym_reach_a_provider(tmp_path: P
                 device.credential_id,
             ):
                 assert leaked not in sent
-        assert device.pseudonym not in json.dumps(gemini.body)  # Gemini has no end-user field
+        assert meta.body["safety_identifier"] == device.pseudonym  # each provider's own end-user field
         assert openai.body["user"] == device.pseudonym and openai.body["temperature"] == 0.1
 
     asyncio.run(main())
@@ -210,10 +210,10 @@ def test_spend_anomaly_alerts_once(tmp_path: Path) -> None:
 
 def test_unknown_slot_or_alias_is_model_not_found(tmp_path: Path) -> None:
     async def main() -> None:
-        h = harness(gateway_config(tmp_path, slots={"primary": "gemini"}))
+        h = harness(gateway_config(tmp_path, slots={"primary": "meta"}))
         device = Device()
         await device.login(h.client)
-        for model in ("fallback/fast-model", "primary/huge-model", "gemini-stub-pro", None):
+        for model in ("fallback/fast-model", "primary/huge-model", "muse-stub-strong", None):
             reply = await device.chat(h.client, {**CHAT, "model": model})
             assert reply.status_code == 404 and classify_http(404, reply.json()) == "model_not_found"
 
@@ -225,11 +225,11 @@ def test_mid_stream_failure_ends_without_done(tmp_path: Path) -> None:
         h = harness(gateway_config(tmp_path))
         device = Device()
         await device.login(h.client)
-        h.stubs["gemini"].say(Output(text="This will be cut off", fail_mid_stream=True))
+        h.stubs["meta"].say(Output(text="This will be cut off", fail_mid_stream=True))
         reply = await device.chat(h.client, {**CHAT, "stream": True})
         assert reply.status_code == 200
         assert "[DONE]" not in reply.text and '"error"' in reply.text
-        h.stubs["gemini"].say(Output(error=(503, {"error": {"status": "UNAVAILABLE"}})))
+        h.stubs["meta"].say(Output(error=(503, {"error": {"type": "service_unavailable"}})))
         early = await device.chat(h.client, {**CHAT, "stream": True})
         assert early.status_code == 503 and classify_http(503, early.json()) == "overloaded"
 
@@ -243,6 +243,6 @@ def test_malformed_request_is_a_classified_error(tmp_path: Path) -> None:
         await device.login(h.client)
         reply = await device.chat(h.client, {**CHAT, "tools": [1]})
         assert reply.status_code == 400 and classify_http(400, reply.json()) == "format_error"
-        assert not h.stubs["gemini"].seen
+        assert not h.stubs["meta"].seen
 
     asyncio.run(main())
