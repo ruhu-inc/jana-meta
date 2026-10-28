@@ -99,6 +99,11 @@ def test_fixture_values_are_not_findings() -> None:
     assert scan_bytes(b"s" + b"k-ant-" + b"api03-" + b"A" * 30, "x")[0].pattern == "anthropic_key"
 
 
+def test_a_legacy_search_key_is_still_caught() -> None:
+    # SPEC §4.2: an old web-search key may still be on a developer's machine, so the scanner keeps its pattern.
+    assert [f.pattern for f in scan_bytes(b"tv" + b"ly-dev-" + b"Q7r2Zp9Kx4Wm8Ln3Bv6Hc1", "x")] == ["legacy_search_key"]
+
+
 def test_history_fixture_allowance_is_narrow(tmp_path: Path) -> None:
     """A listed history fixture is passed over in history only, and only that exact value: in a tracked file or an
     artefact it is still a finding, and a key one character different is caught in history too."""
