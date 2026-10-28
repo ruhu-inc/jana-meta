@@ -124,7 +124,7 @@ not used (preview, about 5× the output price).
 
 ### 4.3 Budget fixes that matter with $150 of credit
 
-From the 2026-10-25 review; both protect the credit (images: done; dropped streams: open):
+From the 2026-10-25 review; both protect the credit (images: done; dropped streams: done 2026-10-28):
 - A dropped stream is recorded at $0 (`cloud_gateway/app.py` ~283–302). Charge at least the input estimate on
   disconnect and record `client_disconnected`.
 - `InferenceBudget.reserve` refuses image content parts (`inference_budget.py` ~70–73). Allow image parts and price

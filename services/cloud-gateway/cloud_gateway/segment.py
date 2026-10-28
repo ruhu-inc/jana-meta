@@ -18,6 +18,7 @@ uncertain call stays counted. Nothing here logs or stores the image, the prompts
 
 from __future__ import annotations
 
+import asyncio
 import re
 from typing import Any
 
@@ -129,7 +130,7 @@ class Segmenter:
         return {day: count for day, count in rows}
 
     async def handle(self, request: Request) -> Response:
-        from cloud_gateway.app import PSEUDONYM_HEADER, _Call, _error, _upstream
+        from cloud_gateway.app import CLIENT_CLOSED, DISCONNECTED, PSEUDONYM_HEADER, _Call, _error, _upstream
 
         gw = self.gw
         started = gw.clock()
@@ -173,6 +174,13 @@ class Segmenter:
         call = _Call(session, device_hash, PROVIDER, self.sam, self.model, started, "vision", FEATURE)  # type: ignore[arg-type]
         try:
             reply = await self.sam.segment(image, width, height, objects=objects, concept=concept)
+        except asyncio.CancelledError:
+            # The caller went away with the image sent, so SAM may bill it: charged at its price (SPEC §4.3), the
+            # image stays counted, and nothing here awaits before the cancellation goes on.
+            if hold is not None and budget is not None:
+                budget.settle_flat(hold, price)
+            gw.finish(call, CLIENT_CLOSED, DISCONNECTED, Usage(), cost=price)
+            raise
         except Exception as raised:  # every failure becomes one classified reply
             failure = _upstream(raised)
             if hold is not None and budget is not None:

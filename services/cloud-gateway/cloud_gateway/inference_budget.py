@@ -3,7 +3,10 @@
 Every request reserves a conservative byte/token upper bound in SQLite before calling the adapter: text by its UTF-8
 bytes, each image at a fixed input-token allowance (images are billed as input tokens). Output
 tokens (including reasoning) are explicitly bounded. A successful response with usage replaces the reservation
-with actual cost; missing usage, failures, cancellations and crashes retain the bound until operator reconciliation.
+with actual cost. A caller that goes away before usage arrives (voice barge-in, a cancelled speculative Solver) is
+charged its input bound plus the output delivered, outcome `client_disconnected` (SPEC §4.3): Meta may omit usage on an
+interrupted stream (SPEC §16), and a hold kept at the full bound would lock the caps. Missing usage and failures retain
+the bound until operator reconciliation; holds a crashed gateway left in flight are marked `unknown` at the next start.
 No prompt, reply, account identifier or credential is stored here. Daily aggregate counters survive metadata purge;
 unresolved calls remain held across midnight. This ledger covers inference, not external hosting/voice/search fees.
 
@@ -18,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import os
 import secrets
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import replace
@@ -54,7 +58,9 @@ FAILED_OTHER = "failed_other"  # a 5xx, a network failure or an unclassified err
 TIMED_OUT = "timed_out"  # the provider timed out (408/504, or the client's timeout)
 CANCELLED = "cancelled"  # the caller went away (task cancelled, stream closed early)
 NO_USAGE = "no_usage"  # the call ended without usable usage counters
-UNKNOWN = "unknown"  # a hold made before outcomes were recorded (or by an older gateway still running)
+UNKNOWN = "unknown"  # made before outcomes were recorded, or left in flight by a gateway that stopped
+CLIENT_DISCONNECTED = "client_disconnected"  # the caller went away first: settled at the input bound plus output seen
+BILLED = (SETTLED, CLIENT_DISCONNECTED)  # a hold replaced by an amount: never settled twice
 ENDED = (FAILED_UNBILLED_UNKNOWN, FAILED_OTHER, TIMED_OUT, CANCELLED, NO_USAGE)
 # What `release_held` accepts. In-flight holds are never selectable; migrated (`unknown`) ones only by name.
 RELEASABLE = {
@@ -67,6 +73,48 @@ SELECTED = (
     "SELECT p.id, p.reserved_micros FROM inference_budget_pending p JOIN inference_budget_holds h ON h.id=p.id "
     "WHERE h.outcome IN (SELECT value FROM json_each(?)) AND h.created_at <= ? AND (? IS NULL OR h.status = ?)"
 )
+
+
+def input_bound(body: dict[str, Any], image_tokens: int) -> int:
+    """The most input tokens a chat body can bill. UTF-8 bytes bound text-token counts conservatively (a token is at
+    least one byte); framing headroom is added per message plus a fixed tool/schema allowance, and each image is
+    bounded by its token allowance (its encoded bytes say nothing about its cost). No cache discount is assumed."""
+    images = 0
+    measured_messages = []
+    for message in body.get("messages", []):
+        content = message.get("content")
+        if isinstance(content, list):
+            images += sum(1 for part in content if part.get("type") == "image_url")
+            content = [part for part in content if part.get("type") == "text"]
+        measured_messages.append({**message, "content": content})
+    body_bytes = len(json.dumps({**body, "messages": measured_messages}, ensure_ascii=False).encode())
+    return body_bytes + 4096 + 256 * len(body.get("messages", [])) + images * image_tokens
+
+
+def output_bytes(chunk: dict[str, Any] | None) -> int:
+    """The bytes a stream chunk delivered (each choice's delta): at least its visible output tokens."""
+    choices = [c for c in (chunk or {}).get("choices") or [] if isinstance(c, dict)]
+    return sum(len(json.dumps(c.get("delta") or {}, ensure_ascii=False).encode()) for c in choices)
+
+
+def abandoned_usage(request: ProviderRequest, image_tokens: int, output: int = 0) -> Usage:
+    """What a call whose caller went away before usage arrived is charged (SPEC §4.3): its input bound, plus the bytes
+    of output delivered so far. Hidden reasoning is not seen, so this is a floor the input bound's headroom pads."""
+    return Usage(input_bound(request.body, image_tokens), output)
+
+
+def _running(pid: int | None) -> bool:
+    """Another process with this id is running. This process's own id means an earlier one (a container restart
+    reuses it): the caller has made no hold yet."""
+    if pid is None or pid == os.getpid():
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True  # running as another user
+    return True
 
 
 def micros(usd: float) -> int:
@@ -91,6 +139,8 @@ class InferenceBudget:
                 for day, usd in db.execute("SELECT day,sum(cost_usd) FROM requests GROUP BY day").fetchall():
                     db.execute("INSERT INTO inference_budget_days VALUES (?,?)", (day, micros(usd)))
                 db.execute("INSERT INTO inference_budget_state VALUES (1)")
+            if "pid" not in {row[1] for row in db.execute("PRAGMA table_info(inference_budget_holds)")}:
+                db.execute("ALTER TABLE inference_budget_holds ADD COLUMN pid INTEGER")  # the process that made it
             # Holds made before outcomes were recorded (or by an older gateway still running against this file) get
             # an `unknown` row dated now, an upper bound on their age. They are never released unless named.
             db.execute(
@@ -100,6 +150,18 @@ class InferenceBudget:
                 (self.clock(), UNKNOWN),
             )
 
+    def recover(self) -> int:
+        """At the serving gateway's start, before it makes a hold: a hold still in flight whose process is gone (killed
+        or crashed mid-call, or made before holds named their process) can never end, so its outcome becomes
+        `unknown`, released like a migrated hold only when named. A hold of a process still running is left alone, so
+        the operator's command line, which also opens the ledger, never calls this. Returns how many were marked."""
+        with self.store._tx() as db:
+            rows = db.execute("SELECT id, pid FROM inference_budget_holds WHERE outcome=?", (IN_FLIGHT,)).fetchall()
+            gone = [(self.clock(), key, IN_FLIGHT) for key, pid in rows if not _running(pid)]
+            db.executemany("UPDATE inference_budget_holds SET outcome=?, resolved_at=? WHERE id=? AND outcome=?",
+                           [(UNKNOWN, *row) for row in gone])  # fmt: skip
+        return len(gone)
+
     def reserve(self, request: ProviderRequest) -> tuple[str, ProviderRequest]:
         expires = self.config.quotas.deployment_budget_expires_at
         if expires is not None and self.clock() >= expires.timestamp():
@@ -108,17 +170,10 @@ class InferenceBudget:
         if price is None:
             raise UpstreamError("quota_or_billing", "no configured price for bounded inference")
         body = dict(request.body)
-        images = 0
-        measured_messages = []
         for message in body.get("messages", []):
             content = message.get("content")
-            if isinstance(content, list):
-                if any(part.get("type") not in ("text", "image_url") for part in content):
-                    raise UpstreamError("format_error", "bounded inference accepts text and images only")
-                images += sum(1 for part in content if part.get("type") == "image_url")
-                # An image's encoded bytes say nothing about its token cost; it is bounded by its allowance below.
-                content = [part for part in content if part.get("type") == "text"]
-            measured_messages.append({**message, "content": content})
+            if isinstance(content, list) and any(part.get("type") not in ("text", "image_url") for part in content):
+                raise UpstreamError("format_error", "bounded inference accepts text and images only")
         limit = self.config.quotas.deployment_max_output_tokens
         for field in ("max_tokens", "max_completion_tokens"):
             if body.get(field) is not None:
@@ -128,13 +183,8 @@ class InferenceBudget:
                 limit = min(limit, value)
         body.pop("max_tokens", None)
         body["max_completion_tokens"] = limit
-        # UTF-8 bytes bound text-token counts conservatively (a token is at least one byte). Additional framing
-        # headroom is reserved per message plus a fixed tool/schema allowance. No cache discount is assumed.
-        measured = {**body, "messages": measured_messages}
-        body_bytes = len(json.dumps(measured, ensure_ascii=False).encode())
-        input_bound = (body_bytes + 4096 + 256 * len(body.get("messages", []))
-                       + images * self.config.quotas.deployment_image_input_tokens)  # fmt: skip
-        bound = micros(cost_usd(price, Usage(input_bound, limit)))
+        inputs = input_bound(body, self.config.quotas.deployment_image_input_tokens)
+        bound = micros(cost_usd(price, Usage(inputs, limit)))
         return self._hold(bound, request.role, request.model.id), replace(request, body=body)
 
     def reserve_flat(self, usd: float, *, role: str = "unspecified", model: str = "unspecified") -> str:
@@ -159,9 +209,9 @@ class InferenceBudget:
                 raise UpstreamError("quota_or_billing", "deployment inference budget exhausted")
             db.execute("INSERT INTO inference_budget_pending VALUES (?,?)", (key, bound))
             db.execute(
-                "INSERT INTO inference_budget_holds (id,reserved_micros,created_at,migrated,role,model,outcome) "
-                "VALUES (?,?,?,0,?,?,?)",
-                (key, bound, now, role, model, IN_FLIGHT),
+                "INSERT INTO inference_budget_holds (id,reserved_micros,created_at,migrated,role,model,outcome,pid) "
+                "VALUES (?,?,?,0,?,?,?,?)",
+                (key, bound, now, role, model, IN_FLIGHT, os.getpid()),
             )
         return key
 
@@ -176,18 +226,23 @@ class InferenceBudget:
             return
         self._settle(key, micros(cost_usd(self.config.prices[request.model.id], usage)))
 
-    def _settle(self, key: str, amount: int) -> None:
+    def abandon(self, key: str, request: ProviderRequest, output: int = 0) -> None:
+        """The caller went away before usage arrived: replace the hold with `abandoned_usage` (SPEC §4.3)."""
+        usage = abandoned_usage(request, self.config.quotas.deployment_image_input_tokens, output)
+        self._settle(key, micros(cost_usd(self.config.prices[request.model.id], usage)), CLIENT_DISCONNECTED)
+
+    def _settle(self, key: str, amount: int, outcome: str = SETTLED) -> None:
         """Record the billed amount once per hold. A hold an operator released is still settled: real spend is
         never lost to a release (the hold's bound is not counted twice, since the release already dropped it)."""
         now = self.clock()
         with self.store._tx() as db:
             row = db.execute("SELECT outcome FROM inference_budget_holds WHERE id=?", (key,)).fetchone()
             dropped = db.execute("DELETE FROM inference_budget_pending WHERE id=?", (key,)).rowcount
-            if (row is None and not dropped) or (row is not None and row[0] == SETTLED):
+            if (row is None and not dropped) or (row is not None and row[0] in BILLED):
                 return  # already settled
             db.execute(
                 "UPDATE inference_budget_holds SET outcome=?, resolved_at=?, spent_micros=? WHERE id=?",
-                (SETTLED, now, amount, key),
+                (outcome, now, amount, key),
             )
             db.execute(
                 "INSERT INTO inference_budget_days VALUES (?,?) ON CONFLICT(day) "
@@ -299,7 +354,10 @@ class BudgetedAdapter:
         key, bounded = self.budget.reserve(request)
         try:
             reply = await self.adapter.complete(bounded)
-        except BaseException as error:  # cancellation included: the hold says how the call ended
+        except asyncio.CancelledError:  # the caller went away (or timed out) before the reply
+            self.budget.abandon(key, bounded)
+            raise
+        except BaseException as error:
             self.budget.fail(key, error)
             raise
         self.budget.settle(key, bounded, reply.usage)
@@ -307,17 +365,24 @@ class BudgetedAdapter:
 
     async def stream(self, request: ProviderRequest) -> AsyncGenerator[StreamPart]:
         key, bounded = self.budget.reserve(request)
-        parts, usage, ended = self.adapter.stream(bounded), None, False
+        parts, usage, ended, delivered = self.adapter.stream(bounded), None, False, 0
         try:
             async for part in parts:
                 if part.usage is not None:
                     usage = part.usage
+                delivered += output_bytes(part.chunk)
                 yield part
             ended = True
             self.budget.settle(key, bounded, usage or Usage())  # no usage: the hold stays, marked `no_usage`
-        except BaseException as error:  # a closed stream (GeneratorExit) or a cancelled task is `cancelled`
-            if not ended:
+        except BaseException as error:
+            # Bookkeeping first, without awaiting: a cancelled caller's next await may be cancelled again.
+            cancelled = isinstance(error, (asyncio.CancelledError, GeneratorExit))  # a cancelled task or closed stream
+            if not ended and not cancelled:
                 self.budget.fail(key, error, output_seen=usage is not None)
+            elif not ended and usage is not None:
+                self.budget.settle(key, bounded, usage)  # the caller left after the usage chunk arrived
+            elif not ended:
+                self.budget.abandon(key, bounded, delivered)
             raise
         finally:
             await parts.aclose()
