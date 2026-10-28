@@ -1,8 +1,8 @@
 # Jana: an exam-prep tutor for adult learners, built on Meta's models
 
-Jana helps adults (18 and over) prepare for O level Mathematics and Physics, or refresh those foundations before
-university entry and first-year study. The content packs follow the Cambridge O level topic structure (5054, 5070),
-written in our own words, and cover the core O level topics that WAEC, NECO and GCE syllabuses share.
+Jana helps adults (18 and over) prepare for O level Mathematics, Physics and Chemistry, or refresh those foundations
+before university entry and first-year study. The content packs follow the Cambridge O level topic structure
+(5054, 5070), written in our own words, and cover the core O level topics that WAEC, NECO and GCE syllabuses share.
 
 Jana is a tutor, not a chatbot. It never just hands over an answer: it asks where the learner is stuck, works from
 their own steps and gives the next hint. Every number it says is checked by code first (a sandboxed maths and units
@@ -91,7 +91,7 @@ refuses once a limit is reached.
 uv run python -m jana_tools.hackathon_dev
 ```
 
-Open **http://127.0.0.1:5187/**. The first launch builds and verifies the Mathematics and Physics packs from
+Open **http://127.0.0.1:5187/**. The first launch builds and verifies the Mathematics, Physics and Chemistry packs from
 `content/curriculum` and signs them with the published development key (a few minutes; later launches reuse them).
 Create a profile, then in Settings → Online features give your consent to the cloud tutor.
 

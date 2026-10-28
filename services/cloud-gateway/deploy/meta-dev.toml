@@ -29,3 +29,11 @@ deployment_max_output_tokens = 16384
 # Sponsored development access shares the deployment's inference allocation above.
 [tier]
 allowance_usd_per_student_month = 15.00
+
+# Study Podcasts are read by cloud voice's Kokoro-82M (above), bounded on their own (§6.4).
+[podcast_speech]
+enabled = true
+daily_characters = 20000
+total_characters = 100000
+daily_requests = 100
+total_requests = 500

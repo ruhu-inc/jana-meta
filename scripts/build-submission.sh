@@ -2,30 +2,30 @@
 # Build the hackathon submission tree (SPEC §9, JM-D17): only the parts the entry needs, from one commit, with no
 # history. The tree is written to OUT; nothing is pushed or submitted.
 #
-#   scripts/build-submission.sh [--ref REF] [--chemistry] [--verify] OUT
+#   scripts/build-submission.sh [--ref REF] [--no-chemistry] [--verify] OUT
 #
-#   --ref REF     the commit to build from (default HEAD; the working tree's uncommitted changes are never included)
-#   --chemistry   ship the Chemistry pack as well as Mathematics and Physics (owner decision, §9)
-#   --verify      afterwards, copy OUT to a scratch folder, install it from its lockfiles and run the core suites
-#                 there, so OUT itself never holds node_modules, .venv or target
+#   --ref REF       the commit to build from (default HEAD; the working tree's uncommitted changes are never included)
+#   --no-chemistry  leave the Chemistry pack out; by default it ships with Mathematics and Physics (owner, §9)
+#   --verify        afterwards, copy OUT to a scratch folder, install it from its lockfiles and run the core suites
+#                   there, so OUT itself never holds node_modules, .venv or target
 #
 # Needs git, uv, pnpm, cargo and Node 24 (.nvmrc). The lockfiles are regenerated for the smaller workspace from the
 # versions already pinned here, so `pnpm install --frozen-lockfile`, `uv sync --locked` and `cargo build --locked`
 # work in the tree.
 set -euo pipefail
 
-ref=HEAD chemistry=0 verify=0 out=""
+ref=HEAD chemistry=1 verify=0 out=""
 while (($#)); do
   case "$1" in
     --ref) ref="$2"; shift 2 ;;
-    --chemistry) chemistry=1; shift ;;
+    --no-chemistry) chemistry=0; shift ;;
     --verify) verify=1; shift ;;
     -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
     -*) echo "unknown option $1" >&2; exit 2 ;;
     *) out="$1"; shift ;;
   esac
 done
-[[ -n "$out" ]] || { echo "usage: $0 [--ref REF] [--chemistry] [--verify] OUT" >&2; exit 2; }
+[[ -n "$out" ]] || { echo "usage: $0 [--ref REF] [--no-chemistry] [--verify] OUT" >&2; exit 2; }
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 [[ "$(node -v 2>/dev/null)" == v24.* ]] || { echo "Node 24 is needed (.nvmrc); found $(node -v 2>/dev/null || echo none)" >&2; exit 1; }
 if [[ -e "$out" ]] && [[ -n "$(ls -A "$out" 2>/dev/null)" ]]; then
@@ -200,7 +200,21 @@ status=0
 pnpm install --frozen-lockfile
 uv sync --locked --all-packages
 cargo build --locked --workspace
-uv run --frozen pytest -q -p no:cacheprovider services || status=1
+# The Python suite takes hours in one process, so its test files run in VERIFY_JOBS parallel shards (default 6).
+jobs="${VERIFY_JOBS:-6}"
+find services -path '*/tests/*' -name 'test_*.py' | sort > .verify-files
+pids=()
+for i in $(seq 0 $((jobs - 1))); do
+  awk -v n="$jobs" -v i="$i" 'NR % n == i' .verify-files > ".verify-shard$i"
+  # shellcheck disable=SC2046  # one argument per test file
+  uv run --frozen pytest -q -p no:cacheprovider -rfE $(cat ".verify-shard$i") > ".verify-pytest$i.log" 2>&1 &
+  pids+=("$!")
+done
+for i in "${!pids[@]}"; do
+  wait "${pids[$i]}" || status=1
+  grep -hE '^(FAILED|ERROR) ' ".verify-pytest$i.log" || true
+  tail -n 1 ".verify-pytest$i.log"
+done
 pnpm test || status=1
 cargo test --locked --workspace || status=1
 echo "verify: $([[ $status == 0 ]] && echo passed || echo FAILED) in $work"

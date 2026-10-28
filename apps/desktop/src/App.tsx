@@ -1,6 +1,7 @@
 import { LearningJourneyController, nextJourneyAction, type JourneyAction, type LearningJourneyView } from "@jana/client-core";
 import { LearningJourney, StudyJourney } from "@jana/ui";
 import type { S2Screen } from "./routes.js";
+import { BrowserPodcastAudio } from "./podcast-audio.js";
 import { BrowserLocalSpeech } from "./local-speech.js";
 import { objectiveForKc, objectiveForLesson, objectiveForTopic, type LearningObjective } from "./learning-navigation.js";
 // The desktop client (M5, M10): first run on a computer with no students yet ("Who's learning?", then the hand-off,
@@ -118,7 +119,7 @@ export function createRuntime(launch: Launch, fetchImpl?: typeof fetch): AppRunt
   const knows = new KnowsController(profiles);
   const runtime: AppRuntime = {
     holder, profiles, knows, map: new SubjectMapController(profiles), conceptMap: new ConceptMapController(profiles), lessons: new LessonController(profiles), practice: new PracticeController(profiles), mocks: new MockController(profiles), pastPapers: new PastPaperController(profiles), examDates: new ExamDateController(profiles),
-    studyWorkspace: new StudyWorkspaceController(profiles, new BrowserLocalSpeech()), sessionNotes: new SessionNotesController(profiles), savedQuestions: new SavedQuestionsController(profiles), assessments: new AssessmentController(profiles), plans: new PlanController(profiles), progress: new ProgressController(profiles), history: new HistoryController(profiles), search: new SearchController(profiles), goal: new DailyGoal(profiles), ask: new AskController(profiles), launch,
+    studyWorkspace: new StudyWorkspaceController(profiles, new BrowserLocalSpeech(), new BrowserPodcastAudio()), sessionNotes: new SessionNotesController(profiles), savedQuestions: new SavedQuestionsController(profiles), assessments: new AssessmentController(profiles), plans: new PlanController(profiles), progress: new ProgressController(profiles), history: new HistoryController(profiles), search: new SearchController(profiles), goal: new DailyGoal(profiles), ask: new AskController(profiles), launch,
   };
   return fetchImpl === undefined ? runtime : { ...runtime, fetch: fetchImpl };
 }

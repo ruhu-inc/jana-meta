@@ -154,6 +154,7 @@ _TOKEN = re.compile(
     r"\\(?:[a-zA-Z]+|[,;:! ])|(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?|"
     r"[a-zA-Z]+(?:['\u2019][a-zA-Z]+)*|<=|>=|!=|[^\s]"
 )
+_WORD = r"[a-zA-Z]+(?:['\u2019][a-zA-Z]+)*"
 _FORMULA = re.compile(r"(?:[A-Z][a-z]?)+")  # element symbols as written in a formula: CO, NH, Fe, Mg
 _CHARGE = re.compile(r"[1-9]?[+-]")  # an ion's charge as a superscript: 2+, 3-, +, -
 # Lowercase runs a maths span reads as named functions (TeX writes the rest as products of single-letter variables).
@@ -308,6 +309,19 @@ class _Math:
         after = self.peek()
         return bool(_RATIO_SIDE.fullmatch(before)) and bool(_RATIO_SIDE.fullmatch(after) or after in ("(", "{", "["))
 
+    def hyphen(self) -> bool:
+        """A hyphen glued between words (well-known, light-years, x-axis, a 20-minute break) belongs to the word and
+        is never read as a sign. Single letters on both sides (x-y) and anything in a maths span stay a minus."""
+        position = self.index - 1
+        if (self.maths and not self.words) or position < 1 or position + 1 >= len(self.tokens):
+            return False
+        before, after = self.tokens[position - 1], self.peek()
+        if not (self.glued[position] and self.glued[position + 1]) or not re.fullmatch(_WORD, after):
+            return False
+        if _NUMBER.fullmatch(before):
+            return len(after) > 2 and after not in FUNCTIONS
+        return re.fullmatch(_WORD, before) is not None and max(len(before), len(after)) > 1
+
     def peek(self) -> str:
         return self.tokens[self.index] if self.index < len(self.tokens) else ""
 
@@ -447,6 +461,10 @@ class _Math:
             if token == "{":
                 self.index -= 1
                 spoken, _ = self.group(depth)
+            elif token == "-" and pieces and self.hyphen():
+                pieces[-1] += "-" + self.take()
+                operand = chemical = False
+                continue
             elif token == "-":
                 spoken = "minus" if operand else "negative"
             elif token == ":" and not self.ratio():

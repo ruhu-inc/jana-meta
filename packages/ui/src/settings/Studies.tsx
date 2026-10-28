@@ -1,11 +1,9 @@
 // The study screen (UXS-07, TABLE UXS-46a's Online features; PRV-05, PRV-06, D87, EVL-22): below the online features,
 // the open profile's research scopes, each a switch of its own with its plain-words consent line (TABLE PRV-05a). A new
-// grant asks first: on a profile under 18 the parent or guardian ticks "I'm this student's parent or guardian and I
-// agree to this study." and "Turn on" stays disabled until it is ticked; the student pressing it is their assent
-// (`granted_by_role: guardian`, `in_app_guardian`). On a profile of 18 or over the student ticks their own agreement
-// instead (`student_18_plus`). Which one shows comes from the open profile's age band (`GET /v1/profiles/{id}`, D93); a
-// band that cannot be read counts as a minor's, and the core refuses a minor's own agreement either way.
-// Any profile pauses its consent and switches it back on with no guardian step, or withdraws it (D87). While
+// grant asks first: the student ticks their own agreement and "Turn on" stays disabled until it is ticked
+// (`student_18_plus`). Jana is for learners aged 18 or over (W5), so no guardian agreement is ever offered: a profile
+// whose band does not read as 18 or over (`GET /v1/profiles/{id}`, D93) is told it can't take part, and the core
+// refuses it either way. Any profile pauses its consent and switches it back on in one step, or withdraws it (D87). While
 // `research_use` is on, the research export (TABLE DAT-10a) takes the study's approvals from the study host (the
 // school's approval reference and the registered protocol reference) and the student's own assent, and saves an
 // encrypted file for the study team; nothing is sent from here.
@@ -17,14 +15,13 @@ import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
 import { Button, ConfirmDialog, Dialog, ErrorState, FIELD_LOOK, Notice, Skeleton } from "../primitives/index.js";
 
-/** The agreement before a new grant: the consent line, who agrees (the parent or guardian on a minor's profile, the
- * student on an adult's), and "Turn on" once it is ticked. */
+/** The agreement before a new grant: the consent line, the student's own agreement, and "Turn on" once it is ticked.
+ * A profile that is not 18 or over is told it can't take part; it is never offered a guardian's agreement (W5). */
 export function StudyAgreement({ scope, adult, open, busy, refused, onCancel, onAgree }: {
-  scope: string; adult: boolean; open: boolean; busy: boolean; refused: string | null; onCancel: () => void; onAgree: (guardian: boolean) => void;
+  scope: string; adult: boolean; open: boolean; busy: boolean; refused: string | null; onCancel: () => void; onAgree: () => void;
 }) {
   const t = useT();
   const id = useId();
-  const option = adult ? "adult" : "guardian";
   const [agreed, setAgreed] = useState(false);
   useEffect(() => {
     if (open) setAgreed(false);
@@ -34,18 +31,20 @@ export function StudyAgreement({ scope, adult, open, busy, refused, onCancel, on
       <div className="flex flex-col gap-4" data-study-agreement={scope}>
         <p className="text-body text-ink">{t(`settings.study.consent.${scope}`)}</p>
         <p className="text-ui text-muted">{t("settings.study.what")}</p>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-ui font-medium text-ink">{t("settings.study.who")}</legend>
-          <label htmlFor={`${id}-${option}`} className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-line-strong bg-canvas px-4 py-3 text-ui text-ink has-[:checked]:border-ink has-[:checked]:bg-wash">
-            <input id={`${id}-${option}`} type="checkbox" className="mt-0.5 size-4 shrink-0" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} data-agree={option} />
-            <span>{t(`settings.study.agree.${option}`)}</span>
-          </label>
-        </fieldset>
-        <p className="text-meta text-muted">{t("settings.study.assent")}</p>
+        {adult ? (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-ui font-medium text-ink">{t("settings.study.who")}</legend>
+            <label htmlFor={`${id}-adult`} className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-line-strong bg-canvas px-4 py-3 text-ui text-ink has-[:checked]:border-ink has-[:checked]:bg-wash">
+              <input id={`${id}-adult`} type="checkbox" className="mt-0.5 size-4 shrink-0" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} data-agree="adult" />
+              <span>{t("settings.study.agree.adult")}</span>
+            </label>
+          </fieldset>
+        ) : <Notice message={t("settings.study.needs_guardian")} />}
+        {adult && <p className="text-meta text-muted">{t("settings.study.assent")}</p>}
         {refused !== null && <ErrorState message={t(refused)} />}
         <div className="flex justify-end gap-2">
           <Button onClick={onCancel}>{t("action.cancel")}</Button>
-          <Button tone="primary" disabled={!agreed || busy} onClick={() => agreed && onAgree(!adult)}>{t("settings.online.turn_on")}</Button>
+          <Button tone="primary" disabled={!adult || !agreed || busy} onClick={() => adult && agreed && onAgree()}>{t("settings.online.turn_on")}</Button>
         </div>
       </div>
     </Dialog>
@@ -129,16 +128,16 @@ export function Studies({ profiles, chooseSource }: { profiles: ProfileControlle
   const scopes = RESEARCH_SCOPES.filter((scope) => consents.some((c) => c.scope === scope));
   if (scopes.length === 0) return null;
   const replace = (next: ConsentState) => setConsents((list) => Array.isArray(list) ? [...list.filter((c) => c.scope !== next.scope), next] : list);
-  const change = async (scope: string, action: "on" | "pause" | "withdraw", guardian = false): Promise<boolean> => {
+  const change = async (scope: string, action: "on" | "pause" | "withdraw"): Promise<boolean> => {
     setBusy(true);
     setError(null);
     setRefused(null);
     try {
-      replace(await switchConsent(profiles.commands, profiles.scope().profileId, scope, action, guardian));
+      replace(await switchConsent(profiles.commands, profiles.scope().profileId, scope, action));
       return true;
     } catch (e) {
       const code = (e as { code?: string }).code ?? "internal_error";
-      // A minor's own new grant: the parent or guardian has to agree (PRV-06).
+      // A new grant the core refused: a profile not 18 or over can't take part (PRV-06, W5).
       if (asking !== null) setRefused(code === "validation_failed" ? "settings.study.needs_guardian" : `error.${code}`);
       else setError(code);
       return false;
@@ -175,9 +174,9 @@ export function Studies({ profiles, chooseSource }: { profiles: ProfileControlle
       {error !== null && <ErrorState message={t(`error.${error}`)} />}
       {research?.effective === true && chooseSource !== undefined && <ResearchExport profiles={profiles} chooseSource={chooseSource} />}
       <StudyAgreement scope={asking ?? "research_use"} adult={adult} open={asking !== null} busy={busy} refused={refused} onCancel={() => setAsking(null)}
-        onAgree={(guardian) => {
+        onAgree={() => {
           const scope = asking;
-          if (scope !== null) void change(scope, "on", guardian).then((ok) => ok && setAsking(null));
+          if (scope !== null) void change(scope, "on").then((ok) => ok && setAsking(null));
         }} />
       <ConfirmDialog open={withdrawing !== null} message={t("settings.study.withdraw_confirm")} confirm={t("settings.study.withdraw")} cancel={t("action.cancel")} destructive
         onCancel={() => setWithdrawing(null)} onConfirm={() => {

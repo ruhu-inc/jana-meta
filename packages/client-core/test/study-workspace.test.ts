@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { StudyWorkspaceController, EMPTY_STUDY } from "../src/study-workspace.js";
+import { StudyWorkspaceController, EMPTY_STUDY, type PodcastAudio } from "../src/study-workspace.js";
 import { CommandClient } from "../src/stream/commands.js";
 import { ProfileController } from "../src/profiles.js";
 import { StoreHolder } from "../src/index.js";
@@ -53,13 +53,13 @@ test("a file is saved locally while Study permission is pending, without startin
   expect(processing).not.toHaveBeenCalled();
   expect(study.getView()).toMatchObject({ error: null, source: { title: "notes.pdf", state: "queued" }, access: { status: "consent_required" } });
 });
-function setup(get: (path: string) => Promise<unknown>, post = vi.fn(async () => SOURCE), speech?: LocalSpeech) {
+function setup(get: (path: string) => Promise<unknown>, post = vi.fn(async () => SOURCE), speech?: LocalSpeech, podcastAudio?: PodcastAudio) {
   let clear = () => {};
   const wrappedPost = vi.fn(async (path: string, ...args: unknown[]) => path.endsWith("/journey") ? { journey: null } : path.startsWith("/v1/study/retries/") ? { client_key: `cli_${"0".repeat(26)}`, expires_at: "2099-10-18T00:05:00Z" } : (post as unknown as (path: string, ...args: unknown[]) => Promise<unknown>)(path, ...args));
   const commands = { get: vi.fn(async (path: string) => path.endsWith("/saved-result") ? { result: null } : get(path)), post: wrappedPost, request: vi.fn(async (method: string, path: string, body: unknown, key: string, headers: unknown) => path.endsWith("/journey") ? { journey: null } : (post as unknown as (path: string, ...args: unknown[]) => Promise<unknown>)(path, body, key, headers)), delete: vi.fn(async () => undefined), scoped: vi.fn() };
   commands.scoped.mockImplementation(() => commands);
   const profiles = { generation: 1, commands, onClear: (fn: () => void) => { clear = fn; }, getView: () => ({ settings: null }) };
-  const controller = new StudyWorkspaceController(profiles as unknown as ProfileController, speech);
+  const controller = new StudyWorkspaceController(profiles as unknown as ProfileController, speech, podcastAudio);
   return { controller, profiles, clear: () => { profiles.generation++; clear(); } };
 }
 test("workspace rejects malformed wire data and clears late profile responses", async () => {
@@ -272,6 +272,86 @@ test.each(["chat", "summary", "flashcards", "quiz"])("a newly requested %s opens
   expect(fake.controller.getView().aid).toBeNull(); // no unsolicited reopening
 });
 
+
+test.each(["finish", "stop_pending", "profile_clear"])("Podcast voice %s never uses system synthesis or plays a late response", async (mode) => {
+  const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", title: "Overview", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA")], status: "ready", created_at: now };
+  let release: ((value: Blob) => void) | undefined;
+  const pendingAudio = new Promise<Blob>((resolve) => { release = resolve; });
+  const local: LocalSpeech = { available: () => false, subscribe: () => () => {}, speak: vi.fn() };
+  const audio: PodcastAudio = { available: () => true, activate: vi.fn(), play: vi.fn((_blob, _rate, callbacks) => { void Promise.resolve().then(callbacks.end); return vi.fn(); }) };
+  const post = vi.fn(async () => mode === "finish" ? new Blob([new Uint8Array(52)], { type: "audio/wav" }) : pendingAudio);
+  const fake = setup(async (path) => {
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
+    if (path.includes("/speech?")) return { aid_id: AID, claim_index: 0, text: "DNA", next_offset: null, last_claim: true };
+    return aid;
+  }, post as never, local, audio);
+  await fake.controller.showAid(AID);
+  expect(fake.controller.getView().canSpeak).toBe(true);
+  const playback = fake.controller.playOverview();
+  await vi.waitFor(() => expect(post).toHaveBeenCalled());
+  if (mode !== "finish") {
+    if (mode === "profile_clear") fake.clear(); else fake.controller.stopReading();
+    release!(new Blob([new Uint8Array(52)], { type: "audio/wav" }));
+  }
+  await playback;
+  expect(local.speak).not.toHaveBeenCalled();
+  expect(audio.activate).toHaveBeenCalledOnce();
+  expect(audio.play).toHaveBeenCalledTimes(mode === "finish" ? 1 : 0);
+  expect(fake.controller.getView().reading).toBe(false);
+  if (mode === "finish") expect(fake.controller.getView().audioCompleted).toBe(true);
+  const request = post.mock.calls[0] as unknown as [string, { text?: string; text_sha256: string } & Record<string, unknown>];
+  expect(request[0]).toContain("/neural-speech");
+  expect(Object.keys(request[1]).sort()).toEqual(["claim", "offset", "text_sha256"]);
+  expect(request[1].text_sha256).toHaveLength(64);
+  expect(request[1].text).toBeUndefined(); // script is selected again by the native core
+});
+
+
+test("Podcast voice failure is visible and never silently falls back to an available robotic system voice", async () => {
+  const { CommandError } = await import("../src/stream/commands.js");
+  const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", title: "Overview", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA")], status: "ready", created_at: now };
+  const local: LocalSpeech = { available: () => true, subscribe: () => () => {}, speak: vi.fn() };
+  const audio: PodcastAudio = { available: () => true, activate: vi.fn(), play: vi.fn() };
+  const fake = setup(async (path) => {
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
+    if (path.includes("/speech?")) return { aid_id: AID, claim_index: 0, text: "DNA", next_offset: null, last_claim: true };
+    return aid;
+  }, vi.fn(async () => { throw new CommandError(503, "validation_failed", false, { reason: "neural_speech_unavailable" }); }) as never, local, audio);
+  await fake.controller.showAid(AID);
+  await fake.controller.playOverview();
+  expect(local.speak).not.toHaveBeenCalled();
+  expect(audio.play).not.toHaveBeenCalled();
+  expect(fake.controller.getView()).toMatchObject({ reading: false, audioPreparing: false, error: "neural_speech_unavailable" });
+});
+
+test("Podcast voice buffers only one passage ahead; Pause holds the next passage and Stop drops it", async () => {
+  const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", title: "Overview", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA"), cite("RNA"), cite("Enzymes")], status: "ready", created_at: now };
+  const ended: (() => void)[] = [], cancelled = vi.fn();
+  const audio: PodcastAudio = { available: () => true, activate: vi.fn(), pause: vi.fn(), resume: vi.fn(), play: vi.fn((_blob, _rate, cb) => { ended.push(cb.end); return cancelled; }) };
+  const post = vi.fn(async () => new Blob([new Uint8Array(52)], { type: "audio/wav" }));
+  const fake = setup(async (path) => {
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
+    if (path.includes("/speech?")) { const n = Number(new URL(path, "http://core.test").searchParams.get("claim")); return { aid_id: AID, claim_index: n, text: ["DNA", "RNA", "Enzymes"][n], next_offset: null, last_claim: n === 2 }; }
+    return aid;
+  }, post as never, undefined, audio);
+  await fake.controller.showAid(AID);
+  const playback = fake.controller.playOverview();
+  await vi.waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+  expect(audio.play).toHaveBeenCalledTimes(1); // second request overlaps first audio, no third speculative send
+  fake.controller.pauseOverview(); ended[0]!();
+  await Promise.resolve(); await Promise.resolve();
+  expect(fake.controller.getView().audioPaused).toBe(true);
+  expect(audio.play).toHaveBeenCalledTimes(1);
+  fake.controller.resumeOverview();
+  await vi.waitFor(() => expect(audio.play).toHaveBeenCalledTimes(2));
+  await vi.waitFor(() => expect(post).toHaveBeenCalledTimes(3));
+  fake.controller.stopReading();
+  await playback;
+  expect(cancelled).toHaveBeenCalledOnce();
+  expect(audio.play).toHaveBeenCalledTimes(2);
+  expect(fake.controller.getView()).toMatchObject({ reading: false, audioPaused: false, audioCompleted: false });
+});
+
 test("checking one quiz question sends no other answers and keeps the whole-quiz result separate", async () => {
   const quizId = `sqz_${"0".repeat(26)}`;
   const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "quiz", title: "Biology", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA")], status: "ready", created_at: now, quiz_id: quizId };
@@ -282,6 +362,47 @@ test("checking one quiz question sends no other answers and keeps the whole-quiz
   expect(post).toHaveBeenLastCalledWith(`/v1/study/quizzes/${quizId}/attempts`, expect.objectContaining({ answers: [{ item_id: "q1", answer: "true" }] }), expect.any(String), expect.anything());
   expect(fake.controller.getView().quizFeedback).toEqual({ q1: feedback });
   expect(fake.controller.getView().result).toBeNull();
+});
+
+test("a failed speculative speech request is observed, never retried, and reported after current audio ends", async () => {
+  const { CommandError } = await import("../src/stream/commands.js");
+  const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", title: "Overview", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA"), cite("RNA")], status: "ready", created_at: now };
+  let end = () => {};
+  const audio: PodcastAudio = { available: () => true, activate: vi.fn(), play: vi.fn((_blob, _rate, cb) => { end = cb.end; return vi.fn(); }) };
+  const post = vi.fn(async () => { if (post.mock.calls.length > 1) throw new CommandError(503, "validation_failed", false, { reason: "neural_speech_unavailable" }); return new Blob([new Uint8Array(52)], { type: "audio/wav" }); });
+  const fake = setup(async (path) => {
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
+    if (path.includes("/speech?")) { const n = Number(new URL(path, "http://core.test").searchParams.get("claim")); return { aid_id: AID, claim_index: n, text: n ? "RNA" : "DNA", next_offset: null, last_claim: n === 1 }; }
+    return aid;
+  }, post as never, undefined, audio);
+  await fake.controller.showAid(AID); const playback = fake.controller.playOverview();
+  await vi.waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+  expect(fake.controller.getView().reading).toBe(true);
+  end(); await playback;
+  expect(fake.controller.getView()).toMatchObject({ error: "neural_speech_unavailable", reading: false, audioCompleted: false });
+  expect(post).toHaveBeenCalledTimes(2); expect(audio.play).toHaveBeenCalledOnce();
+});
+
+test("Resume rechecks native permission and cancels buffered audio if Study consent was withdrawn", async () => {
+  const { CommandError } = await import("../src/stream/commands.js");
+  const aid = { aid_id: AID, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", title: "Overview", sources: [{ source_id: sid, revision: 1 }], claims: [cite("DNA"), cite("RNA")], status: "ready", created_at: now };
+  let allowed = true;
+  const cancelled = vi.fn(), audio: PodcastAudio = { available: () => true, activate: vi.fn(), pause: vi.fn(), resume: vi.fn(), play: vi.fn(() => cancelled) };
+  const fake = setup(async (path) => {
+    if (path === "/v1/study/podcast-voice") return { enabled: true, configured: true, provider: "kokoro" };
+    if (path.includes("/speech?")) {
+      if (!allowed) throw new CommandError(403, "validation_failed", false, { reason: "consent_required" });
+      const n = Number(new URL(path, "http://core.test").searchParams.get("claim"));
+      return { aid_id: AID, claim_index: n, text: n ? "RNA" : "DNA", next_offset: null, last_claim: n === 1 };
+    }
+    return aid;
+  }, vi.fn(async () => new Blob([new Uint8Array(52)], { type: "audio/wav" })) as never, undefined, audio);
+  await fake.controller.showAid(AID); const playback = fake.controller.playOverview();
+  await vi.waitFor(() => expect(audio.play).toHaveBeenCalledOnce());
+  fake.controller.pauseOverview(); allowed = false;
+  await fake.controller.resumeOverview(); await playback;
+  expect(cancelled).toHaveBeenCalledOnce(); expect(audio.play).toHaveBeenCalledOnce();
+  expect(fake.controller.getView()).toMatchObject({ reading: false, audioPaused: false, error: "consent_required" });
 });
 
 test("library archive restores by metadata only and cannot leak a late result across profile switches", async () => {

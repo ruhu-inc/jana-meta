@@ -52,6 +52,17 @@ class AskSearch(_Strict):
     secret: str  # the API key's name in the secret source, never the key itself (SEC-20)
 
 
+class PodcastSpeech(_Strict):
+    """Podcast narration by cloud voice's own verbatim voice (`voice_tts`, Kokoro-82M; JM-D13), bounded on its own."""
+
+    enabled: bool = False
+    daily_characters: int = Field(default=20000, ge=1, le=100000)
+    total_characters: int = Field(default=100000, ge=1, le=1000000)
+    daily_requests: int = Field(default=100, ge=1, le=500)
+    total_requests: int = Field(default=500, ge=1, le=2000)
+    expires_at: AwareDatetime | None = None
+
+
 class Sam(_Strict):
     """SAM 3.1 segmentation through Meta's Responses API (JM-D10, SPEC §5): the photo regions Muse Spark read become
     exact masks so Jana can point at the learner's own working. Priced per image, not per token, and counted against
@@ -424,6 +435,7 @@ class GatewayConfig(_Strict):
     # Ask anything (STU-20, D117): the model that writes the cited answer and the search backend it reads from.
     ask_model: str = Field(default="primary/fast-model", pattern=r"^[a-z][a-z0-9_-]*/[a-z][a-z0-9_-]*$")
     ask_search: AskSearch | None = None
+    podcast_speech: PodcastSpeech = Field(default_factory=PodcastSpeech)
     sam: Sam = Field(default_factory=Sam)
     research: Research = Field(default_factory=Research)
     ask_search_results: int = key(6, serves="STU-20", unit="sources", ge=1, le=10)

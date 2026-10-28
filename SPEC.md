@@ -25,7 +25,7 @@ Work landed on `main` today, from this session and from parallel sessions merged
 | W7 Research agent | **Built 2026-10-27, end-to-end check next**: the conversation and plan on the device (§18.1a), the gateway job (search, safe fetch, checkpoints, source steering; 4 questions → 16 s, 22 pages, $0.04), import into Study as one cited material with Study's verified parts, the Study UI and "Make a study pack" from the diagram drill | A full pack from the browser, timed; the podcast read by Kokoro on the device |
 | Standout features (parallel session) | Checked figures, gap tracing, explain-back, predict-before-you-see sims merged | — |
 | Glimmer-free check | `phys_circuit`'s recursive schema unrolled for Spark (§16) | — |
-| Meta-only entry (JM-D12, JM-D14, JM-D19) | **Done 2026-10-28**: NVIDIA's trial voice and the podcast's neural speech path removed (podcasts use the installed voice), the Google/Gemini stack and the old production release material deleted, only Muse Glimmer recommended offline, key references renamed `jana-meta.` | — |
+| Meta-only entry (JM-D12, JM-D14, JM-D19) | **Done 2026-10-28**: NVIDIA's trial voice removed (Study Podcasts are read by the gateway's Kokoro through the podcast route), the Google/Gemini stack and the old production release material deleted, only Muse Glimmer recommended offline, key references renamed `jana-meta.` | — |
 
 ## 1. What we are building
 
@@ -60,11 +60,11 @@ for schools once it has a public link.
 | JM-D10 | **Online vision is Muse Spark + SAM 3.1.** Muse Spark reads the photo (what the question is, which regions matter); SAM 3.1 turns those regions into exact masks so Jana can crop for a second, sharper read and point at the exact place on the learner's own photo. |
 | JM-D11 | **Local inference is Muse Glimmer 30B** (Apache-2.0, official GGUF Q4_K_M, ~16.8 GB) under the existing llama-server supervisor, on 32 GB+ machines. Smaller machines run online only. No non-Meta local language model ships in the entry (offline speech models are covered by JM-D12 and JM-D13). |
 | JM-D12 | **Speech to text is Meta.** Online: Muse Voice Transcribe (realtime). Offline: Meta **Omnilingual ASR** (Apache-2.0) if it passes the latency gate in §6.3; otherwise faster-whisper stays as the offline fallback. English only (JM-D18). Speech out is Kokoro-82M (JM-D13): the NVIDIA trial voice was retired 2026-10-28 and its code removed. |
-| JM-D13 | **Text to speech is not Meta**, because Meta has no commercially usable TTS (MMS-TTS is CC-BY-NC and not streaming). Online and offline: **Kokoro-82M** (Apache-2.0, already in the speech pack), served by the gateway online and read on the device offline. Podcasts (study packs, §18) are read by the device's installed voice until Kokoro reads them there. (NVIDIA's trial voice was used in development until 2026-10-28; its audio could not be distributed, and it is removed.) |
+| JM-D13 | **Text to speech is not Meta**, because Meta has no commercially usable TTS (MMS-TTS is CC-BY-NC and not streaming). Online and offline: **Kokoro-82M** (Apache-2.0, already in the speech pack), served by the gateway online and read on the device offline. Study Podcasts are read online by the gateway's Kokoro through the podcast route (`podcast_speech.py`). (NVIDIA's trial voice was used in development until 2026-10-28; its audio could not be distributed, and it is removed.) |
 | JM-D14 | **Removed:** Nebius Token Factory, all Nemotron models, Tavily web search, and the Google/Gemini cloud stack (Gemini models, Gemini Live, Chirp STT/TTS) from configuration and from the submission. Done: the Google stack's code, tests and release material were deleted 2026-10-28 (§8.1). |
 | JM-D15 | **Adult product:** every profile is `18_plus`; guardian consent, parent summaries, family plan and under-18 Ask policies are hidden or removed. Sign-up asks for date of birth and blocks under-18s. |
 | JM-D16 | **Muse Spark Standard mode only**, never Contributor mode (Meta trains on Contributor data). Contributor mode is a separate model id (`muse-spark-1.3-contributor`), so the gateway configures only Standard ids. Zero data retention for the project account is requested only if the owner chooses it over the research agent (§15 item 2): it disables search grounding, background and stored requests, and file uploads. Muse Code, if used, must not run in Contributor mode on this repository: **Muse Code subscriptions default to Contributor mode**, so run it with `--contributor-mode off` or `MUSE_CONTRIBUTOR_MODE=0`. |
-| JM-D17 | **Submission scope:** the organisers receive a perpetual licence to whatever is submitted (Official Rules, "Hackathon Submission"). Only what the entry needs is submitted (§9). The owner signs off on the scope before submission. |
+| JM-D17 | **Submission scope:** the organisers receive a perpetual licence to whatever is submitted (Official Rules, "Hackathon Submission"). Only what the entry needs is submitted (§9). The owner signs off on the scope before submission. Owner, 2026-10-27: Chemistry ships with Mathematics and Physics; Accounting stays out. |
 | JM-D18 | **English only** (owner, 2026-10-26). No Yoruba, Hausa, Igbo or Pidgin input in the entry; Voice Transcribe does not support the first three anyway. |
 | JM-D19 | **Meta-native presentation** (owner, 2026-10-26). The code, configuration names, interface copy and documentation read as a project built for Meta's models from the start: no Nebius, Nemotron, Tavily or earlier-hackathon framing remains (for example the keychain service is `jana-meta.cloud-gateway`, and the README is about Meta). Done 2026-10-28: identifier `app.jana-meta.desktop`, key references `jana-meta.`, no NVIDIA, Google, Qwen or Gemma in what ships (§17 Identity). |
 | JM-D20 | **Voice conversation in the tutor** (owner, 2026-10-27; replaces D130 on the tutor screen for this entry). With Cloud voice switched on, the tutor screen offers the voice bar ("Start a conversation", push to talk, hands-free): every spoken question is a full tutor turn, with the filler at 1.5 s and the accepted spoken form read sentence by sentence by Kokoro; every spoken word still comes from an accepted engine turn (JM-D6). Without Cloud voice the tutor keeps dictation and read-aloud only; Ask anything and Study keep their own conversations. |
@@ -218,9 +218,9 @@ PCM silence between turns or reconnects; `endStream` ends the whole session.
 
 The gateway reads accepted sentences with Kokoro-82M (`providers/kokoro_speech.py`, a worker under the speech
 runtime's interpreter), resampled for the bridge. NVIDIA's API-catalog trial voice was used in development until
-2026-10-28; the trial forbids distributing its audio, so it was retired and its gateway route, synthesizer, key
-source and the podcast's neural speech path on the device were deleted. Podcasts are read by the device's installed
-voice; reading them with Kokoro on the device is §18's open item.
+2026-10-28; the trial forbids distributing its audio, so its synthesizer, configuration and key source were deleted.
+Study Podcasts keep their route (`podcast_speech.py`, `/v1/podcast/voice` and `/v1/podcast/speech`), which reads each
+frozen passage with the same Kokoro synthesizer; reading them with Kokoro on the device, offline, is §18's open item.
 
 ### 6.3 Offline speech to text: Omnilingual ASR, gated
 
@@ -359,9 +359,9 @@ install"; **the owner signs off this list**):
 - `services/pack-builder` and `services/signing-service`: the browser host builds and development-signs the packs
   from their sources on first launch (`apps/desktop/dev/seed_packs.py`), so the entry does not install without them.
   Only the published development key is used; no release key or signing record ships;
-- **Mathematics and Physics** content packs with their shared `ref/common` lists; **Chemistry** with `--chemistry`
-  (owner decision: the renderers ship a titration predict-before-you-see sim tied to a Chemistry misconception, so
-  without the pack one renderers test fails and that sim has no lesson behind it); Accounting stays out;
+- **Mathematics, Physics and Chemistry** content packs with their shared `ref/common` lists (owner, 2026-10-27:
+  Chemistry ships, so the titration predict-before-you-see sim has its lesson and misconception behind it);
+  `--no-chemistry` leaves it out; Accounting stays out;
 - `contracts/`, `content/agent/`, `skills/`, `evals/` without `evals/held-out` (the tests read the corpora and
   fixtures; every eval image is synthetic and `LicenseRef-Own`), and the tooling the app and its tests run:
   `scripts/jana_tools` (codegen, the browser host), `scripts/codegen`, `scripts/ci` (browser test drivers) and
@@ -376,7 +376,7 @@ The tree is built from one commit with `git archive` and committed as the first 
 (no history; the author is this repository's git user). pnpm, uv and Cargo workspaces drop Studio and the ingest;
 the lockfiles are regenerated for that workspace without changing any pinned version; `skills/teaching` holds only
 the shipped subjects (`skills/counts.toml` follows). Build it with
-`scripts/build-submission.sh [--chemistry] --verify <empty folder>`; `--verify` installs a copy from its lockfiles
+`scripts/build-submission.sh [--no-chemistry] --verify <empty folder>`; `--verify` installs a copy from its lockfiles
 and runs the Python, TypeScript and Rust suites there. Tests that read the private contract additions, or a pack
 the tree leaves out, skip there or are deselected in the tree's pytest configuration (the list is in the script).
 Licence: Apache-2.0 for code; content packs under the owner's licence (`LicenseRef-Own`).
@@ -406,9 +406,9 @@ visual-answer routes). Status 2026-10-27: #2, #3 and #7 done.
 
 - Gateway: `test_nebius.py` → `test_meta.py`; `test_m19_gw_conformance.py`, `test_m19_gw_keys.py`,
   `test_inference_budget.py` (images allowed), `test_m42_study.py`, `test_study_math_format.py`, `gateway_stubs.py`
-  (Meta stand-in); removed `test_tavily.py`, the Gemini and Vertex adapter tests and the podcast speech test. New:
+  (Meta stand-in); removed `test_tavily.py` and the Gemini and Vertex adapter tests; `test_podcast_speech.py` reads with Kokoro. New:
   `test_meta_speech.py` (Recognizer against a fake socket), `test_sam.py` (segment route, budget).
-- Agent core: remove `test_study_web.py`; update `test_a1_input_routes.py` (the podcast speech test is removed); new tests
+- Agent core: remove `test_study_web.py`; update `test_a1_input_routes.py`, `test_study_podcast_speech.py`; new tests
   for `photo_region` pointing and the Glimmer model entry.
 - Scripts: `test_hackathon_app.py`, `test_m42_release_preparation.py`.
 - TypeScript: `client-core` `ask-anything.test.ts`, `study-workspace.test.ts`; `ui` `ask-anything.test.tsx`,
@@ -651,7 +651,7 @@ checks every step with code, keeps working without power or internet, and uses M
 10. Research agent decisions: settled (§18.10).
 11. Before submission: rewrite the README as a Meta project (JM-D19), rename the app identifier and key references
     (§17 Identity, done 2026-10-28), and a trial `git archive` install and test of the §9 scope by Nov 1. Done 2026-10-27; still the
-    owner's: sign off the §9 list (pack-builder and signing-service now ship; Chemistry or not).
+    owner's: sign off the §9 list (pack-builder and signing-service now ship). Chemistry ships (owner, 2026-10-27).
 
 ## 16. Meta facts confirmed from the docs (2026-10-26)
 

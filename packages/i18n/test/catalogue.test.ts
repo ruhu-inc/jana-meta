@@ -70,3 +70,11 @@ describe("UXS-05", () => {
     expect(copyLintErrors({ "a.b": "GREAT JOB", "tutor.feedback": "That is wrong", "x.y": "Saved!" })).toHaveLength(3);
   });
 });
+
+describe("JM-D13", () => {
+  test("learner copy never names a speech provider", () => {
+    // Podcasts are read by Jana's own voice (Kokoro-82M); a development-only trial is never shown to learners.
+    const named = Object.entries(BASE).filter(([, text]) => /NVIDIA|Kokoro/.test(text));
+    expect(named.map(([key]) => key)).toEqual([]);
+  });
+});

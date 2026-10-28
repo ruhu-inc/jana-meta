@@ -119,10 +119,16 @@ def nearest_exam(subjects: Sequence[SubjectInfo]) -> int | None:
 
 
 def unstarted(state: PlannerState) -> frozenset[str]:
-    """The subjects with no evidence yet, once some subject has any (a placement, a lesson, an attempt): their prior
-    mastery makes them look weakest, so they rank after the started ones (SPEC §10.2). Empty when nothing is started."""
+    """The subjects with no evidence yet (no placement, lesson or attempt). Their prior mastery is not evidence and
+    makes them look weakest, so they rank after the started ones, and among themselves in the profile's own order
+    (SPEC §10.2): a new profile starts with its first subject."""
     started = {k.subject for k in state.kcs.values() if k.state != "not_started"}
-    return frozenset({k.subject for k in state.kcs.values()} - started) if started else frozenset()
+    return frozenset({k.subject for k in state.kcs.values()} - started)
+
+
+def _listed(state: PlannerState) -> dict[str, int]:
+    """Each subject's place in the profile's list."""
+    return {x.subject: i for i, x in enumerate(state.subjects)}
 
 
 def subject_order(state: PlannerState, s: Settings) -> list[str]:
@@ -134,9 +140,14 @@ def subject_order(state: PlannerState, s: Settings) -> list[str]:
         total = sum(k.exam_weight for k in rows)
         return sum(k.exam_weight * (1 - k.p_mastery) for k in rows) / total if total else 0.0
 
-    later = unstarted(state)
-    ranked = sorted(state.subjects, key=lambda x: (x.days_to_exam if x.days_to_exam is not None else math.inf,
-                                                   x.subject in later, -weakness(x.subject), x.subject))  # fmt: skip
+    later, listed = unstarted(state), _listed(state)
+    ranked = sorted(state.subjects, key=lambda x: (
+        x.days_to_exam if x.days_to_exam is not None else math.inf,
+        x.subject in later,
+        0.0 if x.subject in later else -weakness(x.subject),
+        listed[x.subject] if x.subject in later else 0,
+        x.subject,
+    ))  # fmt: skip
     names = [x.subject for x in ranked]
     if names:
         shift = state.plans_taken_today % len(names)
@@ -165,9 +176,10 @@ def main_candidates(state: PlannerState, subjects: Sequence[str], phase: str, s:
     def score(k: KcPlanInfo) -> float:
         return k.exam_weight * (1 - k.p_mastery) * (1 + s.planner_recent_failure_boost * k.failed_recently)
 
-    later = unstarted(state)
+    later, listed = unstarted(state), _listed(state)
     out: list[tuple[str, str]] = [(kc, "revisit_moved_on") for kc in revisits]
-    for k in sorted(pool, key=lambda k: (k.subject in later, -round(score(k), 12), k.kc_id)):
+    for k in sorted(pool, key=lambda k: (k.subject in later, listed.get(k.subject, 0) if k.subject in later else 0,
+                                         -round(score(k), 12), k.kc_id)):  # fmt: skip
         weak = [state.kcs[j] for j in k.prerequisites if j in state.kcs
                 and state.kcs[j].p_mastery < s.planner_prerequisite_ready]  # fmt: skip
         if weak and phase not in ("final", "exam_day"):

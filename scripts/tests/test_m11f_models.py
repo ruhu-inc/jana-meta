@@ -23,7 +23,7 @@ from jana_tools.fakes.models import MODEL_KEY_ID, install
 from jana_tools.harness import bakeoff
 from jana_tools.release.models import bakeoff_errors, release_errors
 from signing_service.keys import dev_key
-from test_m7b_devlab import PARAMS, _results
+from test_m7b_devlab import _results
 
 SHIPPED = json.loads(RECOMMENDATIONS.read_text())
 
@@ -35,7 +35,7 @@ def _entry(model: str, classes: dict[str, Any]) -> dict[str, Any]:
 
 def mdl27_bakeoff_record_required() -> None:
     report = bakeoff.build(_results(), "bko_test", "2026-10-09")
-    assert bakeoff.report_errors(report, expected=list(PARAMS)) == []
+    assert bakeoff.report_errors(report) == []
     recorded = {"bko_test": report}
     low = report["decision"]["fast"]["low"]
     high = report["decision"]["strong"]["high"]
@@ -65,8 +65,8 @@ def mdl27_bakeoff_record_required() -> None:
         "models": [_entry("synthetic-31b", {"low": {"tiers": ["fast"], "bakeoff": "bko_test"}})],
     }
     assert any("did not run it on this class" in e for e in bakeoff_errors(excluded, recorded))
-    # The shipped file today: Muse Glimmer's assignment (JM-D11) rests on no complete bake-off record, so the release
-    # check refuses it.
+    # The shipped file today: Muse Glimmer's assignment (JM-D11) rests on no complete bake-off record, so the
+    # release check refuses it.
     shipped = release_errors()
     assert {e.split(":")[0] for e in shipped} == {"muse-glimmer-30b@high"}
     assert all("no bake-off record" in e for e in shipped)

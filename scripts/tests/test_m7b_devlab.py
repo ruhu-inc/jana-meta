@@ -56,14 +56,13 @@ def test_devlab_gate_logic() -> None:
 
 # --- EVL-15 ---------------------------------------------------------------------------------------------------------
 
-# Synthetic candidates (ids and sizes only): the shipped file lists Muse Glimmer alone, so the procedure is checked over
-# a field that spans the hardware classes.
+# Synthetic candidates of each size the harness must tell apart; JM-D11 ships Muse Glimmer only.
 PARAMS = {"muse-glimmer-30b": 30.0, "synthetic-8b": 8.0, "synthetic-12b": 12.0, "synthetic-26b": 26.0,
           "synthetic-30b": 30.0, "synthetic-31b": 31.0}
 
 
 def _results() -> dict[str, dict[str, Any]]:
-    """Synthetic bake-off results for the synthetic candidates (no model was run to make them)."""
+    """Synthetic bake-off results for the D58 candidates (no model was run to make them)."""
     out = {}
     for n, model in enumerate(PARAMS):
         size = PARAMS[model]
@@ -79,9 +78,9 @@ def _results() -> dict[str, dict[str, Any]]:
 
 def evl15_bakeoff_report_complete() -> None:
     results = _results()
-    assert set(bakeoff.candidates()) <= set(results), "the report covers the shipped candidates"
+    assert set(results) == set(PARAMS), "the report covers the D58 candidates"
     report = bakeoff.build(results, "bko_test", "2026-10-09")
-    assert bakeoff.report_errors(report, expected=list(PARAMS)) == []
+    assert bakeoff.report_errors(report, list(PARAMS)) == []
     assert abs(sum(report["weights"].values()) - 1.0) < 1e-9
     assert report["decision"]["fast"]["low"] == "synthetic-8b", "only the 8B class fits the minimum laptop"
     for row in report["candidates"]:
@@ -92,16 +91,16 @@ def evl15_bakeoff_report_complete() -> None:
 
     missing = copy.deepcopy(report)
     missing["candidates"] = [r for r in missing["candidates"] if r["model"] != "synthetic-31b"]
-    assert "candidate synthetic-31b is missing from the report" in bakeoff.report_errors(missing, expected=list(PARAMS))
+    assert "candidate synthetic-31b is missing from the report" in bakeoff.report_errors(missing, list(PARAMS))
     unconfirmed = copy.deepcopy(results)
     for model in unconfirmed:
         unconfirmed[model]["held_out"] = {}
-    errors = bakeoff.report_errors(bakeoff.build(unconfirmed, "bko_test", "2026-10-09"))
+    errors = bakeoff.report_errors(bakeoff.build(unconfirmed, "bko_test", "2026-10-09"), list(PARAMS))
     assert any("has no held-out confirmation" in e for e in errors)
 
     unsafe = copy.deepcopy(results)
     unsafe["synthetic-12b"]["runs"]["mid"]["safety"]["critical_failures"] = 1
-    unsafe["synthetic-12b"]["licence"] = {"spdx": "LicenseRef-Synthetic-Terms", "file_sha256": "b" * 64}
+    unsafe["synthetic-12b"]["licence"] = {"spdx": "LicenseRef-Gemma-Terms", "file_sha256": "b" * 64}
     row = next(r for r in bakeoff.build(unsafe, "bko", "2026-10-09")["candidates"] if r["model"] == "synthetic-12b")
     assert row["classes"]["mid"]["excluded"].startswith("filter: licence")
 

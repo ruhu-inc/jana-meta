@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "note": "The bundled recommendations file (MDL-28): the signed model pack carries its own copy, which wins; offline installs without one use this. The entry's one local model is Meta's Muse Glimmer 30B (JM-D11) on the high hardware class (32 GB+); smaller machines run online only. Its class names the bake-off record that chose it, and none is recorded yet, so the release check refuses the assignment until the full EVL-15 record exists (MDL-27). Context per class is TABLE MDL-16a's (null: the model does not fit that class). Muse Glimmer always reasons, so its thinking is budgeted per request rather than turned off. Sampling presets are the router configuration's role temperatures. Model ids are the ids the local runtime lists.",
+  "note": "The bundled recommendations file (MDL-28): the signed model pack carries its own copy, which wins; offline installs without one use this. Muse Glimmer 30B (JM-D11) is the only local language model, on the high hardware class (32 GB+); smaller machines run online only. Its class names the bake-off record that chose it, and none is recorded yet, so the release check refuses the assignment until the full EVL-15 record exists (MDL-27). Context is TABLE MDL-16a's (null: the model does not fit that class). Sampling presets are the router configuration's role temperatures. Glimmer always reasons, so its thinking is budgeted per request rather than turned off. Model ids are the ids the local runtime lists.",
   "models": [
     {
       "model": "muse-glimmer-30b",
