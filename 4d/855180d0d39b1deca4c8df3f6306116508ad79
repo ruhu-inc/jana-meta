@@ -1,0 +1,21 @@
+services/agent-core/tests/test_m14b_gates.py
+  s_ac0ba8067089b3::t_43f48bf78a86d7 413-414
+services/agent-core/agent_core/engine/turn.py
+  s_ac0ba8067089b3::t_ae87e9d2c3fa39 3663-3664,3666
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4d855180d0d39b1deca4c8df3f6306116508ad79",
+  "prompts": {},
+  "sessions": {
+    "s_ac0ba8067089b3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aabfd8eb-62f5-496b-9005-3d57509671a8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
