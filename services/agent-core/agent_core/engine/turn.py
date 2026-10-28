@@ -3660,9 +3660,10 @@ class Engine(Coordination, Offers, Predictions):
 
     def _context_numbers(self) -> set[Fraction]:
         """Numbers the engine itself puts in front of the Coach (step counters, rung): provenance for a counter only,
-        never for a quantity with a unit (gates.untraced_numbers)."""
+        never for a quantity with a unit (gates.untraced_numbers). Zero is here too: the rest or reference value a
+        question states in words ("from rest", "zero speed at the top"); a withheld zero is still the leak gate's."""
         total = len(self.state.plan.steps) if self.state.plan else 0
-        return {Fraction(n) for n in (self.state.step, total, self.state.rung, 1, 2, 3, 4, 5)}
+        return {Fraction(n) for n in (self.state.step, total, self.state.rung, 0, 1, 2, 3, 4, 5)}
 
     def _tutor_context_budget(self) -> int:
         settings = self.deps.settings

@@ -410,7 +410,8 @@ def agt10_spelled_numbers_need_provenance_on_every_surface(tmp_path: Path) -> No
         assert untraced_numbers(texts, state, context) == [f"{surface}: 49/2"], surface
         assert untraced_numbers(written_surfaces({surface: "The speed is 24.5 m/s"}), state, context), surface
     for prose in ("One more step and you are there.", "Let us take this one step at a time.",
-                  "Try two more, then step three.", "That is one of the two forces."):  # fmt: skip
+                  "Try two more, then step three.", "That is one of the two forces.",
+                  "With zero speed at the top, which equation links u, v and s?"):  # fmt: skip
         assert untraced_numbers(written_surfaces({"say": prose}), state, context) == [], prose
     state.check_values["chk_V"] = [Fraction(49, 2)]
     assert untraced_numbers(written_surfaces({"say": said}), state, context) == [], "a checked value traces"
