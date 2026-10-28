@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 from agent_core.config import Settings
-from agent_core.engine.claims import claim_problems
+from agent_core.engine.claims import claim_problems, written_surfaces
 from agent_core.engine.events import new_id
 from agent_core.engine.gates import leak_findings, surfaces, untraced_numbers, verdict_problems, withheld_texts
 from agent_core.engine.state import Board, BoardStep, Plan, PlanStep, Problem, SessionState
@@ -396,6 +396,108 @@ def agt10_number_provenance(tmp_path: Path) -> None:
     assert verified["fired"] and verified["nudges"] == 3
     assert "33.7" not in frames(engine) and "thirty" not in frames(engine)
     assert engine.events.student_text(result.turn_id) == SAFE
+
+
+def agt10_spelled_numbers_need_provenance_on_every_surface(tmp_path: Path) -> None:
+    """A number in words is the same number in digits on every surface a student reads, not only the spoken one:
+    "twenty-four point five metres per second" in `say` needs the check that "24.5 m/s" needs. Words that are no
+    quantity ("one more step", "this one") still read as prose."""
+    state = SessionState("ses_01JZ0000000000000000000B07", subject="physics")
+    context = {Fraction(n) for n in (0, 1, 2, 3, 4, 5)}
+    said = "The speed is twenty-four point five metres per second"
+    for surface in ("say", "board/0/reason", "card/prompt", "visual/0/labels/0/text", "say_spoken"):
+        texts = written_surfaces({surface: said})
+        assert untraced_numbers(texts, state, context) == [f"{surface}: 49/2"], surface
+        assert untraced_numbers(written_surfaces({surface: "The speed is 24.5 m/s"}), state, context), surface
+    for prose in ("One more step and you are there.", "Let us take this one step at a time.",
+                  "Try two more, then step three.", "That is one of the two forces."):  # fmt: skip
+        assert untraced_numbers(written_surfaces({"say": prose}), state, context) == [], prose
+    state.check_values["chk_V"] = [Fraction(49, 2)]
+    assert untraced_numbers(written_surfaces({"say": said}), state, context) == [], "a checked value traces"
+
+    # Through the engine: the spelled-out value in `say` is sent back like the digits are, and never shown.
+    engine, _ = run(
+        make_engine(
+            tmp_path,
+            {"solver": solver_steps(), "checker": checker_steps(),
+             "coach": [tutor(SAFE), tutor("Try thirty-three point seven metres first."), tutor(SAFE)]},
+            settings=settings(gate_nudges_per_gate=4, coach_max_iterations=(6, 6, 6, 6)),
+        )
+    )  # fmt: skip
+    try:
+        run(engine.start_problem(STATEMENT))
+        run(engine.student_turn("I'm stuck"))
+        result = run(engine.student_turn("I'm stuck"))
+    finally:
+        run(close(engine))
+    verified = next(g for g in result.trace["gates"] if g["gate"] == "verified")
+    assert verified["fired"] and verified["nudges"] == 1
+    assert "thirty" not in frames(engine) and engine.events.student_text(result.turn_id) == SAFE
+
+
+def agt10_small_counters_are_not_quantities() -> None:
+    """The engine's counters (step, total, rung, and 1 to 5) are provenance for a counter only: a small integer with a
+    unit is a quantity and needs its own check, so "4 Ω" fails when the checked value is 6 Ω."""
+    state = SessionState("ses_01JZ0000000000000000000B08", subject="physics")
+    state.problem = Problem("prb_r", "A 12 V supply drives 2 A through a resistor. Find its resistance.", "prb_r#s")
+    state.check_values["chk_R"] = [Fraction(6)]
+    state.step, state.rung = 2, 3
+    context = {Fraction(n) for n in (2, 3, 3, 1, 2, 3, 4, 5)}
+    for wrong in ("The resistance is 4 Ω.", "R = 4 ohms", "R = 4\\,\\Omega", "R = 4\\ \\Omega", "It is 3 V across it.",
+                  "R = 4\\,\\text{ohm}", "The resistance is four ohms."):  # fmt: skip
+        assert untraced_numbers(written_surfaces({"say": wrong}), state, context), wrong
+    for fine in ("The resistance is 6 Ω.", "Step 2 of 3: use R = V/I.", "Hint 3: 12 V across, 2 A through.",
+                 "There are 2 things to find.", "Look at step 4 next.", "Option 1 is closest.", "E = 2 m g h",
+                 "E_k = 1/2 m v^2"):  # fmt: skip
+        assert untraced_numbers(written_surfaces({"say": fine}), state, context) == [], fine
+
+
+def agt10_turn_end_reports_what_was_checked_and_where(tmp_path: Path) -> None:
+    """`turn.end` says `verified` only for a reply that passed the verified gate, never for the canned turn shipped when
+    the gate ran out, and `usage.location` is where the turn's model calls ran (API-10)."""
+
+    def ends(engine: Any) -> list[dict[str, Any]]:
+        return [f["event"] for f in engine.events.frames if f["event"]["type"] == "turn.end"]
+
+    drafts = [tutor("Try 33.7 m first."), tutor("Try 33.7 m first."), tutor("Try 33.7 m first.")]
+    engine, _ = run(
+        make_engine(
+            tmp_path / "local",
+            {"solver": solver_steps(), "checker": checker_steps(), "coach": [tutor(SAFE), *drafts]},
+            settings=settings(gate_nudges_per_gate=1, coach_max_iterations=(6, 6, 6, 6)),
+        )
+    )
+    try:
+        run(engine.start_problem(STATEMENT))
+        run(engine.student_turn("I'm stuck"))
+        result = run(engine.student_turn("I'm stuck"))
+    finally:
+        run(close(engine))
+    first, *_, last = ends(engine)
+    assert first["verification"] == "verified" and first["usage"]["location"] == "local" and not first["degraded"]
+    assert result.degraded and last["degraded"] and last["degraded_reason"] == "unverified_number"
+    assert "33.7" not in frames(engine)
+    assert last["verification"] == "not_applicable", "a canned turn is never reported as verified"
+
+    from agent_core.providers.scripted import ScriptedProvider
+
+    def enable(data: dict[str, Any]) -> None:
+        data["cloud"]["enabled"] = True
+
+    async def online() -> Any:
+        cloud = ScriptedProvider({"input_guard": [], "solver": solver_steps(), "checker": checker_steps(),
+                                  "coach": [tutor(SAFE)]}, kind="cloud")  # fmt: skip
+        engine, _ = await make_engine(tmp_path / "cloud", {}, overrides=enable, cloud=cloud, hardware_class="cloud",
+                                      device_class="content_only")  # fmt: skip
+        engine.deps.router.cloud_on = lambda role: True  # type: ignore[method-assign]
+        try:
+            await engine.start_problem(STATEMENT)
+        finally:
+            await close(engine)
+        return engine
+
+    end = ends(run(online()))[-1]
+    assert end["usage"]["location"] == "cloud" and end["verification"] == "verified"
 
 
 def test_agt10_formula_coefficient_traces_in_any_notation(tmp_path: Path) -> None:
