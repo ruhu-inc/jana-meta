@@ -1,0 +1,25 @@
+README.md
+  s_87311ffec186a4::t_7a40d941f90272 3-5,94
+SPEC.md
+  s_87311ffec186a4::t_453bc994a83c22 66,363-365,380,655
+apps/desktop/src-tauri/Cargo.toml
+  s_87311ffec186a4::t_0ca0a3ad5da744 73
+scripts/build-submission.sh
+  s_87311ffec186a4::t_286fd0360c0671 5,7-10,17,21,28,203-217
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f8283a66ce0c98d79e53279ab42cab8e92bcc4d0",
+  "prompts": {},
+  "sessions": {
+    "s_87311ffec186a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02ea0a11-c16d-43dd-9ca0-be1ee039343a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
