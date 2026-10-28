@@ -1,0 +1,39 @@
+packages/i18n/locales/en.json
+  s_87311ffec186a4::t_0c8744df778f5b 1681
+packages/ui/gallery/states/parent-summary.canonical.json
+  s_87311ffec186a4::t_c58994d0563a49 3,5,99,110
+packages/ui/gallery/states/parent-summary.canonical.too-little.json
+  s_87311ffec186a4::t_7df34944ac9c9e 3,74
+packages/ui/gallery/states/parent-summary.empty.json
+  s_87311ffec186a4::t_20a6d62cc57c80 3,71
+packages/ui/gallery/states/parent-summary.error-retriable.json
+  s_87311ffec186a4::t_d7716a32dae7b5 3
+packages/ui/gallery/states/parent-summary.loading.json
+  s_87311ffec186a4::t_e671e467fe04e8 3
+packages/ui/gallery/states/printed-report.canonical.json
+  s_87311ffec186a4::t_517a1de5980f87 3
+packages/ui/gallery/states/study-agreement.canonical.json
+  s_87311ffec186a4::t_14d3a89a34d940 5,8-9,20
+packages/ui/src/settings/Studies.tsx
+  s_87311ffec186a4::t_285539064f532f 3-6,18-19,21,34-43,47,131,136,140,177,179
+packages/ui/test/parents.test.tsx
+  s_87311ffec186a4::t_770a7a375fd27f 78-79,97
+packages/ui/test/studies.test.tsx
+  s_87311ffec186a4::t_4b8c04abe685d3 2-3,34-35,41,43,45-46,48,51,53-54,82-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "55079c99502aa684495878fa8d4465b1b851ddd0",
+  "prompts": {},
+  "sessions": {
+    "s_87311ffec186a4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02ea0a11-c16d-43dd-9ca0-be1ee039343a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
