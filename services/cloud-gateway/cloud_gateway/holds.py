@@ -6,9 +6,11 @@ never charged.
     uv run python -m cloud_gateway.holds --config ... --release failed --status 400 --older-than 10m --apply
 
 A call that fails, times out or ends without usage keeps its full upper bound so an unknown charge can never be
-overspent; each hold records how its call ended. Releasing is the operator's reconciliation step: check the provider's
-usage page first. A release is a dry run unless --apply is given, and it never touches a call still in flight. Holds
-made before outcomes were recorded show as `unknown` and are released only with `--release unknown`. Settled spend is
+overspent; each hold records how its call ended (a call whose caller went away is settled at its input estimate,
+`client_disconnected`, and holds nothing). Releasing is the operator's reconciliation step: check the provider's usage
+page first. A release is a dry run unless --apply is given, and it never touches a call still in flight. Holds made
+before outcomes were recorded, or left in flight by a gateway that stopped (marked when the next one starts), show as
+`unknown` and are released only with `--release unknown`. Settled spend is
 never changed here, and a call that settles after its hold was released still records what it was billed.
 """
 

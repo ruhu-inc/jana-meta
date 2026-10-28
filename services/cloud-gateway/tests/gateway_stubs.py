@@ -6,6 +6,7 @@ can run against either adapter. The keys here are obviously fake and never match
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
 import secrets
@@ -58,6 +59,7 @@ class Output:
     tool: tuple[str, dict[str, Any]] | None = None
     error: tuple[int, dict[str, Any]] | None = None
     fail_mid_stream: bool = False
+    hang_after: int | None = None  # the reply stops arriving after this many stream events (any body, if not a stream)
     usage: tuple[int, int, int] = (40, 12, 8)  # input, output, cached
 
 
@@ -97,6 +99,8 @@ class StubProvider:
         out = self._next()
         if out.error is not None:
             return httpx.Response(out.error[0], json=out.error[1])
+        if out.hang_after is not None and not seen.stream:
+            return httpx.Response(200, headers={"content-type": "application/json"}, stream=_ByteStream([b"!hang"]))
         if seen.stream:
             return httpx.Response(
                 200, headers={"content-type": "text/event-stream"}, stream=_ByteStream(self._sse(seen, out))
@@ -123,6 +127,8 @@ class _ByteStream(httpx.AsyncByteStream):
         for event in self.events:
             if event == b"!fail":
                 raise httpx.ReadError("connection reset by stub")
+            if event == b"!hang":
+                await asyncio.Event().wait()  # until the caller goes away
             yield event
 
 
@@ -247,6 +253,8 @@ def _openai_sse(seen: Seen, out: Output) -> list[bytes]:
     events = [b"data: " + json.dumps(p).encode() + b"\n\n" for p in pieces] + [b"data: [DONE]\n\n"]
     if out.fail_mid_stream:
         events = [*events[:1], b"!fail"]
+    if out.hang_after is not None:
+        events = [*events[: out.hang_after], b"!hang"]
     return events
 
 
@@ -265,6 +273,8 @@ class SamStub:
         self.seen.append(json.loads(request.content))
         self.headers.append(dict(request.headers))
         reply = self.replies.pop(0) if self.replies else ""
+        if reply == "!hang":
+            return httpx.Response(200, headers={"content-type": "application/json"}, stream=_ByteStream([b"!hang"]))
         if isinstance(reply, tuple):
             return httpx.Response(reply[0], json=reply[1])
         return httpx.Response(200, json={

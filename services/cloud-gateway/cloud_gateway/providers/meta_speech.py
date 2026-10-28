@@ -284,6 +284,10 @@ class MetaRecognizer:
             keywords = self.keywords_for(subject)
             await socket.send(json.dumps(handshake(self.voice, self.key, language, keywords)))
             reply = json.loads(await asyncio.wait_for(socket.recv(), self.voice.handshake_timeout_s))
+        except asyncio.CancelledError:  # the caller gave up on the open (a timeout, idle, barge-in): no socket left
+            with contextlib.suppress(Exception):
+                await socket.close()
+            raise
         except Exception:
             code, reason = _closed(socket)
             with contextlib.suppress(Exception):

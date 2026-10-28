@@ -353,8 +353,11 @@ class Listener:
             try:
                 stream = await asyncio.wait_for(recognizer.open(self.language, self.c.subject),
                                                 self.config.voice_connect_timeout_s)  # fmt: skip
-            except (UpstreamError, TimeoutError) as failure:
+            except asyncio.CancelledError:  # released (idle, barge-in, close) while opening
                 self.c.service.release(hold)  # a stream that never opened bills nothing
+                raise
+            except (UpstreamError, TimeoutError) as failure:
+                self.c.service.release(hold)
                 self.failures += 1
                 log.warning("voice recognition open failed %s", getattr(failure, "reason", type(failure).__name__))
                 if self.failures >= 3:
@@ -363,8 +366,8 @@ class Listener:
                 await asyncio.sleep(0.2 * self.failures)
                 continue
             if self.closed or self.suspended:
+                self.c.service.release(hold)  # before the await: a cancellation there must not keep it
                 await self._close(stream)
-                self.c.service.release(hold)
                 return
             self.failures = 0
             self.base = self.held_from if self.held else self.position
@@ -381,6 +384,9 @@ class Listener:
             except UpstreamError:
                 await self._close(stream)
                 continue
+            except asyncio.CancelledError:  # released while feeding held audio: the reader settles the hold
+                self._close_later(stream)
+                raise
             self.stream = stream
             return
 

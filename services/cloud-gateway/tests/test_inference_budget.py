@@ -152,17 +152,21 @@ def test_failures_and_missing_usage_keep_the_upper_bound(tmp_path: Path, stream:
     store.close()
 
 
-def test_cancelled_stream_retains_reservation(tmp_path: Path) -> None:
+def test_a_closed_stream_is_charged_its_input_bound_and_the_output_delivered(tmp_path: Path) -> None:
+    """SPEC §4.3: usage may never arrive on a stream the caller closed, so the hold (1,393 micros) is replaced by
+    the input bound, 97 body bytes + 4,096 + 256 for one message = 4,449 tokens at $0.30, plus the 22 bytes of the
+    delta delivered at $0.90: 1,354.5, rounded up."""
     store = GatewayStore(tmp_path)
     budget = InferenceBudget(config(), store, lambda: NOW)
 
     async def run() -> None:
         stream = BudgetedAdapter(Adapter(), budget).stream(request())
         await anext(stream)
+        assert budget.snapshot()["held_usd"] == 0.001393
         await stream.aclose()
 
     asyncio.run(run())
-    assert budget.snapshot()["held_usd"] > 0
+    assert budget.snapshot() == {"spent_usd": 0.001355, "today_usd": 0.001355, "held_usd": 0}
     store.close()
 
 
@@ -416,7 +420,7 @@ def test_each_failure_records_its_outcome(tmp_path: Path, stream: bool, respond,
     store.close()
 
 
-def test_cancelled_calls_and_closed_streams_are_marked_cancelled(tmp_path: Path) -> None:
+def test_cancelled_calls_and_closed_streams_are_settled_as_client_disconnected(tmp_path: Path) -> None:
     store = GatewayStore(tmp_path)
     budget = InferenceBudget(config(), store, lambda: NOW)
     gate = asyncio.Event()
@@ -434,8 +438,10 @@ def test_cancelled_calls_and_closed_streams_are_marked_cancelled(tmp_path: Path)
         await stream.aclose()
 
     asyncio.run(run())
-    assert [row["outcome"] for row in holds_rows(store)] == ["cancelled", "cancelled"]
-    assert budget.snapshot()["held_usd"] > 0
+    assert [row["outcome"] for row in holds_rows(store)] == ["client_disconnected", "client_disconnected"]
+    # The complete call is charged its input bound (1,335 micros), the stream that plus its delivered delta (1,355).
+    assert [row["spent_micros"] for row in holds_rows(store)] == [1335, 1355]
+    assert budget.snapshot()["held_usd"] == 0
     store.close()
 
 

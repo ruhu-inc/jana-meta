@@ -61,7 +61,7 @@ from cloud_gateway.contracts.cloud.gateway import (
 from cloud_gateway.custody import SecretSource, secret_source
 from cloud_gateway.errors import DeviceError, auth_error, device_error, error_body, gateway_quota
 from cloud_gateway.health import UpstreamHealth, evaluate_objectives
-from cloud_gateway.inference_budget import InferenceBudget
+from cloud_gateway.inference_budget import InferenceBudget, abandoned_usage, output_bytes
 from cloud_gateway.operations import GatewayOperations
 from cloud_gateway.providers import ClientFactory, Providers, default_client
 from cloud_gateway.providers.base import ProviderAdapter, ProviderRequest, StreamPart, UpstreamError, Usage
@@ -75,6 +75,8 @@ CONTRACT = "cloud/gateway#/$defs/"
 log = logging.getLogger("cloud_gateway")
 UPSTREAM_CHECK_TTL_S = 5.0
 UPSTREAM_CHECK_TIMEOUT_S = 2.0
+CLIENT_CLOSED = 499  # the status recorded for a call whose caller went away before its reply (nginx's convention)
+DISCONNECTED = "client_disconnected"
 
 
 async def tcp_reachable(host: str, port: int, timeout_s: float) -> bool:
@@ -134,6 +136,8 @@ class Gateway:
     ) -> None:
         self.config = config
         self.secrets = secrets
+        # Read once: in development each secret read is a blocking keychain lookup (rotating it means a restart).
+        self._admin_token = secrets.get("admin_token")
         self.clock = clock
         self.alerts = alerts
         self.store = GatewayStore(config.storage_dir)
@@ -144,6 +148,8 @@ class Gateway:
             or config.quotas.deployment_budget_expires_at is not None
         )
         self.inference_budget = InferenceBudget(config, self.store, clock) if bounded else None
+        if self.inference_budget is not None and (orphaned := self.inference_budget.recover()):
+            log.warning("inference budget: %d holds left in flight by a stopped gateway are now unknown", orphaned)
         self.providers = Providers(config, secrets, client_factory, budget=self.inference_budget)
         self.quotas = Quotas(config, self.store, alerts)
         self.operations = GatewayOperations(config.storage_dir, config.operations, alerts=alerts)
@@ -233,6 +239,12 @@ class Gateway:
             self._purged_hour = hour
             self.purge(now)
 
+    def abandoned(self, call: _Call, upstream: ProviderRequest) -> None:
+        """Record a call whose caller went away before its reply (voice barge-in, a cancelled speculative Solver):
+        charged at least its input estimate, never $0 (SPEC §4.3)."""
+        usage = abandoned_usage(upstream, self.config.quotas.deployment_image_input_tokens)
+        self.finish(call, CLIENT_CLOSED, DISCONNECTED, usage)
+
     def purge(self, now: float) -> None:
         self.store.purge(now, self.config.metadata_retention_days)
         if self.inference_budget is not None:
@@ -299,6 +311,9 @@ class Gateway:
             return await self._stream(call, upstream, include_usage)
         try:
             reply = await adapter.complete(upstream)
+        except asyncio.CancelledError:
+            self.abandoned(call, upstream)
+            raise
         except Exception as raised:  # every failure becomes one classified reply
             failure = _upstream(raised)
             error = device_error(failure.reason, failure.retry_after_s, failure.param)
@@ -314,6 +329,9 @@ class Gateway:
         except StopAsyncIteration:
             self.finish(call, 502, "bad_response", Usage())
             return _error(device_error("bad_response"))
+        except asyncio.CancelledError:
+            self.abandoned(call, upstream)
+            raise
         except Exception as raised:
             failure = _upstream(raised)
             error = device_error(failure.reason, failure.retry_after_s, failure.param)
@@ -321,12 +339,13 @@ class Gateway:
             return _error(error)
 
         async def events() -> AsyncIterator[bytes]:
-            usage, outcome, last = Usage(), "ok", None
+            usage, outcome, last, delivered = Usage(), "ok", None, 0
             try:
                 part: StreamPart | None = first
                 while part is not None:
                     if part.chunk is not None:
                         last = part.chunk
+                        delivered += output_bytes(part.chunk)
                         yield b"data: " + json.dumps(part.chunk, separators=(",", ":")).encode() + b"\n\n"
                     if part.usage is not None:
                         usage = part.usage
@@ -345,19 +364,29 @@ class Gateway:
                 outcome = failure.reason
                 payload = device_error(failure.reason, failure.retry_after_s).body()
                 yield b"data: " + json.dumps(payload).encode() + b"\n\n"
+            except (asyncio.CancelledError, GeneratorExit):
+                # The device went away mid-stream (a disconnect cancels this task; a closed body raises GeneratorExit
+                # at a yield). Usage arrives last and may never come (SPEC §16), so the call is charged at least its
+                # input estimate (SPEC §4.3); the budget's own hold is settled the same way as `parts` closes.
+                outcome = DISCONNECTED
+                if usage.input_tokens <= 0:
+                    usage = abandoned_usage(upstream, self.config.quotas.deployment_image_input_tokens, delivered)
+                raise
             finally:
-                await parts.aclose()
+                # Recorded before `parts` closes: after a disconnect, the next await may be cancelled again.
                 self.finish(call, 200, outcome, usage)
+                await parts.aclose()
 
         return StreamingResponse(
             events(), media_type="text/event-stream", headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"}
         )
 
     def admin_ok(self, authorization: str | None) -> bool:
-        secret = self.secrets.get("admin_token")
-        if secret is None or not authorization or not authorization.startswith("Bearer "):
+        """The bearer header is checked before the token: any web page can POST no-cors to a gateway on 127.0.0.1,
+        and such a request never reaches a secret (the token was read at startup)."""
+        if not authorization or not authorization.startswith("Bearer ") or self._admin_token is None:
             return False
-        return hmac.compare_digest(authorization.removeprefix("Bearer ").encode(), secret.reveal().encode())
+        return hmac.compare_digest(authorization.removeprefix("Bearer ").encode(), self._admin_token.reveal().encode())
 
 
 class _VersionHeader:
