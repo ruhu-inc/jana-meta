@@ -1,0 +1,37 @@
+services/agent-core/agent_core/engine/spoken.py
+  s_ac0ba8067089b3::t_d197bd7b5922b1 194
+services/agent-core/agent_core/engine/claims.py
+  s_ac0ba8067089b3::t_c1b436c3b351c6 289-308
+  s_ac0ba8067089b3::t_d197bd7b5922b1 39,411-413
+services/agent-core/tests/test_m14b_gates.py
+  s_ac0ba8067089b3::t_81212b1ed368e3 401-422,424-428,430-449,452-454
+  s_ac0ba8067089b3::t_c6ffc0fa770556 423
+  s_ac0ba8067089b3::t_ed79b2276edf5f 18,429
+  s_ac0ba8067089b3::t_662c9bd0a5e434 450
+  s_ac0ba8067089b3::t_aae67c1728b72e 455-502
+  s_ac0ba8067089b3::t_101ca82528d7ab 451
+services/agent-core/agent_core/engine/gates.py
+  s_ac0ba8067089b3::t_6980489014af20 312
+  s_ac0ba8067089b3::t_a8b674a682321d 301-305
+  s_ac0ba8067089b3::t_c1b436c3b351c6 18,307-308,319-320
+services/agent-core/agent_core/engine/turn.py
+  s_ac0ba8067089b3::t_7a5ffe09782ecb 3185,3187,3648-3659
+  s_ac0ba8067089b3::t_6ef776fce74ddc 3662-3663
+  s_ac0ba8067089b3::t_16357f46751758 3660
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "74711af7c12defe512604387335989e3cdecb4b3",
+  "prompts": {},
+  "sessions": {
+    "s_ac0ba8067089b3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aabfd8eb-62f5-496b-9005-3d57509671a8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
