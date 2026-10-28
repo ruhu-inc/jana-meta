@@ -138,10 +138,10 @@ def main(source: Path, out: Path) -> Path:
     scratch.mkdir()
     (scratch / "dev_launch.py").write_text(LAUNCH)
     put(scratch / "dev_launch.py", "runtime/dev_launch.py", **runtime, spdx="MIT",
-        url="https://github.com/ruhu-ai/jana", who="Jana")  # fmt: skip
+        url="https://getjana.app", who="Jana")  # fmt: skip
     entry = ENTRY.format(agent_core=REPO / "services" / "agent-core", python=source / "venv" / "bin" / "python")
     (scratch / "jana-voice").write_text(entry)
-    put(scratch / "jana-voice", "bin/jana-voice", **runtime, spdx="MIT", url="https://github.com/ruhu-ai/jana",
+    put(scratch / "jana-voice", "bin/jana-voice", **runtime, spdx="MIT", url="https://getjana.app",
         who="Jana")  # fmt: skip
     (pack / "bin" / "jana-voice").chmod(0o755)
     shutil.rmtree(scratch)
