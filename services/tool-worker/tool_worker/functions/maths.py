@@ -18,7 +18,7 @@ from tool_worker.budget import SliceExpired, time_slice
 from tool_worker.functions import constants
 from tool_worker.functions.common import parse_arg
 from tool_worker.functions.numeric import round_sf
-from tool_worker.grammar import describe, exact_number
+from tool_worker.grammar import MAX_POWER_EXPONENT, TooLarge, describe, exact_number, safe_pow
 from tool_worker.protocol import Code, WorkerError
 from tool_worker.registry import CallContext
 
@@ -106,12 +106,31 @@ def _sample(var: sp.Symbol, rng: random.Random) -> sp.Basic:
     return sp.Float(rng.uniform(low, 5.0), 30)
 
 
+ZERO_DIGITS = 3  # a value below 10^-(3 x the working digits) is zero at the working precision
+
+
+def _real_value(value: sp.Basic, floor: sp.Float) -> sp.Basic | None:
+    """A sampled value as a real number; None when it is not real (an imaginary part beyond rounding noise)."""
+    if value.is_real:
+        return value
+    real, imaginary = value.as_real_imag()
+    return real if imaginary.is_number and abs(imaginary) <= floor else None
+
+
 def _numeric(a: sp.Expr, b: sp.Expr, context: CallContext) -> tuple[str, dict[str, Any] | None, int]:
-    """Compare at seeded points: ('equivalent' | 'not_equivalent' | 'unknown', counterexample, valid points)."""
+    """Compare at seeded points: ('equivalent' | 'not_equivalent' | 'unknown', counterexample, valid points).
+
+    Each side is evaluated with the point as evalf's substitution, never substituted first: evalf's adaptive
+    precision brings a sum that cancels to its true zero (sin^2 + cos^2 - 1 is 0, not rounding noise at the inputs'
+    precision), and a sampled power such as (n+1)^(10^29) stays a float instead of an exact integer computed in C,
+    where the per-call budget cannot stop it (SEC-08). So values compare relatively at any magnitude: 2e-12 x is not
+    1e-12 x. A point where one side is real and the other is not is a counterexample: ln(x^2) is not 2 ln(x) at x < 0.
+    Points where neither side is real are skipped."""
     rng = random.Random(context.seed)
     points = int(context.setting("equivalence_points", 12))
     digits = int(context.setting("numeric_digits", 30))
-    tolerance = float(context.setting("relative_tolerance", 1e-9))
+    tolerance = sp.Float(context.setting("relative_tolerance", 1e-9), digits)
+    floor = sp.Float(10, digits) ** (-ZERO_DIGITS * digits)
     variables = _variables(a, b)
     valid = 0
     for _ in range(points * 3):
@@ -119,16 +138,23 @@ def _numeric(a: sp.Expr, b: sp.Expr, context: CallContext) -> tuple[str, dict[st
             break
         point = {v: _sample(v, rng) for v in variables}
         try:
-            va, vb = sp.N(a.subs(point), digits), sp.N(b.subs(point), digits)
+            va, vb = a.evalf(digits, subs=point), b.evalf(digits, subs=point)
         except (ZeroDivisionError, ValueError, TypeError):
             continue
-        if not (va.is_real and vb.is_real) or va.has(sp.zoo, sp.nan, sp.oo) or vb.has(sp.zoo, sp.nan, sp.oo):
+        if not (va.is_number and vb.is_number) or va.has(sp.zoo, sp.nan, sp.oo) or vb.has(sp.zoo, sp.nan, sp.oo):
+            continue
+        ra, rb = _real_value(va, floor), _real_value(vb, floor)
+        if ra is None and rb is None:
             continue
         valid += 1
-        scale = max(1.0, abs(float(va)), abs(float(vb)))
-        if abs(float(va - vb)) > tolerance * scale:
+        if ra is None or rb is None:
             example = {str(k): significant(v, 10) for k, v in point.items()}
-            return "not_equivalent", {"at": example, "a": significant(va, 10), "b": significant(vb, 10)}, valid
+            shown = {side: "not real" if r is None else significant(r, 10) for side, r in (("a", ra), ("b", rb))}
+            return "not_equivalent", {"at": example, **shown}, valid
+        gap = abs(ra - rb)
+        if gap > floor and gap > tolerance * max(abs(ra), abs(rb)):
+            example = {str(k): significant(v, 10) for k, v in point.items()}
+            return "not_equivalent", {"at": example, "a": significant(ra, 10), "b": significant(rb, 10)}, valid
     return ("equivalent" if valid >= int(context.setting("equivalence_min_valid", 8)) else "unknown"), None, valid
 
 
@@ -173,17 +199,29 @@ def _decided(
     return None
 
 
+def _huge_power(tree: sp.Basic) -> bool:
+    """A power with a numeric exponent beyond the grammar's bound: expanding (n+1)^(10^29) loops over binomial
+    coefficients without a Python call, so the time slice never fires and the per-call budget is escaped (SEC-08)."""
+    return any(
+        isinstance(node, sp.Pow) and node.exp.is_number and abs(node.exp) > MAX_POWER_EXPONENT
+        for node in sp.preorder_traversal(tree)
+    )
+
+
 def _expressions(a: sp.Expr, b: sp.Expr, context: CallContext) -> tuple[dict[str, Any], Extras]:
     """Cheap symbolic reduction, then a seeded numeric screen (a counterexample proves non-equivalence), then the
     expensive simplifiers only when the samples agree. Expensive simplification of a false identity (such as
-    log(x + 4) = log(x) + log(4)) can run until the slice expires; the screen answers it in milliseconds."""
+    log(x + 4) = log(x) + log(4)) can run until the slice expires; the screen answers it in milliseconds. A huge
+    power is only sampled, never expanded."""
     difference: sp.Basic = a - b
+    symbolic = not _huge_power(difference)
     try:
         with time_slice(slice_seconds(context)):
-            difference = _reduce(difference, CHEAP)
-            decided = _decided(difference, a, b, context)
-            if decided:
-                return decided
+            if symbolic:
+                difference = _reduce(difference, CHEAP)
+                decided = _decided(difference, a, b, context)
+                if decided:
+                    return decided
     except SliceExpired:
         pass
     try:
@@ -198,7 +236,7 @@ def _expressions(a: sp.Expr, b: sp.Expr, context: CallContext) -> tuple[dict[str
         )
     try:
         with time_slice(slice_seconds(context)):
-            decided = _decided(_reduce(difference, EXPENSIVE), a, b, context)
+            decided = _decided(_reduce(difference, EXPENSIVE), a, b, context) if symbolic else None
             if decided:
                 return decided
     except SliceExpired:
@@ -1215,6 +1253,18 @@ def _in_degrees(tree: sp.Basic) -> sp.Basic:
     return convert(tree)
 
 
+def bounded_subs(tree: sp.Basic, values: dict[sp.Basic, sp.Basic]) -> sp.Basic:
+    """`tree` with `values` substituted, rebuilt bottom-up through the grammar's `safe_pow`, so a power whose base
+    becomes a number (x^(10^29) at x = 2) is refused with TooLarge before SymPy computes it: an exact power runs in C,
+    where the per-call budget cannot stop it (SEC-08)."""
+    if tree in values:
+        return values[tree]
+    if not tree.args:
+        return tree
+    args = [bounded_subs(a, values) for a in tree.args]
+    return safe_pow(*args) if isinstance(tree, sp.Pow) else tree.func(*args)
+
+
 def math_evaluate(args: dict[str, Any], context: CallContext) -> tuple[Any, Extras]:
     tree = parse_arg(args["expression"], args, "expression").tree
     warnings = []
@@ -1247,7 +1297,9 @@ def math_evaluate(args: dict[str, Any], context: CallContext) -> tuple[Any, Extr
             # Parsed numbers and supplied constants are already exact. Searching
             # numerically for another closed form adds no evidence and can spend
             # the whole slice on ordinary non-special-angle trigonometry.
-            result = sp.simplify(tree.subs(values))
+            result = sp.simplify(bounded_subs(tree, values))
+    except TooLarge as error:
+        raise WorkerError(Code.LIMIT_EXCEEDED, f"expression: {error}", limit=error.limit) from None
     except SliceExpired:
         return {"status": "unknown", "reason": "timeout"}, {"method": "heuristic", "confidence": "undecided"}
     if result.has(sp.zoo, sp.nan) or result.is_real is False:

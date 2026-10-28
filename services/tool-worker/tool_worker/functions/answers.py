@@ -162,9 +162,19 @@ def _numeric_value(tree: sp.Basic) -> Fraction | None:
     return Fraction(str(sp.N(tree, 50)))
 
 
-def _expression(student: Parsed, key: Parsed, student_text: str,
+def _exact_min_sf(rule: dict[str, Any], context: CallContext) -> int:
+    """The fewest figures a decimal for an exact key may have: the item's or pack's `min_sf` when one is stated,
+    otherwise the item's precision. The configured two-figure minimum is the measurement row's allowance for a
+    measured key; an exact key such as pi has no measurement behind it, so 3 for pi is too few, not 'pi to 1 s.f.'."""
+    if "min_sf" in rule or convention(context, "numeric.min_sf") is not None:
+        return int(_setting(rule, context, "min_sf", "min_sf", 2))
+    return int(_setting(rule, context, "sf", "default_sf", 3))
+
+
+def _expression(student: Parsed, key: Parsed, student_text: str, rule: dict[str, Any],
                 context: CallContext) -> tuple[dict[str, Any], dict[str, Any], Extras]:  # fmt: skip
-    """Value by equivalence (VER-04); a decimal given for an exact number is compared at its own precision."""
+    """Value by equivalence (VER-04); a decimal given for an exact number is compared at its own precision and needs
+    at least the item's minimum figures unless it equals the key."""
     a, b = student.tree, key.tree
     is_relation = (isinstance(a, (Relational, sp.And)), isinstance(b, (Relational, sp.And)))
     if is_relation[0] != is_relation[1]:
@@ -178,7 +188,8 @@ def _expression(student: Parsed, key: Parsed, student_text: str,
         else:
             status = "within_tolerance" if reading.value == round_sf_exact(key_number, reading.sf or 1) else (
                 "incorrect")  # fmt: skip
-        precision = {"sf": "ok", "student_sf": reading.sf}
+        too_few = reading.value != key_number and (reading.sf or 1) < _exact_min_sf(rule, context)
+        precision = {"sf": "too_few" if too_few else "ok", "student_sf": reading.sf}
         return {"value": status, "unit": "ok", "precision": precision}, {"row": "exact"}, {
             "method": "exact", "confidence": "proved"}  # fmt: skip
     found, extras = (_relations if is_relation[0] else _expressions)(a, b, context)
@@ -417,7 +428,7 @@ def math_check_answer(args: dict[str, Any], context: CallContext) -> tuple[Any, 
     else:
         parsed = parse_arg(student_text, args, "student")
         key = parse_arg(key_text, args, "key")
-        components, details, extras = _expression(parsed, key, student_text, context)
+        components, details, extras = _expression(parsed, key, student_text, rule, context)
         if target is None and row == "exact" and key.tree.is_number:
             target = "exact"  # TABLE VER-09a: a decimal where an exact answer is asked leaves the form unmet
     reading = _reading(student_text, row == "money")

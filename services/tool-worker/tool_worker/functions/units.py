@@ -52,10 +52,48 @@ def normalise_unit(text: str) -> str:
 # surfaces as any of these rather than as a Pint error; every one is a rejected unit (G102).
 _MALFORMED = (pint.errors.PintError, TokenError, SyntaxError, TypeError, ValueError, AttributeError, KeyError,
               IndexError, AssertionError, ZeroDivisionError, OverflowError)  # fmt: skip
+MAX_TEN_POWER = 300  # as the grammar's bound on a written exponent
 MAX_UNIT_POWER = 12  # no school unit has a larger power; larger ones are typing errors (m^99999999999)
 
 
+_POWER = re.compile(r"\s*(?:\^|\*\*)")
+_EXPONENT = re.compile(r"\s*(?:[-+]?\s*\d{1,2}(?:\.\d{1,3})?(?![\d.])|\(\s*[-+]?\s*\d{1,2}(?:\s*/\s*\d{1,2})?\s*\))")
+
+
+def _powers_bounded(unit: str) -> bool:
+    """Every power in the unit text is a short number (2, -3, 0.5, (1/2)) raising a unit or a group with no power in
+    it. Pint evaluates unit text as Python arithmetic, so m^9^9^9 computes 9^387420489, and ((9^99)^99)^99 a power as
+    large, in C before any check on the parsed unit can run and where the per-call budget cannot stop it (SEC-08)."""
+    groups = [False]  # for each open parenthesis: whether its group holds a power
+    after_powered_group = False
+    i = 0
+    while i < len(unit):
+        power = _POWER.match(unit, i)
+        if power:
+            exponent = _EXPONENT.match(unit, power.end())
+            if exponent is None or after_powered_group or _POWER.match(unit, exponent.end()):
+                return False
+            groups[-1] = True
+            i = exponent.end()
+            continue
+        char = unit[i]
+        if char == "(":
+            groups.append(False)
+        elif char == ")" and len(groups) > 1:
+            closed = groups.pop()
+            groups[-1] = groups[-1] or closed
+            after_powered_group = closed
+            i += 1
+            continue
+        if not char.isspace():
+            after_powered_group = False
+        i += 1
+    return True
+
+
 def parse_unit(text: str) -> Any:
+    if not _powers_bounded(normalise_unit(text)):
+        raise WorkerError(Code.PARSE_REJECTED, f"unit {text!r} has a power beyond {MAX_UNIT_POWER}", position=0)
     try:
         unit = REGISTRY.parse_units(normalise_unit(text))
         powers = [Fraction(str(power)) for power in unit._units.values()]
@@ -75,6 +113,8 @@ def parse_quantity(text: str) -> pint.Quantity:
     except TooLarge as error:
         raise WorkerError(Code.LIMIT_EXCEEDED, str(error), limit="components") from None
     if match.group(2):
+        if abs(int(match.group(2))) > MAX_TEN_POWER:  # 10^99999999999 is computed exactly, in C (SEC-08)
+            raise WorkerError(Code.LIMIT_EXCEEDED, "the power of ten is too large", limit="components")
         magnitude = magnitude * sp.Integer(10) ** int(match.group(2))
     unit_text = text[match.end() :].strip()
     unit = parse_unit(unit_text) if unit_text else REGISTRY.dimensionless
