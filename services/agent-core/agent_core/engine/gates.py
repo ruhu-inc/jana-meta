@@ -15,7 +15,7 @@ from typing import Any
 
 from agent_core.assets.visual_kinds import claim_numbers
 from agent_core.config import Settings
-from agent_core.engine.claims import evaluate
+from agent_core.engine.claims import evaluate, measured
 from agent_core.engine.pointing import strip_markers
 from agent_core.engine.spoken import latex_to_plain, to_written
 from agent_core.engine.state import NUMBER, SessionState, numbers_in
@@ -298,21 +298,26 @@ def verdict_problems(draft: dict[str, Any], state: SessionState) -> list[str]:
 
 
 def untraced_numbers(surfaces: dict[str, str], state: SessionState, context_numbers: set[Fraction]) -> list[str]:
-    """Numbers a student could read that trace to no check, the question, the student or engine state (H1)."""
-    allowed = state.provenance() | context_numbers
+    """Numbers a student could read that trace to no check, the question, the student or engine state (H1). The
+    engine's `context_numbers` (step and hint counters) trace a counter only: a value the surface gives a unit ("4 Ω",
+    "4\\,\\Omega") is a quantity and needs a check, the question or the student."""
+    provenance = state.provenance()
+    allowed = provenance | context_numbers
 
-    def traced(value: Fraction) -> bool:
-        return any(_close(value, a, 1e-9) for a in allowed)
+    def traced(value: Fraction, units: set[Fraction]) -> bool:
+        return any(_close(value, a, 1e-9) for a in (provenance if value in units else allowed))
 
     missing = []
     for surface, text in surfaces.items():
+        units = measured(text) - {Fraction(0)}  # zero is the rest a question states in words ("from rest")
         for match in NUMBER.finditer(text.replace("\u2212", "-")):
             token = match.group(0)
             values = numbers_in(token)
             # A fraction written "a/b" reads as \frac{a}{b} does, part by part: a formula's coefficient
             # ("E_k = 1/2 mv^2") traces whichever notation the Coach chose.
             parts = [numbers_in(part) for part in token.lstrip("-").split("/")] if "/" in token else []
-            if values and not traced(values[0]) and not (parts and all(p and traced(p[0]) for p in parts)):
+            if values and not traced(values[0], units) and \
+                    not (parts and all(p and traced(p[0], units) for p in parts)):  # fmt: skip
                 missing.append(f"{surface}: {values[0]}")
     return missing
 

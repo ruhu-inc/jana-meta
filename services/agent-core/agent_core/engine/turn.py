@@ -3182,9 +3182,9 @@ class Engine(Coordination, Offers, Predictions):
                     "cache_read_tokens": turn.usage["cache_read"],
                     "model_served": turn.model_served[:120],
                     "tier": turn.tier,
-                    "location": "local",
+                    "location": self._location(turn),
                 },
-                "verification": "verified" if self.state.plan else "not_applicable",
+                "verification": "verified" if self._verified(turn) else "not_applicable",
                 "persisted": {"message_id": message_id, "part_ids": turn.persisted_parts},
                 "degraded": turn.degraded,
                 "degraded_reason": turn.degraded_reason,
@@ -3645,10 +3645,25 @@ class Engine(Coordination, Offers, Predictions):
             limits["effort"] = "none" if role == "coach" else "low"
         return limits
 
+    @staticmethod
+    def _location(turn: _Turn) -> str:
+        """Where the turn's model calls ran (API-10): `local` only when every answered call ran on this device."""
+        answered = [c for c in turn.trace.model_calls if c.get("finish_reason") != "error"]
+        return "local" if all(c.get("provider_kind") == "local" for c in answered) else "cloud"
+
+    def _verified(self, turn: _Turn) -> bool:
+        """The reply shown passed the verified gate against a verified plan: never an engine-written or canned turn, a
+        degraded one, or one whose verified gate ran out (API-10, AGT-10)."""
+        gate = turn.gates.records["verified"]
+        shown_gated = turn.accepted is not None and turn.template is None and not turn.degraded
+        return self.state.plan is not None and shown_gated and gate.outcome in ("passed", "passed_after_nudge")
+
     def _context_numbers(self) -> set[Fraction]:
-        """Numbers the engine itself puts in front of the Coach (step counters, rung): allowed provenance."""
+        """Numbers the engine itself puts in front of the Coach (step counters, rung): provenance for a counter only,
+        never for a quantity with a unit (gates.untraced_numbers). Zero is here too: the rest or reference value a
+        question states in words ("from rest", "zero speed at the top"); a withheld zero is still the leak gate's."""
         total = len(self.state.plan.steps) if self.state.plan else 0
-        return {Fraction(n) for n in (self.state.step, total, self.state.rung, 1, 2, 3, 4, 5)}
+        return {Fraction(n) for n in (self.state.step, total, self.state.rung, 0, 1, 2, 3, 4, 5)}
 
     def _tutor_context_budget(self) -> int:
         settings = self.deps.settings

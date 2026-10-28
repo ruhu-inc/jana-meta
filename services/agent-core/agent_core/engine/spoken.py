@@ -191,7 +191,7 @@ def latex_to_plain(text: str) -> str:
     plain = _SQRT.sub(r"((\1)^(1/2))", plain)
     plain = re.sub(r"\\(?:times|cdot|ast)", "*", plain)
     plain = re.sub(r"\\div", "/", plain)
-    plain = re.sub(r"\\(?:left|right|,|;|:|!|quad|qquad)", " ", plain)
+    plain = re.sub(r"\\(?:left|right|,|;|:|!| |quad|qquad)", " ", plain)
     plain = re.sub(r"\\(?:text|mathrm|mathit|operatorname)\s*\{([^{}]*)\}", r" \1 ", plain)
     plain = re.sub(r"\^\s*\{([^{}]*)\}", r"^(\1)", plain)
     plain = plain.replace("{", "(").replace("}", ")")

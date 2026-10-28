@@ -36,7 +36,7 @@ UNITS: dict[str, str] = {
     "km": "km", "kilometres": "km", "kilometre": "km", "kilometers": "km", "kilometer": "km",
     "cm": "cm", "centimetres": "cm", "centimetre": "cm", "mm": "mm", "millimetres": "mm",
     "metres": "m", "metre": "m", "meters": "m", "meter": "m", "m": "m",
-    "ms": "ms", "milliseconds": "ms", "minutes": "min", "minute": "min", "min": "min",
+    "\\Omega": "ohm", "ms": "ms", "milliseconds": "ms", "minutes": "min", "minute": "min", "min": "min",
     "seconds": "s", "second": "s", "s": "s", "hours": "h", "hour": "h", "h": "h",
     "kg": "kg", "kilograms": "kg", "kilogram": "kg", "grams": "g", "gram": "g", "g": "g",
     "N/kg": "m/s^2", "newtons": "N", "newton": "N", "N": "N", "joules": "J", "joule": "J", "J": "J", "kJ": "kJ",
@@ -286,6 +286,26 @@ def quantities(text: str) -> list[Quantity]:
     return found
 
 
+# What follows a one-letter "unit" in a formula: another symbol ("1/2 m v^2", "2 m g h"), a power or a product.
+_FORMULA_NEXT = re.compile(r"\s*(?:[A-Za-z](?![A-Za-z])|[\^*(_])")
+
+
+def measured(text: str) -> set[Fraction]:
+    """The values a surface gives a unit ("4 Ω", "R = 4\\,\\Omega"), never a formula's coefficient: a number in a
+    fraction or a power, or one before a single letter that another symbol follows ("1/2 m v^2" is no 2 metres)."""
+    written = plain(text)
+    found = set()
+    for match in QUANTITY.finditer(written):
+        number, space, unit = match.groups()
+        if (unit in _SPACED_ONLY and not space) or not exponent_ok(number):
+            continue
+        before = written[: match.start()].rstrip()
+        if before.endswith(("/", "^")) or (unit in _SPACED_ONLY and _FORMULA_NEXT.match(written, match.end())):
+            continue
+        found.add(Fraction(number))
+    return found
+
+
 def bindings(text: str) -> list[tuple[str, Quantity]]:
     """Variables bound to a single value ("g = 9.8 m/s^2", "s = 10")."""
     found = []
@@ -388,8 +408,9 @@ def claim_problems(surfaces: dict[str, str], state: SessionState) -> list[str]:
 
 
 def written_surfaces(surfaces: dict[str, str]) -> dict[str, str]:
-    """Spoken surfaces with their numbers as digits, so provenance applies to what is heard (AGT-10, VOC-07)."""
-    return {k: to_written(v) if k.startswith("say_spoken") else v for k, v in surfaces.items()}
+    """Every surface with its numbers as digits, so provenance applies to what is read or heard in words as it does to
+    digits: "twenty-four point five metres per second" in `say` is 24.5 m/s (AGT-10, VOC-07)."""
+    return {k: to_written(v) for k, v in surfaces.items()}
 
 
 def unique(items: Iterable[str]) -> list[str]:
