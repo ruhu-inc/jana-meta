@@ -31,7 +31,7 @@ PACKAGES = ("jana-cloud-gateway", "jana-agent-core")
 def _canaries() -> list[str]:
     """Key-shaped values made at run time, so no key pattern is ever written in this file."""
     digits = "".join(secrets.choice("0123456789") for _ in range(35))
-    return ["AI" + "za" + digits, "s" + "k-" + digits + "12345", "x-goog-api-key: " + digits]
+    return ["AI" + "za" + digits, "s" + "k-" + digits + "12345", "x-goog-api-key: " + digits, "tv" + "ly-dev-" + digits]
 
 
 def _git(cwd: Path, *args: str) -> None:
@@ -77,7 +77,7 @@ def sec20_no_provider_keys_in_artefacts(tmp_path: Path) -> None:
     _git(seeded, "commit", "-q", "-am", "remove")
     assert scan_tracked(seeded) == []
     caught = {f.pattern for f in scan_history(seeded)}
-    assert caught == {"google_api_key", "openai_key", "goog_api_key_header"}
+    assert caught == {"google_api_key", "openai_key", "goog_api_key_header", "legacy_search_key"}
     assert all(c[6:20] not in str(f) for c in _canaries() for f in scan_history(seeded))  # findings are masked
 
     # The repository (tracked files and history) and every release artefact the gateway and core produce.
@@ -101,7 +101,7 @@ def test_fixture_values_are_not_findings() -> None:
 
 def test_a_legacy_search_key_is_still_caught() -> None:
     # SPEC §4.2: an old web-search key may still be on a developer's machine, so the scanner keeps its pattern.
-    assert [f.pattern for f in scan_bytes(b"tv" + b"ly-dev-" + b"Q7r2Zp9Kx4Wm8Ln3Bv6Hc1", "x")] == ["legacy_search_key"]
+    assert [f.pattern for f in scan_bytes(_canaries()[3].encode(), "x")] == ["legacy_search_key"]
 
 
 def test_history_fixture_allowance_is_narrow(tmp_path: Path) -> None:
