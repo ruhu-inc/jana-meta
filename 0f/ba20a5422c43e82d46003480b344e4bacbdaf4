@@ -1,0 +1,130 @@
+packages/ui/gallery/states/study-agreement.canonical.json
+  s_c811fae2ae1a5a::t_b509f66e481969 5,8-9,20
+services/cloud-gateway/cloud_gateway/config.py
+  s_c811fae2ae1a5a::t_b509f66e481969 55-65,438
+packages/ui/gallery/states/parent-summary.canonical.json
+  s_c811fae2ae1a5a::t_b509f66e481969 3,5,99,110
+services/agent-core/agent_core/engine/verbaliser.py
+  s_c811fae2ae1a5a::t_b509f66e481969 157,312-324,464-467
+packages/ui/gallery/states/parent-summary.loading.json
+  s_c811fae2ae1a5a::t_b509f66e481969 3
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_c811fae2ae1a5a::t_a4b8376534274c 408-413
+  s_c811fae2ae1a5a::t_b509f66e481969 415
+packages/ui/src/mock/MockExam.tsx
+  s_c811fae2ae1a5a::t_b509f66e481969 576-588,638-639
+packages/ui/test/mock-report-lost.test.tsx
+  s_c811fae2ae1a5a::t_b509f66e481969 1-39
+services/cloud-gateway/tests/test_podcast_speech.py
+  s_c811fae2ae1a5a::t_b509f66e481969 1-159
+packages/ui/gallery/states/parent-summary.empty.json
+  s_c811fae2ae1a5a::t_b509f66e481969 3,71
+services/agent-core/agent_core/learner/planner.py
+  s_c811fae2ae1a5a::t_b509f66e481969 122-124,126-131,143-150,179,181-182
+packages/client-core/test/study-workspace.test.ts
+  s_c811fae2ae1a5a::t_b509f66e481969 275-354,367-406
+  s_c811fae2ae1a5a::t_a4b8376534274c 2,56,62
+  s_c811fae2ae1a5a::t_8a9d3eac6fa9cf 407
+services/agent-core/agent_core/api/screening.py
+  s_c811fae2ae1a5a::t_a4b8376534274c 179-181
+packages/ui/src/settings/OnlineFeatures.tsx
+  s_c811fae2ae1a5a::t_b509f66e481969 22,24-25,133
+scripts/tests/test_m11f_models.py
+  s_c811fae2ae1a5a::t_9533e41efcce38 26,38
+  s_c811fae2ae1a5a::t_b509f66e481969 68-69
+services/agent-core/agent_core/router/recommended_models.json
+  s_c811fae2ae1a5a::t_b509f66e481969 3
+services/agent-core/tests/test_study_podcast_speech.py
+  s_c811fae2ae1a5a::t_b509f66e481969 1-163
+services/agent-core/tests/test_spoken_hyphens.py
+  s_c811fae2ae1a5a::t_b509f66e481969 1-37
+services/agent-core/tests/test_w3_glimmer.py
+  s_c811fae2ae1a5a::t_b509f66e481969 11,36-38
+packages/ui/test/study-workspace.test.tsx
+  s_c811fae2ae1a5a::t_8a65580db8b529 358
+  s_c811fae2ae1a5a::t_a4b8376534274c 26
+  s_c811fae2ae1a5a::t_b509f66e481969 352-354,356-357
+scripts/build-submission.sh
+  s_c811fae2ae1a5a::t_b509f66e481969 5,7-10,17,21,28,203-217
+services/agent-core/agent_core/api/study.py
+  s_c811fae2ae1a5a::t_a4b8376534274c 6,8,321,327-335
+  s_c811fae2ae1a5a::t_b509f66e481969 356-363,365-417
+  s_c811fae2ae1a5a::t_8a65580db8b529 364
+apps/desktop/src/podcast-audio.ts
+  s_c811fae2ae1a5a::t_a4b8376534274c 1-34
+packages/ui/gallery/states/parent-summary.error-retriable.json
+  s_c811fae2ae1a5a::t_b509f66e481969 3
+packages/ui/test/studies.test.tsx
+  s_c811fae2ae1a5a::t_b509f66e481969 2-3,34-35,41,43,45-46,48,51,53-54,82-90
+  s_c811fae2ae1a5a::t_37644a516e2c50 91-92
+packages/ui/gallery/states/parent-summary.canonical.too-little.json
+  s_c811fae2ae1a5a::t_b509f66e481969 3,74
+packages/ui/gallery/states/printed-report.canonical.json
+  s_c811fae2ae1a5a::t_b509f66e481969 3
+services/cloud-gateway/cloud_gateway/podcast_speech.py
+  s_c811fae2ae1a5a::t_b509f66e481969 1-194
+apps/desktop/src-tauri/Cargo.toml
+  s_c811fae2ae1a5a::t_b509f66e481969 73
+services/agent-core/tests/test_s10_next_up_subject.py
+  s_c811fae2ae1a5a::t_b509f66e481969 37-39,41-44,46-52
+scripts/jana_tools/hackathon_app.py
+  s_c811fae2ae1a5a::t_a4b8376534274c 210
+content/agent/notices/notices.json
+  s_c811fae2ae1a5a::t_b509f66e481969 32
+services/cloud-gateway/deploy/meta-dev.toml
+  s_c811fae2ae1a5a::t_b509f66e481969 32-39
+packages/i18n/test/catalogue.test.ts
+  s_c811fae2ae1a5a::t_b509f66e481969 73-76,78-80
+  s_c811fae2ae1a5a::t_8a65580db8b529 77
+services/agent-core/agent_core/net/study.py
+  s_c811fae2ae1a5a::t_a4b8376534274c 115-120
+  s_c811fae2ae1a5a::t_b509f66e481969 130-159
+services/agent-core/tests/test_adult_notices.py
+  s_c811fae2ae1a5a::t_b509f66e481969 1-16
+services/agent-core/agent_core/config/keys.py
+  s_c811fae2ae1a5a::t_a4b8376534274c 110-111
+SPEC.md
+  s_c811fae2ae1a5a::t_b0ec41f022af52 28,63,221-223,409,411
+  s_c811fae2ae1a5a::t_b509f66e481969 67,362-364,379,654
+packages/ui/src/settings/Studies.tsx
+  s_c811fae2ae1a5a::t_b509f66e481969 3-6,18-19,21,34-43,47,131,136,140,177,179
+packages/ui/test/parents.test.tsx
+  s_c811fae2ae1a5a::t_b509f66e481969 78-79,97
+README.md
+  s_c811fae2ae1a5a::t_b509f66e481969 3-5,94
+packages/client-core/src/study-workspace.ts
+  s_c811fae2ae1a5a::t_a4b8376534274c 11-17,21,29-30,85,88,90,111,502-503,507-524,529-532,538-540,567-582,584-586,588-591,593-596,600-602,604-605,635
+  s_c811fae2ae1a5a::t_b509f66e481969 114-121,546-564
+services/cloud-gateway/cloud_gateway/app.py
+  s_c811fae2ae1a5a::t_a23cd3531dd5c9 486-488
+packages/ui/test/online.test.tsx
+  s_c811fae2ae1a5a::t_b509f66e481969 246-264
+apps/desktop/test/podcast-audio.test.ts
+  s_c811fae2ae1a5a::t_b509f66e481969 1-55
+scripts/tests/test_m7b_devlab.py
+  s_c811fae2ae1a5a::t_9533e41efcce38 65,81
+  s_c811fae2ae1a5a::t_b509f66e481969 59,83,94,98,103
+packages/client-core/src/index.ts
+  s_c811fae2ae1a5a::t_a4b8376534274c 114
+packages/i18n/locales/en.json
+  s_c811fae2ae1a5a::t_b509f66e481969 1645-1646,1681,2493-2503
+  s_c811fae2ae1a5a::t_a4b8376534274c 2521-2523
+apps/desktop/src/App.tsx
+  s_c811fae2ae1a5a::t_a4b8376534274c 4,122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0fba20a5422c43e82d46003480b344e4bacbdaf4",
+  "prompts": {},
+  "sessions": {
+    "s_c811fae2ae1a5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59bedd8f-e027-4722-b546-6260ce5ebe63",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
