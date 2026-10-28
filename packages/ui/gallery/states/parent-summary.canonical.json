@@ -1,8 +1,8 @@
 {
   "id": "parent-summary.canonical",
-  "title": "Parent summary",
+  "title": "Weekly summary",
   "component": "ParentSummary",
-  "note": "Settings → Parent summary (UXS-33, TCH-12): a full week, worded from templates around the digest's numbers and the pack's topic names; ideas print with their mastery words (DSN-23).",
+  "note": "Settings → Weekly summary (UXS-33, TCH-12): a full week, worded from templates around the digest's numbers and the pack's topic names; ideas print with their mastery words (DSN-23).",
   "state": "canonical",
   "payload": {
     "view": {
@@ -96,7 +96,7 @@
     "page"
   ],
   "expectText": [
-    "This week Ama studied for 2 h 15 min across 4 days and secured 1 new idea in Physics.",
+    "This week you studied for 2 h 15 min across 4 days and secured 1 new idea in Physics.",
     "Monday",
     "25 min",
     "Ideas secured",
@@ -107,7 +107,7 @@
     "2 full solutions viewed",
     "1 step of 12 ended with the last hint",
     "Streak: 3 days · 219 days to the Physics exam",
-    "Ask Ama to show you one thing about Inside the atom that still feels tricky.",
+    "Pick one thing about Inside the atom that still feels tricky and work through it again.",
     "Print or save as PDF"
   ]
 }

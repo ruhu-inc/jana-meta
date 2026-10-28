@@ -2,10 +2,11 @@
   "id": "study-agreement.canonical",
   "title": "Study agreement",
   "component": "StudyAgreement",
-  "note": "A research study's agreement (PRV-06, D87): the consent line, the guardian's agreement or an adult student's own, and Turn on disabled until one is ticked.",
+  "note": "A research study's agreement (PRV-06, D87, W5): the consent line, the adult student's own agreement, and Turn on disabled until it is ticked.",
   "state": "canonical",
   "payload": {
-    "scope": "research_use"
+    "scope": "research_use",
+    "adult": true
   },
   "payloadContract": null,
   "context": {
@@ -16,6 +17,6 @@
   ],
   "expectText": [
     "Help a study of whether the tutor helps students learn.",
-    "I'm this student's parent or guardian and I agree to this study."
+    "I'm the student, I'm 18 or over, and I agree to this study."
   ]
 }

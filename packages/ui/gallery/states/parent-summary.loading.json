@@ -1,6 +1,6 @@
 {
   "id": "parent-summary.loading",
-  "title": "Parent summary, loading",
+  "title": "Weekly summary, loading",
   "component": "ParentSummary",
   "note": "The digest is being read from the core on this computer.",
   "state": "loading",

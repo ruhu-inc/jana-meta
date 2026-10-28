@@ -1,6 +1,6 @@
 {
   "id": "parent-summary.empty",
-  "title": "Parent summary, no study this week",
+  "title": "Weekly summary, no study this week",
   "component": "ParentSummary",
   "note": "UXS-33's empty week.",
   "state": "empty",
@@ -68,6 +68,6 @@
   ],
   "expectText": [
     "No study sessions this week.",
-    "Ask Ama which topic they would like to start with."
+    "Choose the topic you would like to start with."
   ]
 }
