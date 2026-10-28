@@ -13,6 +13,7 @@ from typing import Any
 
 import sympy as sp
 
+from tool_worker.functions.common import substituted
 from tool_worker.grammar import exact_number
 from tool_worker.protocol import Code, WorkerError
 
@@ -89,4 +90,4 @@ def apply(
         extras["constants"] = records
     if warnings:
         extras["warnings"] = warnings
-    return [t.subs(substitutions) for t in trees], extras
+    return [substituted(t, substitutions, "constants") for t in trees], extras

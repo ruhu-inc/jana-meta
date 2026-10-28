@@ -275,6 +275,31 @@ def safe_pow(base: sp.Expr, exponent: sp.Expr) -> sp.Expr:
     return sp.Pow(base, exponent)
 
 
+def huge_power(tree: sp.Basic) -> bool:
+    """A power with a numeric exponent beyond the grammar's bound, such as (x+1)^(10^29): expanding, factorising,
+    differentiating or solving it loops over binomial coefficients without a Python call, so the time slice never
+    fires and the per-call budget is escaped (SEC-08). Such a tree can only be sampled."""
+    return any(
+        isinstance(node, sp.Pow) and node.exp.is_number and abs(node.exp) > MAX_POWER_EXPONENT
+        for node in sp.preorder_traversal(tree)
+    )
+
+
+def bounded_subs(tree: sp.Basic, values: dict[sp.Basic, sp.Basic]) -> sp.Basic:
+    """`tree` with `values` substituted, rebuilt bottom-up through `safe_pow`, so a power whose base or exponent
+    becomes a number (x^(10^29) at x = 2, 2^x at x = 10^29) is refused with TooLarge before SymPy computes it: an exact
+    power runs in C, where the per-call budget cannot stop it (SEC-08). As with `subs`, a subtree with nothing
+    substituted is kept as it is, never re-evaluated."""
+    if tree in values:
+        return values[tree]
+    if not tree.args:
+        return tree
+    args = [bounded_subs(a, values) for a in tree.args]
+    if all(new is old for new, old in zip(args, tree.args, strict=True)):
+        return tree
+    return safe_pow(*args) if isinstance(tree, sp.Pow) else tree.func(*args)
+
+
 # --- parser -------------------------------------------------------------------------------------------------
 
 
