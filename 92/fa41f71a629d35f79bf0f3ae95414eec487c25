@@ -1,0 +1,49 @@
+services/cloud-gateway/tests/test_ledger_leaks.py
+  s_43c77c511f4fe7::t_5f94052e7ff32b 208,212-215,218
+  s_43c77c511f4fe7::t_8a433081110c1a 1-8,10-166,168-170,175-176,185,187,199-205,207,209-211,219-263,265-296
+  s_43c77c511f4fe7::t_5ab25549ae986d 9,167,171-174,177-184,186,188-198
+  s_43c77c511f4fe7::t_6694b0dbf94aa2 206
+  s_43c77c511f4fe7::t_e617c4148b091e 216-217,264
+services/cloud-gateway/cloud_gateway/voice.py
+  s_43c77c511f4fe7::t_437377e056f48d 356,358-360,369,387-389
+services/cloud-gateway/cloud_gateway/inference_budget.py
+  s_43c77c511f4fe7::t_e617c4148b091e 96-97
+  s_43c77c511f4fe7::t_60e4ad38748c32 379-380,382,384-385
+  s_43c77c511f4fe7::t_03193297e040a9 6-9,61-63,78-95,98-105,175-176,186-187,229-234,241,245,357-360,368,373,377-378,383
+  s_43c77c511f4fe7::t_e1964ea25e29cb 24,106-119,142-143,153-163,212-214
+  s_43c77c511f4fe7::t_018affdecb9369 164
+services/cloud-gateway/cloud_gateway/segment.py
+  s_43c77c511f4fe7::t_437377e056f48d 21,133,177-183
+services/cloud-gateway/tests/test_inference_budget.py
+  s_43c77c511f4fe7::t_e75d511ed455dc 155-158,165,169,423,441-444
+services/cloud-gateway/cloud_gateway/app.py
+  s_43c77c511f4fe7::t_6007156b8eca99 242-246,315,333,371,373,376
+  s_43c77c511f4fe7::t_8aae6192e2bd74 64,78-79,139-140,247,314,316,332,334,342,348,367-370,372,374,385-387,389
+  s_43c77c511f4fe7::t_e1964ea25e29cb 151-152
+  s_43c77c511f4fe7::t_7d412eb19a85e9 378
+services/cloud-gateway/cloud_gateway/providers/meta_speech.py
+  s_43c77c511f4fe7::t_437377e056f48d 287-290
+services/cloud-gateway/tests/gateway_stubs.py
+  s_43c77c511f4fe7::t_8f292c7d1adebc 9
+  s_43c77c511f4fe7::t_f9105704806267 62,102-103,130-131,256-257,276-277
+services/cloud-gateway/cloud_gateway/holds.py
+  s_43c77c511f4fe7::t_80e503da52b780 9-13
+SPEC.md
+  s_43c77c511f4fe7::t_f322e520b59b40 127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "92fa41f71a629d35f79bf0f3ae95414eec487c25",
+  "prompts": {},
+  "sessions": {
+    "s_43c77c511f4fe7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5f54d8d2-152e-4c30-958d-a1952dae8e01",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
