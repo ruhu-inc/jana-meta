@@ -39,7 +39,7 @@ from tool_worker.functions.numeric import (
     round_sf_exact,
 )
 from tool_worker.functions.units import REGISTRY, parse_unit
-from tool_worker.grammar import Parsed
+from tool_worker.grammar import Parsed, huge_power
 from tool_worker.protocol import WorkerError
 from tool_worker.registry import CallContext
 
@@ -338,6 +338,8 @@ def form_met(target: str, text: str, parsed: Parsed | None, reading: Reading | N
             return math.gcd(p, q) == 1 and q != 1
         return True
     written, tree = parsed.as_written, parsed.tree
+    if huge_power(tree):
+        return False  # expanding or factorising it runs where the per-call budget cannot stop it (SEC-08): unchecked
     if target == "simplest":
         nodes = list(sp.preorder_traversal(written))
         if any(_unsimplified_node(n) for n in nodes) or _surd_unsimplified(text, written):
@@ -426,8 +428,8 @@ def math_check_answer(args: dict[str, Any], context: CallContext) -> tuple[Any, 
         extras: Extras = {"method": "exact", "confidence": "proved"}
         parsed = None
     else:
-        parsed = parse_arg(student_text, args, "student")
-        key = parse_arg(key_text, args, "key")
+        parsed = parse_arg(student_text, args, "student", sampled=True)  # a huge power is only sampled
+        key = parse_arg(key_text, args, "key", sampled=True)
         components, details, extras = _expression(parsed, key, student_text, rule, context)
         if target is None and row == "exact" and key.tree.is_number:
             target = "exact"  # TABLE VER-09a: a decimal where an exact answer is asked leaves the form unmet

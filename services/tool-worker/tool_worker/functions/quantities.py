@@ -14,6 +14,7 @@ from typing import Any
 import sympy as sp
 
 from tool_worker.functions import constants, units
+from tool_worker.functions.common import substituted
 from tool_worker.grammar import TooLarge, exact_number
 from tool_worker.protocol import Code, WorkerError
 
@@ -176,4 +177,4 @@ def apply(trees: list[sp.Basic], args: dict[str, Any]) -> tuple[list[sp.Basic], 
             elif symbol.name in scales:
                 substitutions[symbol] = scales[symbol.name] * symbol
     stated = {name: units.unit_text(units.parse_unit(text)) for name, text in wanted.items()}
-    return [t.subs(substitutions, simultaneous=True) for t in trees], stated
+    return [substituted(t, substitutions, "quantities") for t in trees], stated  # simultaneous, bounded (SEC-08)

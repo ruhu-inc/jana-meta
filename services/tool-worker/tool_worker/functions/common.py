@@ -4,24 +4,30 @@ from __future__ import annotations
 
 from typing import Any
 
-from tool_worker.grammar import Parsed, ParseRejected, TooLarge, parse
+import sympy as sp
+
+from tool_worker.grammar import Parsed, ParseRejected, TooLarge, bounded_subs, huge_power, parse
 from tool_worker.protocol import Code, WorkerError
 from tool_worker.registry import CallContext
 
 ASSUMPTION_FLAGS = {"positive": "positive", "nonzero": "nonzero", "integer": "integer", "nonnegative": "nonnegative"}
 
 
-def parse_arg(text: str, args: dict[str, Any], field: str = "text", *, imaginary_unit: bool = False) -> Parsed:
+def parse_arg(
+    text: str, args: dict[str, Any], field: str = "text", *, imaginary_unit: bool = False, sampled: bool = False
+) -> Parsed:
     """Parse one argument; grammar errors become PARSE_REJECTED with the position, size breaches LIMIT_EXCEEDED.
     With `imaginary_unit` the letter `i` is parsed as a non-real symbol (never simplified as a real variable), for the
-    caller to replace with the imaginary unit (VER-30)."""
+    caller to replace with the imaginary unit (VER-30). A power with an exponent beyond the grammar's bound, such as
+    (x+1)^(10^29), is LIMIT_EXCEEDED unless the caller only samples the tree (`sampled`): symbolic work on it runs where
+    the per-call budget cannot stop it (SEC-08)."""
     assumptions = {
         name: {ASSUMPTION_FLAGS[flag]: True for flag in flags} for name, flags in args.get("assumptions", {}).items()
     }
     if imaginary_unit:
         assumptions["i"] = {"real": False, "imaginary": True}
     try:
-        return parse(
+        parsed = parse(
             text,
             variables=frozenset(args.get("variables", [])),
             assumptions=assumptions,
@@ -30,6 +36,18 @@ def parse_arg(text: str, args: dict[str, Any], field: str = "text", *, imaginary
         )
     except ParseRejected as error:
         raise WorkerError(Code.PARSE_REJECTED, f"{field}: {error}", position=error.position) from None
+    except TooLarge as error:
+        raise WorkerError(Code.LIMIT_EXCEEDED, f"{field}: {error}", limit=error.limit) from None
+    if not sampled and huge_power(parsed.tree):
+        raise WorkerError(Code.LIMIT_EXCEEDED, f"{field}: the power is too large to work with", limit="components")
+    return parsed
+
+
+def substituted(tree: sp.Basic, values: dict[sp.Basic, sp.Basic], field: str) -> sp.Basic:
+    """`tree` at the values the call gave in `field`, refused as LIMIT_EXCEEDED when that makes a power too large to
+    compute (2^x at x = 10^29): the exact power runs in C, where the per-call budget cannot stop it (SEC-08)."""
+    try:
+        return bounded_subs(tree, values)
     except TooLarge as error:
         raise WorkerError(Code.LIMIT_EXCEEDED, f"{field}: {error}", limit=error.limit) from None
 

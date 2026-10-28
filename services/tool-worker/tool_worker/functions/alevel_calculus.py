@@ -29,7 +29,7 @@ from sympy.calculus.util import continuous_domain
 from sympy.core.relational import Relational
 
 from tool_worker.budget import SliceExpired, time_slice
-from tool_worker.functions.common import parse_arg
+from tool_worker.functions.common import parse_arg, substituted
 from tool_worker.functions.maths import _expressions as expression_equivalence
 from tool_worker.functions.maths import exact, significant, slice_seconds
 from tool_worker.protocol import Code, WorkerError
@@ -96,7 +96,7 @@ def _lines(gradient: sp.Expr | None, x0: sp.Expr, y0: sp.Expr) -> dict[str, Any]
 
 
 def _student(args: dict[str, Any], expected: sp.Expr, context: CallContext, extras: Extras) -> dict[str, str]:
-    student = parse_arg(args["student"], args, "student").tree
+    student = parse_arg(args["student"], args, "student", sampled=True).tree  # only sampled
     if isinstance(student, sp.Eq):
         student = student.rhs
     verdict, check = expression_equivalence(student, expected, context)
@@ -128,10 +128,11 @@ def implicit(args: dict[str, Any], context: CallContext) -> tuple[Any, Extras]:
                         "check_id": context.check_id}]  # fmt: skip
             if "point" in args:
                 x0, y0 = (constant(v, "point", args) for v in args["point"])
-                if sp.simplify(h.subs({x: x0, y: y0})) != 0:
+                at = {x: x0, y: y0}
+                if sp.simplify(substituted(h, at, "point")) != 0:
                     raise _domain(f"point: ({sp.sstr(x0)}, {sp.sstr(y0)}) is not on the curve")
-                denominator = sp.simplify(sp.diff(h, y).subs({x: x0, y: y0}))
-                gradient = None if denominator == 0 else sp.simplify(dydx.subs({x: x0, y: y0}))
+                denominator = sp.simplify(substituted(sp.diff(h, y), at, "point"))
+                gradient = None if denominator == 0 else sp.simplify(substituted(dydx, at, "point"))
                 value["at"] = {"x": exact(x0), "y": exact(y0),
                                "gradient": exact(gradient) if gradient is not None else {"vertical": True},
                                **_lines(gradient, x0, y0)}  # fmt: skip
@@ -167,8 +168,7 @@ def parametric(args: dict[str, Any], context: CallContext) -> tuple[Any, Extras]
                                 "check_id": context.check_id})  # fmt: skip
             if "at" in args:
                 t0 = constant(args["at"], "at", args)
-                x0, y0 = sp.simplify(xt.subs(t, t0)), sp.simplify(yt.subs(t, t0))
-                dx0, dy0 = sp.simplify(dx.subs(t, t0)), sp.simplify(dy.subs(t, t0))
+                x0, y0, dx0, dy0 = (sp.simplify(substituted(e, {t: t0}, "at")) for e in (xt, yt, dx, dy))
                 if dx0 == 0 and dy0 == 0:
                     return {"status": "unknown", "reason": "singular_point", "parameter": t.name}, UNKNOWN
                 gradient = None if dx0 == 0 else sp.simplify(dy0 / dx0)
@@ -176,7 +176,7 @@ def parametric(args: dict[str, Any], context: CallContext) -> tuple[Any, Extras]
                                       "gradient": exact(gradient) if gradient is not None else {"vertical": True},
                                       **_lines(gradient, x0, y0)}  # fmt: skip
                 if second is not None and dx0 != 0:
-                    at["second_derivative"] = exact(sp.simplify(second.subs(t, t0)))
+                    at["second_derivative"] = exact(sp.simplify(substituted(second, {t: t0}, "at")))
                 value["at"] = at
     except SliceExpired:
         return {"status": "unknown", "reason": "timeout"}, UNKNOWN
@@ -196,6 +196,10 @@ def _limits(args: dict[str, Any]) -> tuple[sp.Expr, sp.Expr]:
 
 
 def _continuous(tree: sp.Expr, var: sp.Symbol, a: sp.Expr, b: sp.Expr) -> None:
+    """The function is defined and continuous on [a, b]. Its value at each end must be computable first: an integral
+    over [0, 10^29] of 2^x would compute 2^(10^29) exactly, in C, where the per-call budget cannot stop it (SEC-08)."""
+    substituted(tree, {var: a}, "lower")
+    substituted(tree, {var: b}, "upper")
     low, high = (a, b) if sp.N(a) <= sp.N(b) else (b, a)
     if continuous_domain(tree, var, sp.Interval(low, high)) != sp.Interval(low, high):
         raise _domain("the function is undefined or discontinuous on part of the interval")
@@ -231,7 +235,7 @@ def trapezium(args: dict[str, Any], tree: sp.Expr, var: sp.Symbol, context: Call
     sf = int(args.get("sf", 4))
     h = (b - a) / n
     xs = [sp.simplify(a + k * h) for k in range(n + 1)]
-    ys = [sp.simplify(tree.subs(var, xk)) for xk in xs]
+    ys = [sp.simplify(substituted(tree, {var: xk}, "upper")) for xk in xs]
     if any(yk.is_real is False or yk.has(sp.zoo, sp.nan) for yk in ys):
         raise _domain("an ordinate is undefined or not real")
     estimate = sp.nsimplify(h / 2 * (ys[0] + 2 * sum(ys[1:-1], sp.Integer(0)) + ys[-1]))
@@ -326,8 +330,10 @@ def substitution(args: dict[str, Any], tree: sp.Expr, var: sp.Symbol, context: C
             if "lower" in args or "upper" in args:
                 a, b = _limits(args)
                 _continuous(tree, var, a, b)
-                ua, ub = sp.simplify(g.subs(var, a)), sp.simplify(g.subs(var, b))
-                result = sp.simplify(antiderivative.subs(u, ub) - antiderivative.subs(u, ua))
+                ua, ub = sp.simplify(substituted(g, {var: a}, "lower")), sp.simplify(substituted(g, {var: b}, "upper"))
+                result = sp.simplify(
+                    substituted(antiderivative, {u: ub}, "upper") - substituted(antiderivative, {u: ua}, "lower")
+                )
                 value["limits_in_u"] = [exact(ua), exact(ub)]
                 value["definite"] = exact(result)
                 expected = result
@@ -370,7 +376,9 @@ def parts(args: dict[str, Any], tree: sp.Expr, var: sp.Symbol, context: CallCont
             if "lower" in args or "upper" in args:
                 a, b = _limits(args)
                 _continuous(tree, var, a, b)
-                expected = sp.simplify(antiderivative.subs(var, b) - antiderivative.subs(var, a))
+                expected = sp.simplify(
+                    substituted(antiderivative, {var: b}, "upper") - substituted(antiderivative, {var: a}, "lower")
+                )
                 value["definite"] = exact(expected)
     except SliceExpired:
         return {"status": "unknown", "reason": "timeout"}, UNKNOWN
@@ -435,15 +443,16 @@ def _separable(rhs: sp.Expr, x: sp.Symbol, y: sp.Symbol, c: sp.Symbol, args: dic
     if "condition" not in args:
         return value, working
     x0, y0 = (constant(v, "condition", args) for v in args["condition"])
-    if sp.simplify(g.subs(y, y0)) == 0:
+    if sp.simplify(substituted(g, {y: y0}, "condition")) == 0:
         particular = y0  # the constant solution y = y0 through the point: separating would divide by zero
         working.append({"label": "constant solution", "value": f"g({sp.sstr(y0)}) = 0, so {y.name} = {sp.sstr(y0)}",
                         "check_id": check})  # fmt: skip
     else:
         # The constant from the condition; with ln of a negative value it is complex here, and the real constant of
         # the ln|.| form is reported.
-        c0 = sp.simplify(left.subs(y, y0) - right.subs(x, x0))
-        c_shown = sp.simplify(shown.subs(y, y0) - right.subs(x, x0))
+        at_x0 = substituted(right, {x: x0}, "condition")
+        c0 = sp.simplify(substituted(left, {y: y0}, "condition") - at_x0)
+        c_shown = sp.simplify(substituted(shown, {y: y0}, "condition") - at_x0)
         if c_shown.is_real is not True:
             raise _domain("condition: the solution is undefined at the stated point")
         working.append({"label": f"{x.name} = {sp.sstr(x0)}, {y.name} = {sp.sstr(y0)}",
@@ -453,7 +462,7 @@ def _separable(rhs: sp.Expr, x: sp.Symbol, y: sp.Symbol, c: sp.Symbol, args: dic
             branch = sp.simplify(candidate.subs(c, c0))
             if branch.has(sp.I):
                 branch = sp.simplify(sp.expand_complex(branch))
-            if branch.has(sp.I) or sp.simplify(branch.subs(x, x0) - y0) != 0:
+            if branch.has(sp.I) or sp.simplify(substituted(branch, {x: x0}, "condition") - y0) != 0:
                 continue
             if _satisfies(branch, rhs, x, y):
                 fitting.append(branch)
@@ -465,7 +474,7 @@ def _separable(rhs: sp.Expr, x: sp.Symbol, y: sp.Symbol, c: sp.Symbol, args: dic
     value["particular"] = exact(particular)
     if "at" in args:
         x1 = constant(args["at"], "at", args)
-        y1 = sp.simplify(particular.subs(x, x1))
+        y1 = sp.simplify(substituted(particular, {x: x1}, "at"))
         if y1.is_real is False or y1.has(sp.zoo, sp.nan):
             raise _domain(f"at: the solution is undefined at {x.name} = {sp.sstr(x1)}")
         value["at"] = {"x": exact(x1), "y": exact(y1)}
@@ -519,6 +528,6 @@ def _check_ode_student(args: dict[str, Any], rhs: sp.Expr, x: sp.Symbol, y: sp.S
     out: dict[str, Any] = {"satisfies_equation": satisfies}
     if "condition" in args:
         x0, y0 = (constant(v, "condition", args) for v in args["condition"])
-        out["satisfies_condition"] = sp.simplify(tree.subs(x, x0) - y0) == 0
+        out["satisfies_condition"] = sp.simplify(substituted(tree, {x: x0}, "condition") - y0) == 0
     out["value"] = "correct" if satisfies and out.get("satisfies_condition", True) else "incorrect"
     return out

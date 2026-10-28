@@ -19,7 +19,7 @@ from sympy.core.relational import Relational
 
 from tool_worker.budget import SliceExpired, time_slice
 from tool_worker.functions import alevel_calculus
-from tool_worker.functions.common import parse_arg
+from tool_worker.functions.common import parse_arg, substituted
 from tool_worker.functions.maths import _expressions as expression_equivalence
 from tool_worker.functions.maths import _sorted_values, exact, slice_seconds
 from tool_worker.protocol import Code, WorkerError
@@ -76,9 +76,9 @@ def point(raw: Any, field: str, args: dict[str, Any]) -> sp.Expr:
         return alevel_calculus.constant(raw, field, args)
 
 
-def value_at(tree: sp.Expr, var: sp.Symbol, at: sp.Expr) -> sp.Expr | None:
-    """f(at) when defined and real, else None."""
-    value = sp.simplify(tree.subs(var, at))
+def value_at(tree: sp.Expr, var: sp.Symbol, at: sp.Expr, field: str = "at") -> sp.Expr | None:
+    """f(at) when defined and real, else None; LIMIT_EXCEEDED when f(at) is a power too large to compute (SEC-08)."""
+    value = sp.simplify(substituted(tree, {var: at}, field))
     if value.has(sp.zoo, sp.nan, sp.oo, -sp.oo) or value.is_real is False:
         return None
     return value
@@ -95,7 +95,7 @@ def line(gradient: sp.Expr, x0: sp.Expr, y0: sp.Expr, var: sp.Symbol) -> dict[st
 def nature(f: sp.Expr, var: sp.Symbol, at: sp.Expr, neighbours: list[sp.Expr]) -> tuple[str, sp.Expr]:
     """A stationary point's nature from the second derivative, or from the sign of the first derivative either side
     when the second derivative is zero there."""
-    second = sp.simplify(sp.diff(f, var, 2).subs(var, at))
+    second = sp.simplify(substituted(sp.diff(f, var, 2), {var: at}, "stationary_points"))
     numeric = sp.N(second, 30)
     if numeric.is_real and numeric > 0:
         return "minimum", second
@@ -104,7 +104,7 @@ def nature(f: sp.Expr, var: sp.Symbol, at: sp.Expr, neighbours: list[sp.Expr]) -
     gaps = [abs(sp.N(n - at, 30)) for n in neighbours if n != at]
     h = sp.nsimplify(min([*gaps, sp.Integer(1)]) / 4, rational=True)
     first = sp.diff(f, var)
-    left, right = sp.N(first.subs(var, at - h), 30), sp.N(first.subs(var, at + h), 30)
+    left, right = (sp.N(substituted(first, {var: at + d}, "stationary_points"), 30) for d in (-h, h))
     if left < 0 < right:
         return "minimum", second
     if left > 0 > right:
@@ -120,7 +120,7 @@ def stationary_points(f: sp.Expr, var: sp.Symbol, domain: sp.Set) -> list[dict[s
     xs = _sorted_values([r for r in roots.args if r.is_real is not False])
     out = []
     for x0 in xs:
-        y0 = value_at(f, var, x0)
+        y0 = value_at(f, var, x0, "stationary_points")
         if y0 is None:
             continue
         kind, second = nature(f, var, x0, xs)
@@ -175,7 +175,7 @@ def math_differentiate(args: dict[str, Any], context: CallContext) -> tuple[Any,
         return {"status": "unknown", "reason": "timeout"}, UNKNOWN
     extras: Extras = {"latex": sp.latex(derivative), **PROVED}
     if "student" in args:
-        student = parse_arg(args["student"], args, "student").tree
+        student = parse_arg(args["student"], args, "student", sampled=True).tree  # only sampled
         verdict, check = expression_equivalence(student, derivative, context)
         value["student"] = {"value": _student_value(verdict["verdict"])}
         if check["confidence"] != "proved":
@@ -250,7 +250,9 @@ def _definite(tree: sp.Expr, antiderivative: sp.Expr, var: sp.Symbol, lower: sp.
         raise WorkerError(Code.DOMAIN_ERROR, "the function is undefined or discontinuous on part of the interval")
 
     def between(a: sp.Expr, b: sp.Expr) -> sp.Expr:
-        return sp.simplify(antiderivative.subs(var, b) - antiderivative.subs(var, a))
+        return sp.simplify(
+            substituted(antiderivative, {var: b}, "upper") - substituted(antiderivative, {var: a}, "lower")
+        )
 
     whole = between(lower, upper)
     out: dict[str, Any] = {"lower": exact(lower), "upper": exact(upper), "definite": exact(whole)}
@@ -274,7 +276,7 @@ def _check_student(args: dict[str, Any], tree: sp.Expr, var: sp.Symbol, definite
                    context: CallContext) -> tuple[dict[str, Any], Extras]:  # fmt: skip
     """A definite answer is compared with the value; an indefinite one by its derivative, so any additive constant is
     accepted, and an answer with no arbitrary constant has form `missing_constant`."""
-    student = parse_arg(args["student"], args, "student").tree
+    student = parse_arg(args["student"], args, "student", sampled=True).tree  # differentiated, then only sampled
     if isinstance(student, (Relational, sp.And)):
         student = student.rhs if isinstance(student, sp.Eq) else student
     if definite is not None:

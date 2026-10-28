@@ -16,9 +16,9 @@ from sympy.core.relational import Relational
 
 from tool_worker.budget import SliceExpired, time_slice
 from tool_worker.functions import constants
-from tool_worker.functions.common import parse_arg
+from tool_worker.functions.common import parse_arg, substituted
 from tool_worker.functions.numeric import round_sf
-from tool_worker.grammar import MAX_POWER_EXPONENT, TooLarge, describe, exact_number, safe_pow
+from tool_worker.grammar import TooLarge, bounded_subs, describe, exact_number, huge_power
 from tool_worker.protocol import Code, WorkerError
 from tool_worker.registry import CallContext
 
@@ -37,15 +37,18 @@ def exact(value: sp.Basic, sf: int = 6) -> dict[str, Any]:
 
 
 def significant(value: sp.Basic, sf: int) -> str:
-    """Round half away from zero to `sf` significant figures (VER-09: never banker's rounding)."""
-    d = Decimal(str(sp.N(value, 40)))
+    """Round half away from zero to `sf` significant figures (VER-09: never banker's rounding). The power of ten is
+    kept apart from the digits: a sampled (n+1)^(10^29) has an exponent beyond any Decimal context's range."""
+    digits, _, power = str(sp.N(value, 40)).partition("e")
+    d = Decimal(digits)
     if d == 0:
         return "0"
     rounded = round_sf(d, sf)
-    if rounded.adjusted() < -4 or rounded.adjusted() >= 12:  # standard form for very small or large values
+    adjusted = rounded.adjusted() + int(power or 0)
+    if adjusted < -4 or adjusted >= 12:  # standard form for very small or large values
         mantissa = rounded.scaleb(-rounded.adjusted())
-        return f"{format(mantissa, 'f')}e{rounded.adjusted()}"
-    return format(rounded, "f")
+        return f"{format(mantissa, 'f')}e{adjusted}"
+    return format(rounded.scaleb(int(power or 0)), "f")
 
 
 def decimal_places(value: sp.Basic, dp: int) -> str:
@@ -79,7 +82,7 @@ def _variables(*trees: sp.Basic) -> list[sp.Symbol]:
 
 def math_parse(args: dict[str, Any], context: CallContext) -> tuple[Any, Extras]:
     """Parse plain maths or the LaTeX subset with our own grammar (VER-03)."""
-    parsed = parse_arg(args["text"], args)
+    parsed = parse_arg(args["text"], args, sampled=True)  # parsed and described, never worked
     value = describe(parsed.tree)
     value["as_written_latex"] = sp.latex(parsed.as_written)
     return value, {"latex": value["latex"], "method": "exact", "confidence": "proved"}
@@ -199,22 +202,13 @@ def _decided(
     return None
 
 
-def _huge_power(tree: sp.Basic) -> bool:
-    """A power with a numeric exponent beyond the grammar's bound: expanding (n+1)^(10^29) loops over binomial
-    coefficients without a Python call, so the time slice never fires and the per-call budget is escaped (SEC-08)."""
-    return any(
-        isinstance(node, sp.Pow) and node.exp.is_number and abs(node.exp) > MAX_POWER_EXPONENT
-        for node in sp.preorder_traversal(tree)
-    )
-
-
 def _expressions(a: sp.Expr, b: sp.Expr, context: CallContext) -> tuple[dict[str, Any], Extras]:
     """Cheap symbolic reduction, then a seeded numeric screen (a counterexample proves non-equivalence), then the
     expensive simplifiers only when the samples agree. Expensive simplification of a false identity (such as
     log(x + 4) = log(x) + log(4)) can run until the slice expires; the screen answers it in milliseconds. A huge
     power is only sampled, never expanded."""
     difference: sp.Basic = a - b
-    symbolic = not _huge_power(difference)
+    symbolic = not huge_power(difference)
     try:
         with time_slice(slice_seconds(context)):
             if symbolic:
@@ -280,6 +274,10 @@ def _any_element(s: sp.Set) -> sp.Basic | None:
 
 
 def _relations(a: sp.Basic, b: sp.Basic, context: CallContext) -> tuple[dict[str, Any], Extras]:
+    """Relations are compared by their solution sets. A huge power is undecided: solving it runs where the per-call
+    budget cannot stop it (SEC-08), and a relation has no sampled screen."""
+    if huge_power(a) or huge_power(b):
+        return {"verdict": "unknown", "reason": "too_large"}, {"method": "heuristic", "confidence": "undecided"}
     variables = _variables(a, b)
     try:
         with time_slice(slice_seconds(context)):
@@ -313,8 +311,8 @@ def _relations(a: sp.Basic, b: sp.Basic, context: CallContext) -> tuple[dict[str
 
 def math_check_equivalence(args: dict[str, Any], context: CallContext) -> tuple[Any, Extras]:
     """Equivalence of two expressions, equations or inequalities (VER-04) under assumptions (VER-05)."""
-    a = parse_arg(args["a"], args, "a").tree
-    b = parse_arg(args["b"], args, "b").tree
+    a = parse_arg(args["a"], args, "a", sampled=True).tree  # a huge power is only sampled (_expressions)
+    b = parse_arg(args["b"], args, "b", sampled=True).tree
     is_relation = (isinstance(a, (Relational, sp.And)), isinstance(b, (Relational, sp.And)))
     if is_relation[0] != is_relation[1]:
         raise WorkerError(
@@ -344,7 +342,7 @@ def _numeric_roots(expr: sp.Expr, var: sp.Symbol, interval: list[Any], context: 
     values = []
     for x in xs:
         try:
-            values.append(sp.N(expr.subs(var, x), 30))
+            values.append(sp.N(substituted(expr, {var: x}, "interval"), 30))
         except (ZeroDivisionError, TypeError):
             values.append(sp.nan)
     for (x0, v0), (x1, v1) in zip(zip(xs, values, strict=True), zip(xs[1:], values[1:], strict=True), strict=False):
@@ -949,13 +947,19 @@ class _Stop(Exception):
 
 def _at(expr: sp.Expr, var: sp.Symbol, x: sp.Expr) -> sp.Expr:
     """expr at x: an exact fraction while x and the result are small fractions, else a 60-digit float. Raises _Stop
-    when expr is undefined or not real there."""
+    when expr is undefined or not real there. A power too large to compute exactly (2^x at x = 10^29) is only
+    evaluated as a float: the exact power runs in C, where the per-call budget cannot stop it (SEC-08)."""
+    found = None
     if isinstance(x, sp.Rational):
-        out = expr.subs(var, x)
-        if out.has(sp.zoo, sp.nan):
+        try:
+            found = bounded_subs(expr, {var: x})
+        except TooLarge:
+            pass
+    if found is not None:
+        if found.has(sp.zoo, sp.nan):
             raise _Stop("undefined")
-        if out.is_Rational:
-            return out if max(abs(out.p), out.q) <= EXACT_LIMIT else sp.Float(out, DIGITS)
+        if found.is_Rational:
+            return found if max(abs(found.p), found.q) <= EXACT_LIMIT else sp.Float(found, DIGITS)
     out = expr.evalf(DIGITS, subs={var: x})
     if not (out.is_Number and out.is_finite and out.is_extended_real):
         raise _Stop("undefined")
@@ -1195,7 +1199,7 @@ def _sign_change(f: sp.Expr, var: sp.Symbol, args: dict[str, Any], line: _Line) 
         raise WorkerError(Code.DOMAIN_ERROR, "interval: the lower end must be below the upper end")
     ends, signs = [], []
     for end in (lo, hi):
-        at = f.subs(var, end)
+        at = substituted(f, {var: end}, "interval")
         if at.has(sp.zoo, sp.nan, sp.oo, -sp.oo) or at.is_real is False:
             raise WorkerError(Code.DOMAIN_ERROR, f"the function is undefined at {var.name} = {sp.sstr(end)}")
         at = sp.simplify(at)
@@ -1251,18 +1255,6 @@ def _in_degrees(tree: sp.Basic) -> sp.Basic:
         return node.func(*args)
 
     return convert(tree)
-
-
-def bounded_subs(tree: sp.Basic, values: dict[sp.Basic, sp.Basic]) -> sp.Basic:
-    """`tree` with `values` substituted, rebuilt bottom-up through the grammar's `safe_pow`, so a power whose base
-    becomes a number (x^(10^29) at x = 2) is refused with TooLarge before SymPy computes it: an exact power runs in C,
-    where the per-call budget cannot stop it (SEC-08)."""
-    if tree in values:
-        return values[tree]
-    if not tree.args:
-        return tree
-    args = [bounded_subs(a, values) for a in tree.args]
-    return safe_pow(*args) if isinstance(tree, sp.Pow) else tree.func(*args)
 
 
 def math_evaluate(args: dict[str, Any], context: CallContext) -> tuple[Any, Extras]:
