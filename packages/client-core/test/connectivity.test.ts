@@ -44,7 +44,7 @@ describe("connectivity slice", () => {
     });
     expect(slice.features.map((f) => f.feature)).toEqual(["cloud_tier", "telemetry"]);
     expect(slice.features[1]).toEqual({ feature: "telemetry", enabled: true, state: "idle", queued_items: 0, last_sent_at: null });
-    expect(ONLINE_FEATURES).toEqual(["cloud_tier", "downloads", "update_checks", "cloud_backup", "multi_device", "parent_remote_view", "cloud_voice", "study_materials", "telemetry", "crash_reports"]);
+    expect(ONLINE_FEATURES).toEqual(["cloud_tier", "downloads", "update_checks", "cloud_backup", "multi_device", "parent_remote_view", "cloud_voice", "study_materials", "telemetry", "crash_reports", "tutor_memory_online"]);
   });
 
   test("connectivity.status replaces network and features but keeps what was last sent", () => {

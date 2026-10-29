@@ -12,9 +12,9 @@ export { StepIdleWatch, openStepOf, reportStepIdle, type IdleTimers } from "./id
 export { reduce, optimistic, markFailed, markForgotten, markSending, removeSketch } from "./reducer.js";
 export { boundLine, moveVisual, selectBoardLine, stepBoard, type VisualMoveSource } from "./visuals.js";
 export {
-  EMPTY_KNOWS, KnowsController, MEMORY_READ_TOOLS, PREFERENCE_KEYS, PREFERENCE_VALUES, forgetNote, knowsReplyProblems, knowsViewOf, memoryReadCount, readKnows,
-  type About, type Band, type Correction, type ForgetReason, type KnowsKc, type KnowsMisconception, type KnowsNote, type KnowsPreference, type KnowsReply, type KnowsReview,
-  type KnowsView, type PreferenceKey, type Sharing,
+  EMPTY_KNOWS, KnowsController, MEMORY_READ_TOOLS, PREFERENCE_KEYS, PREFERENCE_VALUES, forgetNote, knowsReplyProblems, knowsViewOf, memoryReadCount, noteLifecycle, readKnows,
+  type About, type Band, type Correction, type ForgetReason, type KnowsActivity, type KnowsCompanionSummary, type KnowsKc, type KnowsMisconception, type KnowsNote, type KnowsPreference, type KnowsReply, type KnowsReview,
+  type KnowsView, type NoteLifecycle, type PreferenceKey, type Sharing,
 } from "./memory.js";
 export {
   BANDS, EMPTY_LESSON, EMPTY_MAP, KC_STATES, LessonController, SubjectMapController, bandCounts, checkResultProblems, isStepLesson, lessonProblems, readCheckResult, readLesson,
@@ -80,7 +80,7 @@ export { ProblemReports, type NewProblemReport, type ProblemReport } from "./rep
 export { STAGE_2_SECTIONS, SettingsSections, readSettingsSections, type SettingsSection, type SettingsSectionsReply } from "./settings-sections.js";
 export { ARTICLE_KEY_PREFIX, OfflineHelp, issueArticle, readHelp, searchHelp, type HelpArticle, type KnownIssue, type OfflineHelpReply } from "./help.js";
 export {
-  DUE_STATES, SESSION_GROUPS, duePractice, groupSessions, lastWorked, readSessions, recentSessions, refreshesDue, sessionGroupOf, type DueIdea, type RecentSession,
+  DUE_STATES, SESSION_GROUPS, companionMode, duePractice, groupSessions, lastWorked, readSessions, recentSessions, refreshesDue, sessionGroupOf, type DueIdea, type RecentSession,
   type SessionGroup,
 } from "./recent.js";
 export {
@@ -117,3 +117,10 @@ export {
   type ExamDatesView, type ExamReminder, type PaperSource, type PastPaperDraft, type PastPaperSubject, type PastPaperSummary, type PastPapersView, type PastPaperView,
 } from "./past-papers.js";
 export * from "./learning-journey.js";
+export {
+  CHECKIN_KINDS, CHECKIN_NOTIFICATION_KEYS, CHECKIN_REFRESH_MS, COMPANION_ACTIONS, COMPANION_MESSAGE_MAX, CompanionController, EMPTY_CHECKIN, EMPTY_COMPANION, EMPTY_THREAD,
+  companionActions, companionThread, readCheckinsDue, readCompanionOpened, readCompanionSummary, readOpener,
+  type CheckinNotifier, type CheckinView, type Commitment, type CommitmentKind,
+  type CompanionAction, type CompanionActionKind, type CompanionEntry, type CompanionOpened, type CompanionSummary, type CompanionThreadView, type CompanionView, type Opener,
+  type OpenerFacts,
+} from "./companion.js";

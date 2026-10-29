@@ -71,6 +71,7 @@ from agent_core.memory.reflect_input import (
     build_input,
 )
 from agent_core.memory.refs import RefOutOfRange
+from agent_core.memory.scrub import scrub_for_egress
 from agent_core.memory.write import Applied, NoteAction, WriterRole, code_summary, needs_consolidation
 from agent_core.prompts.builder import Message, PromptSession, build_prompt
 from agent_core.router import Message as ProviderMessage
@@ -89,11 +90,12 @@ SCHEMA = "agents/reflection"
 _CALLS = itertools.count(1)  # call ids for the engine's memory_note calls
 JOB_ACTION = "reflector_job"  # the audit log's action for a job's cursor (no learner text in its detail)
 REQUEST_ACTION = "reflector_request"  # an explicit request's job: audited, but it never moves the job cursor
-SUMMARY_POINTS = frozenset({"session_end", "idle"})
+SUMMARY_POINTS = frozenset({"session_end", "idle", "study_end"})  # study_end: the Study session's end (SPEC §19.4)
 CORRECTION = ("<app-event>Your reflection could not be used: {problem}. Reply again with one JSON object in the same "
               "shape, referring only to the numbers in the lists you were given.</app-event>")  # fmt: skip
 CONSOLIDATE = ("\n\nThe student's notes for this subject are at their limit. Reply with notes that merge or drop "
-               "existing ones (update or drop, by number, with evidence numbers) so that new notes fit.")  # fmt: skip
+               "existing ones (update or drop, by number, with evidence numbers) so that new notes fit. Shorten or "
+               "drop notes marked (fading) first.")  # fmt: skip
 
 
 @dataclass(frozen=True)
@@ -120,6 +122,22 @@ class ReflectorModel:
     schemas: Mapping[str, dict[str, Any]]
     known_tools: frozenset[str]
     family: str = "qwen3"
+    # SPEC §19.6 (W8 phase 3, JM-D21): `tutor_memory_online` effective for the open profile now. Read at job start
+    # and again before the apply: a consent withdrawn while the cloud call ran drops the job's result.
+    memory_online: Callable[[], bool] = lambda: False
+    terms: Callable[[], Sequence[str]] = lambda: ()  # the Redactor's profile terms, for the egress scrub
+
+    async def candidate_ready(self, explicit: bool = False) -> bool:
+        """A candidate can serve this job now (SPEC §19.4): a local one, or, while `tutor_memory_online` is effective,
+        a cloud one. An explicit "remember that…" request needs a local candidate regardless (JM-D21): its student
+        text never leaves for memory's sake."""
+        try:
+            _, candidates, _ = await self.router.candidates("reflector")
+        except Exception:  # an unreadable runtime means no candidate, never a failed job
+            return False
+        if any(c.locality == "local" for c in candidates):
+            return True
+        return not explicit and self.memory_online() and any(c.locality == "cloud" for c in candidates)
 
     async def local_ready(self) -> bool:
         """A local candidate can serve the Reflector now; the router never offers it a cloud one (MDL-25)."""
@@ -145,13 +163,20 @@ class ReflectorModel:
         return [ProviderMessage(m.role, m.content) for m in out]  # type: ignore[arg-type]
 
     async def call(
-        self, task: str, session_date: str, history: Sequence[Message], trace: TraceBuilder
+        self,
+        task: str,
+        session_date: str,
+        history: Sequence[Message],
+        trace: TraceBuilder,
+        local_only: bool = True,
     ) -> tuple[dict[str, Any] | None, str, bool]:
-        """One structured call: (output when valid, the raw reply for a correction, served locally)."""
+        """One structured call: (output when valid, the raw reply for a correction, served locally). A cloud
+        candidate is offered only when the job may use one (`local_only` false: §19.6)."""
         output = ("reflection", self.schemas[SCHEMA], validator(SCHEMA))
+        allow = (lambda c: c.locality == "local") if local_only else None
         try:
             result = await self.router.complete("reflector", self.messages(task, session_date, history, trace), [],
-                                                output=output)  # fmt: skip
+                                                output=output, allow=allow)  # fmt: skip
         except RouterError as error:
             if error.record is not None:
                 trace.model_calls.extend(error.record.model_calls())
@@ -597,21 +622,37 @@ async def reflect(
         if not explicit and not (window & set(EVIDENCE_TYPES)) and not summary_due:
             gates.add("new_evidence", True, "skipped")
             return finish("nothing_new", "no_new_events")
+        # §19.4, §19.6: a local candidate when there is one; a cloud one only while tutor_memory_online is effective,
+        # never for an explicit request, and then with an input whose notes passed the egress scrub. The consent is
+        # read here, at the job's start, and again before the apply.
+        wants_model = bool(window & set(EVIDENCE_TYPES)) or explicit
+        online = False
+        if wants_model:
+            if not await model.local_ready():
+                online = not explicit and model.memory_online() and await model.candidate_ready(False)
+                if not online:
+                    gates.add("local_candidate", True, "skipped")
+                    return finish("skipped", "no_local_candidate")  # reflected later: the cursor does not move
+            gates.add("local_candidate", False)
+        terms = model.terms() if online else ()
+        capture = source.capture
+
+        def withheld(text: str) -> bool:
+            return scrub_for_egress(text, settings, capture, terms) is not None
+
+        withhold = withheld if online else None
         given = build_input(conn, source.content, key, settings, session_date=session_date, subject=subject,
-                            request_text=request)  # fmt: skip
+                            request_text=request, withhold=withhold)  # fmt: skip
         shown = {n.note_id: content_hash(n.text) for n in stored_notes(conn)}  # the notes as the job saw them
         role: WriterRole = "student_request" if explicit else "reflector"
         fallback = code_summary(conn, key.session_id, subject) if key.point in SUMMARY_POINTS else None
         notes: list[dict[str, Any]] = []
         summary: str | None = None
         consolidation: list[NoteAction] = []
-        if window & set(EVIDENCE_TYPES) or explicit:
-            if not await model.local_ready():
-                gates.add("local_candidate", True, "skipped")
-                return finish("skipped", "no_local_candidate")  # reflected later: the cursor does not move
-            gates.add("local_candidate", False)
+        cloud_ok = online
+        if wants_model:
             try:
-                reflection, problem = await _reflection(model, given, session_date, trace)
+                reflection, problem = await _reflection(model, given, session_date, trace, cloud_ok)
             except RouterError as error:
                 gates.add("model_call", True, "exhausted_fallback")
                 return finish("failed", f"router_{error.reason}")
@@ -626,7 +667,7 @@ async def reflect(
             summary = reflection.get("summary_for_student") if key.point in SUMMARY_POINTS else None
             mapped = actions_from_reflection({"notes": notes}, given, subject=subject)
             if needs_consolidation(conn, mapped, settings, subject=subject):
-                consolidation = await _consolidation(model, given, session_date, subject, trace)
+                consolidation = await _consolidation(model, given, session_date, subject, trace, cloud_ok)
                 gates.add("consolidation", True, "passed" if consolidation else "exhausted_fallback")
         counts = {"notes": len(notes)}
         # A note deleted since the input was built (a forget while the model thought) is never written back.
@@ -636,6 +677,12 @@ async def reflect(
                       consolidation=consolidation, student_texts=_student_texts(conn, key.session_id),
                       forgotten_hashes=forgotten, also=_cursor_writer(key, "applied", counts, now_ms()),
                       now_ms=now_ms())  # fmt: skip
+        served_online = any(c.get("provider_kind") != "local" for c in trace.model_calls)
+        if served_online and not model.memory_online():
+            # §19.4: the consent was withdrawn while the cloud call ran: its result is dropped, nothing is written,
+            # and the cursor does not move (a later job reflects the same evidence on whatever is allowed then).
+            gates.add("consent_recheck", True, "skipped")
+            return finish("dropped", "consent_withdrawn")
         applying()  # from here the job finishes even if a turn starts: its writes are one transaction
         result = await _apply(executor, job, {"actions": notes, **({"summary": summary} if summary else {})},
                               key.session_id)  # fmt: skip
@@ -665,16 +712,16 @@ async def reflect(
 
 
 async def _reflection(
-    model: ReflectorModel, given: ReflectorInput, session_date: str, trace: TraceBuilder
+    model: ReflectorModel, given: ReflectorInput, session_date: str, trace: TraceBuilder, cloud_ok: bool = False
 ) -> tuple[dict[str, Any] | None, str | None]:
     """The Reflection, with one correction retry for an output that breaks its contract or names a number outside
     the lists (MEM-08). Returns (the usable output or None, the problem that needed a retry or ended the job)."""
     history: list[Message] = []
     problem: str | None = None
     for _attempt in range(2):
-        output, raw, local = await model.call(given.task, session_date, history, trace)
-        if not local:
-            return None, "not_local"  # never applied from a cloud model (MDL-25)
+        output, raw, local = await model.call(given.task, session_date, history, trace, local_only=not cloud_ok)
+        if not local and not cloud_ok:
+            return None, "not_local"  # never applied from a cloud model (MDL-25) without tutor_memory_online
         if output is None:
             problem = "schema_invalid"
             words = "it did not match the output contract"
@@ -691,13 +738,18 @@ async def _reflection(
 
 
 async def _consolidation(
-    model: ReflectorModel, given: ReflectorInput, session_date: str, subject: str | None, trace: TraceBuilder
+    model: ReflectorModel,
+    given: ReflectorInput,
+    session_date: str,
+    subject: str | None,
+    trace: TraceBuilder,
+    cloud_ok: bool = False,
 ) -> list[NoteAction]:
     """One consolidation call in the same job when the bounds would be exceeded (MEM-12). Its output must map
     cleanly; otherwise the write's own fallback (expiring the oldest Reflector notes) makes room."""
     try:
-        output, _, local = await model.call(given.task + CONSOLIDATE, session_date, [], trace)
-        if output is None or not local:
+        output, _, local = await model.call(given.task + CONSOLIDATE, session_date, [], trace, local_only=not cloud_ok)
+        if output is None or (not local and not cloud_ok):
             return []
         return [a for a in actions_from_reflection(output, given, subject=subject) if a.action in ("update", "drop")]
     except (RouterError, RefOutOfRange, ReflectionInvalid):
@@ -834,14 +886,15 @@ class ReflectorQueue:
         if source is None or self.settings.reflector_backlog_sessions <= 0:
             return 0
         rows = source.conn.execute(
-            "SELECT session_id, subject, started_at FROM sessions WHERE ended_at IS NOT NULL AND summary IS NULL"
+            "SELECT session_id, subject, started_at, mode FROM sessions WHERE ended_at IS NOT NULL AND summary IS NULL"
             " ORDER BY ended_at DESC, session_id DESC LIMIT ?",
             (self.settings.reflector_backlog_sessions,),
         ).fetchall()
         queued = 0
-        for sid, subject, started in rows:
+        for sid, subject, started, mode in rows:
             day = time.strftime("%Y-%m-%d", time.gmtime(int(started) / 1000))
-            queued += self.trigger("session_end", profile_ref, sid, session_date=day, subject=subject)
+            point: WritePoint = "study_end" if mode == "study" else "session_end"  # a Study session's own point
+            queued += self.trigger(point, profile_ref, sid, session_date=day, subject=subject)
         return queued
 
     # --- control --------------------------------------------------------------------------------------------

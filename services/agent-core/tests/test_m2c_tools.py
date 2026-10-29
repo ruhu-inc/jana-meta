@@ -91,6 +91,8 @@ def _fuzz_args(rng: random.Random, spec: ToolSpec) -> dict:
         return copy.deepcopy(rng.choice(valid))
     if choice < 0.6:
         args = copy.deepcopy(rng.choice(valid))
+        if not args:  # a tool with no parameters (W8's progress_read, plan): its one valid call, unchanged
+            return args
         key = rng.choice(list(args))
         args[key] = rng.choice(
             [

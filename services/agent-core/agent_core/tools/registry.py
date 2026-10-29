@@ -23,8 +23,21 @@ OFFLINE_RISKS = frozenset({"compute", "read", "ui", "memory_write"})
 # Tools a build carries ahead of their register stage, by build stage (TOL-23 groundwork for M15): the memory tools
 # ride in the S1 build so the engine can bind their handlers. Each keeps its register stage, so it is offered only to
 # roles and sessions of that stage, and like any host tool only once its executor is registered (TOL-06).
+# The companion's study toolset (SPEC §19.3.3, W8) rides the same way: released only to a companion session.
 EARLY_TOOLS: dict[str, frozenset[str]] = {
-    "S1": frozenset({"memory_recall", "session_recall", "memory_note", "progress_update"}),
+    "S1": frozenset(
+        {
+            "memory_recall",
+            "session_recall",
+            "memory_note",
+            "progress_update",
+            "study_search",
+            "progress_read",
+            "plan",
+            "make_aid",
+            "start_research",
+        }
+    ),
 }
 
 

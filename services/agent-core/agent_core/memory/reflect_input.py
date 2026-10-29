@@ -13,25 +13,30 @@ from __future__ import annotations
 
 import re
 import sqlite3
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
 from agent_core.config import Settings
+from agent_core.learner.projections import note_lifecycle
 from agent_core.memory.queries import ContentLabels, subject_notes
 from agent_core.memory.refs import RefOutOfRange, RefTable
 from agent_core.memory.render import escape_note, note_line, wrap_notes
-from agent_core.memory.write import NoteAction, NoteActionKind
+from agent_core.memory.write import NoteAction, NoteActionKind, check_bounds
 from agent_core.store.events import COLUMNS, MERGE_ORDER, StoredEvent
 from agent_core.store.supersession import read_log
 
-WritePoint = Literal["problem_end", "session_end", "idle", "onboarding_end", "explicit_request"]
+WritePoint = Literal["problem_end", "session_end", "idle", "onboarding_end", "explicit_request", "study_end"]
 EVIDENCE_TYPES = ("attempt", "verdict", "hint", "misconception_evidence", "mastery_check", "review",
-                  "diagnostic_item", "detour")  # fmt: skip
+                  "diagnostic_item", "detour", "study_activity")  # fmt: skip
 ACTIONS: tuple[NoteActionKind, ...] = ("add", "update", "keep", "drop", "contradiction")
 POINT_WORDS = {"problem_end": "the end of a problem", "session_end": "the end of the session",
                "idle": "a pause in the session", "onboarding_end": "the end of onboarding",
-               "explicit_request": "the student asked to remember something"}  # fmt: skip
+               "explicit_request": "the student asked to remember something",
+               "study_end": "the end of a visit to Study (the student's own materials)"}  # fmt: skip
+# SPEC §19.3.2: Study activity in the enum's words. `source_added` and `journey_step` have no line (nothing the
+# Reflector needs); the rest name pack labels only, never a title, a source or the learner's text.
+STUDY_WORDS = {"quiz_item": "study quiz", "card_review": "study review", "aid_made": "study aid"}
 STUDENT_OPEN, STUDENT_CLOSE = "<student-message>", "</student-message>"
 
 
@@ -60,6 +65,8 @@ class ReflectionInvalid(ValueError):
 
 
 def _kcs_of(type_: str, payload: Mapping[str, Any]) -> list[str]:
+    if type_ == "study_activity":
+        return [t["kc_id"] for t in payload.get("kc_tags", [])[:1] if isinstance(t, dict) and "kc_id" in t]
     if type_ == "attempt":
         return [k["kc_id"] for k in payload.get("kc_ids", []) if isinstance(k, dict) and "kc_id" in k]
     if type_ == "hint":
@@ -72,6 +79,8 @@ def _evidence_line(
     type_: str, payload: Mapping[str, Any], content: ContentLabels, kc_refs: RefTable, attempts: Mapping[str, int]
 ) -> str:
     """One event in words built from its fields and pack labels only. A student's answer is never copied in."""
+    if type_ == "study_activity":
+        return _study_line(payload, content)
     skills = ", ".join(f"skill {kc_refs.ref_of(k)}" for k in _kcs_of(type_, payload)) or "the current step"
     if type_ == "attempt":
         seconds = round(int(payload.get("time_ms", 0)) / 1000)
@@ -102,6 +111,38 @@ def _evidence_line(
     return f"detour to a prerequisite of {skills}: {payload.get('action')}"
 
 
+def _study_line(payload: Mapping[str, Any], content: ContentLabels) -> str:
+    """A Study activity as §19.3.2 words it: "study quiz: <KC statement>, incorrect", "study review: <KC>, again",
+    "study aid: flashcards (10)". The KC is the activity's first topic tag, named by the pack's statement."""
+    kind = str(payload.get("activity"))
+    words = STUDY_WORDS.get(kind, "study activity")
+    if kind == "aid_made":
+        aid = str(payload.get("aid_kind") or "aid").replace("_", " ")
+        count = payload.get("count")
+        return f"{words}: {aid}" + (f" ({int(count)})" if isinstance(count, int) else "")
+    tags = [t["kc_id"] for t in payload.get("kc_tags", [])[:1] if isinstance(t, dict) and "kc_id" in t]
+    skill = escape_note(content.kc_statement(tags[0]) or tags[0]) if tags else "no topic matched"
+    result = payload.get("outcome") if kind == "quiz_item" else payload.get("rating")
+    return f"{words}: {skill}, {str(result or 'not recorded').replace('_', ' ')}"
+
+
+def notes_fill(conn: sqlite3.Connection, subject: str | None, settings: Settings) -> str:
+    """How full the notes are against their bounds (MEM-12), so consolidation happens before a bound is reached
+    (SPEC §19.4): "38 of 50 notes; subject 31 of 40"."""
+    bounds = check_bounds(conn, subject, settings)
+    line = f"{bounds.total_active} of {settings.notes_max_active} notes"
+    return line + (f"; subject {bounds.notes} of {settings.notes_max_per_subject}" if subject else "")
+
+
+FADING_TAG = " (fading)"
+
+
+def _log_now(conn: sqlite3.Connection) -> int:
+    """The job's "now" for derived fading: the newest event in the log, so the same log gives the same input."""
+    row = conn.execute("SELECT max(occurred_at) FROM events").fetchone()
+    return int(row[0] or 0)
+
+
 def build_input(
     conn: sqlite3.Connection,
     content: ContentLabels,
@@ -111,6 +152,7 @@ def build_input(
     session_date: str,
     subject: str | None,
     request_text: str | None = None,
+    withhold: Callable[[str], bool] | None = None,
 ) -> ReflectorInput:
     """The Reflector's task for one job: the session's learning events up to the job's cursor (the newest
     `reflector_max_evidence_lines`), the subject's active notes and the KCs touched, each numbered from 1. A re-marked
@@ -130,11 +172,19 @@ def build_input(
     event_refs = RefTable.of(event_id for event_id, _, _ in events)
     attempts = {p["attempt_id"]: event_refs.ref_of(e) for e, t, p in events if t == "attempt" and "attempt_id" in p}
     notes = subject_notes(conn, subject)
+    if withhold is not None:  # a cloud job (SPEC §19.6): a note that fails the egress scrub stays out of its input
+        notes = [n for n in notes if not withhold(n.text)]
     note_refs = RefTable.of(n.note_id for n in notes)
 
-    lines = [f"Session date: {session_date}. This job runs at {POINT_WORDS[key.point]}."]
+    lines = [
+        f"Session date: {session_date}. This job runs at {POINT_WORDS[key.point]}.",
+        f"Notes kept: {notes_fill(conn, subject, settings)}.",
+    ]
+    # SPEC §19.5.6: a fading note is marked so consolidation shortens or drops it first (derived, never a model's).
+    fading = {k for k, v in note_lifecycle(conn, [n.note_id for n in notes], _log_now(conn)).items() if v.fading}
     lines += ["Existing notes (refer to them by number as target_ref):",
-              wrap_notes([note_line(n, i) for i, n in enumerate(notes, start=1)])]  # fmt: skip
+              wrap_notes([note_line(n, i) + (FADING_TAG if n.note_id in fading else "")
+                          for i, n in enumerate(notes, start=1)])]  # fmt: skip
     lines.append("Evidence (refer to it by number in evidence_refs):")
     lines += [f"[{event_refs.ref_of(e)}] {_evidence_line(t, p, content, kc_refs, attempts)}" for e, t, p in events]
     if not events:
@@ -160,7 +210,8 @@ def _ref(value: Any) -> int | None:
 # What a model copies into a note's text from the input's list form ("[3] 2026-10-09 · ... (evidence 12)"): a leading
 # ref, a leading ISO date with its separator, and trailing evidence or ref tags. They are not part of the note.
 _ECHOED_LEAD = re.compile(r"^\s*(?:\[\d+\]\s*)?(?:\d{4}-\d{2}-\d{2}\s*(?:[\u00b7\u2022\u2013\u2014:|-]\s*)?)?")
-_ECHOED_TAIL = re.compile(r"(?:\s*[\(\[](?:evidence|refs?|events?)?\s*[\d,\s]+[\)\]])+\s*\.?\s*$", re.IGNORECASE)
+_ECHOED_TAIL = re.compile(r"(?:\s*[\(\[](?:evidence|refs?|events?)?\s*[\d,\s]+[\)\]]|\s*\(fading\))+\s*\.?\s*$",
+                          re.IGNORECASE)  # fmt: skip
 
 
 def clean_note_text(text: str) -> str:

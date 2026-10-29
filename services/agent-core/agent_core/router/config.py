@@ -24,6 +24,7 @@ SLOTS = (
     "reflection",
     "vision",
     "research_chat",
+    "checkin",  # SPEC §19.5.5 (W8): the check-in extractor's one structured call
 )  # MDL-06
 
 

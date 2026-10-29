@@ -356,7 +356,8 @@
      "enum": [
       "guided",
       "solution",
-      "check_working"
+      "check_working",
+      "study_companion"
      ]
     },
     "subject": {
@@ -395,7 +396,8 @@
         "practice_item",
         "lesson",
         "exam_review",
-        "resume"
+        "resume",
+        "companion"
        ]
       },
       "ref": {
@@ -456,7 +458,8 @@
      "enum": [
       "guided",
       "solution",
-      "check_working"
+      "check_working",
+      "study_companion"
      ]
     },
     "subject": {
@@ -491,7 +494,8 @@
       "practice_item",
       "lesson",
       "exam_review",
-      "resume"
+      "resume",
+      "companion"
      ]
     }
    },
@@ -623,6 +627,14 @@
        "type": "null"
       }
      ]
+    },
+    "actions": {
+     "description": "The thread's durable buttons by action id (SPEC §19.3.3), folded from companion.action.",
+     "type": "object",
+     "maxProperties": 200,
+     "additionalProperties": {
+      "$ref": "https://jana.dev/contracts/api/events#/$defs/ev_companion_action"
+     }
     }
    },
    "required": [
@@ -2514,6 +2526,10 @@
     "wake_word": {
      "type": "boolean",
      "default": false
+    },
+    "checkin_notifications": {
+     "type": "boolean",
+     "default": false
     }
    },
    "required": [
@@ -2606,6 +2622,9 @@
      "type": "boolean"
     },
     "wake_word": {
+     "type": "boolean"
+    },
+    "checkin_notifications": {
      "type": "boolean"
     }
    },
@@ -4372,7 +4391,8 @@
     "cloud_voice",
     "study_materials",
     "research_use",
-    "model_training_research"
+    "model_training_research",
+    "tutor_memory_online"
    ]
   },
   "ConsentSwitch": {
@@ -4736,6 +4756,120 @@
        "type": "null"
       }
      ]
+    },
+    "activity": {
+     "description": "The newest Study activities (SPEC §19.3.2): the kind, the pack's statement of the first topic tag (never a title or the learner's text), the result word, the aid's kind and size, and the day.",
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "activity",
+       "kc_id",
+       "statement",
+       "result",
+       "aid_kind",
+       "count",
+       "day"
+      ],
+      "properties": {
+       "activity": {
+        "enum": [
+         "quiz_item",
+         "card_review",
+         "aid_made"
+        ]
+       },
+       "kc_id": {
+        "anyOf": [
+         {
+          "type": "string",
+          "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "statement": {
+        "anyOf": [
+         {
+          "type": "string",
+          "maxLength": 400
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "result": {
+        "anyOf": [
+         {
+          "enum": [
+           "correct",
+           "incorrect",
+           "skipped",
+           "unverifiable",
+           "again",
+           "hard",
+           "good",
+           "easy"
+          ]
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "aid_kind": {
+        "anyOf": [
+         {
+          "enum": [
+           "notes",
+           "summary",
+           "chat",
+           "flashcards",
+           "quiz",
+           "audio_overview",
+           "lesson_plan",
+           "chapters",
+           "concept_map"
+          ]
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "count": {
+        "anyOf": [
+         {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "day": {
+        "type": "string",
+        "format": "date"
+       }
+      }
+     }
+    },
+    "companion_summary": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/CompanionSummary"
+      },
+      {
+       "type": "null"
+      }
+     ]
     }
    },
    "required": [
@@ -4796,6 +4930,22 @@
     "updated_ts": {
      "type": "integer",
      "minimum": 0
+    },
+    "confidence": {
+     "enum": [
+      "tentative",
+      "supported"
+     ]
+    },
+    "fading": {
+     "type": "boolean"
+    },
+    "recall_sessions": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "withheld_online": {
+     "type": "boolean"
     }
    },
    "required": [
@@ -7512,6 +7662,29 @@
     },
     "reason_code": {
      "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/payload_plan_generated/properties/blocks/items/properties/reason_code"
+    },
+    "study_cards": {
+     "description": "Due Study cards for the warm-up (SPEC §19.4 plans.py): soonest first, only cards whose source revision still exists; opened with `open_study_deck`.",
+     "type": "array",
+     "maxItems": 10,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "deck_id",
+       "card_id"
+      ],
+      "properties": {
+       "deck_id": {
+        "type": "string",
+        "pattern": "^dek_[0-9A-HJKMNP-TV-Z]{26}$"
+       },
+       "card_id": {
+        "type": "string",
+        "pattern": "^fcd_[0-9A-HJKMNP-TV-Z]{26}$"
+       }
+      }
+     }
     }
    },
    "required": [
@@ -7714,6 +7887,35 @@
      "type": "array",
      "items": {
       "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/kc_id"
+     }
+    },
+    "study_activity": {
+     "description": "Study activity in the last seven local days (SPEC §19.3.2): quiz questions answered (a skipped one is not), how many were right by Study's judged key, cards reviewed and aids made.",
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "quiz_items",
+      "quiz_correct",
+      "cards_reviewed",
+      "aids_made"
+     ],
+     "properties": {
+      "quiz_items": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "quiz_correct": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "cards_reviewed": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "aids_made": {
+       "type": "integer",
+       "minimum": 0
+      }
      }
     }
    },
@@ -9343,6 +9545,476 @@
     "questions",
     "mistakes"
    ]
+  },
+  "StudyVisit": {
+   "description": "The Study screen's learning session of the day (SPEC §19.3.2): one `sessions` row of mode `study` per profile per day, reused while the screen is open, ended at close or after 20 minutes idle.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "session_id",
+    "resumed"
+   ],
+   "properties": {
+    "session_id": {
+     "type": "string",
+     "pattern": "^ses_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "resumed": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Opener": {
+   "description": "The Last time card (SPEC §19.5.2, phase 1 of §19.3.3's Opener): facts chosen by code and worded by the engine's templates. `opener_id` is the profile's local day. No fact comes from transcript text.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "opener_id",
+    "text",
+    "facts"
+   ],
+   "properties": {
+    "opener_id": {
+     "type": "string",
+     "format": "date"
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 240
+    },
+    "facts": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "last_session_date",
+      "last_session_mode",
+      "last_subject",
+      "next_step",
+      "learner_cards_due",
+      "study_cards_due",
+      "exam_distance_days",
+      "pack_ready",
+      "checkin_id"
+     ],
+     "properties": {
+      "last_session_date": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "last_session_mode": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 32
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "last_subject": {
+       "anyOf": [
+        {
+         "enum": [
+          "mathematics",
+          "physics",
+          "chemistry",
+          "biology",
+          "accounting"
+         ]
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "next_step": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 120
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "learner_cards_due": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "study_cards_due": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "exam_distance_days": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "pack_ready": {
+       "type": "boolean"
+      },
+      "checkin_id": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 30
+        },
+        {
+         "type": "null"
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "CompanionOpen": {
+   "description": "POST /v1/companion: no body.",
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {}
+  },
+  "CompanionSummary": {
+   "description": "The companion thread's rolling summary (SPEC §19.5.3): updated, never regenerated, and written by code only from the learning events after `cursor_seq`. No free text: labels are the packs' own words.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "cursor_seq",
+    "updated_at",
+    "topics",
+    "misconceptions",
+    "next_step",
+    "episodes"
+   ],
+   "properties": {
+    "version": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "cursor_seq": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "updated_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "topics": {
+     "type": "array",
+     "maxItems": 6,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "label",
+       "sessions",
+       "last_at"
+      ],
+      "properties": {
+       "kc_id": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 200
+       },
+       "sessions": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "last_at": {
+        "type": "string",
+        "format": "date-time"
+       }
+      }
+     }
+    },
+    "misconceptions": {
+     "type": "array",
+     "maxItems": 4,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "misconception_id",
+       "label",
+       "status",
+       "updated_at"
+      ],
+      "properties": {
+       "misconception_id": {
+        "type": "string",
+        "pattern": "^mc\\.[a-z0-9_.]+$",
+        "maxLength": 96
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 200
+       },
+       "status": {
+        "enum": [
+         "suspected",
+         "active",
+         "resolving",
+         "resolved"
+        ]
+       },
+       "updated_at": {
+        "type": "string",
+        "format": "date-time"
+       }
+      }
+     }
+    },
+    "next_step": {
+     "anyOf": [
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "text",
+        "reason_code",
+        "updated_at"
+       ],
+       "properties": {
+        "text": {
+         "type": "string",
+         "maxLength": 120
+        },
+        "reason_code": {
+         "type": "string",
+         "maxLength": 40
+        },
+        "updated_at": {
+         "type": "string",
+         "format": "date-time"
+        }
+       }
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "episodes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "CompanionOpened": {
+   "description": "The reply to POST /v1/companion (SPEC §19.3.3): the day's episode of the thread, opened or resumed. Two opens on one day return the same session. The opener is delivered here only, never on the stream.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "session_id",
+    "thread_id",
+    "resumed",
+    "opener",
+    "summary"
+   ],
+   "properties": {
+    "session_id": {
+     "type": "string",
+     "pattern": "^ses_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "thread_id": {
+     "type": "string",
+     "pattern": "^cth_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "resumed": {
+     "type": "boolean"
+    },
+    "opener": {
+     "$ref": "#/$defs/Opener"
+    },
+    "summary": {
+     "$ref": "#/$defs/CompanionSummary"
+    }
+   }
+  },
+  "Commitment": {
+   "description": "A check-in the tutor will ask about (SPEC §19.3.4): proposed by the extractor from the student's own words or by the heartbeat, delivered at most one a day. `text` is the question in Jana's words, never a quote. Device-local (JM-D27).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "commitment_id",
+    "kind",
+    "subject",
+    "kc_id",
+    "text",
+    "due_from",
+    "due_until",
+    "dedupe_key",
+    "confidence",
+    "state",
+    "source",
+    "source_session_id",
+    "created_at",
+    "shown_at",
+    "resolved_at"
+   ],
+   "properties": {
+    "commitment_id": {
+     "type": "string",
+     "pattern": "^cmt_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "kind": {
+     "enum": [
+      "event_checkin",
+      "deadline_check",
+      "open_loop",
+      "due_reviews",
+      "pack_ready"
+     ]
+    },
+    "subject": {
+     "anyOf": [
+      {
+       "enum": [
+        "mathematics",
+        "physics",
+        "chemistry",
+        "biology",
+        "accounting"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "kc_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "due_from": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "due_until": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "dedupe_key": {
+     "type": "string",
+     "maxLength": 160
+    },
+    "confidence": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "state": {
+     "enum": [
+      "pending",
+      "shown",
+      "opened",
+      "dismissed",
+      "answered",
+      "expired",
+      "detached"
+     ]
+    },
+    "source": {
+     "enum": [
+      "extractor",
+      "heartbeat"
+     ]
+    },
+    "source_session_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 40
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "shown_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "resolved_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "CheckinsDue": {
+   "description": "GET /v1/checkins/due (SPEC §19.5.5): at most one check-in for today, chosen in one transaction.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "items"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 1,
+     "items": {
+      "$ref": "#/$defs/Commitment"
+     }
+    }
+   }
   }
  },
  "x-endpoints": [
@@ -12639,6 +13311,131 @@
    ],
    "stage": "S3",
    "owner": "API-44"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/study/session",
+   "request": null,
+   "response": "#/$defs/StudyVisit",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "feature_disabled"
+   ],
+   "stage": "S2",
+   "owner": "W8"
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/study/session",
+   "request": null,
+   "response": null,
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found"
+   ],
+   "stage": "S2",
+   "owner": "W8"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/companion/opener",
+   "request": null,
+   "response": "#/$defs/Opener",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found"
+   ],
+   "stage": "S2",
+   "owner": "W8"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/companion",
+   "request": "#/$defs/CompanionOpen",
+   "response": "#/$defs/CompanionOpened",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "model_unavailable",
+    "feature_disabled"
+   ],
+   "stage": "S2",
+   "owner": "W8"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/companion/summary",
+   "request": null,
+   "response": "#/$defs/CompanionSummary",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found"
+   ],
+   "stage": "S2",
+   "owner": "W8"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/checkins/due",
+   "request": null,
+   "response": "#/$defs/CheckinsDue",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found"
+   ],
+   "stage": "S2",
+   "owner": "W8"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/checkins/{commitment_id}/dismiss",
+   "request": null,
+   "response": "#/$defs/Commitment",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found"
+   ],
+   "stage": "S2",
+   "owner": "W8"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/checkins/{commitment_id}/open",
+   "request": null,
+   "response": "#/$defs/CompanionOpened",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "model_unavailable",
+    "feature_disabled"
+   ],
+   "stage": "S2",
+   "owner": "W8"
   }
  ]
 }

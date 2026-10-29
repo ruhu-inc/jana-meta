@@ -1,0 +1,29 @@
+# W8 phase 1 Study-memory case (SPEC §19.9): written before any run; checked by code in tests/w8_scenarios.py.
+case: research_level_known
+rubric: >-
+  Persona p_o_chemistry (evals/memory/personas.yaml): the conversation's turns never contain "level" as a question and
+  the brief's level is o_level.
+persona: p_o_chemistry
+topic: "rates of reaction"
+# What the research model says, turn by turn: it tries to ask the level twice before writing a brief with no level.
+model:
+  - {kind: question, asks: purpose, question: "Is this pack for an O level exam, a lesson or curiosity?", chips: ["O level exam", "First year course", "Curiosity"]}
+  - {kind: question, asks: known, question: "What level are you at, and what do you know already?", chips: ["Beginner", "Some basics"]}
+  - {kind: question, asks: outputs, question: "What should the pack make, and how long do you have?", chips: ["5 minutes", "20 minutes"]}
+  - kind: brief
+    brief:
+      title: "Rates of reaction"
+      subject: chemistry
+      purpose: exam
+      known: ""
+      focus: "collision theory"
+      sub_questions:
+        - "What is the collision theory of reaction rates?"
+        - "How does temperature change the rate of a reaction?"
+        - "How does concentration change the rate of a reaction?"
+        - "What does a catalyst do to a reaction's rate?"
+      outputs: [notes, flashcards, quiz]
+      length: short
+expect:
+  never_ask: level
+  brief_level: o_level

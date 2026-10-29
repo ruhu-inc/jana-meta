@@ -509,6 +509,8 @@ LEARNER_TRANSFERS = {
     "cloud_backup": ({"learner_summary", "progress_report"}, {"backup_snapshot"}),
     "multi_device": ({"progress_report"}, {"multi_device_segment"}),
     "parent_remote_view": ({"progress_report"}, {"parent_digest"}),
+    # SPEC §19.6 (W8): DAT-18a's jana-meta row, under its own consent: screened notes and code-built evidence lines.
+    "tutor_memory_online": ({"tutor_notes", "learner_summary"}, {"cloud_prompt"}),
 }
 LEARNER_CLASSES = {"learner_summary", "progress_report"}
 

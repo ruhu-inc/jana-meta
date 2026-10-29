@@ -15,6 +15,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use tauri::{Manager, RunEvent};
 use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_notification::NotificationExt;
 
 struct Core(Arc<Supervisor>);
 struct Runtime(Arc<RuntimeSupervisor>);
@@ -23,6 +24,68 @@ struct UpdateExit(Arc<AtomicBool>);
 struct Recovery(CoreCommand, PathBuf);
 /// The data folder this run resolved (`data_home`), for the update hand-off at exit.
 struct DataHome(PathBuf);
+/// The check-in notifications this run showed (SPEC §19.5.5), by tag, and the last one clicked.
+struct Checkins(Arc<jana_shell::checkins::Shown>);
+
+/// Whether the OS lets the app show notifications, asking when it has not been decided (JM-D24). The webview turns
+/// `checkin_notifications` off when this is "denied".
+#[tauri::command]
+async fn checkin_permission(app: tauri::AppHandle) -> Result<String, String> {
+    use tauri::plugin::PermissionState;
+    let notification = app.notification();
+    let state = match notification.permission_state() {
+        Ok(PermissionState::Granted) => PermissionState::Granted,
+        _ => notification
+            .request_permission()
+            .map_err(|_| "notifications_unavailable".to_string())?,
+    };
+    Ok(if matches!(state, PermissionState::Granted) {
+        "granted"
+    } else {
+        "denied"
+    }
+    .to_string())
+}
+
+/// Show a due check-in's notification: the kind's fixed template, tagged with the commitment id. The check-in's own
+/// words never reach the shell (SPEC §19.5.5).
+#[tauri::command]
+async fn notify_checkin(
+    app: tauri::AppHandle,
+    commitment_id: String,
+    kind: String,
+) -> Result<(), String> {
+    let body = jana_shell::checkins::body(&kind).ok_or_else(|| "invalid_request".to_string())?;
+    if !jana_shell::checkins::valid_id(&commitment_id) {
+        return Err("invalid_request".into());
+    }
+    let tag = app.state::<Checkins>().0.record(&commitment_id);
+    app.notification()
+        .builder()
+        .id(tag)
+        .body(body)
+        .show()
+        .map_err(|_| "notifications_unavailable".to_string())
+}
+
+/// Withdraw every check-in notification this run showed (a lock or a profile switch, SPEC §19.3.4). Where the OS
+/// cannot remove a delivered notification, a later click on it opens nothing.
+#[tauri::command]
+async fn cancel_checkins(app: tauri::AppHandle) -> Result<(), String> {
+    let tags = app.state::<Checkins>().0.clear();
+    if tags.is_empty() {
+        return Ok(());
+    }
+    app.notification()
+        .remove_active(tags)
+        .map_err(|_| "notifications_unavailable".to_string())
+}
+
+/// The check-in whose notification was clicked since the webview last asked (it then opens Home), once.
+#[tauri::command]
+async fn take_checkin_click(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    Ok(app.state::<Checkins>().0.take_click())
+}
 
 #[tauri::command]
 async fn update_recovery(app: tauri::AppHandle) -> Result<Option<String>, String> {
@@ -292,14 +355,37 @@ fn main() {
     }
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             launch_info,
             pick_install_source,
             pick_profile_archive,
             update_recovery,
-            rollback_update
+            rollback_update,
+            checkin_permission,
+            notify_checkin,
+            cancel_checkins,
+            take_checkin_click
         ])
         .setup(|app| {
+            // A click on a check-in notification brings the window forward; the webview takes the click and opens
+            // Home (SPEC §19.5.5). A click on anything else, or on one already withdrawn, does nothing.
+            let shown = Arc::new(jana_shell::checkins::Shown::default());
+            app.manage(Checkins(shown.clone()));
+            let clicked = app.handle().clone();
+            app.notification().on_action(move |performed| {
+                let Some(tag) = performed.notification().map(|n| n.id()) else {
+                    return;
+                };
+                if performed.action_id() == "tap"
+                    && shown.click(tag)
+                    && let Some(window) = clicked.get_webview_window("main")
+                {
+                    let _ = window.unminimize();
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            })?;
             let data_dir = data_home(app)?;
             std::fs::create_dir_all(&data_dir)?;
             let runtime = runtime_builds(app);

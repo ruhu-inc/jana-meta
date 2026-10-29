@@ -1,0 +1,16 @@
+{
+  "opener_id": "2026-01-15",
+  "text": "x",
+  "facts": {
+    "last_session_date": "2026-01-15",
+    "last_session_mode": "x",
+    "last_subject": "mathematics",
+    "next_step": "x",
+    "learner_cards_due": 0,
+    "study_cards_due": 0,
+    "exam_distance_days": 0,
+    "pack_ready": true,
+    "checkin_id": "x"
+  },
+  "__unknown_field__": 1
+}

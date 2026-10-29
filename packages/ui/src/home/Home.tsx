@@ -80,7 +80,7 @@ function Materials({ materials }: { materials: HomeMaterials }) {
   );
 }
 
-export function Home({ name, ask, materials, answer, notice, plan, countdown, goal, mock, subjects, onSubject, pickup, onPickup, practice, onPractice }: {
+export function Home({ name, ask, materials, answer, notice, plan, countdown, lastTime, checkin, goal, mock, subjects, onSubject, pickup, onPickup, practice, onPractice }: {
   name: string;
   /** The one box (the composer, inline), or null where no tutor answers here. */
   ask: ReactNode | null;
@@ -96,6 +96,10 @@ export function Home({ name, ask, materials, answer, notice, plan, countdown, go
   goal?: ReactNode;
   /** The countdown to the nearest exam date and any reminder due (LRN-44), above the plan. */
   countdown?: ReactNode;
+  /** The Last time card beside the countdown (SPEC §19.5.2): where the learner left off, what is due, the exam. */
+  lastTime?: ReactNode;
+  /** Today's check-in from the tutor (SPEC §19.5.5), above the Last time card, when one is due. */
+  checkin?: ReactNode;
   /** A mock exam card: one closed after the abandonment window, with "Start a new mock" (TABLE UXS-25a). */
   mock?: ReactNode;
   subjects: HomeSubject[];
@@ -131,6 +135,8 @@ export function Home({ name, ask, materials, answer, notice, plan, countdown, go
             </>}
             {notice}
             {countdown}
+            {checkin}
+            {lastTime}
             {plan}
             {subjects.length > 1 && (
               <div role="group" aria-label={t("home.subjects")} className="flex flex-wrap gap-2">

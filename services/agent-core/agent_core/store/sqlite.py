@@ -32,6 +32,10 @@ from agent_core.store.migration_v15 import LEARNER as V15_LEARNER
 from agent_core.store.migration_v16 import LEARNER as V16_LEARNER
 from agent_core.store.migration_v17 import LEARNER as V17_LEARNER
 from agent_core.store.migration_v18 import LEARNER as V18_LEARNER
+from agent_core.store.migration_v19 import LEARNER as V19_LEARNER
+from agent_core.store.migration_v20 import LEARNER as V20_LEARNER
+from agent_core.store.migration_v21 import DEVICE as V3_DEVICE
+from agent_core.store.migration_v21 import LEARNER as V21_LEARNER
 from agent_core.store.schema_v1 import DATABASES as V1_DATABASES
 
 # The contract's pragmas (DAT-03). Recursive triggers make a REPLACE conflict fire the delete triggers, so
@@ -44,6 +48,9 @@ NEWER_MESSAGE_KEY = "profile.newer_app"
 class Migration:
     version: int
     sql: str
+    # The migration edits a stored definition through `writable_schema` (a CHECK that only widens): the runner bumps
+    # the schema version in the same transaction so every connection reads the new definition.
+    edits_schema: bool = False
 
 
 class NewerDatabaseError(RuntimeError):
@@ -92,7 +99,11 @@ MIGRATIONS["learner"] = (
     Migration(16, V16_LEARNER),
     Migration(17, V17_LEARNER),
     Migration(18, V18_LEARNER),
+    Migration(19, V19_LEARNER, edits_schema=True),
+    Migration(20, V20_LEARNER),
+    Migration(21, V21_LEARNER, edits_schema=True),
 )
+MIGRATIONS["device"] = (*MIGRATIONS["device"], Migration(3, V3_DEVICE, edits_schema=True))
 
 
 def connect(path: Path | str) -> sqlite3.Connection:
@@ -168,6 +179,9 @@ def open_database(
             conn.execute("BEGIN IMMEDIATE")
             for statement in statements(migration.sql):
                 conn.execute(statement)
+            if migration.edits_schema:
+                bumped = int(conn.execute("PRAGMA schema_version").fetchone()[0]) + 1
+                conn.execute(f"PRAGMA schema_version = {bumped}")
             for table in ("meta", "device"):
                 if _has_table(conn, table):
                     conn.execute(f"UPDATE {table} SET schema_version = ?", (migration.version,))  # noqa: S608

@@ -1,0 +1,8 @@
+{
+  "text": "x",
+  "action": {
+    "kind": "open_tutor",
+    "ref": 1
+  },
+  "__unknown_field__": 1
+}

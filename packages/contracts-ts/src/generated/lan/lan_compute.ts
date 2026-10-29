@@ -119,7 +119,8 @@ export type LearningLearningEvent =
   | LearningLearningEventOneOf24
   | LearningLearningEventOneOf25
   | LearningLearningEventOneOf26
-  | LearningLearningEventOneOf27;
+  | LearningLearningEventOneOf27
+  | LearningLearningEventOneOf28;
 export type LearningLearningEventOneOf1 = LearningLearningEventEnvelope & {
   type?: "item_exposed";
   payload?: LearningLearningEventPayloadItemExposed;
@@ -187,6 +188,13 @@ export type LearningLearningEventOneOf13 = LearningLearningEventEnvelope & {
   type?: "plan_generated";
   payload?: LearningLearningEventPayloadPlanGenerated;
 };
+/**
+ * @maxItems 10
+ *
+ * This interface was referenced by `LANComputeServerContract`'s JSON-Schema
+ * via the `definition` "learning_learning_event__study_cards".
+ */
+export type LearningLearningEventStudyCards = LearningLearningEventStudyCardsItem[];
 export type LearningLearningEventOneOf14 = LearningLearningEventEnvelope & {
   type?: "plan_decision";
   payload?: LearningLearningEventPayloadPlanDecision;
@@ -245,6 +253,10 @@ export type LearningLearningEventOneOf26 = LearningLearningEventEnvelope & {
   payload?: LearningLearningEventPayloadSkillsDelivered;
 };
 export type LearningLearningEventOneOf27 = LearningLearningEventEnvelope & {
+  type?: "study_activity";
+  payload?: LearningLearningEventPayloadStudyActivity;
+};
+export type LearningLearningEventOneOf28 = LearningLearningEventEnvelope & {
   type?:
     | "session_started"
     | "session_ended"
@@ -271,8 +283,9 @@ export type LearningLearningEventOneOf27 = LearningLearningEventEnvelope & {
     | "injection_flagged"
     | "profile_updated"
     | "item_exposed"
-    | "skills_delivered";
-  payload?: LearningLearningEventOneOf27Payload;
+    | "skills_delivered"
+    | "study_activity";
+  payload?: LearningLearningEventOneOf28Payload;
 };
 
 export interface LANComputeServerContract {
@@ -550,9 +563,11 @@ export interface LearningLearningEventPayloadSessionStarted {
     | "revision"
     | "diagnostic"
     | "mastery_check"
-    | "review";
+    | "review"
+    | "study"
+    | "study_companion";
   subject?: LearningLearningEventSubject;
-  entry: "plan" | "question" | "lesson" | "practice" | "mock" | "review" | "detour";
+  entry: "plan" | "question" | "lesson" | "practice" | "mock" | "review" | "detour" | "study";
   hardware_class: "content_only" | "low" | "mid" | "high";
   cloud_tier_enabled?: boolean;
   online?: boolean;
@@ -732,7 +747,8 @@ export interface LearningLearningEventPayloadSettingChange {
     | "tutor_name"
     | "tutor_avatar"
     | "faster_tutor"
-    | "wake_word";
+    | "wake_word"
+    | "checkin_notifications";
   old_value?: unknown;
   new_value: unknown;
   actor_role: "student";
@@ -772,7 +788,13 @@ export interface LearningLearningEventPayloadPlanGeneratedBlocksItem {
     | "exam_phase"
     | "revisit_moved_on"
     | "mastery_check"
-    | "mock_follow_up";
+    | "mock_follow_up"
+    | "due_reviews_study";
+  study_cards?: LearningLearningEventStudyCards;
+}
+export interface LearningLearningEventStudyCardsItem {
+  deck_id: string;
+  card_id: string;
 }
 /**
  * This interface was referenced by `LANComputeServerContract`'s JSON-Schema
@@ -948,7 +970,39 @@ export interface LearningLearningEventPayloadSkillsDeliveredSkillsItem {
   delivery: "index" | "pushed" | "search";
   receipt: boolean;
 }
-export interface LearningLearningEventOneOf27Payload {
+/**
+ * This interface was referenced by `LANComputeServerContract`'s JSON-Schema
+ * via the `definition` "learning_learning_event__payload_study_activity".
+ */
+export interface LearningLearningEventPayloadStudyActivity {
+  activity: "quiz_item" | "card_review" | "aid_made" | "source_added" | "pack_ready" | "journey_step";
+  ref: string;
+  /**
+   * @maxItems 3
+   */
+  kc_tags: LearningLearningEventPayloadStudyActivityKcTagsItem[];
+  outcome: ("correct" | "incorrect" | "skipped" | "unverifiable") | null;
+  rating: ("again" | "hard" | "good" | "easy") | null;
+  aid_kind:
+    | (
+        | "notes"
+        | "summary"
+        | "chat"
+        | "flashcards"
+        | "quiz"
+        | "audio_overview"
+        | "lesson_plan"
+        | "chapters"
+        | "concept_map"
+      )
+    | null;
+  count: number | null;
+}
+export interface LearningLearningEventPayloadStudyActivityKcTagsItem {
+  kc_id: LearningLearningEventKcId;
+  weight: number;
+}
+export interface LearningLearningEventOneOf28Payload {
   erased: true;
   erased_at: string;
 }

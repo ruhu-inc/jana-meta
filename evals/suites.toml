@@ -116,3 +116,12 @@ cadence = "per pilot"
 stage = "S2"
 version = "2026-10-09.1"
 files = []
+
+[suites.companion]
+# SPEC §19.9 (W8): the Study-memory scenarios, run by services/agent-core/tests/w8_scenarios.py as pytest cases (the
+# memory harness loads tutoring sessions only). Each rubric is written in its case before any run.
+owner = "Engine engineer"
+cadence = "every commit touching engine, memory or study"
+stage = "S2"
+version = "2026-10-29.3"
+files = ["services/agent-core/tests/scenarios/w8/*.yaml"]

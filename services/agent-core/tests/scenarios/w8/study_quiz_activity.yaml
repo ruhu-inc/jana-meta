@@ -1,0 +1,24 @@
+# W8 phase 1 Study-memory case (SPEC §19.9): written before any run; checked by code in tests/w8_scenarios.py.
+case: study_quiz_activity
+rubric: >-
+  A Study quiz miss on an item tagged kc.phy.o.motion.solve_with_equation records study_activity with that tag and
+  leaves the KC's band unchanged.
+profile: {level: O, subjects: [physics], day: "2026-11-04", exam_date: "2026-11-23"}
+seed_sessions: 3  # tutoring evidence first (learner_harness), so the learner model has rows that must not move
+source:
+  title: "Kinematics notes"
+  text: |-
+    Motion in a straight line
+
+    For motion in a straight line with uniform acceleration, v = u + at solves for the final velocity.
+quiz:
+  - stem: "For motion in a straight line, which equation of uniform acceleration do you use to solve for v?"
+    options: {x: "v = u + at", y: "s = d / t"}
+    key: x
+    explanation: "Solve with the equation of uniform acceleration v = u + at."
+    answer: y
+expect:
+  activity: quiz_item
+  outcome: incorrect
+  tag: kc.phy.o.motion.solve_with_equation
+  unchanged: [kc_mastery, review_cards, learner_misconceptions]

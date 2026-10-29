@@ -13,15 +13,18 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from agent_core.config import Settings
 from agent_core.engine.memory_session import MemorySource
-from agent_core.learner.projections import PREFERENCE_VALUES, local_date
+from agent_core.learner.projections import PREFERENCE_VALUES, local_date, note_lifecycle
 from agent_core.memory.capture import default_filter
 from agent_core.memory.policy import render_check
-from agent_core.memory.queries import NoteRecord, ReviewItem, review_items
+from agent_core.memory.queries import NoteRecord, ReviewItem, recent_study_activity, review_items
+from agent_core.memory.recall import recall_sessions
+from agent_core.memory.scrub import scrub_for_egress
 from agent_core.memory.view import about, knows_view
 from agent_core.memory.write import compact_storage, correct_misconception, correct_preference, forget, resolve_review
 
@@ -66,6 +69,11 @@ PLAN_REASONS = {"revisit_moved_on", "prerequisite", "weak_high_value", "mock", "
 class KnowsDesk:
     source: MemorySource
     settings: Settings
+    # SPEC §19.6 (W8 phase 3): while tutor_memory_online is effective, a note the egress scrub withholds is flagged
+    # (`withheld_online`); `terms` are the Redactor's profile terms the scrub uses.
+    memory_online: Callable[[], bool] = lambda: False
+    terms: Callable[[], Sequence[str]] = lambda: ()
+    _derived: dict[str, Any] = field(default_factory=dict)
 
     @property
     def _capture(self) -> Any:
@@ -77,9 +85,23 @@ class KnowsDesk:
         if flagged is None:
             flagged = bool(render_check(note.text, self.settings, self._capture))
         source = {"student_request": "student", "corrected": "corrected"}.get(note.origin, "reflector")
-        return {"note_id": NOTE_PREFIX + note.note_id, "text": note.text, "status": note.status, "source": source,
-                "flagged": flagged, "subject": note.subject, "created_ts": note.created_at,
-                "updated_ts": note.updated_at or note.created_at}  # fmt: skip
+        out = {"note_id": NOTE_PREFIX + note.note_id, "text": note.text, "status": note.status, "source": source,
+               "flagged": flagged, "subject": note.subject, "created_ts": note.created_at,
+               "updated_ts": note.updated_at or note.created_at}  # fmt: skip
+        # SPEC §19.3.5, §19.5.6: derived confidence and fading, the sessions the tutor recalled it in, and whether the
+        # egress scrub keeps it on this computer under tutor_memory_online.
+        lifecycle = self._derived.get("lifecycle", {}).get(note.note_id)
+        out["confidence"] = lifecycle.confidence if lifecycle is not None else "tentative"
+        out["fading"] = bool(lifecycle.fading) if lifecycle is not None else False
+        out["recall_sessions"] = int(self._derived.get("recalls", {}).get(note.note_id, 0))
+        out["withheld_online"] = bool(self._derived.get("online")) and scrub_for_egress(
+            note.text, self.settings, self._capture, tuple(self.terms())) is not None  # fmt: skip
+        return out
+
+    def _derive(self, note_ids: Sequence[str]) -> None:
+        conn = self.source.conn
+        self._derived = {"lifecycle": note_lifecycle(conn, note_ids, int(time.time() * 1000)),
+                         "recalls": recall_sessions(conn), "online": self.memory_online()}  # fmt: skip
 
     def _review(self, item: ReviewItem) -> dict[str, Any]:
         return {"review_id": REVIEW_PREFIX + item.review_id, "kind": item.kind,
@@ -91,6 +113,9 @@ class KnowsDesk:
         """Everything the page shows except who views it and what is shared (the API's), in the wire shape."""
         conn = self.source.conn
         seen = knows_view(conn, self.source.content, self.settings, capture=self._capture)
+        ids = [n.note.note_id for n in seen.notes]
+        ids += [n.note_id for r in seen.reviews for n in (r.pending, r.target) if n is not None]
+        self._derive(ids)
         profile = about(conn)
         records = []
         for table, kind in RECORD_CATEGORIES.items():
@@ -125,7 +150,15 @@ class KnowsDesk:
             "notes": [self._note(n.note, n.flagged) for n in seen.notes],
             "reviews": [self._review(r) for r in seen.reviews],
             "memory_saving": seen.memory_saving,
+            # SPEC §19.1: what the learner did in Study, as evidence the tutor saw (activity, never mastery).
+            "activity": recent_study_activity(conn, self.source.content),
+            # SPEC §19.3.3: the companion thread's rolling summary as last folded by code (none before a first open).
+            "companion_summary": self._companion_summary(),
         }  # fmt: skip
+
+    def _companion_summary(self) -> dict[str, Any] | None:
+        row = self.source.conn.execute("SELECT body_json FROM companion_summary ORDER BY thread_id LIMIT 1").fetchone()
+        return dict(json.loads(row[0])) if row is not None else None
 
     # --- corrections ------------------------------------------------------------------------------------------------
 

@@ -36,4 +36,10 @@ def test_auxiliary_slots_put_the_local_model_first_and_spark_after_it(slot: str)
 
 
 def test_the_reflector_never_goes_to_the_cloud() -> None:
-    assert "reflector" not in load(ROUTER).cloud["roles_allowed"]
+    """MDL-25 stays the default: the Reflector reaches the cloud only while tutor_memory_online is effective (SPEC
+    §19.4, JM-D21, which puts it in roles_allowed behind the router's memory_online gate)."""
+    router = _router([])
+    assert "reflector" in load(ROUTER).cloud["roles_allowed"]
+    assert router._cloud_block("reflector") == "cloud tier off"  # no consent: never
+    router.memory_online = lambda: True
+    assert router._cloud_block("reflector") is None

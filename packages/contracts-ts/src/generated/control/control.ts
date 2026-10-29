@@ -29,7 +29,8 @@ export type ApiEventsOnlineFeature =
   | "cloud_voice"
   | "study_materials"
   | "telemetry"
-  | "crash_reports";
+  | "crash_reports"
+  | "tutor_memory_online";
 export type KeyStoreKind = "os_keychain" | "user_file";
 export type KeyRef = string;
 export type KeyValue = string;
@@ -127,6 +128,7 @@ export interface ApiEventsEvEgressNotice {
     | "audio"
     | "transcript"
     | "document"
+    | "tutor_notes"
   )[];
 }
 export interface EgressLedger {

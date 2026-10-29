@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 d54ef026716b9596e1bc045f387562eb9d565b5ad12cb64368fb2f063618dbe2; do not edit",
+ "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 132aad3c38e1838a44b0d42481259f766660c959f2483abc7cab4083eb9a80a5; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/study/workspace",
  "$defs": {
@@ -2036,6 +2036,9 @@
      "type": "string",
      "minLength": 1,
      "maxLength": 8000
+    },
+    "learner": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/LearnerBlock"
     }
    },
    "required": [
@@ -4019,6 +4022,80 @@
     "concepts",
     "relations"
    ]
+  },
+  "LearnerBlock": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "level",
+    "subjects",
+    "kcs",
+    "misconception_ids"
+   ],
+   "properties": {
+    "level": {
+     "anyOf": [
+      {
+       "enum": [
+        "O",
+        "A"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "subjects": {
+     "type": "array",
+     "maxItems": 5,
+     "uniqueItems": true,
+     "items": {
+      "enum": [
+       "mathematics",
+       "physics",
+       "chemistry",
+       "biology",
+       "accounting"
+      ]
+     }
+    },
+    "kcs": {
+     "type": "array",
+     "maxItems": 24,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "band"
+      ],
+      "properties": {
+       "kc_id": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       },
+       "band": {
+        "enum": [
+         "not_started",
+         "learning",
+         "secure"
+        ]
+       }
+      }
+     }
+    },
+    "misconception_ids": {
+     "type": "array",
+     "maxItems": 8,
+     "uniqueItems": true,
+     "items": {
+      "type": "string",
+      "pattern": "^mc\\.[a-z0-9_.]+$",
+      "maxLength": 96
+     }
+    }
+   }
   }
  }
 }

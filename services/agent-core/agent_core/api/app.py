@@ -18,6 +18,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from agent_core.api import ask as ask_routes
 from agent_core.api import assessment as assessment_routes
 from agent_core.api import captures as capture_routes
+from agent_core.api import companion as companion_routes
 from agent_core.api import connectivity as connectivity_routes
 from agent_core.api import drafts as draft_routes
 from agent_core.api import exports as export_routes
@@ -260,6 +261,7 @@ def create_app(core: CoreService, secret: LaunchSecret, port: Callable[[], int |
     journey_routes.add_routes(app, core, mutating)
     assessment_routes.add_past_paper_routes(app, core, mutating)  # imported past papers (ASM-27)
     plan_routes.add_routes(app, core, mutating)  # plans and progress (LRN-28 to LRN-33, UXS-12, UXS-27)
+    companion_routes.add_routes(app, core, mutating)  # the Last time card (SPEC §19.5.2, W8 phase 1)
     parent_routes.add_routes(app, core, mutating)  # parent summary, alerts, session history (TCH-12, TCH-14, UXS-48)
     draft_routes.add_routes(app, core, mutating)
     journal_routes.add_routes(app, core, mutating)

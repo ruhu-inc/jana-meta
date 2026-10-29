@@ -31,6 +31,27 @@ export async function rollbackUpdate(): Promise<void> {
   if (tauri !== undefined) await tauri.invoke("rollback_update");
 }
 
+/** Check-in notifications (SPEC §19.5.5, JM-D24), shown by the shell: only a check-in's id and kind cross, and the
+ * shell words the notification from the kind's fixed template. Null outside the desktop shell (a browser build). */
+export interface DesktopCheckinNotifier {
+  permission(): Promise<"granted" | "denied">;
+  notify(checkin: { commitment_id: string; kind: string }): Promise<void>;
+  cancel(): Promise<void>;
+  /** The check-in whose notification was clicked since the last call, once: the app then opens Home. */
+  takeClick(): Promise<string | null>;
+}
+
+export function desktopCheckinNotifier(): DesktopCheckinNotifier | null {
+  const tauri = (globalThis as { __TAURI_INTERNALS__?: TauriInternals }).__TAURI_INTERNALS__;
+  if (tauri === undefined) return null;
+  return {
+    permission: async () => ((await tauri.invoke("checkin_permission")) === "granted" ? "granted" : "denied"),
+    notify: async ({ commitment_id, kind }) => { await tauri.invoke("notify_checkin", { commitmentId: commitment_id, kind }); },
+    cancel: async () => { await tauri.invoke("cancel_checkins"); },
+    takeClick: async () => ((await tauri.invoke("take_checkin_click")) as string | null) ?? null,
+  };
+}
+
 export async function launchInfo(refresh = false): Promise<LaunchInfo> {
   const tauri = (globalThis as { __TAURI_INTERNALS__?: TauriInternals }).__TAURI_INTERNALS__;
   if (tauri !== undefined) return (await tauri.invoke("launch_info", { refresh })) as LaunchInfo;

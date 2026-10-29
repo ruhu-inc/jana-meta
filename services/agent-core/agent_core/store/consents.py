@@ -29,12 +29,14 @@ PROFILE_SCOPES: dict[str, tuple[str, str | None]] = {
     "parent_remote_view": ("S4", "parent_remote_view"),
     "cloud_voice": ("S4", "cloud_voice"),
     "model_training_research": ("S5", None),
+    # SPEC §19.3.5 (W8, JM-D21): screened notes and code-built evidence lines may reach the cloud tutor (needs cloud).
+    "tutor_memory_online": ("S2", "tutor_memory_online"),
 }
 DEVICE_SCOPES = ("telemetry", "crash_reports")
 # TABLE ARC-07a: feature -> stage
 FEATURES = {"cloud_tier": "S2", "downloads": "S2", "update_checks": "S2", "telemetry": "S2", "crash_reports": "S2",
             "study_materials": "S3", "cloud_backup": "S4", "multi_device": "S4", "parent_remote_view": "S4",
-            "cloud_voice": "S4"}  # fmt: skip
+            "cloud_voice": "S4", "tutor_memory_online": "S2"}  # fmt: skip
 # The stage whose consent and connectivity surface ships: these endpoints arrive with M10 (S2).
 SHIPPED = "S2"
 

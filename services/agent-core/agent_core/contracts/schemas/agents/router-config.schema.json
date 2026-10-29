@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/agents/router-config.schema.json sha256 6767349917b49405eeef6d98dbaf9a0324b14aca02af3a408daeb862103cea11; do not edit",
+ "$comment": "GENERATED from contracts/agents/router-config.schema.json sha256 0f7712c0dd66317ed470ac4af4d174c629697aa215c319ba1cfaff5f99a1bac3; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/agents/router-config",
  "title": "Router configuration",
@@ -216,6 +216,9 @@
     },
     "reflector": {
      "$ref": "#/$defs/role"
+    },
+    "companion": {
+     "$ref": "#/$defs/role"
     }
    }
   },
@@ -245,6 +248,9 @@
      "$ref": "#/$defs/slot"
     },
     "research_chat": {
+     "$ref": "#/$defs/slot"
+    },
+    "checkin": {
      "$ref": "#/$defs/slot"
     }
    }
@@ -480,7 +486,10 @@
        "compaction",
        "judge",
        "vision",
-       "research_chat"
+       "research_chat",
+       "companion",
+       "reflector",
+       "checkin"
       ]
      }
     }

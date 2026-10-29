@@ -1,0 +1,2144 @@
+{
+  "proposal": "Contract pieces SPEC §19 phase 1 implies (the personal learning agent, W8; JM-D21 to JM-D29 approved 2026-10-29), proposed by W8 phase 1. Each entry is a JSON Pointer into a contract under contracts/ (an endpoint for TABLE API-27a, or a CHECK in contracts/data/schema.sql marked storage) and the value to add there. They were adopted in the same change (python -m jana_tools codegen), so the generated Python and TypeScript bindings carry them and no local allowance applies; this file records what was added and why. Entries marked phase 2 are §19.3.3's; entries marked phase 3 are §19.3.4's and §19.3.5's.",
+  "additions": [
+    {
+      "target": "study/workspace.schema.json",
+      "pointer": "/$defs/LearnerBlock",
+      "requirements": [
+        "§19.3.1",
+        "MDL-25",
+        "JM-D29"
+      ],
+      "why": "Study chat, quizzes and flashcards are pitched at the learner's level, bands and watched misconceptions; the block is the cloud variant's structured form, so a cloud Study request carries MDL-25's fields only.",
+      "value": {
+        "description": "Who is asking a Study request (SPEC §19.3.1, MDL-25's set and nothing else): the profile's level and subjects, up to 24 knowledge components in three bands (the current focus first, then the most recently practised) and up to 8 misconceptions being watched (active or resolving). Rendered by the engine from the frozen learner snapshot (memory/snapshot.py learner_block_data); never notes, preferences, names or dates.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "level",
+          "subjects",
+          "kcs",
+          "misconception_ids"
+        ],
+        "properties": {
+          "level": {
+            "anyOf": [
+              {
+                "enum": [
+                  "O",
+                  "A"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subjects": {
+            "type": "array",
+            "maxItems": 5,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "mathematics",
+                "physics",
+                "chemistry",
+                "biology",
+                "accounting"
+              ]
+            }
+          },
+          "kcs": {
+            "type": "array",
+            "maxItems": 24,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kc_id",
+                "band"
+              ],
+              "properties": {
+                "kc_id": {
+                  "type": "string",
+                  "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+                },
+                "band": {
+                  "enum": [
+                    "not_started",
+                    "learning",
+                    "secure"
+                  ]
+                }
+              }
+            }
+          },
+          "misconception_ids": {
+            "type": "array",
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^mc\\.[a-z0-9_.]+$",
+              "maxLength": 96
+            }
+          }
+        }
+      }
+    },
+    {
+      "target": "study/workspace.schema.json",
+      "pointer": "/$defs/ProcessingRequest/properties/learner",
+      "requirements": [
+        "§19.3.1"
+      ],
+      "why": "The body net/study.py sends gains the block; JobCreate is unchanged (the engine renders it, the app never sends it). The gateway keeps it in the model's user message beside the passages.",
+      "value": {
+        "$ref": "https://jana.dev/contracts/study/workspace#/$defs/LearnerBlock"
+      }
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/$defs/payload_study_activity",
+      "requirements": [
+        "§19.3.2",
+        "JM-D22",
+        "JM-D26"
+      ],
+      "why": "Study writes activity, not mastery: one event per quiz item, card review and aid, read by the Reflector and the knows view only.",
+      "value": {
+        "description": "What the learner did in Study (SPEC §19.3.2, JM-D22, JM-D26): activity, not mastery. `kc_tags` are topic-derived (engine/study_topics.py matches pack topic titles in the item's words; they say which topics an item names, never which skills it tests); the mastery, review and misconception projections ignore this event. `ref` is aid:<aid_id>, att:<attempt_id>:<item_index> or card:<card_id>: never a title, a source id or text.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "activity",
+          "ref",
+          "kc_tags",
+          "outcome",
+          "rating",
+          "aid_kind",
+          "count"
+        ],
+        "properties": {
+          "activity": {
+            "enum": [
+              "quiz_item",
+              "card_review",
+              "aid_made",
+              "source_added",
+              "pack_ready",
+              "journey_step"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^(aid|att|card|rsr|jny):[0-9A-Za-z_:]{1,59}$"
+          },
+          "kc_tags": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kc_id",
+                "weight"
+              ],
+              "properties": {
+                "kc_id": {
+                  "$ref": "#/$defs/kc_id"
+                },
+                "weight": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1
+                }
+              }
+            }
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "enum": [
+                  "correct",
+                  "incorrect",
+                  "skipped",
+                  "unverifiable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "enum": [
+                  "again",
+                  "hard",
+                  "good",
+                  "easy"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "aid_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "notes",
+                  "summary",
+                  "chat",
+                  "flashcards",
+                  "quiz",
+                  "audio_overview",
+                  "lesson_plan",
+                  "chapters",
+                  "concept_map"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/oneOf/26",
+      "requirements": [
+        "§19.3.2"
+      ],
+      "why": "The new variant in the root union, inserted before the erased branch (which stays last).",
+      "value": {
+        "title": "study_activity",
+        "allOf": [
+          {
+            "$ref": "#/$defs/envelope"
+          }
+        ],
+        "properties": {
+          "type": {
+            "const": "study_activity"
+          },
+          "payload": {
+            "$ref": "#/$defs/payload_study_activity"
+          }
+        },
+        "unevaluatedProperties": false
+      }
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/oneOf/27/properties/type/enum/-",
+      "requirements": [
+        "§19.3.2",
+        "DAT-09"
+      ],
+      "why": "A study_activity event can be erased like any other (the erased branch, after the insert above).",
+      "value": "study_activity"
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/$defs/payload_session_started/properties/mode/enum/-",
+      "requirements": [
+        "§19.3.2"
+      ],
+      "why": "The Study screen's session; every study_activity cites it.",
+      "value": "study"
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/$defs/payload_session_started/properties/mode/enum/-",
+      "requirements": [
+        "§19.3.2",
+        "JM-D23"
+      ],
+      "why": "The companion's daily episode (phase 2); added with `study` so sessions.mode and the event agree.",
+      "value": "study_companion"
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/$defs/payload_session_started/properties/entry/enum/-",
+      "requirements": [
+        "§19.3.2"
+      ],
+      "why": "A Study session is entered from the Study screen.",
+      "value": "study"
+    },
+    {
+      "target": "policies/event_registry.json",
+      "pointer": "/study_activity",
+      "requirements": [
+        "DAT-04",
+        "§19.6"
+      ],
+      "why": "TABLE DAT-04a: study_activity is a learning event, synced as events are.",
+      "value": "local"
+    },
+    {
+      "target": "data/schema.sql",
+      "pointer": "sessions.mode CHECK",
+      "requirements": [
+        "§19.3.2",
+        "DAT-12"
+      ],
+      "why": "(storage) The sessions CHECK gains 'study' and 'study_companion' as payload_session_started.mode does; agent_core/store/migration_v19.py widens it in place on a v18 profile. attempts.mode is unchanged: Study writes no attempt, verdict or review event (JM-D26).",
+      "value": "mode IN ('guided','solution','check_working','learn','practice','mock','revision','diagnostic','mastery_check','review','study','study_companion')"
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/StudyVisit",
+      "requirements": [
+        "§19.3.2"
+      ],
+      "why": "The reply to the Study screen's open: the day's study session, new or resumed.",
+      "value": {
+        "description": "The Study screen's learning session of the day (SPEC §19.3.2): one `sessions` row of mode `study` per profile per day, reused while the screen is open, ended at close or after 20 minutes idle.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "session_id",
+          "resumed"
+        ],
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "pattern": "^ses_[0-9A-HJKMNP-TV-Z]{26}$"
+          },
+          "resumed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/Opener",
+      "requirements": [
+        "§19.5.2",
+        "JM-D25"
+      ],
+      "why": "Phase 1's Last time card: §19.3.3's Opener, served alone by GET /v1/companion/opener (CompanionOpen and CompanionOpened stay phase 2). Facts by code, wording by the engine templates, no model call.",
+      "value": {
+        "description": "The Last time card (SPEC §19.5.2, phase 1 of §19.3.3's Opener): facts chosen by code and worded by the engine's templates. `opener_id` is the profile's local day. No fact comes from transcript text.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "opener_id",
+          "text",
+          "facts"
+        ],
+        "properties": {
+          "opener_id": {
+            "type": "string",
+            "format": "date"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "last_session_date",
+              "last_session_mode",
+              "last_subject",
+              "next_step",
+              "learner_cards_due",
+              "study_cards_due",
+              "exam_distance_days",
+              "pack_ready",
+              "checkin_id"
+            ],
+            "properties": {
+              "last_session_date": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "last_session_mode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 32
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "last_subject": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mathematics",
+                      "physics",
+                      "chemistry",
+                      "biology",
+                      "accounting"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "next_step": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "learner_cards_due": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "study_cards_due": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "exam_distance_days": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "pack_ready": {
+                "type": "boolean"
+              },
+              "checkin_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 30
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/ProgressView/properties/study_activity",
+      "requirements": [
+        "§19.1",
+        "§19.8",
+        "JM-D22"
+      ],
+      "why": "Progress's \"Study activity\" line: the week's Study activity as counts (activity, never mastery). Optional, so an older core's reply still holds.",
+      "value": {
+        "description": "Study activity in the last seven local days (SPEC §19.3.2): quiz questions answered (a skipped one is not), how many were right by Study's judged key, cards reviewed and aids made.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "quiz_items",
+          "quiz_correct",
+          "cards_reviewed",
+          "aids_made"
+        ],
+        "properties": {
+          "quiz_items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "quiz_correct": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cards_reviewed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "aids_made": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsView/properties/activity",
+      "requirements": [
+        "§19.1",
+        "§19.8",
+        "JM-D22"
+      ],
+      "why": "The knows page shows what the learner did in Study as evidence the tutor saw. Optional, so an older core's reply still holds.",
+      "value": {
+        "description": "The newest Study activities (SPEC §19.3.2): the kind, the pack's statement of the first topic tag (never a title or the learner's text), the result word, the aid's kind and size, and the day.",
+        "type": "array",
+        "maxItems": 8,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "activity",
+            "kc_id",
+            "statement",
+            "result",
+            "aid_kind",
+            "count",
+            "day"
+          ],
+          "properties": {
+            "activity": {
+              "enum": [
+                "quiz_item",
+                "card_review",
+                "aid_made"
+              ]
+            },
+            "kc_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "statement": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 400
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "result": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "correct",
+                    "incorrect",
+                    "skipped",
+                    "unverifiable",
+                    "again",
+                    "hard",
+                    "good",
+                    "easy"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "aid_kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "notes",
+                    "summary",
+                    "chat",
+                    "flashcards",
+                    "quiz",
+                    "audio_overview",
+                    "lesson_plan",
+                    "chapters",
+                    "concept_map"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 200
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "day": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        }
+      }
+    },
+    {
+      "target": "api/endpoints (TABLE API-27a)",
+      "pointer": "POST /v1/study/session",
+      "requirements": [
+        "§19.3.2"
+      ],
+      "why": "The Study screen opens: the day's study session is opened or resumed (one per profile per day).",
+      "value": {
+        "method": "POST",
+        "path": "/v1/study/session",
+        "request": null,
+        "response": "#/$defs/StudyVisit",
+        "auth": [
+          "launch",
+          "profile"
+        ],
+        "errors": [
+          "not_found",
+          "feature_disabled"
+        ],
+        "stage": "S2",
+        "owner": "W8"
+      }
+    },
+    {
+      "target": "api/endpoints (TABLE API-27a)",
+      "pointer": "DELETE /v1/study/session",
+      "requirements": [
+        "§19.4"
+      ],
+      "why": "The Study screen closes: its session ends and the study_end Reflector point is queued.",
+      "value": {
+        "method": "DELETE",
+        "path": "/v1/study/session",
+        "request": null,
+        "response": null,
+        "auth": [
+          "launch",
+          "profile"
+        ],
+        "errors": [
+          "not_found"
+        ],
+        "stage": "S2",
+        "owner": "W8"
+      }
+    },
+    {
+      "target": "api/endpoints (TABLE API-27a)",
+      "pointer": "GET /v1/companion/opener",
+      "requirements": [
+        "§19.5.2"
+      ],
+      "why": "The Last time card on Home and in Study (phase 1: code-built facts and template wording).",
+      "value": {
+        "method": "GET",
+        "path": "/v1/companion/opener",
+        "request": null,
+        "response": "#/$defs/Opener",
+        "auth": [
+          "launch",
+          "profile"
+        ],
+        "errors": [
+          "not_found"
+        ],
+        "stage": "S2",
+        "owner": "W8"
+      }
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/CreateSession/properties/mode/enum/-",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "The companion's daily episode.",
+      "value": "study_companion",
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/Session/properties/mode/enum/-",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "Returned sessions stay valid.",
+      "value": "study_companion",
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/CreateSession/properties/origin/properties/kind/enum/-",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "Opened from the thread.",
+      "value": "companion",
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/Session/properties/origin/enum/-",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "Session.origin is its own enum (review B4).",
+      "value": "companion",
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/CompanionOpen",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "The open command.",
+      "value": {
+        "description": "POST /v1/companion: no body.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/CompanionSummary",
+      "requirements": [
+        "§19.3.3",
+        "§19.5.3"
+      ],
+      "why": "Its own table, never sessions.summary (review B9).",
+      "value": {
+        "description": "The companion thread's rolling summary (SPEC §19.5.3): updated, never regenerated, and written by code only from the learning events after `cursor_seq`. No free text: labels are the packs' own words.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "cursor_seq",
+          "updated_at",
+          "topics",
+          "misconceptions",
+          "next_step",
+          "episodes"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cursor_seq": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "topics": {
+            "type": "array",
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kc_id",
+                "label",
+                "sessions",
+                "last_at"
+              ],
+              "properties": {
+                "kc_id": {
+                  "type": "string",
+                  "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "sessions": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "last_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "misconceptions": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "misconception_id",
+                "label",
+                "status",
+                "updated_at"
+              ],
+              "properties": {
+                "misconception_id": {
+                  "type": "string",
+                  "pattern": "^mc\\.[a-z0-9_.]+$",
+                  "maxLength": 96
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "status": {
+                  "enum": [
+                    "suspected",
+                    "active",
+                    "resolving",
+                    "resolved"
+                  ]
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text",
+                  "reason_code",
+                  "updated_at"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "reason_code": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "episodes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/CompanionOpened",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "Open or resume, idempotent within the profile's day.",
+      "value": {
+        "description": "The reply to POST /v1/companion (SPEC §19.3.3): the day's episode of the thread, opened or resumed. Two opens on one day return the same session. The opener is delivered here only, never on the stream.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "session_id",
+          "thread_id",
+          "resumed",
+          "opener",
+          "summary"
+        ],
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "pattern": "^ses_[0-9A-HJKMNP-TV-Z]{26}$"
+          },
+          "thread_id": {
+            "type": "string",
+            "pattern": "^cth_[0-9A-HJKMNP-TV-Z]{26}$"
+          },
+          "resumed": {
+            "type": "boolean"
+          },
+          "opener": {
+            "$ref": "#/$defs/Opener"
+          },
+          "summary": {
+            "$ref": "#/$defs/CompanionSummary"
+          }
+        }
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsView/properties/companion_summary",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "The knows page shows the rolling summary under the plan's reason. Optional.",
+      "value": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/CompanionSummary"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/PlanBlock/properties/study_cards",
+      "requirements": [
+        "§19.4 plans.py",
+        "review B5"
+      ],
+      "why": "The plan's warm-up offers due Study cards.",
+      "value": {
+        "description": "Due Study cards for the warm-up (SPEC §19.4 plans.py): soonest first, only cards whose source revision still exists; opened with `open_study_deck`.",
+        "type": "array",
+        "maxItems": 10,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "deck_id",
+            "card_id"
+          ],
+          "properties": {
+            "deck_id": {
+              "type": "string",
+              "pattern": "^dek_[0-9A-HJKMNP-TV-Z]{26}$"
+            },
+            "card_id": {
+              "type": "string",
+              "pattern": "^fcd_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          }
+        }
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/endpoints (TABLE API-27a)",
+      "pointer": "POST /v1/companion",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "Open or resume today's episode.",
+      "value": {
+        "method": "POST",
+        "path": "/v1/companion",
+        "request": "#/$defs/CompanionOpen",
+        "response": "#/$defs/CompanionOpened",
+        "auth": [
+          "launch",
+          "profile"
+        ],
+        "errors": [
+          "not_found",
+          "model_unavailable",
+          "feature_disabled"
+        ],
+        "stage": "S2",
+        "owner": "W8"
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/endpoints (TABLE API-27a)",
+      "pointer": "GET /v1/companion/summary",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "The rolling summary, for the knows page and the thread.",
+      "value": {
+        "method": "GET",
+        "path": "/v1/companion/summary",
+        "request": null,
+        "response": "#/$defs/CompanionSummary",
+        "auth": [
+          "launch",
+          "profile"
+        ],
+        "errors": [
+          "not_found"
+        ],
+        "stage": "S2",
+        "owner": "W8"
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/Snapshot/properties/actions",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "The snapshot a client hydrates carries the actions, so a reconnect and a restart keep them (review B14).",
+      "value": {
+        "description": "The thread's durable buttons by action id (SPEC §19.3.3), folded from companion.action.",
+        "type": "object",
+        "maxProperties": 200,
+        "additionalProperties": {
+          "$ref": "https://jana.dev/contracts/api/events#/$defs/ev_companion_action"
+        }
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/events.schema.json",
+      "pointer": "/$defs/ev_companion_action",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "Durable actions (review B14).",
+      "value": {
+        "description": "A durable button in the companion thread (SPEC §19.3.3): emitted by the engine from a tool result, never from model text, folded into the session projection's `actions`, so it survives a reconnect and a restart.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "action_id",
+          "action",
+          "payload",
+          "label_key"
+        ],
+        "properties": {
+          "type": {
+            "const": "companion.action"
+          },
+          "action_id": {
+            "type": "string",
+            "pattern": "^act_[0-9A-HJKMNP-TV-Z]{26}$"
+          },
+          "action": {
+            "enum": [
+              "open_tutor",
+              "open_practice",
+              "open_study_job",
+              "open_add_source",
+              "open_research",
+              "open_plan",
+              "open_knows",
+              "open_study_deck"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "question": {
+                "type": "string",
+                "maxLength": 2000
+              },
+              "job_id": {
+                "type": "string",
+                "pattern": "^stj_[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "aid_id": {
+                "type": "string",
+                "pattern": "^aid_[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "deck_id": {
+                "type": "string",
+                "pattern": "^dek_[0-9A-HJKMNP-TV-Z]{26}$"
+              },
+              "kc_ids": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "type": "string",
+                  "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+                }
+              }
+            }
+          },
+          "label_key": {
+            "type": "string",
+            "maxLength": 80
+          }
+        }
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/events.schema.json",
+      "pointer": "/$defs/tutor_event/oneOf/-",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "In the tutor event union.",
+      "value": {
+        "$ref": "#/$defs/ev_companion_action"
+      },
+      "phase": 2
+    },
+    {
+      "target": "api/events.schema.json",
+      "pointer": "/$defs/status_phase/enum/-",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "The thread recalls by code before its model call.",
+      "value": "recalling",
+      "phase": 2
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/$defs/payload_plan_generated/properties/blocks/items/properties/study_cards",
+      "requirements": [
+        "§19.4 plans.py"
+      ],
+      "why": "The warm-up's Study cards survive the plan event (review B5).",
+      "value": {
+        "$ref": "#/$defs/study_cards"
+      },
+      "phase": 2
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/$defs/study_cards",
+      "requirements": [
+        "§19.4 plans.py"
+      ],
+      "why": "Shared by the event and the plan view.",
+      "value": {
+        "description": "Due Study cards of a warm-up block (SPEC §19.4).",
+        "type": "array",
+        "maxItems": 10,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "deck_id",
+            "card_id"
+          ],
+          "properties": {
+            "deck_id": {
+              "type": "string",
+              "pattern": "^dek_[0-9A-HJKMNP-TV-Z]{26}$"
+            },
+            "card_id": {
+              "type": "string",
+              "pattern": "^fcd_[0-9A-HJKMNP-TV-Z]{26}$"
+            }
+          }
+        }
+      },
+      "phase": 2
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/$defs/payload_plan_generated/properties/blocks/items/properties/reason_code/enum/-",
+      "requirements": [
+        "§19.4 plans.py"
+      ],
+      "why": "The warm-up block of due Study cards.",
+      "value": "due_reviews_study",
+      "phase": 2
+    },
+    {
+      "target": "agents/companion-turn.schema.json",
+      "pointer": "",
+      "requirements": [
+        "§19.4"
+      ],
+      "why": "The companion role's output (§19.4).",
+      "value": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://jana.dev/contracts/agents/companion-turn",
+        "title": "Companion turn",
+        "description": "One reply of the Study companion (SPEC §19.3.3, role `companion`): at most 600 characters and at most one action. `ref` is an integer from a tool result of this turn; the engine resolves it.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "action"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 600
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "ref"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "open_tutor",
+                      "open_practice",
+                      "open_study_job",
+                      "open_add_source",
+                      "open_research",
+                      "open_plan",
+                      "open_knows"
+                    ]
+                  },
+                  "ref": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "phase": 2
+    },
+    {
+      "target": "agents/router-config.schema.json",
+      "pointer": "/properties/roles/properties/companion",
+      "requirements": [
+        "§19.4 router.yaml"
+      ],
+      "why": "The companion role (fast tier, prefer cloud).",
+      "value": {
+        "$ref": "#/$defs/role"
+      },
+      "phase": 2
+    },
+    {
+      "target": "agents/router-config.schema.json",
+      "pointer": "/properties/cloud/properties/roles_allowed/items/enum/-",
+      "requirements": [
+        "§19.4 router.yaml"
+      ],
+      "why": "A companion call may run on the cloud tier (§19.6 limits what it is offered).",
+      "value": "companion",
+      "phase": 2
+    },
+    {
+      "target": "agents/role-manifest.schema.json",
+      "pointer": "/properties/toolsets/items/enum/-",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "The companion's toolset.",
+      "value": "study",
+      "phase": 2
+    },
+    {
+      "target": "registers/toolsets.json",
+      "pointer": "/toolsets/study",
+      "requirements": [
+        "§19.3.3",
+        "MEM-05",
+        "review B11"
+      ],
+      "why": "The authoritative tool register (tools/generated/register.py line 1): the companion's study toolset, every result a records-not-instructions list with per-call integer refs.",
+      "value": {
+        "tools": [
+          {
+            "name": "study_search",
+            "stage": "S2",
+            "risk": "read",
+            "executor": "host",
+            "sideEffects": false,
+            "parallelSafe": true,
+            "interactive": false,
+            "idempotent": true,
+            "dedupe": true,
+            "timeoutMs": 1000,
+            "maxResultChars": {
+              "small": 8000,
+              "full": 50000
+            },
+            "smallModelFriendly": true,
+            "subjects": [
+              "general"
+            ],
+            "levels": [
+              "O",
+              "A"
+            ],
+            "usesNetwork": false,
+            "activityLabel": "Looked in your materials"
+          },
+          {
+            "name": "progress_read",
+            "stage": "S2",
+            "risk": "read",
+            "executor": "host",
+            "sideEffects": false,
+            "parallelSafe": true,
+            "interactive": false,
+            "idempotent": true,
+            "dedupe": true,
+            "timeoutMs": 1000,
+            "maxResultChars": {
+              "small": 8000,
+              "full": 50000
+            },
+            "smallModelFriendly": true,
+            "subjects": [
+              "general"
+            ],
+            "levels": [
+              "O",
+              "A"
+            ],
+            "usesNetwork": false,
+            "activityLabel": "Looked at your progress"
+          },
+          {
+            "name": "plan",
+            "stage": "S2",
+            "risk": "read",
+            "executor": "host",
+            "sideEffects": false,
+            "parallelSafe": true,
+            "interactive": false,
+            "idempotent": true,
+            "dedupe": true,
+            "timeoutMs": 1000,
+            "maxResultChars": {
+              "small": 8000,
+              "full": 50000
+            },
+            "smallModelFriendly": true,
+            "subjects": [
+              "general"
+            ],
+            "levels": [
+              "O",
+              "A"
+            ],
+            "usesNetwork": false,
+            "activityLabel": "Looked at your plan"
+          },
+          {
+            "name": "make_aid",
+            "stage": "S2",
+            "risk": "memory_write",
+            "executor": "host",
+            "sideEffects": true,
+            "parallelSafe": false,
+            "interactive": false,
+            "idempotent": false,
+            "dedupe": false,
+            "timeoutMs": 1000,
+            "maxResultChars": {
+              "small": 8000,
+              "full": 50000
+            },
+            "smallModelFriendly": true,
+            "subjects": [
+              "general"
+            ],
+            "levels": [
+              "O",
+              "A"
+            ],
+            "usesNetwork": false,
+            "activityLabel": "Started a study aid"
+          },
+          {
+            "name": "start_research",
+            "stage": "S2",
+            "risk": "read",
+            "executor": "host",
+            "sideEffects": false,
+            "parallelSafe": true,
+            "interactive": false,
+            "idempotent": true,
+            "dedupe": true,
+            "timeoutMs": 1000,
+            "maxResultChars": {
+              "small": 8000,
+              "full": 50000
+            },
+            "smallModelFriendly": true,
+            "subjects": [
+              "general"
+            ],
+            "levels": [
+              "O",
+              "A"
+            ],
+            "usesNetwork": false,
+            "activityLabel": "Opened research"
+          }
+        ]
+      },
+      "phase": 2
+    },
+    {
+      "target": "registers/toolsets.json",
+      "pointer": "/roleGrants/companion",
+      "requirements": [
+        "§19.3.3"
+      ],
+      "why": "Granted to the companion role only.",
+      "value": [
+        "memory_recall",
+        "session_recall",
+        "study_search",
+        "progress_read",
+        "plan",
+        "make_aid",
+        "start_research"
+      ],
+      "phase": 2
+    },
+    {
+      "target": "data/schema.sql",
+      "pointer": "companion_episodes, companion_summary",
+      "requirements": [
+        "§19.3.3",
+        "DAT-12"
+      ],
+      "why": "(storage) The thread's daily episodes (UNIQUE profile_day: concurrent opens return one row) and its rolling summary; agent_core/store/migration_v20.py adds them to a v19 profile.",
+      "value": "CREATE TABLE companion_episodes (...); CREATE TABLE companion_summary (...)",
+      "phase": 2
+    },
+    {
+      "target": "trace/turn-trace.schema.json",
+      "pointer": "/$defs/role/enum/-",
+      "requirements": [
+        "§19.4",
+        "OBS-03"
+      ],
+      "why": "Every turn's trace lists the role manifests (OBS-03), and a companion turn's calls are traced by role.",
+      "value": "companion",
+      "phase": 2
+    },
+    {
+      "target": "trace/turn-trace.schema.json",
+      "pointer": "/properties/job_name/enum/-",
+      "requirements": [
+        "§19.5.2"
+      ],
+      "why": "The opener's wording call runs as a job outside a turn, as the research conversation's does (§19.5.2).",
+      "value": "companion",
+      "phase": 2
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/consent_scope/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Personal tutor memory online: its own consent (JM-D21).",
+      "value": "tutor_memory_online",
+      "phase": 3
+    },
+    {
+      "target": "api/events.schema.json",
+      "pointer": "/$defs/online_feature/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Its own switch in Settings → Online features (§19.6).",
+      "value": "tutor_memory_online",
+      "phase": 3
+    },
+    {
+      "target": "api/events.schema.json",
+      "pointer": "/$defs/ev_egress_notice/properties/data_classes/items/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "The data class TABLE DAT-18a's new row names: screened notes and code-built evidence lines (§19.6).",
+      "value": "tutor_notes",
+      "phase": 3
+    },
+    {
+      "target": "trace/turn-trace.schema.json",
+      "pointer": "/properties/connectivity/properties/features_used/items/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "The trace lists every online feature (OBS-03).",
+      "value": "tutor_memory_online",
+      "phase": 3
+    },
+    {
+      "target": "trace/turn-trace.schema.json",
+      "pointer": "/properties/connectivity/properties/egress_bytes/propertyNames/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Egress bytes by feature.",
+      "value": "tutor_memory_online",
+      "phase": 3
+    },
+    {
+      "target": "trace/telemetry.schema.json",
+      "pointer": "/properties/series/items/properties/labels/properties/feature/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Telemetry labels by online feature.",
+      "value": "tutor_memory_online",
+      "phase": 3
+    },
+    {
+      "target": "trace/telemetry.schema.json",
+      "pointer": "/properties/labels/properties/feature/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Telemetry labels by online feature.",
+      "value": "tutor_memory_online",
+      "phase": 3
+    },
+    {
+      "target": "ops/governance-records.schema.json",
+      "pointer": "/$defs/dpia/properties/features/items/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "A DPIA record may name the feature (PRV-08).",
+      "value": "tutor_memory_online",
+      "phase": 3
+    },
+    {
+      "target": "ops/dpia-list.schema.json",
+      "pointer": "/properties/approved/items/properties/features/items/enum/-",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "The signed DPIA list may approve it (PRV-08); its gate is the cloud tier's.",
+      "value": "tutor_memory_online",
+      "phase": 3
+    },
+    {
+      "target": "policies/online-features.json",
+      "pointer": "/tutor_memory_online",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "TABLE ARC-07a's row: through the gateway with the cloud tier's payload classes; queued never.",
+      "value": {
+        "stage": "S2",
+        "service": "gateway",
+        "payload_classes": [
+          "cloud_prompt",
+          "service_auth",
+          "consent_withdrawal"
+        ],
+        "data_classes": [
+          "tutor_notes",
+          "learner_summary"
+        ],
+        "queued": "never",
+        "consent": "profile",
+        "authenticated": true,
+        "dpia_gate": "cloud_tier",
+        "destination_label": "Online tutor memory"
+      },
+      "phase": 3
+    },
+    {
+      "target": "agents/router-config.schema.json",
+      "pointer": "/properties/cloud/properties/roles_allowed/items/enum/-",
+      "requirements": [
+        "§19.4",
+        "JM-D21"
+      ],
+      "why": "The Reflector may run on the cloud tier while `tutor_memory_online` is effective (§19.4 router.yaml).",
+      "value": "reflector",
+      "phase": 3
+    },
+    {
+      "target": "agents/router-config.schema.json",
+      "pointer": "/properties/cloud/properties/roles_allowed/items/enum/-",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "Its input already left the device as the turn itself; no new data class leaves (§19.5.5).",
+      "value": "checkin",
+      "phase": 3
+    },
+    {
+      "target": "trace/turn-trace.schema.json",
+      "pointer": "/$defs/role/enum/-",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "The extractor's call is traced by role.",
+      "value": "checkin",
+      "phase": 3
+    },
+    {
+      "target": "agents/commitment.schema.json",
+      "pointer": "",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "The extractor's output (§19.5.5).",
+      "value": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://jana.dev/contracts/agents/commitment",
+        "title": "Commitment",
+        "description": "The check-in extractor's reply (SPEC §19.5.5, role `checkin`): at most one commitment proposed from the student's own text of one companion turn. Code decides what is kept: confidence at least 0.6, a due day today or within 14 days, and a text that passes the capture filter and the write policy.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "found",
+          "kind",
+          "subject",
+          "due_day",
+          "text",
+          "confidence"
+        ],
+        "properties": {
+          "found": {
+            "type": "boolean"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "event_checkin",
+                  "deadline_check",
+                  "open_loop"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mathematics",
+                  "physics",
+                  "chemistry",
+                  "biology",
+                  "accounting"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "due_day": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 140
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "phase": 3
+    },
+    {
+      "target": "learning/learner-model.schema.json",
+      "pointer": "/$defs/note/properties/confidence",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Derived by the notes projection: supported when the cited evidence spans two sessions (JM-D28).",
+      "value": {
+        "enum": [
+          "tentative",
+          "supported"
+        ]
+      },
+      "phase": 3
+    },
+    {
+      "target": "learning/learner-model.schema.json",
+      "pointer": "/$defs/note/properties/fading",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Derived: no update and no newer cited evidence for 90 days.",
+      "value": {
+        "type": "boolean"
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsNote/properties/confidence",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "The knows page labels a note tentative or supported (§19.5.6).",
+      "value": {
+        "enum": [
+          "tentative",
+          "supported"
+        ]
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsNote/properties/fading",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "And fading after 90 days.",
+      "value": {
+        "type": "boolean"
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsNote/properties/recall_sessions",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "The number of sessions the tutor recalled it in (note_recalls, device-local).",
+      "value": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsNote/properties/withheld_online",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "The note matched the egress scrub and is withheld from the cloud variant (§19.6: flagged on the knows page).",
+      "value": {
+        "type": "boolean"
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/Commitment",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "A check-in (§19.3.4).",
+      "value": {
+        "description": "A check-in the tutor will ask about (SPEC §19.3.4): proposed by the extractor from the student's own words or by the heartbeat, delivered at most one a day. `text` is the question in Jana's words, never a quote. Device-local (JM-D27).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "commitment_id",
+          "kind",
+          "subject",
+          "kc_id",
+          "text",
+          "due_from",
+          "due_until",
+          "dedupe_key",
+          "confidence",
+          "state",
+          "source",
+          "source_session_id",
+          "created_at",
+          "shown_at",
+          "resolved_at"
+        ],
+        "properties": {
+          "commitment_id": {
+            "type": "string",
+            "pattern": "^cmt_[0-9A-HJKMNP-TV-Z]{26}$"
+          },
+          "kind": {
+            "enum": [
+              "event_checkin",
+              "deadline_check",
+              "open_loop",
+              "due_reviews",
+              "pack_ready"
+            ]
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mathematics",
+                  "physics",
+                  "chemistry",
+                  "biology",
+                  "accounting"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kc_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140
+          },
+          "due_from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "due_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dedupe_key": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "shown",
+              "opened",
+              "dismissed",
+              "answered",
+              "expired",
+              "detached"
+            ]
+          },
+          "source": {
+            "enum": [
+              "extractor",
+              "heartbeat"
+            ]
+          },
+          "source_session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "shown_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/CheckinsDue",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "The due query's reply.",
+      "value": {
+        "description": "GET /v1/checkins/due (SPEC §19.5.5): at most one check-in for today, chosen in one transaction.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "$ref": "#/$defs/Commitment"
+            }
+          }
+        }
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/endpoints (TABLE API-27a)",
+      "pointer": "GET /v1/checkins/due",
+      "requirements": [
+        "§19.3.4"
+      ],
+      "why": "The Home card's check-in for today, if any.",
+      "value": {
+        "method": "GET",
+        "path": "/v1/checkins/due",
+        "request": null,
+        "response": "#/$defs/CheckinsDue",
+        "auth": [
+          "launch",
+          "profile"
+        ],
+        "errors": [
+          "not_found"
+        ],
+        "stage": "S2",
+        "owner": "W8"
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/endpoints (TABLE API-27a)",
+      "pointer": "POST /v1/checkins/{commitment_id}/dismiss",
+      "requirements": [
+        "§19.3.4"
+      ],
+      "why": "Dismissed; its dedupe key is remembered for 7 days.",
+      "value": {
+        "method": "POST",
+        "path": "/v1/checkins/{commitment_id}/dismiss",
+        "request": null,
+        "response": "#/$defs/Commitment",
+        "auth": [
+          "launch",
+          "profile"
+        ],
+        "errors": [
+          "not_found"
+        ],
+        "stage": "S2",
+        "owner": "W8"
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/endpoints (TABLE API-27a)",
+      "pointer": "POST /v1/checkins/{commitment_id}/open",
+      "requirements": [
+        "§19.3.4"
+      ],
+      "why": "Opens the thread with the check-in as the opener's checkin_id.",
+      "value": {
+        "method": "POST",
+        "path": "/v1/checkins/{commitment_id}/open",
+        "request": null,
+        "response": "#/$defs/CompanionOpened",
+        "auth": [
+          "launch",
+          "profile"
+        ],
+        "errors": [
+          "not_found",
+          "model_unavailable",
+          "feature_disabled"
+        ],
+        "stage": "S2",
+        "owner": "W8"
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/Settings/properties/checkin_notifications",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "Desktop notifications for check-ins, off by default (JM-D24).",
+      "value": {
+        "type": "boolean",
+        "default": false
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/SettingsPatch/properties/checkin_notifications",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "Its patch.",
+      "value": {
+        "type": "boolean"
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/events.schema.json",
+      "pointer": "/$defs/ev_settings_changed/properties/keys/items/enum/-",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "A settings change names it.",
+      "value": "checkin_notifications",
+      "phase": 3
+    },
+    {
+      "target": "learning/learning-event.schema.json",
+      "pointer": "/$defs/payload_setting_change/properties/setting/enum/-",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "A setting_change event may carry it.",
+      "value": "checkin_notifications",
+      "phase": 3
+    },
+    {
+      "target": "learning/learner-model.schema.json",
+      "pointer": "/$defs/profile/properties/student_settings/properties/checkin_notifications",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "The learner model's settings carry every preference.",
+      "value": {
+        "type": "boolean"
+      },
+      "phase": 3
+    },
+    {
+      "target": "data/schema.sql",
+      "pointer": "settings, consents, online_features, companion_episodes, commitments, note_recalls",
+      "requirements": [
+        "§19.3.4",
+        "§19.3.5",
+        "DAT-12"
+      ],
+      "why": "(storage) agent_core/store/migration_v21.py (learner) and migration_device_v3.py (device) carry a profile and a device forward.",
+      "value": "settings key CHECK + checkin_notifications; consents scope CHECK + tutor_memory_online; online_features CHECK + tutor_memory_online; companion_episodes.checkin_id; CREATE TABLE commitments (...); CREATE TABLE note_recalls (...)",
+      "phase": 3
+    },
+    {
+      "target": "agents/router-config.schema.json",
+      "pointer": "/properties/auxiliary/properties/checkin",
+      "requirements": [
+        "§19.3.4",
+        "§19.5.5"
+      ],
+      "why": "The check-in extractor's one fast-model call, an auxiliary slot like research_chat (§19.5.5, MDL-06).",
+      "value": {
+        "$ref": "#/$defs/slot"
+      },
+      "phase": 3
+    }
+  ]
+}

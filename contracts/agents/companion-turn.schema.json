@@ -1,0 +1,59 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://jana.dev/contracts/agents/companion-turn",
+ "title": "Companion turn",
+ "description": "One reply of the Study companion (SPEC §19.3.3, role `companion`): at most 600 characters and at most one action. `ref` is an integer from a tool result of this turn; the engine resolves it.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "text",
+  "action"
+ ],
+ "properties": {
+  "text": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 600
+  },
+  "action": {
+   "anyOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "ref"
+     ],
+     "properties": {
+      "kind": {
+       "enum": [
+        "open_tutor",
+        "open_practice",
+        "open_study_job",
+        "open_add_source",
+        "open_research",
+        "open_plan",
+        "open_knows"
+       ]
+      },
+      "ref": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 64
+        },
+        {
+         "type": "null"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "type": "null"
+    }
+   ]
+  }
+ }
+}

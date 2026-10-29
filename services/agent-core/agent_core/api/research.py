@@ -26,7 +26,7 @@ from agent_core.api.core import CoreService
 from agent_core.api.errors import ApiError, cloud_refusal
 from agent_core.contracts import errors as contract_errors
 from agent_core.engine.events import new_id
-from agent_core.engine.research_chat import ChatError, Start, next_turn
+from agent_core.engine.research_chat import ChatError, Start, learner_profile, next_turn
 from agent_core.engine.research_links import checked_links
 from agent_core.engine.safety import redact_personal
 from agent_core.engine.study import StudyDesk, StudyError, checked
@@ -329,8 +329,16 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
             router = core.research_router() if core.research_router is not None else None
             if router is None:
                 raise ApiError("model_unavailable")
+            # SPEC §19.4: the learner's level, subjects and bands go in as the profile section; an O profile's level
+            # is known by code (JM-D29). A profile that cannot be read leaves the conversation as it was.
             try:
-                return await next_turn(router, subject, body["history"], body["answer"], body["skip"])
+                content = core.study.content() if core.study.content is not None else None
+                profile = learner_profile(d.conn, content, core.settings, core._today())
+            except Exception:
+                profile = None
+            try:
+                return await next_turn(router, subject, body["history"], body["answer"], body["skip"],
+                                       profile=profile)  # fmt: skip
             except ChatError as error:
                 raise ApiError("model_unavailable", details={"reason": str(error)}) from None
 

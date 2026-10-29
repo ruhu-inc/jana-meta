@@ -8,6 +8,10 @@ fn main() {
             "pick_profile_archive",
             "update_recovery",
             "rollback_update",
+            "checkin_permission",
+            "notify_checkin",
+            "cancel_checkins",
+            "take_checkin_click",
         ]),
     ))
     .expect("tauri build configuration is valid");

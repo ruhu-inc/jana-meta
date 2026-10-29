@@ -7,6 +7,7 @@
 // flags. Every correction answers with the view as it is afterwards. These commands are the G90 contract additions
 // (proposed, D72): until the command contract carries them, the types below mirror the proposal and `readKnows` checks
 // a reply at the boundary. Everything here belongs to the unlocked profile and is dropped with it (SEC-19).
+import { errors, type api_commands } from "@jana/contracts-ts/client";
 import { clientId } from "./ids.js";
 import type { ProfileController } from "./profiles.js";
 import { markForgotten } from "./reducer.js";
@@ -44,6 +45,29 @@ export interface KnowsNote {
   subject: string | null;
   created_ts: number;
   updated_ts: number;
+  /** Derived by the core's notes projection (SPEC §19.3.5, §19.5.6), never by a model: `supported` once the note's cited
+   * evidence spans two sessions. Read through `noteLifecycle` (an older core sends none of these). */
+  confidence?: "tentative" | "supported";
+  /** No new evidence and no update for 90 days. */
+  fading?: boolean;
+  /** How many sessions the tutor recalled the note in (device-local, JM-D27). */
+  recall_sessions?: number;
+  /** The scrub kept the note out of the online tutor's records (§19.6): it is used on this computer only. */
+  withheld_online?: boolean;
+}
+
+/** A note's lifecycle as the knows page shows it (SPEC §19.5.6), with the defaults for a field the core did not send. */
+export interface NoteLifecycle {
+  confidence: "tentative" | "supported";
+  fading: boolean;
+  recall_sessions: number;
+  withheld_online: boolean;
+}
+
+export function noteLifecycle(note: KnowsNote): NoteLifecycle {
+  return {
+    confidence: note.confidence ?? "tentative", fading: note.fading ?? false, recall_sessions: note.recall_sessions ?? 0, withheld_online: note.withheld_online ?? false,
+  };
 }
 
 export type Band = "not_started" | "learning" | "secure";
@@ -109,7 +133,26 @@ export interface KnowsRecord { kind: (typeof RECORD_KINDS)[number]; count: numbe
 export const PLAN_REASONS = ["revisit_moved_on", "prerequisite", "weak_high_value", "mock", "mock_follow_up"] as const;
 export type KnowsPlanReason = (typeof PLAN_REASONS)[number];
 
+/** One thing the learner did in Study (SPEC §19.3.2), as evidence the tutor saw: never mastery (JM-D26). `statement`
+ * is the pack's words for the topic the activity's words named, when one matched; `result` is the outcome or rating. */
+export interface KnowsActivity {
+  activity: "quiz_item" | "card_review" | "aid_made";
+  kc_id: string | null;
+  statement: string | null;
+  result: string | null;
+  aid_kind: string | null;
+  count: number | null;
+  day: string;
+}
+const ACTIVITY_KINDS = ["quiz_item", "card_review", "aid_made"] as const;
+
+/** The companion thread's rolling summary (SPEC §19.3.3, §19.5.3): written by code only, read on this computer. */
+export type KnowsCompanionSummary = api_commands.CompanionSummary;
+
 export interface KnowsReply {
+  activity?: KnowsActivity[];
+  /** The companion thread's rolling summary, when the thread has one (SPEC §19.3.3). */
+  companion_summary?: KnowsCompanionSummary | null;
   records?: KnowsRecord[];
   plan_reason?: KnowsPlanReason | null;
   profile_id: string;
@@ -129,7 +172,10 @@ const oneOf = (v: unknown, values: readonly unknown[]) => values.includes(v);
 const isNote = (v: unknown): v is KnowsNote =>
   isObject(v) && isString(v.note_id) && /^mem_[0-9A-HJKMNP-TV-Z]{26}$/.test(v.note_id) && isString(v.text) && oneOf(v.status, ["active", "pending_review"]) &&
   oneOf(v.source, ["reflector", "student", "corrected"]) && typeof v.flagged === "boolean" && (v.subject === null || isString(v.subject)) &&
-  Number.isInteger(v.created_ts) && Number.isInteger(v.updated_ts);
+  Number.isInteger(v.created_ts) && Number.isInteger(v.updated_ts) &&
+  (v.confidence === undefined || oneOf(v.confidence, ["tentative", "supported"])) && (v.fading === undefined || typeof v.fading === "boolean") &&
+  (v.recall_sessions === undefined || (Number.isSafeInteger(v.recall_sessions) && (v.recall_sessions as number) >= 0)) &&
+  (v.withheld_online === undefined || typeof v.withheld_online === "boolean");
 const isVersion = (v: unknown) => isString(v) && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(v);
 const isReview = (r: unknown): r is KnowsReview =>
   isObject(r) && isString(r.review_id) && /^rvw_[0-9A-HJKMNP-TV-Z]{26}$/.test(r.review_id) && oneOf(r.kind, ["replace", "drop"]) &&
@@ -158,6 +204,13 @@ export function knowsReplyProblems(value: unknown): string[] {
     if (Array.isArray(value.records)) check(value.records.length <= 10 && new Set(value.records.map((r) => isObject(r) ? r.kind : null)).size === value.records.length, "records");
   }
   check(value.plan_reason === undefined || value.plan_reason === null || oneOf(value.plan_reason, PLAN_REASONS), "plan_reason");
+  const orNull = (v: unknown, ok: (x: unknown) => boolean) => v === null || ok(v);
+  if (value.activity !== undefined) {
+    list("activity", (a) => isObject(a) && oneOf(a.activity, ACTIVITY_KINDS) && orNull(a.kc_id, isString) && orNull(a.statement, isString) && orNull(a.result, isString)
+      && orNull(a.aid_kind, isString) && orNull(a.count, Number.isSafeInteger) && isString(a.day) && /^\d{4}-\d{2}-\d{2}$/.test(a.day));
+  }
+  check(value.companion_summary === undefined || value.companion_summary === null
+    || errors("api/commands#/$defs/CompanionSummary", value.companion_summary).length === 0, "companion_summary");
   check(typeof value.memory_saving === "boolean", "memory_saving");
   const sharing = value.sharing;
   check(sharing === null || (isObject(sharing) && ["backup", "devices", "parent_view", "cloud_tutor"].every((f) => typeof sharing[f] === "boolean")), "sharing");
@@ -174,6 +227,10 @@ export function readKnows(value: unknown): KnowsReply {
 // --- the page's view -------------------------------------------------------------------------------------------------
 
 export interface KnowsView {
+  /** What the learner did in Study, newest first (SPEC §19.3.2). */
+  activity?: KnowsActivity[];
+  /** The companion thread's rolling summary (SPEC §19.3.3), or null when there is none yet. */
+  companion_summary?: KnowsCompanionSummary | null;
   records?: KnowsRecord[];
   plan_reason?: KnowsPlanReason | null;
   status: "idle" | "loading" | "ready" | "failed";
@@ -210,7 +267,8 @@ export function knowsViewOf(reply: KnowsReply): KnowsView {
   return {
     status: "ready", notes: [...reply.notes].sort(newestFirst), about: reply.about === null ? null : { ...reply.about, subjects: [...reply.about.subjects] },
     sharing: reply.sharing, memory_saving: reply.memory_saving, kcs: [...reply.kcs], misconceptions: [...reply.misconceptions],
-    records: [...(reply.records ?? [])], plan_reason: reply.plan_reason ?? null,
+    records: [...(reply.records ?? [])], plan_reason: reply.plan_reason ?? null, activity: [...(reply.activity ?? [])],
+    ...(reply.companion_summary !== undefined ? { companion_summary: reply.companion_summary } : {}),
     preferences: [...reply.preferences], reviews: [...reply.reviews], forgotten: null, error: null, errorOn: null, changed: null,
   };
 }

@@ -1,6 +1,6 @@
 // The normalised client store (UIA-01): a delta touches one record, so one component re-renders. Components select
 // records by id; no component subscribes to a whole slice. The store holds the unlocked profile's data only.
-import type { Card, CardAbout, ContentBlock, EvStatus, StepError, Usage, VisualsVisualSpecResolved } from "@jana/contracts-ts";
+import type { Card, CardAbout, ContentBlock, EvCompanionAction, EvStatus, StepError, Usage, VisualsVisualSpecResolved } from "@jana/contracts-ts";
 import type { ConnectionState } from "./stream/client.js";
 
 export type { ConnectionState };
@@ -195,6 +195,10 @@ export interface MemoryRec {
   seq: number;
 }
 
+/** A durable button of the companion thread (SPEC §19.3.3): the `companion.action` event as the engine sent it, kept
+ * by its action id so it survives a reconnect and a restart (the core's snapshot carries the same map as `actions`). */
+export type ActionRec = EvCompanionAction & { session_id: string };
+
 export interface Cursor {
   epoch: string;
   seq: number;
@@ -210,11 +214,13 @@ export interface Store {
   boards: Record<string, BoardRec>;
   visuals: Record<string, VisualRec>;
   memory: Record<string, MemoryRec>;
+  /** The companion thread's durable buttons by action id (SPEC §19.3.3). */
+  actions: Record<string, ActionRec>;
   cursors: Record<string, Cursor>;
 }
 
 export function emptyStore(): Store {
-  return { connection: {}, sessions: {}, turns: {}, messages: {}, parts: {}, requests: {}, boards: {}, visuals: {}, memory: {}, cursors: {} };
+  return { connection: {}, sessions: {}, turns: {}, messages: {}, parts: {}, requests: {}, boards: {}, visuals: {}, memory: {}, actions: {}, cursors: {} };
 }
 
 export function connectionKey(sessionId: string | null): string {

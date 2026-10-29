@@ -484,12 +484,16 @@ fn test_arc23_core_finishes_its_exit_steps() {
 }
 
 /// The commands the webview may invoke: exactly those the UI calls (`apps/desktop/src/launch.ts`).
-const UI_COMMANDS: [&str; 5] = [
+const UI_COMMANDS: [&str; 9] = [
     "launch_info",
     "pick_install_source",
     "pick_profile_archive",
     "update_recovery",
     "rollback_update",
+    "checkin_permission",
+    "notify_checkin",
+    "cancel_checkins",
+    "take_checkin_click",
 ];
 
 /// The identifiers in `text` after each `marker`, up to `end`.
@@ -526,6 +530,22 @@ fn update_recovery() -> &'static str {
 }
 #[tauri::command]
 fn rollback_update() -> &'static str {
+    "ok"
+}
+#[tauri::command]
+fn checkin_permission() -> &'static str {
+    "ok"
+}
+#[tauri::command]
+fn notify_checkin() -> &'static str {
+    "ok"
+}
+#[tauri::command]
+fn cancel_checkins() -> &'static str {
+    "ok"
+}
+#[tauri::command]
+fn take_checkin_click() -> &'static str {
     "ok"
 }
 #[tauri::command]
@@ -624,6 +644,10 @@ fn sec11_capabilities_minimal() {
             pick_profile_archive,
             update_recovery,
             rollback_update,
+            checkin_permission,
+            notify_checkin,
+            cancel_checkins,
+            take_checkin_click,
             not_declared
         ])
         .build(tauri::generate_context!())
@@ -637,6 +661,7 @@ fn sec11_capabilities_minimal() {
     for command in [
         "not_declared",
         "plugin:dialog|open",
+        "plugin:notification|notify",
         "plugin:window|close",
         "plugin:event|listen",
     ] {

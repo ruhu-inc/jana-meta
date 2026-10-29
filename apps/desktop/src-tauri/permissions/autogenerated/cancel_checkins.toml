@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cancel-checkins"
+description = "Enables the cancel_checkins command without any pre-configured scope."
+commands.allow = ["cancel_checkins"]
+
+[[permission]]
+identifier = "deny-cancel-checkins"
+description = "Denies the cancel_checkins command without any pre-configured scope."
+commands.deny = ["cancel_checkins"]

@@ -383,6 +383,9 @@ class Engine(Coordination, Offers, Predictions):
         # The installed packs' search index (CUR-30, MEM-21): bound by the app; an engine without one offers neither
         # knowledge tool and grounds no topic context.
         self.knowledge: KnowledgeTools | None = None
+        # A `study_companion` session's companion context and study tools (SPEC §19.4, W8): set by the core.
+        self.companion: Any = None
+        self.study_tools: Any = None
         deps.executor.host_executors["skill"] = self._skill
         # PRM-19: the one trusted wrapper, with a nonce drawn per session; PRM-16, PRM-17: reminders and notices.
         self.app_events = AppEvents(secrets.token_hex(8))
@@ -465,13 +468,23 @@ class Engine(Coordination, Offers, Predictions):
         the only candidate left): `memory_recall` is then refused (MEM-13, MEM-20)."""
         return self.state.hardware_class == "cloud" or self._call_cloud
 
+    def _memory_online(self) -> bool:
+        """`tutor_memory_online` is effective for this session's profile (SPEC §19.6, W8 phase 3): a cloud call then
+        carries the scrubbed cloud_notes block and may call `memory_recall`, whose answer is scrubbed the same way."""
+        return self.memory is not None and self.memory.memory_online()
+
     def _released(self) -> frozenset[str]:
         """The early-carried tools this session offers: the memory reads once bound, never `memory_recall` on a cloud
         call (MEM-13, MEM-20). `memory_note` and `progress_update` are released for the engine's own calls; no
         model's manifest and grant together list them."""
         if self.memory is None:
             return frozenset()
-        return MEMORY_TOOLS - ({"memory_recall"} if self._cloud() else set())
+        released = MEMORY_TOOLS - ({"memory_recall"} if self._cloud() and not self._memory_online() else set())
+        if self.study_tools is not None:  # a companion session (SPEC §19.3.3): its study toolset
+            from agent_core.engine.companion import STUDY_TOOLS
+
+            released |= frozenset(STUDY_TOOLS)
+        return released
 
     def forget_note(self, note_id: str) -> bool:
         """A note was forgotten: it leaves this session's frozen snapshot, and the next prepare renders without it
@@ -597,6 +610,28 @@ class Engine(Coordination, Offers, Predictions):
                 if stopped is not None:
                     return stopped
                 return await self._student_turn(turn, text, intent, show_step, source)
+            except Exception:
+                self._finish_crashed(turn)
+                raise
+
+    async def companion_turn(self, text: str, ids: TurnIds | None = None,
+                             source: str = "student_text") -> TurnResult:  # fmt: skip
+        """A message in the Study companion's thread (SPEC §19.5.1): the input-guard role and the input guard with its
+        distress screening first, exactly as for a tutoring message; then the companion's own turn
+        (`engine.companion.run_turn`). The only branch the companion has in this module."""
+        turn = self._begin("ask", ids)
+        with turn_scope(turn.turn_id):
+            try:
+                model = await self._guard_model(text, question=True)
+                stopped, text = self._intake(turn, text, source, model)
+                if stopped is not None:
+                    return stopped
+                from agent_core.engine.companion import run_turn
+
+                if self.study_tools is not None:
+                    self.study_tools.new_turn()
+                result: TurnResult = await run_turn(self, turn, text)
+                return result
             except Exception:
                 self._finish_crashed(turn)
                 raise
@@ -2214,6 +2249,8 @@ class Engine(Coordination, Offers, Predictions):
             messages = [system, *[_to_provider(m) for m in self._sent_transcript(sent)], *tail]
         if not cloud:
             return messages
+        if self._memory_online():  # §19.6: recall results were answered under the same scrub; they stay
+            return Prepared(messages, list(self._call_tools), self._sketch_offer())
         withheld = [replace(m, content=RECALL_WITHHELD) if m.role == "tool" and m.name == "memory_recall" else m
                     for m in messages]  # fmt: skip
         return Prepared(withheld, [t for t in self._call_tools if t.name != "memory_recall"], self._sketch_offer())
@@ -2248,8 +2285,9 @@ class Engine(Coordination, Offers, Predictions):
         """A model call leaving the device is shown while it runs (ARC-10, API-15, MDL-24): the online tier, on any
         class where an adult enabled it, and below the minimum laptop (PLT-29) the same notice as everywhere else. A
         cloud call the network blocked says so, and the turn goes on locally with one notice."""
+        classes = [*CLOUD_DATA_CLASSES, *(["tutor_notes"] if self._memory_online() else [])]  # §19.6
         self.events.emit({"type": "egress.notice", "feature": "cloud_tier", "state": state,
-                          "destination_label": CLOUD_LABEL, "data_classes": list(CLOUD_DATA_CLASSES)})  # fmt: skip
+                          "destination_label": CLOUD_LABEL, "data_classes": classes})  # fmt: skip
         if state == "blocked":
             self._cloud_notice("cloud_unavailable_using_local")
 
@@ -2887,10 +2925,17 @@ class Engine(Coordination, Offers, Predictions):
         local, cloud = self._learner_block("local"), self._learner_block("cloud")
         system = messages[0]
         content = system.content
-        if local is not None and cloud is not None and local.text:
-            content = content.replace(local.text, cloud.text)
+        online = self._memory_online()  # the cloud block is then the scrubbed cloud_notes variant (§19.6)
+        mark = "\x00learner-block\x00"
+        if local is not None and cloud is not None:
+            for text in (local.text, cloud.text):  # a cloud-class session's prompt already holds the cloud block
+                if text:
+                    content = content.replace(text, mark)
         content = _NOTES_REGION.sub("", content)
-        content = "\n".join(line for line in content.split("\n") if "`memory_recall`" not in line)
+        if cloud is not None:
+            content = content.replace(mark, cloud.text)
+        if not online:
+            content = "\n".join(line for line in content.split("\n") if "`memory_recall`" not in line)
         return [replace(system, content=content), *messages[1:]]
 
     # --- learning evidence (LRN-01, G54) ----------------------------------------------------------------------

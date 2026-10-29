@@ -72,3 +72,52 @@ methods:
   expand_first: "opening the brackets first"
   givens_formula: "putting the given values straight into a formula"
   other_formula: "a different formula that also works"
+# The Last time card on Home and in Study (SPEC §19.5.2, W8 phase 1): facts chosen by code, worded here. Every number
+# is a fact beside its label; the date is the session's own day. `modes` says where a session of each mode happened.
+companion:
+  opener:
+    first_time: "When you've studied here, this card will say where you left off."
+    last_time: "Last time you worked on {subject} {where} {when}"
+    due_only: "{facts}."
+    pack_ready: "a research pack you asked for is ready in Study"
+    due: "{count} cards are due"
+    due_one: "1 card is due"
+    exam: "your exam is in {days} days"
+    exam_one: "your exam is tomorrow"
+    exam_today: "your exam is today"
+    joiner: " and "
+    when_today: "today"
+    when_date: "on {date}"
+    no_subject: "your studies"
+    no_subject_study: "your own materials"
+    # SPEC §19.5.5 (phase 3): a check-in opens the thread with its own question, already in Jana's words.
+    checkin: "{question}"
+    modes:
+      guided: "with the tutor"
+      solution: "with the tutor"
+      check_working: "checking your working"
+      learn: "in a lesson"
+      practice: "in practice"
+      mock: "on a mock exam"
+      revision: "in revision"
+      diagnostic: "on a placement check"
+      mastery_check: "on a mastery check"
+      review: "in a review"
+      study: "in Study"
+      study_companion: "with your tutor in Study"
+      other: "here"
+  # The thread's engine-written turns (SPEC §19.5.1, phase 2): homework goes to the guided tutor, material to the study
+  # area, and a reply that fails its gates twice is this canned line. No numbers.
+  turn:
+    to_tutor: "That one is for the tutor: they'll work through it with you step by step. Open it below."
+    to_study: "That looks like material to study from. Add it to Study and I can help you work through it."
+    canned: "Sorry, I couldn't put that together just now. Could you ask me again in a different way?"
+  # Check-ins (SPEC §19.5.5, phase 3): the heartbeat's questions and every desktop notification's body, one per kind,
+  # word for word the app's home.checkin.notify.* (the shell's checkins.rs is tested against those). Never the
+  # check-in's own text; no numbers, no names.
+  checkin:
+    event_checkin: "Your tutor would like to hear how it went."
+    deadline_check: "Your tutor has a question about something due today."
+    open_loop: "Your tutor has a question about something you left open."
+    due_reviews: "You have review cards due today."
+    pack_ready: "A research pack you asked for is ready."

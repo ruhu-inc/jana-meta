@@ -72,6 +72,30 @@
     "origin": "synthesised"
   },
   {
+    "file": "agents/commitment/invalid/unknown_property.json",
+    "contract": "agents/commitment",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "agents/commitment/valid/minimal.json",
+    "contract": "agents/commitment",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "agents/companion-turn/invalid/unknown_property.json",
+    "contract": "agents/companion-turn",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "agents/companion-turn/valid/minimal.json",
+    "contract": "agents/companion-turn",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "agents/delegation-result/invalid/unknown_property.json",
     "contract": "agents/delegation-result",
     "expect": "invalid",
@@ -402,6 +426,18 @@
     "origin": "synthesised"
   },
   {
+    "file": "api/commands/CheckinsDue/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/CheckinsDue",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/CheckinsDue/valid/minimal.json",
+    "contract": "api/commands#/$defs/CheckinsDue",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "api/commands/ClientJournal/invalid/unknown_property.json",
     "contract": "api/commands#/$defs/ClientJournal",
     "expect": "invalid",
@@ -422,6 +458,54 @@
   {
     "file": "api/commands/CloudSubscription/valid/minimal.json",
     "contract": "api/commands#/$defs/CloudSubscription",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/Commitment/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/Commitment",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/Commitment/valid/minimal.json",
+    "contract": "api/commands#/$defs/Commitment",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/CompanionOpen/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/CompanionOpen",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/CompanionOpen/valid/minimal.json",
+    "contract": "api/commands#/$defs/CompanionOpen",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/CompanionOpened/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/CompanionOpened",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/CompanionOpened/valid/minimal.json",
+    "contract": "api/commands#/$defs/CompanionOpened",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/CompanionSummary/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/CompanionSummary",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/CompanionSummary/valid/minimal.json",
+    "contract": "api/commands#/$defs/CompanionSummary",
     "expect": "valid",
     "origin": "synthesised"
   },
@@ -1278,6 +1362,18 @@
     "origin": "synthesised"
   },
   {
+    "file": "api/commands/Opener/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/Opener",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/Opener/valid/minimal.json",
+    "contract": "api/commands#/$defs/Opener",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "api/commands/PackList/invalid/unknown_property.json",
     "contract": "api/commands#/$defs/PackList",
     "expect": "invalid",
@@ -2018,6 +2114,18 @@
   {
     "file": "api/commands/StudyNoteOpen/valid/minimal.json",
     "contract": "api/commands#/$defs/StudyNoteOpen",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/StudyVisit/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/StudyVisit",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/StudyVisit/valid/minimal.json",
+    "contract": "api/commands#/$defs/StudyVisit",
     "expect": "valid",
     "origin": "synthesised"
   },
@@ -4874,6 +4982,18 @@
   {
     "file": "study/workspace/JobState/valid/minimal.json",
     "contract": "study/workspace#/$defs/JobState",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/LearnerBlock/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/LearnerBlock",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/LearnerBlock/valid/minimal.json",
+    "contract": "study/workspace#/$defs/LearnerBlock",
     "expect": "valid",
     "origin": "synthesised"
   },

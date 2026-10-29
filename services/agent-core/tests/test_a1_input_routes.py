@@ -296,6 +296,14 @@ MODEL_ENTRY_POINTS = {
     "delimited as source data; no learner text and no tools",
     ("engine/research_chat.py", "next_turn", "complete"): "the research conversation (SPEC §18.1a): the topic and "
     "each learner reply screened by the route first (POST /v1/study/research/chat), delimited as data; no tools",
+    ("engine/companion.py", "_call", "complete"): "the companion's thread (SPEC §19.5.1): Engine.companion_turn "
+    "screens the message first (the guard and distress, as a tutoring turn); recall and tool results are records, "
+    "delimited",
+    ("engine/companion.py", "_history", "summariser"): "the thread's earlier messages, each screened when sent",
+    ("engine/companion.py", "word_opener", "complete"): "the opener's facts only, built by code (§19.5.2); no student "
+    "text",
+    ("engine/checkins.py", "extract", "complete"): "a companion turn's own student text after that turn screened it "
+    "(the guard and distress), escaped inside a <student> fence; the reply is checked by code (§19.5.5)",
     ("router/__init__.py", "complete", "complete"): "the router's module entry, inside an engine turn or job scope",
     ("router/core.py", "_request", "complete"): "the router itself: the provider call every site above goes through "
     "(`_call` wraps it with the online re-check)",

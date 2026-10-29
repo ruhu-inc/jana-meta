@@ -48,6 +48,7 @@ cargo_metadata 0.19.2 (cargo): MIT
 cbc 0.1.2 (cargo): MIT OR Apache-2.0
 cfb 0.14.0 (cargo): MIT
 cfg-if 1.0.5 (cargo): MIT OR Apache-2.0
+chacha20 0.10.2 (cargo): MIT OR Apache-2.0
 chrono 0.4.45 (cargo): MIT OR Apache-2.0
 cipher 0.4.4 (cargo): MIT OR Apache-2.0
 concurrent-queue 2.5.0 (cargo): Apache-2.0 OR MIT
@@ -57,6 +58,7 @@ core-foundation-sys 0.8.7 (cargo): MIT OR Apache-2.0
 core-graphics 0.25.0 (cargo): MIT OR Apache-2.0
 core-graphics-types 0.2.0 (cargo): MIT OR Apache-2.0
 cpufeatures 0.2.17 (cargo): MIT OR Apache-2.0
+cpufeatures 0.3.1 (cargo): MIT OR Apache-2.0
 crc32fast 1.5.2 (cargo): MIT OR Apache-2.0
 crossbeam-channel 0.5.17 (cargo): MIT OR Apache-2.0
 crossbeam-utils 0.8.23 (cargo): MIT OR Apache-2.0
@@ -188,6 +190,7 @@ linux-raw-sys 0.12.1 (cargo): Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MI
 litemap 0.8.3 (cargo): Unicode-3.0
 lock_api 0.4.14 (cargo): MIT OR Apache-2.0
 log 0.4.34 (cargo): MIT OR Apache-2.0
+mac-notification-sys 0.6.15 (cargo): MIT/Apache-2.0
 markup5ever 0.39.0 (cargo): MIT OR Apache-2.0
 memchr 2.8.3 (cargo): Unlicense OR MIT
 memoffset 0.9.1 (cargo): MIT
@@ -198,6 +201,7 @@ mio 1.2.4 (cargo): MIT
 muda 0.20.0 (cargo): Apache-2.0 OR MIT
 new_debug_unreachable 1.0.6 (cargo): MIT
 nix 0.30.1 (cargo): MIT
+notify-rust 4.18.2 (cargo): MIT OR Apache-2.0
 ntapi 0.4.3 (cargo): Apache-2.0 OR MIT
 num 0.4.3 (cargo): MIT OR Apache-2.0
 num-bigint 0.4.8 (cargo): MIT OR Apache-2.0
@@ -249,6 +253,8 @@ proc-macro-error-attr 1.0.4 (cargo): MIT OR Apache-2.0
 proc-macro2 1.0.107 (cargo): MIT OR Apache-2.0
 quick-xml 0.42.0 (cargo): MIT
 quote 1.0.47 (cargo): MIT OR Apache-2.0
+rand 0.10.3 (cargo): MIT OR Apache-2.0
+rand_core 0.10.1 (cargo): MIT OR Apache-2.0
 raw-window-handle 0.6.2 (cargo): MIT OR Apache-2.0 OR Zlib
 ref-cast 1.0.27 (cargo): MIT OR Apache-2.0
 ref-cast-impl 1.0.27 (cargo): MIT OR Apache-2.0
@@ -317,9 +323,11 @@ tauri-codegen 2.7.1 (cargo): Apache-2.0 OR MIT
 tauri-macros 2.7.1 (cargo): Apache-2.0 OR MIT
 tauri-plugin-dialog 2.8.2 (cargo): Apache-2.0 OR MIT
 tauri-plugin-fs 2.7.0 (cargo): Apache-2.0 OR MIT
+tauri-plugin-notification 2.8.0 (cargo): Apache-2.0 OR MIT
 tauri-runtime 2.12.1 (cargo): Apache-2.0 OR MIT
 tauri-runtime-wry 2.12.1 (cargo): Apache-2.0 OR MIT
 tauri-utils 2.10.1 (cargo): Apache-2.0 OR MIT
+tauri-winrt-notification 0.8.1 (cargo): MIT OR Apache-2.0
 tendril 0.5.1 (cargo): MIT OR Apache-2.0
 thiserror 1.0.69 (cargo): MIT OR Apache-2.0
 thiserror 2.0.21 (cargo): MIT OR Apache-2.0

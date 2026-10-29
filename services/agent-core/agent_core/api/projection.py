@@ -232,6 +232,10 @@ def apply(state: dict[str, Any], envelope: dict[str, Any]) -> bool:
                          elapsed_ms=event["elapsed_ms"], verification=event["verification"])  # fmt: skip
         state["active_turn"] = None
         state["session"]["updated_ts"] = ts
+    elif kind == "companion.action":
+        # A durable button of the companion's thread (SPEC §19.3.3): kept by id in the snapshot, so it survives a
+        # reconnect and a restart (the checkpoint holds this state).
+        state.setdefault("actions", {})[event["action_id"]] = dict(event)
     elif kind in ("memory.saved", "memory.forgotten", "progress.update"):
         # The Snapshot contract has no place for these (G94): a saved note's announcement and Undo live in the
         # client's store while it is connected, and the note itself on the "What your tutor knows" page. Keeping the

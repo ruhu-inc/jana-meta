@@ -21,7 +21,7 @@ def test_existing_profiles_upgrade_without_a_pin(tmp_path: Path) -> None:
     conn.execute("INSERT INTO online_features (feature,enabled,enabled_by_role) VALUES ('downloads',1,'adult')")
     conn.close()
     conn, applied = open_database(path, "device")
-    assert [m.version for m in applied] == [2]
+    assert [m.version for m in applied] == [2, 3]  # v3: online_features admits tutor_memory_online (SPEC §19.3.5)
     assert conn.execute("SELECT display_name,db_file FROM profiles_index").fetchone() == (
         "Ada",
         "profiles/ada/learner.db",

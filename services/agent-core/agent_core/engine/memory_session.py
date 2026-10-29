@@ -26,6 +26,7 @@ from agent_core.config import Settings
 from agent_core.learner.service import Learner
 from agent_core.memory.capture import CaptureFilter
 from agent_core.memory.queries import ContentLabels, memory_saving
+from agent_core.memory.recall import recall_sessions, record_recalls
 from agent_core.memory.refs import RefTable
 from agent_core.memory.render import LearnerBlock, Variant, fit_block
 from agent_core.memory.snapshot import FrozenMemory, freeze
@@ -76,6 +77,10 @@ class SessionMemory:
     refs: RefTable = field(default_factory=lambda: RefTable.of(()))  # the note refs the Coach was shown (MEM-08)
     progress_seen: dict[str, float] = field(default_factory=dict)  # kc -> probability before the latest verdict
     _topic_kcs: tuple[str, ...] | None = None
+    # SPEC §19.6 (W8 phase 3): `tutor_memory_online` effective for this session's profile now; while it is, a cloud
+    # call's block is the scrubbed cloud_notes variant. `terms` are the Redactor's profile terms for the scrub.
+    memory_online: Callable[[], bool] = lambda: False
+    terms: Callable[[], Sequence[str]] = lambda: ()
 
     def source(self) -> MemorySource | None:
         return self.access.source()
@@ -123,14 +128,22 @@ class SessionMemory:
         same text, so the prompt prefix stays cacheable (MEM-03, LRN-05)."""
         if self.frozen is None:
             return None
+        if variant == "cloud" and self.memory_online():
+            variant = "cloud_notes"
         key = (variant, allowance_chars)
         if key not in self._blocks:
             source = self.source()
             capture = source.capture if source is not None else None
+            recalls = recall_sessions(source.conn) if source is not None else {}
             self._blocks[key] = fit_block(self.frozen, variant=variant, allowance_chars=allowance_chars,
-                                          settings=self.settings, capture=capture)  # fmt: skip
+                                          settings=self.settings, capture=capture,
+                                          terms=tuple(self.terms()) if variant == "cloud_notes" else (),
+                                          recalls=recalls)  # fmt: skip
+            if source is not None and self._blocks[key].shown_note_ids:
+                record_recalls(source.conn, self._blocks[key].shown_note_ids, self.session_id,
+                               self.frozen.session_date)  # fmt: skip
         built = self._blocks[key]
-        if variant == "local":
+        if variant in ("local", "cloud_notes"):
             self.refs = built.note_refs
         return built
 

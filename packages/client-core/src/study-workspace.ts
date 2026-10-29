@@ -225,6 +225,38 @@ export class StudyWorkspaceController {
     await this.open(first.source_id, listed && listed.revision !== first.revision ? first.revision : undefined);
     if (this.view.source?.source_id === first.source_id) await this.showAid(set.aid_id);
   }
+  /** SPEC §19.3.3: a companion button (`open_study_job`, `open_study_deck`) or the plan's due Study cards opens the
+   * material a job, aid or deck belongs to, at that aid. A job still being made opens its material, and its result as
+   * soon as it is ready. False when there is nothing (any more) to open. */
+  async openTarget(target: { job_id?: string; aid_id?: string; deck_id?: string }): Promise<boolean> {
+    const generation = this.profiles.generation;
+    try {
+      let aidId = target.aid_id ?? null;
+      let source: W.SourceSelection | null = null;
+      let job: W.Job | undefined;
+      if (aidId === null && target.deck_id !== undefined) {
+        const deck = valid<W.Deck>("Deck", await this.commands().get(`/v1/study/decks/${encodeURIComponent(target.deck_id)}`, this.headers()));
+        aidId = deck.aid_id; source = { source_id: deck.source_id, revision: deck.revision };
+      }
+      if (aidId === null && target.job_id !== undefined) {
+        if (!this.view.jobs.some((j) => j.job_id === target.job_id)) await this.load();
+        job = this.view.jobs.find((j) => j.job_id === target.job_id);
+        aidId = job?.result_ids[0] ?? null;
+        if (aidId === null) source = job?.sources[0] ?? null;
+      }
+      if (aidId !== null && source === null) {
+        const aid = valid<W.Aid>("Aid", await this.commands().get(`/v1/study/aids/${encodeURIComponent(aidId)}`, this.headers()));
+        source = aid.sources[0] ?? null;
+      }
+      if (generation !== this.profiles.generation || source === null) return false;
+      const listed = this.view.sources.find((s) => s.source_id === source.source_id);
+      await this.open(source.source_id, listed && listed.revision !== source.revision ? source.revision : undefined);
+      if (generation !== this.profiles.generation || this.view.source?.source_id !== source.source_id) return false;
+      if (aidId !== null) await this.showAid(aidId);
+      else if (job !== undefined) { this.pendingAid = job.job_id; this.patch({ requestedJobId: job.job_id }); }
+      return true;
+    } catch { return false; }
+  }
   /** STU-21: the open material's own topics, all kept by default in the Generate settings. */
   async loadMaterialTopics(): Promise<void> {
     const source = this.view.source;
@@ -259,6 +291,17 @@ export class StudyWorkspaceController {
   }
   /** STU-22: move the player to a moment of the open recording (a chapter, a transcript line, a citation). */
   seek(ms: number): void { this.patch({ playhead: { ms: Math.max(0, ms), seq: (this.view.playhead?.seq ?? 0) + 1 } }); }
+  /** The Study screen opens (SPEC §19.3.2): the core opens or resumes the day's Study session, which every activity
+   * here cites. A core without the route (an older one) records nothing and the screen works as before. */
+  async enter(): Promise<void> {
+    try { await this.commands().post("/v1/study/session", {}, clientId()); } catch { /* the screen opens regardless */ }
+  }
+
+  /** The Study screen closes: its session ends and the tutor reflects on what was done there (§19.4). */
+  async leave(): Promise<void> {
+    try { await this.commands().delete("/v1/study/session", clientId()); } catch { /* it ends when idle anyway */ }
+  }
+
   close(): void {
     this.clearCardReturns();
     this.pendingAid = null;

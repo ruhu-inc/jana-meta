@@ -1406,6 +1406,140 @@
   },
   "external": {
    "tools": []
+  },
+  "study": {
+   "tools": [
+    {
+     "name": "study_search",
+     "stage": "S2",
+     "risk": "read",
+     "executor": "host",
+     "sideEffects": false,
+     "parallelSafe": true,
+     "interactive": false,
+     "idempotent": true,
+     "dedupe": true,
+     "timeoutMs": 1000,
+     "maxResultChars": {
+      "small": 8000,
+      "full": 50000
+     },
+     "smallModelFriendly": true,
+     "subjects": [
+      "general"
+     ],
+     "levels": [
+      "O",
+      "A"
+     ],
+     "usesNetwork": false,
+     "activityLabel": "Looked in your materials"
+    },
+    {
+     "name": "progress_read",
+     "stage": "S2",
+     "risk": "read",
+     "executor": "host",
+     "sideEffects": false,
+     "parallelSafe": true,
+     "interactive": false,
+     "idempotent": true,
+     "dedupe": true,
+     "timeoutMs": 1000,
+     "maxResultChars": {
+      "small": 8000,
+      "full": 50000
+     },
+     "smallModelFriendly": true,
+     "subjects": [
+      "general"
+     ],
+     "levels": [
+      "O",
+      "A"
+     ],
+     "usesNetwork": false,
+     "activityLabel": "Looked at your progress"
+    },
+    {
+     "name": "plan",
+     "stage": "S2",
+     "risk": "read",
+     "executor": "host",
+     "sideEffects": false,
+     "parallelSafe": true,
+     "interactive": false,
+     "idempotent": true,
+     "dedupe": true,
+     "timeoutMs": 1000,
+     "maxResultChars": {
+      "small": 8000,
+      "full": 50000
+     },
+     "smallModelFriendly": true,
+     "subjects": [
+      "general"
+     ],
+     "levels": [
+      "O",
+      "A"
+     ],
+     "usesNetwork": false,
+     "activityLabel": "Looked at your plan"
+    },
+    {
+     "name": "make_aid",
+     "stage": "S2",
+     "risk": "memory_write",
+     "executor": "host",
+     "sideEffects": true,
+     "parallelSafe": false,
+     "interactive": false,
+     "idempotent": false,
+     "dedupe": false,
+     "timeoutMs": 1000,
+     "maxResultChars": {
+      "small": 8000,
+      "full": 50000
+     },
+     "smallModelFriendly": true,
+     "subjects": [
+      "general"
+     ],
+     "levels": [
+      "O",
+      "A"
+     ],
+     "usesNetwork": false,
+     "activityLabel": "Started a study aid"
+    },
+    {
+     "name": "start_research",
+     "stage": "S2",
+     "risk": "read",
+     "executor": "host",
+     "sideEffects": false,
+     "parallelSafe": true,
+     "interactive": false,
+     "idempotent": true,
+     "dedupe": true,
+     "timeoutMs": 1000,
+     "maxResultChars": {
+      "small": 8000,
+      "full": 50000
+     },
+     "smallModelFriendly": true,
+     "subjects": [
+      "general"
+     ],
+     "levels": [
+      "O",
+      "A"
+     ],
+     "usesNetwork": false,
+     "activityLabel": "Opened research"
+    }
+   ]
   }
  },
  "roleGrants": {
@@ -1447,6 +1581,15 @@
    "progress_update",
    "invalid",
    "compute:*"
+  ],
+  "companion": [
+   "memory_recall",
+   "session_recall",
+   "study_search",
+   "progress_read",
+   "plan",
+   "make_aid",
+   "start_research"
   ]
  },
  "profiles": {

@@ -13,12 +13,18 @@ export type RecentSession = Pick<Session, "session_id" | "title" | "subject" | "
 export const SESSION_GROUPS = ["today", "yesterday", "week", "older"] as const;
 export type SessionGroup = (typeof SESSION_GROUPS)[number];
 
+/** Study's companion thread (SPEC §19.3.3) is a session too, but it is not tutoring work: it opens in Study only, so
+ * the recent lists and the tutor's own subject never pick it. */
+export function companionMode(session: { mode?: string }): boolean {
+  return session.mode === "study_companion";
+}
+
 /** The profile's open sessions, newest first, at most `max`. The core titles a session from its first question; a
  * session with no title that was never used since it was opened (a blank "New question") is not work to go back to,
  * so it is left out. */
 export function recentSessions(list: SessionList | null, max: number = CLIENT_KEYS.ui_recent_sessions_max): RecentSession[] {
   return (list?.sessions ?? [])
-    .filter((s) => !s.archived && (s.title.trim() !== "" || s.updated_ts > s.created_ts))
+    .filter((s) => !s.archived && !companionMode(s) && (s.title.trim() !== "" || s.updated_ts > s.created_ts))
     .sort((a, b) => b.updated_ts - a.updated_ts)
     .slice(0, max)
     .map(({ session_id, title, subject, topic_id, mode, updated_ts }) => ({ session_id, title, subject, topic_id, mode, updated_ts }));
@@ -26,9 +32,9 @@ export function recentSessions(list: SessionList | null, max: number = CLIENT_KE
 
 /** The session the student last worked on: the open one with the newest `updated_ts` (a turn ending moves it), not
  * the one created last, which is the order `GET /v1/sessions` lists them in. The tutor's subject starts from it. */
-export function lastWorked<T extends Pick<Session, "archived" | "updated_ts">>(sessions: readonly T[]): T | null {
+export function lastWorked<T extends Pick<Session, "archived" | "updated_ts"> & { mode?: string }>(sessions: readonly T[]): T | null {
   let newest: T | null = null;
-  for (const s of sessions) if (!s.archived && (newest === null || s.updated_ts > newest.updated_ts)) newest = s;
+  for (const s of sessions) if (!s.archived && !companionMode(s) && (newest === null || s.updated_ts > newest.updated_ts)) newest = s;
   return newest;
 }
 

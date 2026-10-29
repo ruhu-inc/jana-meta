@@ -1,0 +1,20 @@
+# W8 phase 3 Study-memory case (SPEC §19.9): written before any run; checked by code in tests/w8_scenarios.py.
+case: checkin_sunday
+rubric: >-
+  "mock paper on Saturday" on Thursday 2026-10-15 yields one event_checkin with due_from 2026-10-18T07:00 local and
+  text with no quote.
+now: "2026-10-15T16:00:00Z"
+offset_minutes: 60  # the profile's timezone, UTC+1
+student: "I've got a mock paper on Saturday, physics, so I'm revising motion graphs tonight"
+model:
+  found: true
+  kind: event_checkin
+  subject: physics
+  due_day: "2026-10-17"
+  text: "How did the physics mock paper go?"
+  confidence: 0.85
+expect:
+  kind: event_checkin
+  due_from_local: "2026-10-18T07:00"
+  window_hours: 72
+  count: 1

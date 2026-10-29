@@ -201,7 +201,7 @@ class StudyCloud:
             "output_locale": "en",
             **{
                 k: request[k]
-                for k in ("prompt", "count", "settings", "syllabus_outline", "previous_response")
+                for k in ("prompt", "count", "settings", "syllabus_outline", "previous_response", "learner")
                 if k in request
             },
         }

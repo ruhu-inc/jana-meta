@@ -1,4 +1,7 @@
-"""Conservative local topic suggestions from verified installed pack titles; never mastery evidence."""
+"""Conservative local topic suggestions from verified installed pack titles; never mastery evidence.
+
+`kc_tags` labels a Study activity with the pack topics its words name (SPEC §19.3.2): a hint for the Reflector and the
+knows view, never which skills an item tests, so never mastery evidence (JM-D26)."""
 
 from __future__ import annotations
 
@@ -46,6 +49,37 @@ def matching_topics(content: Any, text: str) -> dict[str, Any]:
         if len(matches) == 10:
             break
     return {"items": matches}
+
+
+KC_TAGS_MAX = 3
+
+
+def kc_tags(content: Any, text: str) -> list[dict[str, Any]]:
+    """At most three `{kc_id, weight}` for a Study activity, the weights summing to 1 (none when no topic matches):
+    the topics `matching_topics` finds in the text share the weight equally, and each topic's share goes to its KCs,
+    more to a KC whose statement shares more words with the text. Topic-derived, never mastery evidence (JM-D26)."""
+    if content is None or not text.strip():
+        return []
+    found = matching_topics(content, text)["items"]
+    if not found:
+        return []
+    words = set(re.findall(r"[a-z0-9]+", text.lower()))
+    share = 1 / len(found)
+    scores: dict[str, float] = {}
+    for topic in found:
+        overlap = {kc: len(_terms(str(content.kc_statement(kc) or "")) & words) for kc in topic["kc_ids"]}
+        total = sum(1 + n for n in overlap.values())
+        for kc, n in overlap.items():
+            scores[kc] = scores.get(kc, 0.0) + share * (1 + n) / total
+    top = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))[:KC_TAGS_MAX]
+    whole = sum(w for _, w in top)
+    weights = [round(w / whole, 4) for _, w in top]
+    weights[-1] = round(1 - sum(weights[:-1]), 4)  # the rounding never moves the sum
+    return [{"kc_id": kc, "weight": w} for (kc, _), w in zip(top, weights, strict=True) if w > 0]
+
+
+def _terms(statement: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9]+", statement.lower()) if len(w) >= 4 and w not in _STOP}
 
 
 # --- STU-21: topics from the material itself --------------------------------------------------------------------

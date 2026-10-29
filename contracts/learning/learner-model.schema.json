@@ -317,6 +317,9 @@
       },
       "wake_word": {
        "type": "boolean"
+      },
+      "checkin_notifications": {
+       "type": "boolean"
       }
      }
     },
@@ -751,6 +754,15 @@
       "active",
       "pending_review"
      ]
+    },
+    "confidence": {
+     "enum": [
+      "tentative",
+      "supported"
+     ]
+    },
+    "fading": {
+     "type": "boolean"
     }
    }
   }

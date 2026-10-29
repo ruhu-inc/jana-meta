@@ -320,6 +320,7 @@ export interface StudyProcessingRequest {
   settings?: StudyWorkspaceGenerateSettings;
   syllabus_outline?: string;
   previous_response?: string;
+  learner?: StudyWorkspaceLearnerBlock;
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -390,6 +391,29 @@ export interface StudyWorkspaceGenerateSettings {
 export interface StudyWorkspaceSourceSelection {
   source_id: StudyWorkspaceSourceId;
   revision: StudyWorkspaceRevision;
+}
+/**
+ * This interface was referenced by `CloudGateway`'s JSON-Schema
+ * via the `definition` "study_workspace__LearnerBlock".
+ */
+export interface StudyWorkspaceLearnerBlock {
+  level: ("O" | "A") | null;
+  /**
+   * @maxItems 5
+   */
+  subjects: ("mathematics" | "physics" | "chemistry" | "biology" | "accounting")[];
+  /**
+   * @maxItems 24
+   */
+  kcs: StudyWorkspaceLearnerBlockKcsItem[];
+  /**
+   * @maxItems 8
+   */
+  misconception_ids: string[];
+}
+export interface StudyWorkspaceLearnerBlockKcsItem {
+  kc_id: string;
+  band: "not_started" | "learning" | "secure";
 }
 export interface StudyProcessingResponse1 {
   request_id: StudyWorkspaceJobId;
@@ -824,4 +848,5 @@ export interface StudyWorkspaceProcessingRequest {
   settings?: StudyWorkspaceGenerateSettings;
   syllabus_outline?: string;
   previous_response?: string;
+  learner?: StudyWorkspaceLearnerBlock;
 }

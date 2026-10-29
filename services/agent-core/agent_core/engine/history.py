@@ -16,6 +16,7 @@ from agent_core.store.pack_index import PackIndex
 from agent_core.store.transcript import bare
 
 COLUMNS = "session_id, mode, subject, topic_id, title, started_at, ended_at, transcript_purged_at"
+STUDY_MODES = "'study', 'study_companion'"
 
 
 class HistoryRefused(ValueError):
@@ -44,10 +45,11 @@ class HistoryDesk:
     def list(self, limit: int = 50, before: str | None = None) -> dict[str, Any]:
         """`HistoryList`: a page of sessions, newest first, and the fixed retention period the screen explains."""
         size = max(1, min(limit, 100))
-        query = f"SELECT {COLUMNS} FROM sessions"  # noqa: S608 - fixed columns
+        # A Study session (SPEC §19.3.2) has no conversation to read back: its activity shows on Progress instead.
+        query = f"SELECT {COLUMNS} FROM sessions WHERE mode NOT IN ({STUDY_MODES})"  # noqa: S608 - fixed columns
         args: tuple[Any, ...] = ()
         if before is not None:
-            query += " WHERE session_id < ?"
+            query += " AND session_id < ?"
             args = (bare(before),)
         rows = self.conn.execute(query + " ORDER BY session_id DESC LIMIT ?", (*args, size + 1)).fetchall()
         entries = [_entry(row, self.content) for row in rows[:size]]

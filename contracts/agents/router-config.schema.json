@@ -215,6 +215,9 @@
     },
     "reflector": {
      "$ref": "#/$defs/role"
+    },
+    "companion": {
+     "$ref": "#/$defs/role"
     }
    }
   },
@@ -244,6 +247,9 @@
      "$ref": "#/$defs/slot"
     },
     "research_chat": {
+     "$ref": "#/$defs/slot"
+    },
+    "checkin": {
      "$ref": "#/$defs/slot"
     }
    }
@@ -479,7 +485,10 @@
        "compaction",
        "judge",
        "vision",
-       "research_chat"
+       "research_chat",
+       "companion",
+       "reflector",
+       "checkin"
       ]
      }
     }

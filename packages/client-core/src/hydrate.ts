@@ -1,10 +1,11 @@
 // Applying a core snapshot (API-17, UIA-02): the session's records are replaced by the snapshot's, which is the core's
 // projection of the same events (services/agent-core/agent_core/api/projection.py). Other sessions are untouched.
-import type { ContentBlock, Session } from "@jana/contracts-ts";
+import type { ContentBlock, EvCompanionAction, Session } from "@jana/contracts-ts";
 import { splitBlocks } from "./blocks.js";
 import {
   connectionKey,
   emptyConnection,
+  type ActionRec,
   type BoardRec,
   type MessageRec,
   type PartRec,
@@ -24,6 +25,8 @@ export interface CoreSnapshot {
   visuals: Record<string, CoreVisual>;
   open_requests: { request_id: string; part_id: string; card: unknown }[];
   active_turn: { turn_id: string; status: Record<string, unknown> } | null;
+  /** The companion thread's durable buttons by action id (SPEC §19.3.3); absent for any other session. */
+  actions?: Record<string, EvCompanionAction>;
 }
 
 export type CoreMessage = CoreStudentMessage | CoreTutorMessage;
@@ -112,6 +115,11 @@ export function hydrate(store: Store, snapshot: CoreSnapshot): Store {
   const oldBoards = new Set(store.sessions[sessionId]?.board_ids ?? []);
   const boards = without(store.boards, (b) => oldBoards.has(b.board_id));
   const visuals = without(store.visuals, (v) => oldParts.has(v.part_id));
+  // The snapshot's actions replace the session's: a button folded from the stream equals one read after a restart.
+  const actions: Record<string, ActionRec> = without(store.actions, (a) => a.session_id === sessionId);
+  for (const [id, action] of Object.entries(snapshot.actions ?? {})) {
+    actions[id] = { type: "companion.action", action_id: action.action_id, action: action.action, payload: { ...action.payload }, label_key: action.label_key, session_id: sessionId };
+  }
 
   // Bubbles the student sent that the core has not seen yet survive a snapshot (UIA-05: never silently dropped).
   const unsent = (store.sessions[sessionId]?.pending_ids ?? []).filter((k) => {
@@ -196,7 +204,7 @@ export function hydrate(store: Store, snapshot: CoreSnapshot): Store {
         updated_ts: s.updated_ts, archived: s.archived, turn_ids: turnIds, board_ids: boardIds, hint_rung: hintRung, pending_ids: pending,
       },
     },
-    turns, messages, parts, requests, boards, visuals,
+    turns, messages, parts, requests, boards, visuals, actions,
     cursors: { ...store.cursors, [sessionId]: { ...snapshot.cursor } },
   };
 }

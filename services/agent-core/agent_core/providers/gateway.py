@@ -114,6 +114,8 @@ class GatewayProvider:
             "input_guard",
             "rule_matcher",
             "research_chat",
+            "companion",  # SPEC §19.4 (W8): the gateway counts the thread's turns and holds their bound
+            "reflector",  # and the Reflector's jobs under tutor_memory_online, each under its own feature
         }:
             headers["x-jana-role"] = str(role)
         if self.token is not None:
@@ -140,6 +142,10 @@ class GatewayProvider:
             # the cloud is tried again, instead of each call retrying a dead route with backoff.
             self._report("offline")
             return ProviderError("network_unavailable", "the gateway cannot reach the model provider")
+        if reply.status == 429 and code == "plan_limit":
+            # SPEC §19.7 (W8): the companion's or the Reflector's daily cap. Only that feature stops for the day: no
+            # retry, no pause of the cloud tier (a quota error would pause it), and the call is served locally.
+            return ProviderError("content_filter", "plan_limit: the feature's daily cap at the gateway")
         return provider_error(reply.status, reply.body, _detail(reply.body), reply.headers)
 
     def _refused(self, refused: EgressRefused) -> ProviderError:

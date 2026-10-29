@@ -273,12 +273,24 @@ class Ack(BaseModel):
     receiver_time: Datetime
 
 
-class LearningLearningEventOneOf27Payload(BaseModel):
+class LearningLearningEventOneOf28Payload(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     erased: Literal[True]
     erased_at: str
+
+
+type Count = Annotated[int, Field(ge=1, le=200)]
+
+
+type LearningLearningEventKcId = Annotated[
+    str,
+    Field(
+        pattern="^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$",
+        title="LearningLearningEventKcId",
+    ),
+]
 
 
 class LearningLearningEventPayloadSkillsDeliveredSkillsItem(BaseModel):
@@ -378,15 +390,6 @@ class LearningLearningEventPayloadNoteDeleted(BaseModel):
     actor_role: Literal["student", "system_expiry"]
 
 
-type LearningLearningEventKcId = Annotated[
-    str,
-    Field(
-        pattern="^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$",
-        title="LearningLearningEventKcId",
-    ),
-]
-
-
 type LearningLearningEventSubject = Annotated[
     Literal["mathematics", "physics", "chemistry", "biology", "accounting"],
     Field(title="LearningLearningEventSubject"),
@@ -445,38 +448,18 @@ class LearningLearningEventPayloadPlanDecision(BaseModel):
     new_minutes: Annotated[int | None, Field(ge=1)] = None
 
 
-class LearningLearningEventPayloadPlanGeneratedBlocksItem(BaseModel):
+class LearningLearningEventStudyCardsItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    kind: Literal["warmup", "main", "mixed", "reflect", "mock", "mastery_check"]
-    kc_ids: list[LearningLearningEventKcId] | None = None
-    minutes: Annotated[int, Field(ge=1)]
-    reason_code: (
-        Literal[
-            "due_reviews",
-            "weak_high_value",
-            "prerequisite",
-            "interleave",
-            "exam_phase",
-            "revisit_moved_on",
-            "mastery_check",
-            "mock_follow_up",
-        ]
-        | None
-    ) = None
+    deck_id: Annotated[str, Field(pattern="^dek_[0-9A-HJKMNP-TV-Z]{26}$")]
+    card_id: Annotated[str, Field(pattern="^fcd_[0-9A-HJKMNP-TV-Z]{26}$")]
 
 
-class LearningLearningEventPayloadPlanGenerated(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    plan_id: LearningLearningEventId
-    date: str
-    minutes: Annotated[int, Field(ge=1)]
-    phase: Literal["normal", "countdown", "final", "exam_day"]
-    blocks: list[LearningLearningEventPayloadPlanGeneratedBlocksItem]
-    deferred_reviews: Annotated[int | None, Field(ge=0)] = None
+type LearningLearningEventStudyCards = Annotated[
+    list[LearningLearningEventStudyCardsItem],
+    Field(max_length=10, title="LearningLearningEventStudyCards"),
+]
 
 
 class LearningLearningEventPayloadCorrection(BaseModel):
@@ -512,6 +495,7 @@ class LearningLearningEventPayloadSettingChange(BaseModel):
         "tutor_avatar",
         "faster_tutor",
         "wake_word",
+        "checkin_notifications",
     ]
     old_value: Any | None = None
     new_value: Any
@@ -700,9 +684,11 @@ class LearningLearningEventPayloadSessionStarted(BaseModel):
         "diagnostic",
         "mastery_check",
         "review",
+        "study",
+        "study_companion",
     ]
     subject: LearningLearningEventSubject | None = None
-    entry: Literal["plan", "question", "lesson", "practice", "mock", "review", "detour"]
+    entry: Literal["plan", "question", "lesson", "practice", "mock", "review", "detour", "study"]
     hardware_class: Literal["content_only", "low", "mid", "high"]
     cloud_tier_enabled: bool | None = None
     online: bool | None = None
@@ -829,14 +815,6 @@ class LearningLearningEventOneOf12(LearningLearningEventEnvelope):
     payload: LearningLearningEventPayloadCorrection
 
 
-class LearningLearningEventOneOf13(LearningLearningEventEnvelope):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    type: Literal["plan_generated"]
-    payload: LearningLearningEventPayloadPlanGenerated
-
-
 class LearningLearningEventOneOf14(LearningLearningEventEnvelope):
     model_config = ConfigDict(
         extra="forbid",
@@ -917,7 +895,7 @@ class LearningLearningEventOneOf25(LearningLearningEventEnvelope):
     payload: LearningLearningEventPayloadProfileUpdated
 
 
-class LearningLearningEventOneOf27(LearningLearningEventEnvelope):
+class LearningLearningEventOneOf28(LearningLearningEventEnvelope):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -948,11 +926,41 @@ class LearningLearningEventOneOf27(LearningLearningEventEnvelope):
         "profile_updated",
         "item_exposed",
         "skills_delivered",
+        "study_activity",
     ]
     payload: Annotated[
-        LearningLearningEventOneOf27Payload,
-        Field(title="LearningLearningEventOneOf27Payload"),
+        LearningLearningEventOneOf28Payload,
+        Field(title="LearningLearningEventOneOf28Payload"),
     ]
+
+
+class LearningLearningEventPayloadStudyActivityKcTagsItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kc_id: LearningLearningEventKcId
+    weight: Annotated[float, Field(gt=0.0, le=1.0)]
+
+
+class LearningLearningEventPayloadStudyActivity(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    activity: Literal["quiz_item", "card_review", "aid_made", "source_added", "pack_ready", "journey_step"]
+    ref: Annotated[
+        str,
+        Field(max_length=64, pattern="^(aid|att|card|rsr|jny):[0-9A-Za-z_:]{1,59}$"),
+    ]
+    kc_tags: Annotated[list[LearningLearningEventPayloadStudyActivityKcTagsItem], Field(max_length=3)]
+    outcome: Literal["correct", "incorrect", "skipped", "unverifiable"] | None
+    rating: Literal["again", "hard", "good", "easy"] | None
+    aid_kind: (
+        Literal[
+            "notes", "summary", "chat", "flashcards", "quiz", "audio_overview", "lesson_plan", "chapters", "concept_map"
+        ]
+        | None
+    )
+    count: Count | None
 
 
 class LearningLearningEventPayloadSkillsDelivered(BaseModel):
@@ -988,6 +996,50 @@ class LearningLearningEventPayloadNoteWritten(BaseModel):
     reflector_version: Annotated[str | None, Field(max_length=32)] = None
 
 
+class LearningLearningEventPayloadPlanGeneratedBlocksItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["warmup", "main", "mixed", "reflect", "mock", "mastery_check"]
+    kc_ids: list[LearningLearningEventKcId] | None = None
+    minutes: Annotated[int, Field(ge=1)]
+    reason_code: (
+        Literal[
+            "due_reviews",
+            "weak_high_value",
+            "prerequisite",
+            "interleave",
+            "exam_phase",
+            "revisit_moved_on",
+            "mastery_check",
+            "mock_follow_up",
+            "due_reviews_study",
+        ]
+        | None
+    ) = None
+    study_cards: LearningLearningEventStudyCards | None = None
+
+
+class LearningLearningEventPayloadPlanGenerated(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    plan_id: LearningLearningEventId
+    date: str
+    minutes: Annotated[int, Field(ge=1)]
+    phase: Literal["normal", "countdown", "final", "exam_day"]
+    blocks: list[LearningLearningEventPayloadPlanGeneratedBlocksItem]
+    deferred_reviews: Annotated[int | None, Field(ge=0)] = None
+
+
+class LearningLearningEventOneOf13(LearningLearningEventEnvelope):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["plan_generated"]
+    payload: LearningLearningEventPayloadPlanGenerated
+
+
 class LearningLearningEventOneOf17(LearningLearningEventEnvelope):
     model_config = ConfigDict(
         extra="forbid",
@@ -1010,6 +1062,14 @@ class LearningLearningEventOneOf26(LearningLearningEventEnvelope):
     )
     type: Literal["skills_delivered"]
     payload: LearningLearningEventPayloadSkillsDelivered
+
+
+class LearningLearningEventOneOf27(LearningLearningEventEnvelope):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["study_activity"]
+    payload: LearningLearningEventPayloadStudyActivity
 
 
 type LearningLearningEvent = Annotated[
@@ -1039,7 +1099,8 @@ type LearningLearningEvent = Annotated[
     | LearningLearningEventOneOf24
     | LearningLearningEventOneOf25
     | LearningLearningEventOneOf26
-    | LearningLearningEventOneOf27,
+    | LearningLearningEventOneOf27
+    | LearningLearningEventOneOf28,
     Field(title="LearningLearningEvent"),
 ]
 

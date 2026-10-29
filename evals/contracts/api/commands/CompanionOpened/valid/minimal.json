@@ -1,0 +1,33 @@
+{
+  "session_id": "ses_00000000000000000000000000",
+  "thread_id": "cth_00000000000000000000000000",
+  "resumed": true,
+  "opener": {
+    "opener_id": "2026-01-15",
+    "text": "x",
+    "facts": {
+      "last_session_date": "2026-01-15",
+      "last_session_mode": "x",
+      "last_subject": "mathematics",
+      "next_step": "x",
+      "learner_cards_due": 0,
+      "study_cards_due": 0,
+      "exam_distance_days": 0,
+      "pack_ready": true,
+      "checkin_id": "x"
+    }
+  },
+  "summary": {
+    "version": 0,
+    "cursor_seq": 0,
+    "updated_at": "2026-01-15T09:30:00Z",
+    "topics": [],
+    "misconceptions": [],
+    "next_step": {
+      "text": "x",
+      "reason_code": "x",
+      "updated_at": "2026-01-15T09:30:00Z"
+    },
+    "episodes": 0
+  }
+}

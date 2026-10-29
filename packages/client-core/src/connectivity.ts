@@ -15,20 +15,22 @@ import { Observable } from "./observable.js";
 import type { Envelope } from "./queue.js";
 import type { CommandClient } from "./stream/commands.js";
 
-/** The online features of TABLE ARC-07a, in its order. The slice lists only those the core lists (the build's stage). */
+/** The online features of TABLE ARC-07a, in its order, then Personal tutor memory online (SPEC §19.6, appended after
+ * crash reports as in the egress policy). The slice lists only those the core lists (the build's stage). */
 export const ONLINE_FEATURES = [
   "cloud_tier", "downloads", "update_checks", "cloud_backup", "multi_device", "parent_remote_view", "cloud_voice", "study_materials",
-  "telemetry", "crash_reports",
+  "telemetry", "crash_reports", "tutor_memory_online",
 ] as const satisfies readonly OnlineFeature[];
 
 /** Features whose switch is the guardian's consent (ARC-11, UXS-07, PRV-05); downloads and update checks need only the
  * switch. `cloud_tier` is switched on by subscribing (D70). */
 export const CONSENT_FEATURES: ReadonlySet<OnlineFeature> = new Set<OnlineFeature>([
   "cloud_tier", "cloud_backup", "multi_device", "parent_remote_view", "cloud_voice", "study_materials", "telemetry", "crash_reports",
+  "tutor_memory_online",
 ]);
 
 /** The version of each consent text the client shows (PRV-05: consent is recorded with its notice version). */
-export const CONSENT_NOTICE_VERSIONS = { cloud_tier: "2026-10.d1" } as const satisfies Partial<Record<OnlineFeature, string>>;
+export const CONSENT_NOTICE_VERSIONS = { cloud_tier: "2026-10.d1", tutor_memory_online: "2026-10.d1" } as const satisfies Partial<Record<OnlineFeature, string>>;
 
 /** Notices that say a turn left the cloud tutor for the tutor on this computer (MDL-24, UXS-08, API-15). */
 export const CLOUD_FALLBACK_NOTICES = ["cloud_unavailable_using_local", "cloud_continuing_locally"] as const;

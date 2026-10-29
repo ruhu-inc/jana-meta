@@ -27,7 +27,8 @@ CREATE TABLE profile (
 CREATE TABLE settings (
   key              TEXT    PRIMARY KEY CHECK (key IN ('low_power','text_scale','locale',
                      'memory_saving','notifications','reduced_motion','read_aloud','easy_read','extra_time_percent','speech_rate','speech_voice',
-                     'theme','character_shortcuts','tutor_name','tutor_avatar','faster_tutor','wake_word')),
+                     'theme','character_shortcuts','tutor_name','tutor_avatar','faster_tutor','wake_word',
+                     'checkin_notifications')),
   value            TEXT    NOT NULL CHECK (json_valid(value)
                      AND (key <> 'extra_time_percent' OR value IN ('0','25','50'))
                      AND (key <> 'theme' OR value IN ('"system"','"light"','"dark"'))
@@ -37,7 +38,8 @@ CREATE TABLE settings (
                      AND (key <> 'tutor_avatar' OR value IN ('"avatar.jana"','"avatar.orbit"','"avatar.prism"',
                           '"avatar.kite"','"avatar.pebble"','"avatar.ray"'))
                      AND (key <> 'faster_tutor' OR value IN ('true','false'))
-                     AND (key <> 'wake_word' OR value IN ('true','false'))),
+                     AND (key <> 'wake_word' OR value IN ('true','false'))
+                     AND (key <> 'checkin_notifications' OR value IN ('true','false'))),
   source           TEXT    NOT NULL CHECK (source IN ('default','student')),
   set_by_event_id  TEXT,
   hlc              TEXT    NOT NULL,
@@ -48,7 +50,7 @@ CREATE TABLE consents (
   scope            TEXT    NOT NULL CHECK (scope IN (
                      'cloud_tier','cloud_backup','multi_device',
                      'parent_remote_view','cloud_voice','study_materials','research_use',
-                     'model_training_research')),
+                     'model_training_research','tutor_memory_online')),
   granted_by_role  TEXT    NOT NULL CHECK (granted_by_role IN ('guardian','student_18_plus')),
   granted_by_label TEXT    NOT NULL CHECK (length(granted_by_label) <= 60),
   basis_ref        TEXT,
@@ -164,7 +166,7 @@ CREATE TABLE archive_authorizations (
 ) STRICT;
 CREATE TABLE sessions (
   session_id       TEXT    PRIMARY KEY,
-  mode             TEXT    NOT NULL CHECK (mode IN ('guided','solution','check_working','learn','practice','mock','revision','diagnostic','mastery_check','review')),
+  mode             TEXT    NOT NULL CHECK (mode IN ('guided','solution','check_working','learn','practice','mock','revision','diagnostic','mastery_check','review','study','study_companion')),
   subject          TEXT    CHECK (subject IN ('mathematics','physics','chemistry','biology','accounting')),
   topic_id         TEXT,
   kc_ids           TEXT    CHECK (kc_ids IS NULL OR json_valid(kc_ids)),
@@ -656,6 +658,52 @@ CREATE TABLE study_research (
   updated_at INTEGER NOT NULL
 ) STRICT;
 
+-- W8 (SPEC §19.3.3): the companion thread's daily episodes (one per profile day: UNIQUE profile_day returns one row to
+-- concurrent opens) and its rolling summary, written by code only. Device-local (JM-D27).
+CREATE TABLE companion_episodes (
+  session_id   TEXT    PRIMARY KEY REFERENCES sessions(session_id) ON DELETE CASCADE,
+  thread_id    TEXT    NOT NULL CHECK (thread_id GLOB 'cth_*' AND length(thread_id) = 30),
+  profile_day  TEXT    NOT NULL UNIQUE CHECK (profile_day GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'),
+  opener_json  TEXT    NOT NULL CHECK (json_valid(opener_json)),
+  opened_at    INTEGER NOT NULL,
+  ended_at     INTEGER,
+  checkin_id   TEXT    CHECK (checkin_id IS NULL OR (checkin_id GLOB 'cmt_*' AND length(checkin_id) = 30))
+) STRICT;
+CREATE TABLE companion_summary (
+  thread_id    TEXT    PRIMARY KEY CHECK (thread_id GLOB 'cth_*' AND length(thread_id) = 30),
+  version      INTEGER NOT NULL CHECK (version >= 0),
+  cursor_seq   INTEGER NOT NULL CHECK (cursor_seq >= 0),
+  updated_at   INTEGER NOT NULL,
+  body_json    TEXT    NOT NULL CHECK (json_valid(body_json))
+) STRICT;
+CREATE TABLE commitments (
+  commitment_id TEXT   PRIMARY KEY CHECK (commitment_id GLOB 'cmt_*' AND length(commitment_id) = 30),
+  kind         TEXT    NOT NULL CHECK (kind IN ('event_checkin','deadline_check','open_loop','due_reviews',
+                                               'pack_ready')),
+  subject      TEXT    CHECK (subject IS NULL OR subject IN ('mathematics','physics','chemistry','biology',
+                                                             'accounting')),
+  kc_id        TEXT,
+  text         TEXT    NOT NULL CHECK (length(text) BETWEEN 1 AND 140),
+  due_from     INTEGER NOT NULL,
+  due_until    INTEGER NOT NULL CHECK (due_until > due_from AND due_until - due_from <= 259200000),
+  dedupe_key   TEXT    NOT NULL UNIQUE CHECK (length(dedupe_key) <= 160),
+  confidence   REAL    NOT NULL CHECK (confidence BETWEEN 0 AND 1),
+  state        TEXT    NOT NULL CHECK (state IN ('pending','shown','opened','dismissed','answered','expired',
+                                                 'detached')),
+  source       TEXT    NOT NULL CHECK (source IN ('extractor','heartbeat')),
+  source_session_id TEXT,
+  created_at   INTEGER NOT NULL,
+  shown_at     INTEGER,
+  resolved_at  INTEGER
+) STRICT;
+CREATE INDEX commitments_due ON commitments(state, due_from);
+CREATE TABLE note_recalls (
+  note_id      TEXT    NOT NULL,
+  session_id   TEXT    NOT NULL,
+  day          TEXT    NOT NULL CHECK (day GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'),
+  PRIMARY KEY (note_id, session_id, day)
+) STRICT;
+
 -- @database device
 CREATE TABLE device (
   singleton        INTEGER PRIMARY KEY CHECK (singleton = 1),
@@ -682,7 +730,8 @@ CREATE TABLE profiles_index (
 CREATE TABLE online_features (
   feature          TEXT    PRIMARY KEY CHECK (feature IN (
                      'cloud_tier','downloads','update_checks','cloud_backup','multi_device',
-                     'parent_remote_view','cloud_voice','study_materials','telemetry','crash_reports')),
+                     'parent_remote_view','cloud_voice','study_materials','telemetry','crash_reports',
+                     'tutor_memory_online')),
   enabled          INTEGER NOT NULL DEFAULT 0 CHECK (enabled IN (0,1)),
   enabled_by_role  TEXT    CHECK (enabled_by_role IN ('user','subscription')),
   enabled_at       INTEGER,

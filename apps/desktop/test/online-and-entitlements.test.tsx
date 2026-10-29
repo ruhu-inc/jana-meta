@@ -22,8 +22,8 @@ const ROOT = path.resolve(import.meta.dirname, "../../..");
 
 afterEach(() => cleanup());
 
-/** TABLE ARC-07a's features, in its order. */
-const ARC07A = ["cloud_tier", "downloads", "update_checks", "cloud_backup", "multi_device", "parent_remote_view", "cloud_voice", "study_materials", "telemetry", "crash_reports"];
+/** TABLE ARC-07a's features, in its order, then Personal tutor memory online (SPEC §19.6, after crash reports). */
+const ARC07A = ["cloud_tier", "downloads", "update_checks", "cloud_backup", "multi_device", "parent_remote_view", "cloud_voice", "study_materials", "telemetry", "crash_reports", "tutor_memory_online"];
 
 const rows = () => [...document.querySelectorAll<HTMLElement>("[data-online-feature]")];
 

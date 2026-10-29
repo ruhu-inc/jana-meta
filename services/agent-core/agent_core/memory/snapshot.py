@@ -9,10 +9,12 @@ projections and the profile; it reads no clock, so the same tables always give t
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, Literal
 
 from agent_core.config import Settings
 from agent_core.memory.queries import (
@@ -32,12 +34,13 @@ from agent_core.memory.queries import (
 from agent_core.store.events import iso_ms
 
 # The learner model's version in the contract's form; it moves with any projection's code version.
-PROJECTION_VERSION = "1.15.0"
+PROJECTION_VERSION = "1.16.0"  # 1.16: the plan projection completes Study-card warm-ups (W8)
 MASTERY_MODEL = "pfa_elo"
 BETA_PRIOR = {"alpha": 1.0, "beta": 1.0}  # LRN-22: every style starts at Beta(1, 1)
 STUDENT_SETTINGS = ("low_power", "text_scale", "memory_saving", "notifications", "reduced_motion", "read_aloud",
                     "easy_read", "extra_time_percent", "speech_rate", "speech_voice", "theme",
-                    "character_shortcuts", "tutor_name", "tutor_avatar", "faster_tutor", "wake_word")  # fmt: skip
+                    "character_shortcuts", "tutor_name", "tutor_avatar", "faster_tutor", "wake_word",
+                    "checkin_notifications")  # fmt: skip
 
 
 @dataclass(frozen=True)
@@ -74,20 +77,56 @@ def freeze(
     topic_id: str | None,
     session_date: str,
     focus: Sequence[str] = (),
+    kcs_max: int | None = None,
+    misconceptions_max: int | None = None,
 ) -> FrozenMemory:
     """Run the fixed queries with the session's parameters (`snapshot_top_kcs`, `snapshot_misconceptions_max`,
-    `snapshot_recent_notes`). `focus` names the current problem's KCs, which come first among the topic's."""
+    `snapshot_recent_notes`). `focus` names the current problem's KCs, which come first among the topic's. A Study
+    session's snapshot asks for more KCs and misconceptions than a tutoring prompt holds (`kcs_max`,
+    `misconceptions_max`; SPEC §19.4): its block is structured data, not prompt text with an allowance."""
     notes = subject_notes(conn, subject)
     split = max(settings.snapshot_recent_notes, 0)
+    n_kcs = settings.snapshot_top_kcs if kcs_max is None else kcs_max
+    n_misconceptions = settings.snapshot_misconceptions_max if misconceptions_max is None else misconceptions_max
     return FrozenMemory(
         session_date=session_date,
         profile=profile_summary(conn, today=session_date, settings=settings),
-        kcs=tuple(top_kcs(conn, content, topic_id, settings.snapshot_top_kcs, settings, focus=focus)),
-        misconceptions=tuple(active_misconceptions(conn, content, topic_id, settings.snapshot_misconceptions_max)),
+        kcs=tuple(top_kcs(conn, content, topic_id, n_kcs, settings, focus=focus)),
+        misconceptions=tuple(active_misconceptions(conn, content, topic_id, n_misconceptions)),
         preferences=tuple(preferences(conn)),
         recent=tuple(notes[:split]),
         older=tuple(notes[split:]),
     )
+
+
+# --- the learner block on Study requests (SPEC §19.3.1, W8) -------------------------------------------------------
+
+LEARNER_BLOCK_KCS = 24
+LEARNER_BLOCK_MISCONCEPTIONS = 8
+LEARNER_BLOCK_SUBJECTS = ("mathematics", "physics", "chemistry", "biology", "accounting")
+_KC_ID = re.compile(r"^kc\.(mth|phy|chm|bio|acc)\.(o|a)\.[a-z0-9_]+\.[a-z0-9_]+$")
+_MC_ID = re.compile(r"^mc\.[a-z0-9_.]+$")
+
+
+def learner_block_data(frozen: FrozenMemory, variant: Literal["cloud"] = "cloud") -> dict[str, Any]:
+    """The cloud variant of the learner block as data (`LearnerBlock`, MDL-25's set and nothing else): the profile's
+    level and subjects, at most 24 KCs in three bands in the snapshot's order (the focus KCs first, then the most
+    recently practised, then the rest), and at most 8 watched misconception ids. No notes, preferences, name, exam
+    date or reading level: those never leave for a Study request. `cloud_notes` (with notes) is phase 3."""
+    if variant != "cloud":
+        raise ValueError(f"learner block variant {variant!r} is not available")
+    from agent_core.memory.render import BANDS  # the render module imports this one
+
+    profile = frozen.profile
+    subjects = [s for s in dict.fromkeys(profile.subjects) if s in LEARNER_BLOCK_SUBJECTS][:5]
+    kcs = [{"kc_id": k.kc_id, "band": BANDS.get(k.state, "learning")} for k in frozen.kcs if _KC_ID.match(k.kc_id)]
+    misconceptions = [m.misconception_id for m in frozen.misconceptions if _MC_ID.match(m.misconception_id)]
+    return {
+        "level": profile.level if profile.level in ("O", "A") else None,
+        "subjects": subjects,
+        "kcs": kcs[:LEARNER_BLOCK_KCS],
+        "misconception_ids": list(dict.fromkeys(misconceptions))[:LEARNER_BLOCK_MISCONCEPTIONS],
+    }
 
 
 # --- the learner-model contract (LRN-03) -----------------------------------------------------------------------
@@ -239,12 +278,20 @@ def _engagement(conn: sqlite3.Connection) -> dict[str, Any]:
     return out
 
 
-def _notes(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+def _notes(conn: sqlite3.Connection, now_ms: int | None = None) -> list[dict[str, Any]]:
     out = []
-    for note in sorted(stored_notes(conn), key=lambda n: (n.created_at, n.note_id))[:50]:
+    notes = sorted(stored_notes(conn), key=lambda n: (n.created_at, n.note_id))[:50]
+    from agent_core.learner.projections import note_lifecycle
+
+    now = now_ms if now_ms is not None else int(time.time() * 1000)
+    derived = note_lifecycle(conn, [n.note_id for n in notes], now)
+    for note in notes:
         item: dict[str, Any] = {"note_id": note.note_id, "text": note.text,
                                 "source_event_ids": list(note.source_event_ids),
                                 "created_at": iso_ms(note.created_at), "status": note.status}  # fmt: skip
+        if note.note_id in derived:  # SPEC §19.3.5: derived, never written by a model
+            item["confidence"] = derived[note.note_id].confidence
+            item["fading"] = derived[note.note_id].fading
         if note.subject is not None:
             item["subject"] = note.subject
         if note.kc_ids:

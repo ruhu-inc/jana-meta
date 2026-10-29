@@ -1,0 +1,10 @@
+# W8 phase 1 Study-memory case (SPEC §19.9): written before any run; checked by code in tests/w8_scenarios.py.
+case: last_time_card
+rubric: >-
+  After a physics session on 2026-10-10, the 2026-10-11 card names physics and 2026-10-10 and no other date or number.
+profile: {level: O, subjects: [physics], day: "2026-10-11", exam_date: null}
+sessions:
+  - {mode: guided, subject: physics, started: "2026-10-10T09:00:00Z", ended: "2026-10-10T09:40:00Z"}
+expect:
+  names: [physics, "2026-10-10"]
+  numbers: ["2026-10-10"]

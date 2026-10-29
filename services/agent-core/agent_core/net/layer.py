@@ -251,6 +251,16 @@ class OnlineLayer:
         consent = consent_store.active(learner, "cloud_tier")
         return consent is not None and consent[5] is None
 
+    def memory_online_effective(self, profile_id: str | None, learner: sqlite3.Connection | None) -> bool:
+        """Personal tutor memory online (SPEC §19.6, JM-D21): its switch is on, the cloud tier is effective for the
+        profile (the consent requires it) and the profile holds an active, unpaused `tutor_memory_online` consent.
+        Only then may screened notes and the Reflector's evidence lines reach the cloud tutor."""
+        if "tutor_memory_online" not in self.features_on() or not self.cloud_effective(profile_id, learner):
+            return False
+        assert learner is not None
+        consent = consent_store.active(learner, "tutor_memory_online")
+        return consent is not None and consent[5] is None
+
     def voice_effective(self, profile_id: str | None, learner: sqlite3.Connection | None) -> bool:
         """Cloud voice is switched on, the subscription names the profile and its `cloud_voice` consent is active
         (VOC-28, PRV-05, D70); the first-use notice is asked separately."""

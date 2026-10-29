@@ -6,7 +6,7 @@ import { ONLINE_FEATURES, type ConnectivityController, type EgressLedger, type F
 import { useT } from "../i18n.js";
 import { Button, EmptyState, ErrorState, Skeleton } from "../primitives/index.js";
 
-const DATA_CLASSES = new Set(["question_text", "board", "image", "learner_summary", "progress_report", "diagnostics", "audio", "transcript", "document"]);
+const DATA_CLASSES = new Set(["question_text", "board", "image", "learner_summary", "progress_report", "diagnostics", "audio", "transcript", "document", "tutor_notes"]);
 const FEATURES = new Set<string>(ONLINE_FEATURES);
 
 export type LedgerState = { status: "loading" } | { status: "failed" } | { status: "ready"; ledger: EgressLedger };

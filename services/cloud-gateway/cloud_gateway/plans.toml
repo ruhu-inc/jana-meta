@@ -44,6 +44,10 @@ upload_max_mb = 200
 recording_hours_per_month = 10
 podcasts_per_day = 5
 voice_minutes_per_month = 300  # online voice
+# The personal learning agent (W8, SPEC §19.7): held by the gateway per session pseudonym per day, never signed
+# into the entitlement.
+companion_turns_per_day = 60
+tutor_memory_jobs_per_day = 20
 
 [paid.jana_online.prices.nigeria]
 month = { currency = "NGN", amount = 9000 }
@@ -74,6 +78,10 @@ upload_max_mb = 200
 recording_hours_per_month = 10
 podcasts_per_day = 5
 voice_minutes_per_month = 300  # online voice
+# The personal learning agent (W8, SPEC §19.7): held by the gateway per session pseudonym per day, never signed
+# into the entitlement.
+companion_turns_per_day = 60
+tutor_memory_jobs_per_day = 20
 
 [paid.jana_family.prices.nigeria]
 month = { currency = "NGN", amount = 22000 }

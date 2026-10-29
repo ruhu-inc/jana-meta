@@ -1,0 +1,59 @@
+{
+ "$comment": "GENERATED from contracts/agents/companion-turn.schema.json sha256 49d7d4857b2ecb633967d926ba058aceb2b31b778c13219ec25f8ff067fa75d2; do not edit",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://jana.dev/contracts/agents/companion-turn",
+ "title": "Companion turn",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "text",
+  "action"
+ ],
+ "properties": {
+  "text": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 600
+  },
+  "action": {
+   "anyOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "ref"
+     ],
+     "properties": {
+      "kind": {
+       "enum": [
+        "open_tutor",
+        "open_practice",
+        "open_study_job",
+        "open_add_source",
+        "open_research",
+        "open_plan",
+        "open_knows"
+       ]
+      },
+      "ref": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 64
+        },
+        {
+         "type": "null"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "type": "null"
+    }
+   ]
+  }
+ }
+}

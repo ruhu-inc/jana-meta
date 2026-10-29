@@ -94,3 +94,9 @@ preferred_domains = [
     "cambridgeinternational.org", "aqa.org.uk", "ocr.org.uk", "pearson.com/qualifications", "waecdirect.org",
     "waec.org.ng", "nhs.uk", "ifrs.org", "accaglobal.com", "icaew.com", "mathsisfun.com", "nrich.maths.org",
 ]
+
+# The personal learning agent (W8, SPEC §19.4, §19.7): every Study companion turn and Reflector job holds its upper
+# bound against this daily spend, per session pseudonym, before it is sent. The turn and job counts per day are the
+# plan's limits in plans.toml (60 and 20).
+[companion]
+per_day_usd = 0.50

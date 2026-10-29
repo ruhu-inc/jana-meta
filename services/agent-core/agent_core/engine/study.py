@@ -1,4 +1,7 @@
-"""M42 local source workspace. Revisions and jobs are durable; no syllabus learning events are emitted."""
+"""M42 local source workspace. Revisions and jobs are durable. What the learner does here is recorded as
+`study_activity` learning events (SPEC §19.3.2, W8) through `self.activity` (`engine.study_session.StudyVisits`),
+each after Study's own transaction has committed: activity for the Reflector and the knows view, never mastery,
+review or misconception evidence (JM-D26)."""
 
 from __future__ import annotations
 
@@ -195,6 +198,17 @@ def chat_source_notes(identity: str, request: dict[str, Any], chunks: list[dict[
     return {"request_id": identity, "kind": "notes", "claims": claims}
 
 
+def item_text(item: dict[str, Any], key: dict[str, Any]) -> str:
+    """A quiz item's words for its topic tags (SPEC §19.3.2): the stem, the key (an option's text for a choice) and
+    the key's explanation. Used locally to choose tags; never stored or sent."""
+    options = {o["option_id"]: o["text"] for o in item.get("options", [])}
+    answer = str(key.get("answer", ""))
+    keyed = [options.get(a, a) for a in answer_ids(answer)] if options else [answer]
+    stem = item.get("stem", {}).get("text", "")
+    explanation = key.get("explanation", {}).get("text", "") if isinstance(key.get("explanation"), dict) else ""
+    return "\n".join([str(stem), *map(str, keyed), str(explanation)])
+
+
 def answer_ids(answer: str) -> list[str]:
     """A multi-select answer: comma-separated option ids, order-free."""
     return sorted({part.strip() for part in answer.split(",") if part.strip()})
@@ -287,6 +301,8 @@ def located(output: Any, chunks: list[dict[str, Any]]) -> None:
 class StudyDesk:
     def __init__(self, conn: sqlite3.Connection, clock: Callable[[], int], settings: Any):
         self.conn, self.clock, self.settings = conn, clock, settings
+        # The open profile's Study session and activity recorder (`StudyVisits`), when the core attached one.
+        self.activity: Any = None
         file = next((r[2] for r in conn.execute("PRAGMA database_list") if r[1] == "main"), "")
         if not file:
             raise StudyError("storage_full")
@@ -1131,6 +1147,11 @@ class StudyDesk:
             brief["previous_response"] = "\n".join(lines)
         if settings:
             brief["settings"] = settings
+        # SPEC §19.3.1: who is asking, as MDL-25's data (level, subjects, bands, watched misconceptions), when the
+        # profile's learner database is open. The app never sends it; the engine renders it from the snapshot.
+        learner = self.activity.learner_block() if self.activity is not None else None
+        if learner is not None:
+            brief["learner"] = learner
         if syllabus:
             text = "\n".join(c["text"] for c in self.selected(syllabus))
             brief["syllabus_outline"] = text[:8000]
@@ -1545,6 +1566,9 @@ class StudyDesk:
                 "INSERT INTO study_reviews VALUES (?,?,?,?)",
                 (body["client_review_id"], body["card_id"], json.dumps(result), self.clock()),
             )
+        # The activity's seam: after the review committed (or, inside a command's transaction, at its flush).
+        if self.activity is not None:
+            self.activity.card(body["card_id"], f"{card['front']['text']}\n{card['back']['text']}", body["rating"])
         return result
 
     def quiz(self, qid: str) -> dict[str, Any]:
@@ -1626,6 +1650,16 @@ class StudyDesk:
                     "'$.submission',json(?)) WHERE quiz_id=?",
                     (json.dumps({"attempt_id": body["attempt_id"], "answers": body["answers"]}), qid),
                 )
+        # The activity's one seam (SPEC §19.4): after the submission committed, one quiz_item per item; a preliminary
+        # check records nothing. A repeat returned the stored result above and never reaches here.
+        if self.activity is not None and body.get("submission_kind") != "check":
+            order = {item_id: i for i, item_id in enumerate(items)}
+            keys = {k["item_id"]: k for k in quiz["keys"]}
+            self.activity.quiz(body["attempt_id"], [
+                (order.get(r["item_id"], i), item_text(items.get(r["item_id"], {}), keys.get(r["item_id"], {})),
+                 r["verdict"])
+                for i, r in enumerate(result["results"])
+            ])  # fmt: skip
         return result
 
     def save_draft(self, qid: str, body: dict[str, Any]) -> dict[str, Any]:
@@ -1733,12 +1767,31 @@ class StudyQueue:
         from agent_core.tools.perception import PerceptionClient
 
         self.perception: Callable[..., Any] = PerceptionClient(settings=settings).run
+        # The open profile's Study session and activity recorder (`engine.study_session.StudyVisits`), once attached.
+        self.activity: Any = None
 
     def desk(self) -> StudyDesk:
         conn = self.connection()
         if conn is None:
             raise StudyError("not_found")
-        return StudyDesk(conn, self.clock, self.settings)
+        desk = StudyDesk(conn, self.clock, self.settings)
+        desk.activity = self.activity
+        return desk
+
+    def aid_made(self, desk: StudyDesk, jid: str) -> None:
+        """SPEC §19.4: an aid is recorded where it completes, once its job committed (never at `create_job`), in the
+        open Study session; with none open, the next session's open records it at the time it was made."""
+        if self.activity is None:
+            return
+        with contextlib.suppress(StudyError, sqlite3.Error, KeyError):
+            job = desk.job(jid)
+            if job["state"] != "completed":
+                return
+            from agent_core.engine.study_session import aid_count, aid_text
+
+            for aid_id in job.get("result_ids", []):
+                aid = desk.aid(aid_id)
+                self.activity.aid(aid_id, aid["kind"], aid_count(desk.conn, aid), aid_text(aid))
 
     async def submit_quiz(self, qid: str, body: dict[str, Any]) -> dict[str, Any]:
         if self.busy():
@@ -2366,6 +2419,8 @@ class StudyQueue:
                 job["notice"] = "allowance_exhausted"
                 desk.save_job(job)
                 await self.generate_batches(desk, job, {**brief, "execution": "local"}, chunks)
+            if self.connection() is desk.conn:
+                self.aid_made(desk, jid)
         except asyncio.CancelledError:
             raise
         except Exception as error:

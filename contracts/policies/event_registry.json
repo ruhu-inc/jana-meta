@@ -24,5 +24,6 @@
     "consent_withdrawn": "local",
     "safety_flagged": "local",
     "injection_flagged": "local",
-    "profile_updated": "local"
+    "profile_updated": "local",
+    "study_activity": "local"
 }

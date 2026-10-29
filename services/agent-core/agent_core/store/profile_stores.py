@@ -67,6 +67,14 @@ PROFILE_STORES: tuple[ProfileStore, ...] = (
                  "profile_directory", "projections"),
     ProfileStore("exams", "mock sittings and their marks", LEARNER, "profile_directory", "exams"),
     ProfileStore("study notes", "typed and dictated study notes", LEARNER, "profile_directory", "study notes"),
+    ProfileStore("companion episodes", "the Study companion's daily episodes: their session, day and opener facts "
+                 "(SPEC §19.4)", LEARNER, "profile_directory", "companion episodes"),
+    ProfileStore("companion summary", "the companion thread's rolling summary, folded by code: ids, bands and counts, "
+                 "no free text (SPEC §19.5.3)", LEARNER, "profile_directory", "companion summary"),
+    ProfileStore("check-ins", "the tutor's check-ins: kind, subject, Jana's question, due window and state (SPEC "
+                 "§19.3.4)", LEARNER, "profile_directory", "check-ins"),
+    ProfileStore("note recalls", "which note the tutor recalled in which session and day (SPEC §19.3.5), ids only",
+                 LEARNER, "profile_directory", "note recalls"),
     ProfileStore("source study workspace", "source revisions, chunks, aids, cards, reviews, quizzes and jobs", LEARNER,
                  "profile_directory", "source study workspace"),
     ProfileStore("study concept maps of typed topics", "concept maps of typed topics and the learner's edits to them",

@@ -6,14 +6,19 @@
 // switch (the core does both in `PATCH /v1/connectivity`); turning it off withdraws the consent. Downloads and update
 // checks need only the switch. The cloud tutor is not a switch (D70): subscribing turns it on, the guardian's consent
 // for each profile under 18 is recorded with it, and ending the subscription turns it off.
+//
+// Personal tutor memory online (SPEC §19.6, JM-D21) is the open profile's own consent, like Online study materials: off
+// by default, with §19.6's "What leaves this computer" line, and it needs the online tutor, so while that is off it
+// cannot be turned on and says why. Under it, Check-in notifications (JM-D24): the profile's `checkin_notifications`,
+// default off; turning it on asks the computer for permission first, and a refusal leaves it off with a notice.
 import { useEffect, useState } from "react";
 import {
-  CONSENT_FEATURES, CONSENT_NOTICE_VERSIONS, ONLINE_FEATURES, type FamilySettings, type CloudSubscription, type ConnectivityReply,
+  CONSENT_FEATURES, CONSENT_NOTICE_VERSIONS, ONLINE_FEATURES, type CheckinNotifier, type FamilySettings, type CloudSubscription, type ConnectivityReply,
   agreesForItself, readProfile, readConsents, switchConsent, type ConsentState, type ProfileController,
 } from "@jana/client-core";
 import type { OnlineFeature } from "@jana/contracts-ts";
 import { useT } from "../i18n.js";
-import { Button, ConfirmDialog, Skeleton } from "../primitives/index.js";
+import { Button, ConfirmDialog, Notice, Skeleton, Switch } from "../primitives/index.js";
 import { useProfiles } from "../profiles/ProfilePicker.js";
 
 type Run = (work: () => Promise<unknown>) => void;
@@ -49,7 +54,41 @@ function Cloud({ subscription, names, selfConsent, known, onConsent, onEnd }: { 
   return <p className="text-ui text-ink">{t("settings.online.cloud.off")}</p>;
 }
 
-export function OnlineFeatures({ profiles, run }: { profiles: ProfileController; run: Run }) {
+/** Check-in notifications (SPEC §19.5.5): shown once the open profile's settings carry the key (a core with check-ins). */
+function CheckinNotifications({ profiles, notifier }: { profiles: ProfileController; notifier?: Pick<CheckinNotifier, "permission"> | undefined }) {
+  const t = useT();
+  const view = useProfiles(profiles);
+  const [problem, setProblem] = useState<"denied" | "failed" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const settings = view.settings;
+  if (view.active === null || settings === null || settings.checkin_notifications === undefined) return null;
+  const change = async (on: boolean) => {
+    setProblem(null);
+    setBusy(true);
+    try {
+      if (on && notifier !== undefined && await notifier.permission().catch(() => "denied" as const) !== "granted") {
+        setProblem("denied");
+        return;
+      }
+      await profiles.setPreferences({ checkin_notifications: on });
+    } catch {
+      setProblem("failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div data-checkin-notifications="" className="flex flex-col gap-1 border-t border-line pt-2">
+      <Switch label={t("settings.checkin_notifications.label")} help={t("settings.checkin_notifications.help")} checked={settings.checkin_notifications} disabled={busy}
+        onChange={(on) => void change(on)} />
+      {problem !== null && <Notice tone="warn" message={t(problem === "denied" ? "settings.checkin_notifications.denied" : "settings.checkin_notifications.failed")} />}
+    </div>
+  );
+}
+
+export function OnlineFeatures({ profiles, run, notifier }: { profiles: ProfileController; run: Run;
+  /** The computer's notification permission (the desktop shell's), asked before check-in notifications are turned on. */
+  notifier?: Pick<CheckinNotifier, "permission"> | undefined }) {
   const t = useT();
   const family: FamilySettings = profiles.family;
   const view = useProfiles(profiles);
@@ -94,6 +133,8 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
   const names = needed.map((id) => known.find((p) => p.profile_id === id)?.display_name ?? "").filter((n) => n !== "");
   const selfConsent = adult === true && needed.length > 0 && needed.every((id) => id === view.active);
   const studyNeedsCloud = adult === true && (!cloudConsent?.effective || cloudConsent.paused || (view.active !== null && needed.includes(view.active)));
+  // Personal tutor memory online works with the online tutor (§19.6): it cannot be turned on while that is off.
+  const memoryNeedsCloud = !(state.features.cloud_tier?.enabled ?? false) || cloudConsent?.effective !== true || cloudConsent.paused;
   const set = (change: Partial<Record<OnlineFeature, boolean>>) => run(async () => setState(await family.setOnlineFeatures(change)));
   const refresh = async () => setState(await family.connectivity());
   const end = () => run(async () => {
@@ -119,6 +160,7 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
               <input
                 type="checkbox"
                 checked={state.features[feature]?.enabled ?? false}
+                disabled={feature === "tutor_memory_online" && memoryNeedsCloud && !(state.features[feature]?.enabled ?? false)}
                 onChange={(event) => (event.target.checked ? setAsking(feature) : set({ [feature]: false }))}
               />
               {t(`settings.online.feature.${feature}`)}
@@ -130,9 +172,13 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
             <p className="text-ui text-ink">{t(adult === false ? "study.access.settings_guardian" : "study.access.settings_self")}</p>
             {adult && <Button onClick={() => setAsking("study_materials")}>{t("study.access.review_consent")}</Button>}
           </div>}
+          {feature === "tutor_memory_online" && memoryNeedsCloud && !(state.features[feature]?.enabled ?? false)
+            && <p data-needs-cloud="" className="text-meta text-muted">{t("settings.online.tutor_memory_online.needs_cloud")}</p>}
+          {feature === "tutor_memory_online" && <CheckinNotifications profiles={profiles} notifier={notifier} />}
           {feature === "cloud_tier" && <Cloud subscription={subscription} names={names} selfConsent={selfConsent} known={adult !== null || view.active === null} onConsent={() => setDialog("consent")} onEnd={() => setDialog("end")} />}
         </div>
       ))}
+      {!listed.includes("tutor_memory_online") && <CheckinNotifications profiles={profiles} notifier={notifier} />}
       <div className="border-t border-line pt-2">
         <Button onClick={() => (active ? setDialog("all_off") : allOff())}>{t("settings.online.all_off")}</Button>
       </div>
@@ -166,6 +212,11 @@ export function OnlineFeatures({ profiles, run }: { profiles: ProfileController;
             // Cloud voice is a profile feature too (VOC-28): the adult's "Turn on" above, with the consent line, is
             // their own consent for the open profile, or voice stays on this computer.
             if (feature === "cloud_voice" && adult === true && view.active !== null) {
+              await switchConsent(profiles.commands, view.active, feature, "on");
+            }
+            // Personal tutor memory online is the profile's consent too (§19.6), recorded against the notice the core
+            // ships (`CONSENT_NOTICE_VERSIONS.tutor_memory_online`).
+            if (feature === "tutor_memory_online" && adult === true && view.active !== null) {
               await switchConsent(profiles.commands, view.active, feature, "on");
             }
             setState(await family.setOnlineFeatures({ [feature]: true }));

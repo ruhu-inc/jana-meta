@@ -111,6 +111,17 @@
       "authenticated": false,
       "dpia_gate": "pilot_start",
       "destination_label": "Crash reports"
+    },
+    "tutor_memory_online": {
+      "stage": "S2",
+      "service": "gateway",
+      "payload_classes": ["cloud_prompt", "service_auth", "consent_withdrawal"],
+      "data_classes": ["tutor_notes", "learner_summary"],
+      "queued": "never",
+      "consent": "profile",
+      "authenticated": true,
+      "dpia_gate": "cloud_tier",
+      "destination_label": "Online tutor memory"
     }
   },
   "probe_payload_class": "probe",

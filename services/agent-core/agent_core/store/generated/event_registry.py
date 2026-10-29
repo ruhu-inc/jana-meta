@@ -2,7 +2,7 @@
 # Do not edit: change the table and regenerate (ARC-30).
 """Every event type and its sync class (DAT-04)."""
 
-SOURCE_SHA256 = "8be5a3db5b8a190631a775759d4d9a4da664a0d22b662f5acb5672997169ed23"
+SOURCE_SHA256 = "bf28a74efb65891a10ef1419ba56e35a8f7876522a8243e1e9e70ca99bbc1e50"
 
 SYNC_CLASS: dict[str, str] = {
     "session_started": "local",
@@ -30,5 +30,6 @@ SYNC_CLASS: dict[str, str] = {
     "consent_withdrawn": "local",
     "safety_flagged": "local",
     "injection_flagged": "local",
-    "profile_updated": "local"
+    "profile_updated": "local",
+    "study_activity": "local"
 }

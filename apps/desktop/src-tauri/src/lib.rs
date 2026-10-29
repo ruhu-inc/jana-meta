@@ -1,6 +1,7 @@
 //! The desktop shell (ARC-02): starts and supervises the agent core and the model runtime, hands the webview its
 //! launch info, and quits without leaving processes behind. The Tauri entry point is `main.rs`; everything here runs without a window, so
 //! it is tested headless.
+pub mod checkins;
 pub mod control;
 pub mod data_home;
 pub mod generated;

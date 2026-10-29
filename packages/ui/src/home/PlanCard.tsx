@@ -30,15 +30,19 @@ export interface PlanActions {
   onKeepLearning: () => void;
   onAnother: () => void;
   onRetry: () => void;
+  /** Open the deck of a warm-up's due Study cards (SPEC §19.4, `open_study_deck`). */
+  onStudyCards?: (deckId: string) => void;
 }
 
-export function useBlockText(names: PlanNames): (block: Pick<PlanBlock, "kind" | "kc_ids" | "reason_code">) => { title: string; detail: string | null } {
+export function useBlockText(names: PlanNames): (block: Pick<PlanBlock, "kind" | "kc_ids" | "reason_code"> & Partial<Pick<PlanBlock, "study_cards">>) => { title: string; detail: string | null } {
   const t = useT();
   return (block) => {
     const first = block.kc_ids[0];
     const topic = first === undefined ? null : names.topic(first);
     switch (block.kind) {
       case "warmup":
+        // Due cards from the learner's own materials (SPEC §19.4): counted from the plan, opened in Study.
+        if (block.study_cards !== undefined && block.study_cards.length > 0) return { title: t("plan.block.study_cards", { count: block.study_cards.length }), detail: null };
         return { title: t("plan.block.warmup", { count: block.kc_ids.length }), detail: null };
       case "main": {
         if (block.reason_code === "mock_follow_up") {
@@ -162,14 +166,20 @@ export function PlanCard({ state, names, streak, actions }: { state: PlanState; 
   // The next activity leads, large, with Start; the rest follow quietly under "Then" (H1, D109).
   const earlier = next === null ? plan.blocks : plan.blocks.filter((block) => block.index < next.index);
   const later = next === null ? [] : plan.blocks.filter((block) => block.index > next.index);
+  // A warm-up of due Study cards opens its deck from its own row too (SPEC §19.4).
+  const cards = (block: PlanBlock) => {
+    const deck = block.study_cards?.[0]?.deck_id;
+    return deck === undefined || actions.onStudyCards === undefined ? undefined
+      : <Button size="sm" tone="ghost" data-study-cards={deck} onClick={() => actions.onStudyCards?.(deck)}>{t("plan.open_study_cards")}</Button>;
+  };
   const notToday = plan.status === "proposed" ? <Button tone="ghost" disabled={state.busy} onClick={actions.onNotToday}>{t("plan.not_today")}</Button> : undefined;
   return frame(
     <ol className="flex flex-col gap-1">
-      {earlier.map((block) => <BlockRow key={block.index} block={block} text={text(block)} next={false} status={plan.status} />)}
+      {earlier.map((block) => <BlockRow key={block.index} block={block} text={text(block)} next={false} status={plan.status} action={cards(block)} />)}
       {next !== null && <HeroRow block={next} text={text(next)} secondary={notToday} action={plan.status === "proposed"
         ? <Button tone="primary" disabled={state.busy} onClick={actions.onStart}>{t(keepLearning ? "plan.keep_learning" : "plan.start")}<Icon name="go-next" size={16} /></Button>
         : <Button tone="primary" onClick={() => actions.onContinue(next)}><Icon name="continue" size={16} />{t("plan.continue")}</Button>} />}
       {later.length > 0 && <li aria-hidden="true" className="border-t border-line px-2 pt-3 text-label font-medium text-faint">{t("plan.then")}</li>}
-      {later.map((block) => <BlockRow key={block.index} block={block} text={text(block)} next={false} status={plan.status} />)}
+      {later.map((block) => <BlockRow key={block.index} block={block} text={text(block)} next={false} status={plan.status} action={cards(block)} />)}
     </ol>, plan.status);
 }

@@ -96,7 +96,8 @@
     "title",
     "index_rebuild",
     "capture",
-    "research_chat"
+    "research_chat",
+    "companion"
    ]
   },
   "session_ref": {
@@ -1283,7 +1284,8 @@
        "cloud_voice",
        "study_materials",
        "telemetry",
-       "crash_reports"
+       "crash_reports",
+       "tutor_memory_online"
       ]
      }
     },
@@ -1300,7 +1302,8 @@
        "cloud_voice",
        "study_materials",
        "telemetry",
-       "crash_reports"
+       "crash_reports",
+       "tutor_memory_online"
       ]
      },
      "additionalProperties": {
@@ -1584,7 +1587,9 @@
     "compaction",
     "judge",
     "item_drafter",
-    "research_chat"
+    "research_chat",
+    "companion",
+    "checkin"
    ]
   },
   "effort": {

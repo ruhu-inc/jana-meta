@@ -1,0 +1,7 @@
+{
+  "text": "x",
+  "action": {
+    "kind": "open_tutor",
+    "ref": 1
+  }
+}

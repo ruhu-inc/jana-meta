@@ -2038,6 +2038,9 @@
      "minLength": 1,
      "maxLength": 8000,
      "description": "Previous study response for conversational context only. Original chunks remain the only factual evidence."
+    },
+    "learner": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/LearnerBlock"
     }
    },
    "required": [
@@ -4030,6 +4033,81 @@
     "relations"
    ],
    "description": "Muse Spark's no-source concept map of a topic: names, plain notes, relations."
+  },
+  "LearnerBlock": {
+   "description": "Who is asking a Study request (SPEC §19.3.1, MDL-25's set and nothing else): the profile's level and subjects, up to 24 knowledge components in three bands (the current focus first, then the most recently practised) and up to 8 misconceptions being watched (active or resolving). Rendered by the engine from the frozen learner snapshot (memory/snapshot.py learner_block_data); never notes, preferences, names or dates.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "level",
+    "subjects",
+    "kcs",
+    "misconception_ids"
+   ],
+   "properties": {
+    "level": {
+     "anyOf": [
+      {
+       "enum": [
+        "O",
+        "A"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "subjects": {
+     "type": "array",
+     "maxItems": 5,
+     "uniqueItems": true,
+     "items": {
+      "enum": [
+       "mathematics",
+       "physics",
+       "chemistry",
+       "biology",
+       "accounting"
+      ]
+     }
+    },
+    "kcs": {
+     "type": "array",
+     "maxItems": 24,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "band"
+      ],
+      "properties": {
+       "kc_id": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       },
+       "band": {
+        "enum": [
+         "not_started",
+         "learning",
+         "secure"
+        ]
+       }
+      }
+     }
+    },
+    "misconception_ids": {
+     "type": "array",
+     "maxItems": 8,
+     "uniqueItems": true,
+     "items": {
+      "type": "string",
+      "pattern": "^mc\\.[a-z0-9_.]+$",
+      "maxLength": 96
+     }
+    }
+   }
   }
  }
 }

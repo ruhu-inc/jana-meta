@@ -7,6 +7,7 @@ Device credentials and tokens (SEC-21):
   POST /admin/v1/credentials/{credential_id}/revoke licence portal, admin bearer secret -> 204
 Model calls (ARC-12, MDL-25, MDL-26, SEC-20, OBS-22):
   POST /v1/chat/completions                         OpenAI chat-completions body, model "<slot>/<alias>"
+                                                    (roles `companion` and `reflector`: `cloud_gateway.companion`)
 Photo segmentation (JM-D10, `cloud_gateway.segment`):
   POST /v1/vision/segment                           a screened photo and boxes, points or one concept -> masks
 Research agent (SPEC §18, `cloud_gateway.research`):
@@ -45,7 +46,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from cloud_gateway import minimise
+from cloud_gateway import companion, minimise
 from cloud_gateway.auth import Authenticator, AuthError, RegistrationError, Session
 from cloud_gateway.config import GatewayConfig, ModelSpec
 from cloud_gateway.contracts import errors as contract_errors
@@ -123,6 +124,7 @@ class _Call:
     started: float
     role: str = "unspecified"
     feature: str = FEATURE
+    hold: str | None = None  # the personal learning agent's daily hold (`cloud_gateway.companion`), settled at finish
 
 
 class Gateway:
@@ -152,6 +154,7 @@ class Gateway:
             log.warning("inference budget: %d holds left in flight by a stopped gateway are now unknown", orphaned)
         self.providers = Providers(config, secrets, client_factory, budget=self.inference_budget)
         self.quotas = Quotas(config, self.store, alerts)
+        self.companion = companion.CompanionLedger(config, self.store, clock)
         self.operations = GatewayOperations(config.storage_dir, config.operations, alerts=alerts)
         self.health = UpstreamHealth(config.objectives)
         self.reach: Callable[[str, int, float], Awaitable[bool]] = tcp_reachable
@@ -216,6 +219,8 @@ class Gateway:
         )
         self.store.record(record)
         self.quotas.spent(call.session.account, call.session.period_start, now, cost)
+        if call.hold is not None:
+            self.companion.settle(call.hold, cost)
         self.operations.record_cost(
             now,
             call.provider,
@@ -247,6 +252,7 @@ class Gateway:
 
     def purge(self, now: float) -> None:
         self.store.purge(now, self.config.metadata_retention_days)
+        self.companion.purge(now)
         if self.inference_budget is not None:
             self.inference_budget.purge(now, self.config.metadata_retention_days)
 
@@ -302,10 +308,20 @@ class Gateway:
             "compaction",
             "input_guard",
             "rule_matcher",
+            *companion.FEATURES,
         }:
             role = "unspecified"
-        call = _Call(session, device_hash, provider, adapter, model, started, role)
-        upstream = ProviderRequest(model, minimise.forwarded(body), request.headers[PSEUDONYM_HEADER], role)
+        forwarded, feature, hold = minimise.forwarded(body), FEATURE, None
+        if role in companion.FEATURES:
+            # The personal learning agent (W8): its bound held and its turn or job counted under its own feature.
+            admitted = self.companion.admit(session.account, request.headers[PSEUDONYM_HEADER], role, model,
+                                            forwarded, started)  # fmt: skip
+            if isinstance(admitted, DeviceError):
+                return _error(admitted)
+            hold, forwarded = admitted
+            feature = role
+        call = _Call(session, device_hash, provider, adapter, model, started, role, feature, hold)
+        upstream = ProviderRequest(model, forwarded, request.headers[PSEUDONYM_HEADER], role)
         if asked.stream:
             include_usage = bool(asked.stream_options is not None and asked.stream_options.include_usage)
             return await self._stream(call, upstream, include_usage)
