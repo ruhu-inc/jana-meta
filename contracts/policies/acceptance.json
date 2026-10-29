@@ -90,6 +90,15 @@
     "agt10_number_provenance": [
       "services/agent-core/tests/test_m14b_gates.py"
     ],
+    "agt10_small_counters_are_not_quantities": [
+      "services/agent-core/tests/test_m14b_gates.py"
+    ],
+    "agt10_spelled_numbers_need_provenance_on_every_surface": [
+      "services/agent-core/tests/test_m14b_gates.py"
+    ],
+    "agt10_turn_end_reports_what_was_checked_and_where": [
+      "services/agent-core/tests/test_m14b_gates.py"
+    ],
     "agt10_unverified_plan_blocked": [
       "services/agent-core/tests/test_m14b_gates.py"
     ]
@@ -810,6 +819,14 @@
       "services/agent-core/tests/test_m16_assessment.py"
     ]
   },
+  "ASM-21": {
+    "asm21_flag_not_edit": [
+      "services/pack-builder/tests/test_m33b_item_analytics.py"
+    ],
+    "asm21_threshold": [
+      "services/pack-builder/tests/test_m33b_item_analytics.py"
+    ]
+  },
   "ASM-22": {
     "asm22_mock_pool_reserved": [
       "services/agent-core/tests/test_m16_assessment.py"
@@ -1003,6 +1020,14 @@
     ],
     "aut36_migration_replay_check": [
       "services/pack-builder/tests/test_m22_studio.py"
+    ]
+  },
+  "AUT-37": {
+    "aut37_research_only": [
+      "services/pack-builder/tests/test_m33b_item_analytics.py"
+    ],
+    "aut37_small_sample": [
+      "services/pack-builder/tests/test_m33b_item_analytics.py"
     ]
   },
   "AUT-39": {
@@ -1225,6 +1250,11 @@
   "CUR-25": {
     "cur25_qa_checks_block": [
       "services/pack-builder/tests/test_m13_content_gates.py"
+    ]
+  },
+  "CUR-26": {
+    "cur26_flagged_items_queued": [
+      "services/pack-builder/tests/test_m33b_item_analytics.py"
     ]
   },
   "CUR-27": {
@@ -1583,7 +1613,14 @@
     ]
   },
   "DSN-27": {
+    "dsn27_mouth_follows_loudness": [
+      "packages/client-core/test/mouth.test.ts"
+    ],
+    "dsn27_no_motion_low_power_or_calm": [
+      "packages/ui/test/presence.test.tsx"
+    ],
     "dsn27_reduced_motion_static_pose": [
+      "packages/ui/test/presence.test.tsx",
       "packages/ui/test/tutor.test.tsx"
     ]
   },
@@ -2037,12 +2074,25 @@
       "services/agent-core/tests/test_m25a_first_run_and_lab.py"
     ]
   },
+  "JRN-13": {
+    "jrn13_failure_branches": [
+      "services/agent-core/tests/test_m33a_parents.py"
+    ],
+    "jrn13_weekly_summary": [
+      "services/agent-core/tests/test_m33a_parents.py"
+    ]
+  },
   "JRN-15": {
     "jrn15_failure_branches": [
       "services/agent-core/tests/test_m31_m32_device_lab.py"
     ],
     "jrn15_voice_session": [
       "services/agent-core/tests/test_m31_m32_device_lab.py"
+    ]
+  },
+  "JRN-16": {
+    "jrn16_failure_branches": [
+      "services/pack-builder/tests/test_jrn16_studio_journey.py"
     ]
   },
   "LOC-01": {
@@ -2638,6 +2688,14 @@
   "MDL-30": {
     "mdl30_trace_complete": [
       "services/agent-core/tests/test_m3_router.py"
+    ]
+  },
+  "MDL-33": {
+    "mdl33_allowance_exhausted_no_sketch": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ],
+    "mdl33_sketch_only_online": [
+      "services/agent-core/tests/test_m44_sketch.py"
     ]
   },
   "MEM-01": {
@@ -4388,6 +4446,14 @@
       "services/agent-core/tests/test_m10a_isolation.py"
     ]
   },
+  "TCH-12": {
+    "tch12_digest_no_free_text": [
+      "services/agent-core/tests/test_m33a_parents.py"
+    ],
+    "tch12_digest_numbers_match": [
+      "services/agent-core/tests/test_m33a_parents.py"
+    ]
+  },
   "TCH-13": {
     "tch13_no_adult_pin": [
       "services/agent-core/tests/test_m10a_isolation.py"
@@ -5088,6 +5154,11 @@
       "packages/ui/test/settings.test.tsx"
     ]
   },
+  "UXS-33": {
+    "uxs33_parent_summary_offline": [
+      "services/agent-core/tests/test_m33a_history.py"
+    ]
+  },
   "UXS-34": {
     "uxs34_mic_errors_keep_typing": [
       "apps/desktop/test/microphone-browser.test.ts",
@@ -5179,6 +5250,14 @@
       "services/agent-core/tests/test_m20d_first_run.py"
     ]
   },
+  "UXS-48": {
+    "uxs48_history_private": [
+      "services/agent-core/tests/test_m33a_history.py"
+    ],
+    "uxs48_history_retention": [
+      "services/agent-core/tests/test_m33a_history.py"
+    ]
+  },
   "UXS-51": {
     "uxs51_reserved_items_hidden": [
       "services/agent-core/tests/test_m18_search.py"
@@ -5201,6 +5280,17 @@
       "packages/ui/test/session-notes.test.tsx"
     ]
   },
+  "UXS-53": {
+    "uxs53_presence_follows_voice_state": [
+      "packages/ui/test/presence.test.tsx"
+    ],
+    "uxs53_presence_placement": [
+      "packages/ui/test/presence.test.tsx"
+    ],
+    "uxs53_presence_states_gallery": [
+      "packages/ui/test/presence.test.tsx"
+    ]
+  },
   "UXS-54": {
     "uxs54_one_pick_sets_character_and_name": [
       "packages/ui/test/tutor.test.tsx"
@@ -5210,6 +5300,68 @@
     ],
     "uxs54_tutor_pick_gallery": [
       "packages/ui/test/tutor.test.tsx"
+    ]
+  },
+  "UXS-55": {
+    "uxs55_reduced_motion_instant": [
+      "packages/ui/test/write-on.test.tsx"
+    ],
+    "uxs55_screen_reader_parity": [
+      "packages/ui/test/write-on.test.tsx"
+    ],
+    "uxs55_write_on_synced_to_speech": [
+      "packages/client-core/test/write-on.test.ts"
+    ]
+  },
+  "UXS-56": {
+    "uxs56_pen_follows_cues": [
+      "packages/client-core/test/pen.test.ts"
+    ],
+    "uxs56_pen_reduced_motion_jumps": [
+      "packages/ui/test/pen.test.tsx"
+    ]
+  },
+  "UXS-57": {
+    "uxs57_spotlight_dims_and_restores": [
+      "packages/ui/test/spotlight.test.tsx"
+    ],
+    "uxs57_spotlight_not_colour_alone": [
+      "packages/ui/test/spotlight.test.tsx"
+    ]
+  },
+  "UXS-58": {
+    "uxs58_keyboard_term_selection": [
+      "packages/ui/test/pointing-back.test.tsx"
+    ],
+    "uxs58_term_why_sends_target": [
+      "services/agent-core/tests/test_m43_pointing_back.py"
+    ],
+    "uxs58_voice_this_resolves_selection": [
+      "services/agent-core/tests/test_m43_pointing_back.py"
+    ]
+  },
+  "UXS-59": {
+    "uxs59_no_audio_stored": [
+      "services/agent-core/tests/test_m43_replay.py"
+    ],
+    "uxs59_replay_without_model": [
+      "services/agent-core/tests/test_m43_replay.py"
+    ]
+  },
+  "UXS-61": {
+    "uxs61_carry_from_verified_diff": [
+      "services/agent-core/tests/test_m43_term_carry.py"
+    ],
+    "uxs61_reduced_motion_skips": [
+      "packages/ui/test/term-carry.test.tsx"
+    ]
+  },
+  "UXS-62": {
+    "uxs62_mark_unchanged": [
+      "services/agent-core/tests/test_m43_why_right.py"
+    ],
+    "uxs62_why_right_on_correct_items": [
+      "services/agent-core/tests/test_m43_why_right.py"
     ]
   },
   "UXS-63": {
@@ -5442,9 +5594,42 @@
       "services/agent-core/tests/test_m2de_verification.py"
     ]
   },
+  "VER-30": {
+    "ver30_a_level_maths_golden": [
+      "services/agent-core/tests/test_m26_maths.py"
+    ]
+  },
+  "VER-31": {
+    "ver31_mechanics_golden": [
+      "services/tool-worker/tests/test_ver31_mechanics.py"
+    ]
+  },
+  "VER-32": {
+    "ver32_weak_acid_method": [
+      "services/tool-worker/tests/test_ver32_weak_acid.py"
+    ]
+  },
+  "VER-34": {
+    "ver34_a_level_accounting_golden": [
+      "services/agent-core/tests/test_m26_accounting.py"
+    ]
+  },
+  "VER-35": {
+    "ver35_monohybrid_ratio": [
+      "services/tool-worker/tests/test_ver38_biology.py"
+    ]
+  },
   "VER-36": {
     "ver36_kc_checker_mapping": [
       "scripts/tests/test_m12e_budgets_coverage.py"
+    ]
+  },
+  "VER-38": {
+    "ver38_biology_contract_cases": [
+      "services/tool-worker/tests/test_ver38_biology.py"
+    ],
+    "ver38_equilibrium_physical_cases": [
+      "services/tool-worker/tests/test_ver38_equilibrium.py"
     ]
   },
   "VOC-01": {
@@ -5841,6 +6026,17 @@
       "packages/renderers/test/catalogue.test.tsx"
     ]
   },
+  "VSL-05": {
+    "vsl05_biology_kinds_render": [
+      "packages/renderers/test/biology.test.tsx"
+    ]
+  },
+  "VSL-06": {
+    "vsl06_but2ene_isomers": [
+      "packages/renderers/test/chemistry.test.tsx",
+      "services/agent-core/tests/test_vsl46_chemistry_kinds.py"
+    ]
+  },
   "VSL-09": {
     "vsl09_engine_fields_rejected": [
       "services/agent-core/tests/test_m4fh_context_visuals.py"
@@ -5988,6 +6184,64 @@
       "packages/renderers/test/catalogue.test.tsx"
     ]
   },
+  "VSL-40": {
+    "vsl40_closed_vocabulary": [
+      "services/agent-core/tests/test_m43_annotations.py"
+    ],
+    "vsl40_student_line_not_hidden": [
+      "packages/ui/test/board-annotation.test.tsx"
+    ],
+    "vsl40_unknown_target_dropped": [
+      "services/agent-core/tests/test_m43_annotations.py"
+    ]
+  },
+  "VSL-41": {
+    "vsl41_build_follows_declared_layers": [
+      "services/agent-core/tests/test_m43_visual_build.py"
+    ],
+    "vsl41_no_layers_shows_whole": [
+      "services/agent-core/tests/test_m43_visual_build.py"
+    ]
+  },
+  "VSL-42": {
+    "vsl42_keyboard_equivalent": [
+      "packages/ui/test/manipulation.test.tsx"
+    ],
+    "vsl42_manipulation_checked_by_tools": [
+      "services/agent-core/tests/test_m43_manipulation.py"
+    ]
+  },
+  "VSL-43": {
+    "vsl43_never_replaces_catalogue_visual": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ],
+    "vsl43_sketch_validation": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ],
+    "vsl43_speech_never_waits_for_sketch": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ],
+    "vsl43_student_removes_sketch": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ],
+    "vsl43_template_first_sketch_only_without_fit": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ]
+  },
+  "VSL-44": {
+    "vsl44_checks_by_claim": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ],
+    "vsl44_label_unless_checked": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ],
+    "vsl44_late_sketch_offered_after_turn": [
+      "services/agent-core/tests/test_m44_sketch.py"
+    ],
+    "vsl44_rough_sketch_label_and_spoken_notice": [
+      "packages/ui/test/sketch.test.tsx"
+    ]
+  },
   "VSL-45": {
     "vsl45_ambiguous_target_no_pointer": [
       "services/agent-core/tests/test_m43f_point_demo.py"
@@ -5997,6 +6251,13 @@
     ]
   },
   "VSL-46": {
+    "vsl46_equilibrium_response_fidelity": [
+      "services/agent-core/tests/test_vsl46_chemistry_kinds.py"
+    ],
+    "vsl46_science_kind_contracts": [
+      "packages/renderers/test/chemistry.test.tsx",
+      "services/agent-core/tests/test_vsl46_chemistry_kinds.py"
+    ],
     "vsl46_science_sim_fidelity": [
       "packages/renderers/test/science.test.tsx"
     ]
@@ -6029,6 +6290,5 @@
     "vsl47_scenarios_tied_to_pack_misconceptions": [
       "packages/renderers/test/predict.test.tsx"
     ]
-  },
-  "JRN-16": {}
+  }
 }

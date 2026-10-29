@@ -353,7 +353,7 @@ test("the Podcast voice keeps Play disabled while readiness loads and never name
   show({ source, busy: true, canSpeak: false, podcastVoice: { enabled: true, configured: true },
     aid: { ...aidBase, aid_id: `aid_${"0".repeat(26)}`, kind: "audio_overview" } });
   expect(screen.getByRole("button", { name: "Play overview" }).hasAttribute("disabled")).toBe(true);
-  expect(screen.getByText(/Jana’s own voice reads this Podcast/)).toBeTruthy();
+  expect(screen.getByText(/The tutor’s own voice reads this Podcast/)).toBeTruthy();
   expect(screen.queryByText("Read on this computer using an installed voice.")).toBeNull();
   expect(document.body.textContent).not.toMatch(/NVIDIA|Kokoro/);
 });

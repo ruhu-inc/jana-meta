@@ -18,6 +18,7 @@ RENDERERS_SRC = Path("packages") / "renderers" / "src"
 CLIENT_EVENTS = Path("packages") / "client-core" / "src" / "session.ts"
 STAGES = ("S1", "S2", "S3", "S4", "S5")
 
+_LINE_COMMENT = re.compile(r"//[^\n]*")
 _RENDERERS = re.compile(r"export const RENDERERS\b[^=]*=\s*\[([^\]]*)\]")
 _DEFINITION = re.compile(
     r"export const (\w+)\s*(?::\s*VisualRenderer\s*)?=\s*(?:define\(\s*)?\{\s*kind:\s*\"([^\"]+)\""
@@ -42,7 +43,7 @@ def register_kinds(path: Path | None = None) -> list[dict[str, Any]]:
 def renderer_kinds(root: Path = REPO_ROOT) -> tuple[list[str], list[str]]:
     """The kinds of the renderers listed in RENDERERS, in order, and any entry whose kind cannot be read."""
     src = root / RENDERERS_SRC
-    listed = _RENDERERS.search((src / "index.ts").read_text())
+    listed = _RENDERERS.search(_LINE_COMMENT.sub("", (src / "index.ts").read_text()))
     if listed is None:
         return [], [f"{RENDERERS_SRC / 'index.ts'}: no RENDERERS list"]
     definitions: dict[str, str] = {}

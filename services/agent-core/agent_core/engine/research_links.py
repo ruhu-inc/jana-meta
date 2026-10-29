@@ -82,8 +82,7 @@ async def checked_links(router: Any, concept_map: Mapping[str, Any]) -> list[dic
     if not passages:
         return []
     ids = [c["concept_id"] for c in ideas]
-    listed = [f'<idea id="{c["concept_id"]}">{escape(c["name"])}: {escape(c["summary"]["text"])}</idea>'
-              for c in ideas]
+    listed = [f'<idea id="{c["concept_id"]}">{escape(c["name"])}: {escape(c["summary"]["text"])}</idea>' for c in ideas]
     propose_schema = {
         "type": "object", "additionalProperties": False, "required": ["links"],
         "properties": {"links": {"type": "array", "maxItems": MAX_LINKS, "items": {

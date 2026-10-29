@@ -16,6 +16,8 @@ from signing_service.speech import sign_speech_pack
 
 FILES = [
     ("tts", "kokoro", "models/kokoro-82m/kokoro-v1_0.pth", "Apache-2.0"),
+    # VOC-48: the profile's Kokoro speaker must be a voice file the pack ships for the class, as the release build does.
+    ("tts", "kokoro", "models/kokoro-82m/voices/af_heart.pt", "Apache-2.0"),
     ("sidecar", "speech-to-speech", "bin/jana-voice-kokoro", "Apache-2.0"),
     ("sidecar", "speech-to-speech", "runtime/kokoro-cpu/num2words/__init__.py", "LGPL-2.1-or-later"),
     ("sidecar", "speech-to-speech", "runtime/kokoro-cpu/num2words-0.5.14.dist-info/COPYING", "LGPL-2.1-or-later"),

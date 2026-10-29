@@ -176,16 +176,21 @@ def test_teaching_entry_keeps_step_positions_and_assessment_records(tmp_path: Pa
         try:
             c = Client(r)
             ordinary = await c.ok("GET", f"/v1/lessons/{STEP_LESSON}", definition="LessonView")
-            await c.ok("PUT", f"/v1/lessons/{STEP_LESSON}/position", {
-                "block_index": 2, "lesson_version": ordinary["version"],
-            })
+            await c.ok(
+                "PUT",
+                f"/v1/lessons/{STEP_LESSON}/position",
+                {
+                    "block_index": 2,
+                    "lesson_version": ordinary["version"],
+                },
+            )
             conn = r.runtime.learner.conn
             before = (list(conn.execute("SELECT * FROM attempts")), list(conn.execute("SELECT * FROM kc_mastery")))
             with offline_run() as egress:
                 teaching = await c.ok("GET", f"/v1/lessons/{STEP_LESSON}?teaching=true", definition="LessonView")
             assert egress.attempts == []
             assert teaching["position"]["block_index"] == 2
-            assert teaching["blocks"][:len(ordinary["blocks"])] == ordinary["blocks"]
+            assert teaching["blocks"][: len(ordinary["blocks"])] == ordinary["blocks"]
             assert teaching["blocks"][-1]["type"] == "worked_example"
             assert teaching["blocks"][-1]["worked_example"]["faded_steps"] == []
             after = (list(conn.execute("SELECT * FROM attempts")), list(conn.execute("SELECT * FROM kc_mastery")))
@@ -194,6 +199,7 @@ def test_teaching_entry_keeps_step_positions_and_assessment_records(tmp_path: Pa
             assert again["blocks"] == ordinary["blocks"]
         finally:
             await stop_core(r)
+
     run(scenario())
 
 

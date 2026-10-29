@@ -228,7 +228,7 @@ class StudyCloud:
         if errors("study/workspace#/$defs/ConceptTopicDraft", output) or output["request_id"] != request_id:
             raise StudyCloudError("insufficient_evidence")
         self.meter(conn, output)
-        return output
+        return cast(dict[str, Any], output)
 
     async def research_start(self, conn: Any, request: dict[str, Any]) -> dict[str, Any]:
         """The approved brief, and a photographed diagram's confirmed part names, to the gateway's research job (SPEC

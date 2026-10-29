@@ -209,7 +209,7 @@ def check(text: str, validator: Draft202012Validator) -> Checked:
         value = model_json.loads(fenced.group(1) if fenced else body)  # LaTeX backslashes kept, not read as escapes
     except json.JSONDecodeError as error:
         return Checked(None, [f"the reply is not valid JSON ({error.msg} at character {error.pos})"])
-    value = _without_empty_optional(value, validator.schema, validator._resolver)
+    value = _without_empty_optional(value, validator.schema, validator._resolver)  # type: ignore[attr-defined]  # private jsonschema attribute
     problems = sorted(validator.iter_errors(value), key=lambda e: [str(p) for p in e.absolute_path])
     errors = [f"{'/'.join(str(p) for p in e.absolute_path) or '(root)'}: {e.message[:300]}" for e in problems[:10]]
     if not errors and not isinstance(value, dict):  # `null` or a bare list can pass a loose schema: never valid

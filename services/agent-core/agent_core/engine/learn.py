@@ -112,11 +112,19 @@ def teaching_example(content: Any, lesson: Mapping[str, Any]) -> Mapping[str, An
     kcs = lesson.get("kc_ids") or []
     if not kcs:
         return None
-    return next(iter(sorted(
-        (example for example in content.table("worked_examples")
-         if _active(example) and kcs[0] in example.get("kc_ids", [])),
-        key=lambda example: str(example["id"]),
-    )), None)
+    return next(
+        iter(
+            sorted(
+                (
+                    example
+                    for example in content.table("worked_examples")
+                    if _active(example) and kcs[0] in example.get("kc_ids", [])
+                ),
+                key=lambda example: str(example["id"]),
+            )
+        ),
+        None,
+    )
 
 
 def syllabus_points(record: Mapping[str, Any]) -> list[dict[str, str]]:
@@ -435,8 +443,9 @@ class LearnDesk:
                 resolved = self._worked_example(str(example["id"]), stages)
                 if resolved is not None:
                     resolved["faded_steps"] = []  # Teaching explicitly requests the complete worked example.
-                    idea = next((_english(block.get("names")) for block in record["blocks"]
-                                 if _english(block.get("names"))), "")
+                    idea = next(
+                        (_english(block.get("names")) for block in record["blocks"] if _english(block.get("names"))), ""
+                    )
                     # Append presentation blocks: saved step indices and all check items keep their identity.
                     if idea:
                         blocks.append({"type": "idea", "text": idea, "visual": None})

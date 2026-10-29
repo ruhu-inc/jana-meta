@@ -23,7 +23,7 @@ from typing import Any
 from fastapi import FastAPI, Request, Response
 
 from agent_core.api.core import CoreService
-from agent_core.api.errors import ApiError
+from agent_core.api.errors import ApiError, cloud_refusal
 from agent_core.contracts import errors as contract_errors
 from agent_core.engine.events import new_id
 from agent_core.engine.research_chat import ChatError, Start, next_turn
@@ -31,12 +31,34 @@ from agent_core.engine.research_links import checked_links
 from agent_core.engine.safety import redact_personal
 from agent_core.engine.study import StudyDesk, StudyError, checked
 from agent_core.engine.study_concepts import RELATIONS_MAX, with_outline
-from agent_core.net.study import StudyCloudError
 
 RESEARCH = "study/research#/$defs/"
 SOURCE_CHARS = 20_000  # what Study processes per part: a few batches, not dozens (see `relevant`)
-STOPWORDS = frozenset({"what", "which", "when", "where", "does", "with", "from", "that", "this", "their", "they",
-                       "into", "each", "your", "about", "level", "there", "these", "those", "have", "been"})
+STOPWORDS = frozenset(
+    {
+        "what",
+        "which",
+        "when",
+        "where",
+        "does",
+        "with",
+        "from",
+        "that",
+        "this",
+        "their",
+        "they",
+        "into",
+        "each",
+        "your",
+        "about",
+        "level",
+        "there",
+        "these",
+        "those",
+        "have",
+        "been",
+    }
+)
 PART_KINDS = ("concept_map", "notes", "flashcards", "quiz", "audio_overview")
 # SPEC §18.1: only types code marks, as Study's own quiz defaults. With multi-select and numeric added, the first live
 # pack's quiz failed (a topic with no quantities); Study's defaults made the same material's quiz at once.
@@ -88,7 +110,7 @@ def page_sections(title: str, brief: dict[str, Any], pages: list[dict[str, Any]]
     head = (f"Web research: {title}\nFound by the research agent for these questions:\n"
             + "\n".join(f"- {q}" for q in brief["sub_questions"]))  # fmt: skip
     budget = max(600, (SOURCE_CHARS - len(head)) // max(1, len(pages)))
-    sections = []
+    sections: list[str] = []
     for page in pages:
         index = page["sub_question"]
         question = brief["sub_questions"][index] if index < len(brief["sub_questions"]) else brief["title"]
@@ -190,8 +212,8 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
             _, parts = photo_parts(core, record["capture_id"])
         try:
             job = await cloud().research_start(d.conn, {"brief": record["brief"], "photo_parts": list(parts)})
-        except (StudyCloudError, StudyError) as error:
-            reason = getattr(error, "reason", "upstream")
+        except ValueError as error:
+            reason = cloud_refusal(error)
             if reason == "waiting_online":
                 return {**record, "status": "waiting_online"}, None
             failure = reason if reason in ("consent_required", "allowance_exhausted") else "upstream"
@@ -234,8 +256,8 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
         elif record["status"] == "researching" and gateway_id is not None:
             try:
                 job = await cloud().research_job(d.conn, gateway_id)
-            except StudyCloudError as error:
-                if error.reason == "research_not_found":  # the gateway lost it (a 24-hour expiry, a reset)
+            except ValueError as error:
+                if cloud_refusal(error) == "research_not_found":  # the gateway lost it (a 24-hour expiry, a reset)
                     record = {**record, "status": "failed", "failure": "interrupted"}
                 return save(d, record, gateway_id)
             record = {**record, "sub_questions": job["sub_questions"]}
@@ -246,8 +268,8 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
                     record = {**record, "status": "failed", "failure": "import_failed"}
                 try:
                     await cloud().research_forget(d.conn, gateway_id)  # the pages are kept here now
-                except (StudyCloudError, StudyError):
-                    pass  # the gateway deletes them itself within 24 hours
+                except ValueError as error:
+                    cloud_refusal(error)  # the gateway deletes them itself within 24 hours
             elif job["status"] in ("failed", "cancelled"):
                 record = {**record, "status": job["status"], "failure": job["failure"]}
         if record["status"] == "making":
@@ -296,8 +318,8 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
         async def run(d: StudyDesk, body: dict[str, Any]) -> dict[str, Any]:
             try:
                 cloud().guard(d.conn)  # consent, subscription: the conversation is online as the research is
-            except StudyCloudError as error:
-                raise StudyError(error.reason) from None
+            except ValueError as error:
+                raise StudyError(cloud_refusal(error)) from None
             start = body["start"]
             if "capture_id" in start:
                 title, parts = photo_parts(core, start["capture_id"])
@@ -334,8 +356,7 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
             record, gateway_id = await send(d, record)
             return save(d, record, gateway_id)
 
-        return await command(request, "study/research#/$defs/CreateRequest", run, status=202,
-                             atomic_command=False)
+        return await command(request, "study/research#/$defs/CreateRequest", run, status=202, atomic_command=False)
 
     @app.get("/v1/study/research")
     async def listed() -> Response:
@@ -362,8 +383,10 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
             if gateway_id is not None:
                 try:
                     await cloud().research_cancel(d.conn, gateway_id)
-                except StudyCloudError:
-                    pass  # the gateway stops at its own limits; nothing more is fetched for this pack here
+                except ValueError as error:
+                    cloud_refusal(
+                        error
+                    )  # the gateway stops at its own limits; nothing more is fetched for this pack here
             return save(d, {**record, "status": "cancelled"}, gateway_id)
 
         return await command(request, None, run, atomic_command=False)

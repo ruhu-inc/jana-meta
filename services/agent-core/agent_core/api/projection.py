@@ -76,9 +76,14 @@ def apply(state: dict[str, Any], envelope: dict[str, Any]) -> bool:
     parts = state["parts"]
     if kind.startswith("board.") or kind == "visual.await":
         # Preserve the actual board event sequence for replay after a restart.
-        part = next((p for p in reversed(list(parts.values()))
-                     if p["kind"] == "board" and p["turn_id"] == turn_id
-                     and p["status"] in ("started", "streaming")), None)
+        part = next(
+            (
+                p
+                for p in reversed(list(parts.values()))
+                if p["kind"] == "board" and p["turn_id"] == turn_id and p["status"] in ("started", "streaming")
+            ),
+            None,
+        )
         if part is not None:
             part.setdefault("board_events", []).append(copy.deepcopy(event))
     if kind == "turn.start":

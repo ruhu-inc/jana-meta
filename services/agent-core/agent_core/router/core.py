@@ -443,7 +443,10 @@ class Router:
                         prepared = await prepare(candidate, await self.capabilities(candidate), list(messages))
                         if isinstance(prepared, Prepared):
                             messages, tools = prepared.messages, offered if prepared.tools is None else prepared.tools
-                            decode = prepared.output or output
+                            # A candidate's own decode schema only replaces the call's: a call without one (a tool
+                            # round) stays free text, or a reply that is a tool call would be refused as bad JSON
+                            # and the call never reach its executor (MEM-13: a cloud recall must reach the refusal).
+                            decode = (prepared.output or output) if output is not None else None
                         else:
                             messages, tools, decode = prepared, offered, output
                     else:

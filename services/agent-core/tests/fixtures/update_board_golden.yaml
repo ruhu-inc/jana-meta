@@ -14,7 +14,8 @@ ops:
    prompt: 'What is v at the top?', check_id: null}
 events:
 - {type: board.step, board_id: brd_1, step_id: stp_1, index: 1, latex: 'v^2 = u^2 + 2as',
-   reason: 'links u, v, a and s', owner: tutor, status: unchecked, check_id: null, error: null}
+   reason: 'links u, v, a and s', owner: tutor, status: unchecked, check_id: null, error: null,
+   terms: [{term_id: t1, start: 0, end: 3}, {term_id: t2, start: 6, end: 9}, {term_id: t3, start: 12, end: 15}]}
 - {type: board.highlight, board_id: brd_1, step_ids: [stp_2], ttl_ms: null}
 - {type: board.knowns, board_id: brd_1, knowns: [], unknowns: [], conventions: []}
 - {type: board.step, board_id: brd_1, step_id: stp_3, index: 2, latex: '', reason: null, owner: student,

@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: math_integrate
-version: 1
+version: 2
 valid_args:
 - expression: x^2
   student: x^3/3

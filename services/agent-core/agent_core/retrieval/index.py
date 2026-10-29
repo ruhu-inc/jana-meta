@@ -251,7 +251,8 @@ class KnowledgeIndex:
             mc_id = str(found["id"])
             if mc_id not in self.misconceptions:
                 kinds = tuple(sorted({str(s.get("kind", "")) for s in found.get("signatures", []) if s.get("kind")}))
-                gap = found.get("root_gap") if isinstance(found.get("root_gap"), dict) else {}
+                root_gap = found.get("root_gap")
+                gap = root_gap if isinstance(root_gap, dict) else {}
                 idea = gap.get("idea") or {}
                 self.misconceptions[mc_id] = MisconceptionRecord(
                     mc_id, str(found.get("student_name", "")), kinds, tuple(str(k) for k in found.get("kc_ids", [])),

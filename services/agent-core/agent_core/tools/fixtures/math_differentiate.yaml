@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: math_differentiate
-version: 1
+version: 2
 valid_args:
 - expression: x^3 - 3x
   stationary_points: true

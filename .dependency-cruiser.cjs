@@ -16,7 +16,8 @@ module.exports = {
       comment: "packages/ui may import only client-core, contracts-ts and i18n",
       severity: "error",
       from: { path: "^packages/ui/" },
-      to: { path: "^(apps/|packages/(?!(ui|client-core|contracts-ts|i18n)/))" },
+      // The renderers' JSON visual fixtures are shared test data (figures.test.tsx draws one), not code.
+      to: { path: "^(apps/|packages/(?!(ui|client-core|contracts-ts|i18n)/))", pathNot: "^packages/renderers/fixtures/.*\\.json$" },
     },
     {
       name: "arc18-renderers-imports",

@@ -23,6 +23,22 @@ _POINT = re.compile(r"^\(\s*([^,()]+?)\s*,\s*([^,()]+?)\s*\)$")
 _FORCE = re.compile(r"^\s*(?P<size>.+?)\s+at\s+(?P<angle>-?\d+(?:\.\d+)?)\s*°?\s*$")
 
 
+async def checker_value(engine: Any, name: str, args: dict[str, Any]) -> tuple[Any, str | None]:
+    """One verification tool call as the checker, for a placement: its value and check id, or nothing if it failed."""
+    from agent_core.engine.events import new_id
+    from agent_core.tools.executor import ToolCall
+
+    result = await engine.deps.executor.run_one(
+        ToolCall(f"call_visual{new_id('cli')[4:]}_0", name, args),
+        "checker",
+        engine._tool_session("checker", "full"),
+    )
+    if result.get("status") != "ok":
+        return None, None
+    checks = result.get("meta", {}).get("checks") or []
+    return result.get("data", {}).get("value"), checks[0]["check_id"] if checks else None
+
+
 class ManipulationRefused(Exception):
     def __init__(self, code: str, detail: str) -> None:
         super().__init__(f"{code}: {detail}")

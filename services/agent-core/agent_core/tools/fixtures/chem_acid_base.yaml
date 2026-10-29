@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: chem_acid_base
-version: 1
+version: 2
 valid_args:
 - acid: HCl
   acid_concentration: 0.1 mol/dm^3

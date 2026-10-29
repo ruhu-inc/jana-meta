@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: acc_double_entry
-version: 1
+version: 2
 valid_args:
 - entries_text: Dr Equipment 5000; Cr Cash 2500; Cr Payables 2500
 - entries:

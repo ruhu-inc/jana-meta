@@ -36,7 +36,7 @@ WEIGHT_BANDS = ((0.5, "high"), (0.25, "medium"), (0.0, "low"))
 
 
 def _active(record: Mapping[str, Any]) -> bool:
-    return record.get("status", "active") == "active"
+    return bool(record.get("status", "active") == "active")
 
 
 def _english(text: Any) -> str:

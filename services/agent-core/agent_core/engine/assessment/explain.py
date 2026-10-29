@@ -19,7 +19,7 @@ from __future__ import annotations
 import hashlib
 import re
 from collections.abc import Awaitable, Callable, Mapping, Sequence
-from typing import Any
+from typing import Any, cast
 
 from agent_core.engine.assessment.errors import Refused
 from agent_core.store.assessment import dump
@@ -33,7 +33,9 @@ ExplainJudge = Callable[[Sequence[tuple[str, str]], str], Awaitable[list[dict[st
 def key_points(content: Any, kc_id: str) -> list[dict[str, Any]]:
     """The KC's key points from its pack record ([] when it has none, so its check confirms mastery as before)."""
     record = content.record("kcs", kc_id) or {}
-    return [p for p in record.get("key_points") or [] if isinstance(p, Mapping) and p.get("id")]
+    return cast(
+        list[dict[str, Any]], [p for p in record.get("key_points") or [] if isinstance(p, Mapping) and p.get("id")]
+    )
 
 
 def _english(text: Any) -> str:
@@ -122,7 +124,7 @@ class ExplainCommands:
             reply = self._assessment_view(state)  # type: ignore[attr-defined]
             state["clients"][client_id] = {"fingerprint": fingerprint, "reply": reply}
             self._commit(state, events)  # type: ignore[attr-defined]
-            return self._assessment_view(state)  # type: ignore[attr-defined]
+            return self._assessment_view(state)  # type: ignore[attr-defined,no-any-return]
         finally:
             self.busy.discard(state["id"])
 

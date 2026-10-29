@@ -178,8 +178,10 @@ SKETCH_FIELDS = frozenset({"sketch", "sketch_wanted"})
 # beside it, and every later call, read the KCs in play as usual.
 GUESSED_KCS: contextvars.ContextVar[list[str] | None] = contextvars.ContextVar("guessed_kcs", default=None)
 # The one line an online candidate's prompt gains (VSL-43, D106): a sketch is the engine's own call, never the turn's.
-SKETCH_HINT = ("Only when a drawing would help and no catalogue visual fits, set sketch_wanted to a short description "
-               "of it (what to draw, in words); the app draws it separately. Never draw in the reply.")
+SKETCH_HINT = (
+    "Only when a drawing would help and no catalogue visual fits, set sketch_wanted to a short description "
+    "of it (what to draw, in words); the app draws it separately. Never draw in the reply."
+)
 KC_ID = re.compile(r"^kc\.(mth|phy|chm|bio|acc)\.(o|a)\.[a-z0-9_]+\.[a-z0-9_]+$")
 
 
@@ -187,6 +189,8 @@ def _rebased(checker: Draft202012Validator, schema: dict[str, Any]) -> Draft2020
     """The checker for another shape of its contract: the same registry and formats, with references resolved from
     the new schema (a self-contained decoding schema's `#/$defs/...` are its own, not the registry document's)."""
     return cast(Draft202012Validator, checker.evolve(schema=schema, _resolver=None))
+
+
 REPEATED_MARKER = "[repeated text removed]"
 AUX_STOPS = {"timeout": "timeout", "schema_invalid": "schema_invalid"}  # an auxiliary fallback's delegation stop
 CHECK_ID = re.compile(r"chk_[A-Za-z0-9_]{3,64}")
@@ -497,8 +501,9 @@ class Engine(Coordination, Offers, Predictions):
         send. The capture flow (INP-30) calls this; the text is shown back for confirmation before any turn uses it."""
         reader = PhotoReader(self.deps.router, self.deps.settings, hardware_class=self.state.hardware_class,
                              screen=screen)  # fmt: skip
-        return await reader.read(data, send_to_cloud=send_to_cloud, structured=structured, purpose=purpose,
-                                 outline_later=outline_later)
+        return await reader.read(
+            data, send_to_cloud=send_to_cloud, structured=structured, purpose=purpose, outline_later=outline_later
+        )
 
     async def _skill(self, args: dict[str, Any], context: Any) -> Any:
         """The `skill` tool for the calling role; loading grants nothing (SKL-23)."""
@@ -2378,7 +2383,10 @@ class Engine(Coordination, Offers, Predictions):
                 "exhausted_canned",
                 "unit_notation",
             )
-        missing = untraced_numbers(written_surfaces(surfaces), self.state, self._context_numbers())
+        # Zero stands in the Coach's prose as the rest or reference value a question states in words ("from rest",
+        # "zero speed at the top"); never on the board, where a 0 is a computed value and needs its check (EVL-02).
+        prose = self._context_numbers() | {Fraction(0)}
+        missing = untraced_numbers(written_surfaces(surfaces), self.state, prose)
         if missing:
             return self._fired(
                 turn, "verified", NUDGES["verified"].format(detail=missing[0]), "exhausted_canned", "unverified_number"
@@ -3508,6 +3516,7 @@ class Engine(Coordination, Offers, Predictions):
         check_schema = validator(schema_name)
         if schema is not self.deps.bundled_schemas[schema_name]:
             tolerant = self._output_schema(schema_name, tolerant=True)
+            assert tolerant is not None  # a schema other than the bundled one is a lean one, never None
             check_schema = _rebased(check_schema, tolerant)
         if text_only and schema_name == "agents/tutor-turn":
             # The engine already wrote and checked these student lines. Acknowledging them or answering a method
@@ -3660,10 +3669,9 @@ class Engine(Coordination, Offers, Predictions):
 
     def _context_numbers(self) -> set[Fraction]:
         """Numbers the engine itself puts in front of the Coach (step counters, rung): provenance for a counter only,
-        never for a quantity with a unit (gates.untraced_numbers). Zero is here too: the rest or reference value a
-        question states in words ("from rest", "zero speed at the top"); a withheld zero is still the leak gate's."""
+        never for a quantity with a unit (gates.untraced_numbers)."""
         total = len(self.state.plan.steps) if self.state.plan else 0
-        return {Fraction(n) for n in (self.state.step, total, self.state.rung, 0, 1, 2, 3, 4, 5)}
+        return {Fraction(n) for n in (self.state.step, total, self.state.rung, 1, 2, 3, 4, 5)}
 
     def _tutor_context_budget(self) -> int:
         settings = self.deps.settings

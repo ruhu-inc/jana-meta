@@ -1,4 +1,5 @@
 """The imported visual features across real APIs, stored history and restarts; all input is synthetic."""
+
 import asyncio
 
 from api_harness import start_core, stop_core
@@ -21,8 +22,9 @@ def test_visuals_survive_reload_history_and_restart(tmp_path):
         assert snapshot["parts"][ids["sketch_part"]]["sketch"]["sketch_id"] == ids["sketch"]
         history = (await api.call("GET", f"/v1/history/{session}", profile=token)).json()
         assert history["parts"][ids["part"]]["boards"][0]["annotation"]["mark"] == "circle"
-        start = await api.call("POST", f"/v1/visuals/{ids['visuals']['number-line']}/practice",
-                               {"part_id": "sol.from"}, profile=token)
+        start = await api.call(
+            "POST", f"/v1/visuals/{ids['visuals']['number-line']}/practice", {"part_id": "sol.from"}, profile=token
+        )
         assert start.status_code == 200, start.text
         step = start.json()["step_id"]
         assert r.core.records.failures == 0
@@ -38,9 +40,16 @@ def test_visuals_survive_reload_history_and_restart(tmp_path):
             replay = await api.call("GET", f"/v1/boards/{ids['board']}/replay", profile=token)
             assert replay.status_code == 200, replay.text
             assert any(i["event"]["type"] == "board.annotate" for i in replay.json()["items"])
-            answer = await api.call("POST", f"/v1/visuals/{ids['visuals']['number-line']}/answer",
-                                    {"client_answer_id": "cli_01JZ0000000000000000000001", "step_id": step,
-                                     "values": [{"part_id": "sol.from", "value": "4"}]}, profile=token)
+            answer = await api.call(
+                "POST",
+                f"/v1/visuals/{ids['visuals']['number-line']}/answer",
+                {
+                    "client_answer_id": "cli_01JZ0000000000000000000001",
+                    "step_id": step,
+                    "values": [{"part_id": "sol.from", "value": "4"}],
+                },
+                profile=token,
+            )
             assert answer.status_code == 200, answer.text
             assert answer.json()["status"] == "correct", answer.text
             assert answer.json()["check_id"]
@@ -50,13 +59,20 @@ def test_visuals_survive_reload_history_and_restart(tmp_path):
             ]:
                 visual_id = ids["visuals"][diagram]
                 for value, expected in [(wrong, "incorrect"), (correct, "correct")]:
-                    started = await api.call("POST", f"/v1/visuals/{visual_id}/practice",
-                                             {"part_id": part}, profile=token)
+                    started = await api.call(
+                        "POST", f"/v1/visuals/{visual_id}/practice", {"part_id": part}, profile=token
+                    )
                     assert started.status_code == 200, started.text
-                    submitted = await api.call("POST", f"/v1/visuals/{visual_id}/answer",
-                                               {"client_answer_id": "cli_01JZ0000000000000000000001",
-                                                "step_id": started.json()["step_id"],
-                                                "values": [{"part_id": part, "value": value}]}, profile=token)
+                    submitted = await api.call(
+                        "POST",
+                        f"/v1/visuals/{visual_id}/answer",
+                        {
+                            "client_answer_id": "cli_01JZ0000000000000000000001",
+                            "step_id": started.json()["step_id"],
+                            "values": [{"part_id": part, "value": value}],
+                        },
+                        profile=token,
+                    )
                     assert submitted.status_code == 200, submitted.text
                     assert submitted.json()["status"] == expected, submitted.text
                     assert submitted.json()["check_id"]
@@ -69,8 +85,11 @@ def test_visuals_survive_reload_history_and_restart(tmp_path):
             other = await api.add(student("Other synthetic QA", "18_plus"))
             other_token = await api.token(other)
             assert (await api.call("GET", f"/v1/history/{session}", profile=other_token)).status_code == 404
-            assert (await api.call("POST", f"/v1/visuals/{ids['visuals']['free-body']}/practice",
-                                   {"part_id": "W"}, profile=other_token)).status_code == 404
+            assert (
+                await api.call(
+                    "POST", f"/v1/visuals/{ids['visuals']['free-body']}/practice", {"part_id": "W"}, profile=other_token
+                )
+            ).status_code == 404
         finally:
             await stop_core(r)
 

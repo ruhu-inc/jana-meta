@@ -41,7 +41,7 @@ files = ["evals/prompt-snapshots/*/*.txt"]
 owner = "Client lead"
 cadence = "every commit touching client"
 stage = "S1"
-version = "2026-10-26.1"
+version = "2026-10-28.1"
 files = ["packages/ui/gallery/states/*.json"]
 
 [suites.performance]

@@ -40,9 +40,7 @@ def matching_topics(content: Any, text: str) -> dict[str, Any]:
                 "subject": ".".join(node_id.split(".")[:3]),
                 "kc_ids": kcs,
                 "lesson_ids": lessons,
-                "objectives": [
-                    {"kc_id": k, "statement": str(content.kc_statement(k) or k)} for k in kcs
-                ],
+                "objectives": [{"kc_id": k, "statement": str(content.kc_statement(k) or k)} for k in kcs],
             }
         )
         if len(matches) == 10:

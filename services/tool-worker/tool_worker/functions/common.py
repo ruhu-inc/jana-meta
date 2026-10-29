@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from fractions import Fraction
 from typing import Any
 
 import sympy as sp
@@ -50,6 +51,23 @@ def substituted(tree: sp.Basic, values: dict[sp.Basic, sp.Basic], field: str) ->
         return bounded_subs(tree, values)
     except TooLarge as error:
         raise WorkerError(Code.LIMIT_EXCEEDED, f"{field}: {error}", limit=error.limit) from None
+
+
+def as_expr(value: sp.Basic | Fraction | int | float) -> sp.Basic:
+    """An already-computed number as a SymPy value, built explicitly: SymPy values are kept as they are, a Python int
+    or Fraction becomes an exact Integer or Rational and a float a Float. Unlike sympify it never parses text, so no
+    string can reach SymPy's parser through it (SEC-07); anything else is a programming error."""
+    if isinstance(value, sp.Basic):
+        return value
+    if isinstance(value, bool):
+        raise TypeError("as_expr: a bool is not a number")
+    if isinstance(value, int):
+        return sp.Integer(value)
+    if isinstance(value, Fraction):
+        return sp.Rational(value.numerator, value.denominator)
+    if isinstance(value, float):
+        return sp.Float(value)
+    raise TypeError(f"as_expr: expected a SymPy value or a Python number, got {type(value).__name__}")
 
 
 def convention(context: CallContext, key: str) -> tuple[Any, str] | None:

@@ -23,6 +23,7 @@ from typing import Any
 
 import sympy as sp
 
+from tool_worker.functions.common import as_expr
 from tool_worker.functions.maths import exact
 from tool_worker.functions.projectile import _gravity
 from tool_worker.functions.quantities import number
@@ -60,13 +61,13 @@ UNKNOWN_MARK = "?"
 
 def _tidy(value: Any) -> sp.Expr:
     """A canonical exact form: rationals as they are, anything else simplified."""
-    expr = sp.sympify(value)
+    expr = as_expr(value)
     return expr if expr.is_Rational else sp.simplify(expr)
 
 
 def _sign(value: Any) -> int:
     """The sign of an exact real number (surds and trigonometric values of rational degrees)."""
-    expr = sp.sympify(value)
+    expr = as_expr(value)
     if expr.is_zero:
         return 0
     if expr.is_positive:
@@ -80,7 +81,7 @@ def _sign(value: Any) -> int:
 
 
 def _equal(a: Any, b: Any) -> bool:
-    return _sign(sp.sympify(a) - sp.sympify(b)) == 0
+    return _sign(as_expr(a) - as_expr(b)) == 0
 
 
 def _quantity(raw: Any, field: str, kind: str) -> tuple[sp.Expr, str | None]:
@@ -118,7 +119,7 @@ class Problem:
     def get(self, key: str, kind: str, *, default: Any = None, sign: str = "any") -> sp.Expr | None:
         """A given quantity (None when absent and no default); `sign` is any, positive or nonnegative."""
         if not self.has(key):
-            return None if default is None else sp.sympify(default)
+            return None if default is None else as_expr(default)
         value, _ = _quantity(self.args[key], key, kind)
         if sign == "positive" and not value > 0:
             raise WorkerError(Code.DOMAIN_ERROR, f"{key} must be positive")
@@ -325,7 +326,7 @@ def _moments(p: Problem) -> Value:
         if any(not v.is_real for v in solution.values()):
             raise WorkerError(Code.DOMAIN_ERROR, "no real values of the unknowns put the beam in equilibrium")
     resolved = {
-        name: _tidy(sp.sympify(e).subs(solution))
+        name: _tidy(as_expr(e).subs(solution))
         for name, e in [
             *((f"x_{n}", d) for n, d, *_ in [*loads, *supports]),
             *((f"R_{n}", r) for n, _, r in supports),

@@ -16,7 +16,7 @@ import unicodedata
 from collections.abc import Callable, Iterator
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from agent_core.contracts import errors
 from agent_core.engine import pedagogy, study_concepts
@@ -1072,7 +1072,7 @@ class StudyDesk:
         if parent["status"] != "ready":
             raise StudyError("source_stale", True)
 
-        def selections(sources):
+        def selections(sources: list[dict[str, Any]]) -> set[tuple[Any, Any]]:
             return {(s["source_id"], s["revision"]) for s in sources}
 
         if selections(parent["sources"]) != selections(request["sources"]):
@@ -1087,7 +1087,7 @@ class StudyDesk:
                 if not card["suspended"]
                 for claim in (card["front"], card["back"])
             ]
-        return parent["claims"]
+        return cast(list[dict[str, Any]], parent["claims"])
 
     def scoped(self, request: dict[str, Any], chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Only the chunks of the topics the learner kept; all topics kept means the whole material (STU-21)."""
@@ -1122,7 +1122,7 @@ class StudyDesk:
         brief = {k: v for k, v in request.items() if k not in ("settings", "context_aid_id", "learning_intent")}
         if request.get("context_aid_id"):
             parent = self.follow_up_aid(request)
-            lines = []
+            lines: list[str] = []
             for i, claim in enumerate(self.follow_up_claims(parent)):
                 line = f"{i + 1}. {claim['text']}"
                 if sum(len(s) + 1 for s in lines) + len(line) > 8000:

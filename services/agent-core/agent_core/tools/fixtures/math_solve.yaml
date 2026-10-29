@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: math_solve
-version: 3
+version: 4
 valid_args:
 - equations:
   - v = u + a*t
@@ -28,6 +28,21 @@ valid_args:
     unit: m/s^2
     source: question
   positive_direction: up
+- equations:
+  - z^2 - 2z + 5 = 0
+  domain: complex
+- equations:
+  - x^3 - 2x - 5 = 0
+  method: newton_raphson
+  start: 2
+  steps: 4
+  dp: 6
+- equations:
+  - x^3 + x - 1 = 0
+  method: sign_change
+  interval:
+  - 0
+  - 1
 invalid_args:
 - equations:
   - s = u*t
@@ -40,6 +55,14 @@ invalid_args:
   constants:
   - symbol: g
     source: textbook
+- equations:
+  - x^2 = 2
+  method: bisection
+  start: 1
+- equations:
+  - x^2 = 2
+  method: newton_raphson
+  start: one
 description_lint:
   sections:
   - what

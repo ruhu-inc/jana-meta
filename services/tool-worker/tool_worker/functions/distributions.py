@@ -46,7 +46,7 @@ from typing import Any
 import mpmath
 import sympy as sp
 
-from tool_worker.functions.common import convention
+from tool_worker.functions.common import as_expr, convention
 from tool_worker.functions.maths import significant
 from tool_worker.functions.money import choice
 from tool_worker.protocol import Code, WorkerError
@@ -141,9 +141,7 @@ def _text(value: Fraction | int | sp.Expr) -> str:
 
 
 def _sym(value: Fraction | sp.Expr) -> sp.Expr:
-    if isinstance(value, Fraction):
-        return sp.Rational(value.numerator, value.denominator)
-    return sp.sympify(value)
+    return as_expr(value)
 
 
 def _float(value: Fraction | sp.Expr) -> sp.Float:

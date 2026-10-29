@@ -35,8 +35,13 @@ MAP = {"edited": False, "relations": [], "concepts": [
 
 
 def test_near_duplicates_from_two_batches_merge_but_distinct_ideas_do_not() -> None:
-    a = {"concepts": [{"concept_id": "c1", "name": "Cardiac cycle", "summary": claim("x")},
-                      {"concept_id": "c2", "name": "Heart", "summary": claim("y")}], "relations": []}
+    a = {
+        "concepts": [
+            {"concept_id": "c1", "name": "Cardiac cycle", "summary": claim("x")},
+            {"concept_id": "c2", "name": "Heart", "summary": claim("y")},
+        ],
+        "relations": [],
+    }
     b = {"concepts": [{"concept_id": "c1", "name": "Cardiac cycle phases", "summary": claim("z")},
                       {"concept_id": "c2", "name": "Heart valves", "summary": claim("w")}],
          "relations": [{"from": "c1", "to": "c2", "type": "causes", "claim": claim("v")}]}  # fmt: skip

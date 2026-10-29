@@ -148,8 +148,10 @@ def vsl44_label_unless_checked() -> None:
     )
     assert partly["status"] == "not_checked"
     # Only pictorial elements (shapes, layout): never checkable, never "checked".
-    shapes = [{"kind": "circle", "center": [0, 0], "radius": 2},
-              {"kind": "polygon", "points": [[0, 0], [1, 0], [0, 1]]}]
+    shapes = [
+        {"kind": "circle", "center": [0, 0], "radius": 2},
+        {"kind": "polygon", "points": [[0, 0], [1, 0], [0, 1]]},
+    ]
     picture = run(resolve(sketch(shapes), context(), no_tool))
     assert picture["status"] == "not_checked" and picture["checks"] == []
     # A check the element cannot carry, or one against an unknown value, is not a check that ran.

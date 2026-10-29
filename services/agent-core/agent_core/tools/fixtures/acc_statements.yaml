@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: acc_statements
-version: 1
+version: 2
 valid_args:
 - trial_balance:
   - account: Sales

@@ -14,7 +14,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
 from agent_core.api.core import CURRENT_PROFILE, CoreService
-from agent_core.api.errors import ApiError
+from agent_core.api.errors import ApiError, cloud_refusal
 from agent_core.engine.events import new_id
 from agent_core.engine.study import StudyDesk, StudyError, atomic, checked
 from agent_core.engine.study_concepts import ConceptEditError, apply_edits, model_map, pack_map
@@ -684,12 +684,10 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
                     raise StudyError("model_unavailable")
                 if core.study.cloud is None:
                     raise StudyError("consent_required")
-                from agent_core.net.study import StudyCloudError
-
                 try:
                     draft = await core.study.cloud.concept_topic(d.conn, new_id("req"), topic)
-                except StudyCloudError as error:
-                    raise StudyError(error.reason) from None
+                except ValueError as error:
+                    raise StudyError(cloud_refusal(error)) from None
                 node_id, concept_map, origin = None, model_map(draft, content), "model"
             now = core.clock_ms()
             record = {"map_id": new_id("ctm"), "topic": topic, "origin": origin, "node_id": node_id,

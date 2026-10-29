@@ -15389,11 +15389,11 @@
     "packages/ui/gallery/states/model-manager.loading.json": "72305a294cc0e225c120f606386a82aaf82628836c2f0bf33cbe342685e8a8b7",
     "packages/ui/gallery/states/model-manager.queued.json": "411d739c5652bae2f8f78e35f9d2704963e2d54c3cf1853b92fac53b24f8e411",
     "packages/ui/gallery/states/next-step-chips.canonical.json": "a7677c53a264ddeed2db04af89bab42bb8f8e5a579904bcee3f1a1c973c3893a",
-    "packages/ui/gallery/states/parent-summary.canonical.json": "82dc6ff47c9e490a0bc59a6672e1a466b68d9e3c1115d4e9b6fc6bfb61b36aa5",
-    "packages/ui/gallery/states/parent-summary.canonical.too-little.json": "4b5e1c2e165586eb745ca0efc221f4d0fe18a66c16411d8ee79c6152a36b1905",
-    "packages/ui/gallery/states/parent-summary.empty.json": "4ba871efd26b2213edcb0c2c63040c2a7c3af2517e584be658d84205df70c9c1",
-    "packages/ui/gallery/states/parent-summary.error-retriable.json": "e606aea7983e034502aaeadc389ac3cee660f3adbe2c5d343a8f026b39687958",
-    "packages/ui/gallery/states/parent-summary.loading.json": "872ad3ba32d7170d41a304f8cc4fab454d69464734f48cd7743b79fd7f0f53f8",
+    "packages/ui/gallery/states/parent-summary.canonical.json": "95a5a7608f251be2d0ea3633862305b3664bd4e80420c0215d366dd17ac422bc",
+    "packages/ui/gallery/states/parent-summary.canonical.too-little.json": "5e48f287ca649e42f0b08d40425aeb2562a416c873ba97dde6e243a579ed5ff2",
+    "packages/ui/gallery/states/parent-summary.empty.json": "6db93bdebf3b61f88d0409eb311e9ca62ea677070405302d3a78f6899f4ac466",
+    "packages/ui/gallery/states/parent-summary.error-retriable.json": "ccb34a8f7db69dba0acce7d53a582c1c44e6006f383d0a895c084c9918ce2323",
+    "packages/ui/gallery/states/parent-summary.loading.json": "0f38377bc51a13e3b0407b5ea44cf7e44b5390ebc1060ec34ba2842f2cea7c79",
     "packages/ui/gallery/states/past-papers.canonical.json": "a0a436f45700a03d0c8f859fb560dbe3f457ce5c010d2dbf2820ac0168300fae",
     "packages/ui/gallery/states/past-papers.canonical.refused.json": "1675ce1b904c0cad9203039d38c3430f2bcf6e6bb2772ce1bd5a0f7d9277fcbf",
     "packages/ui/gallery/states/past-papers.empty.json": "d6e62d894b1a6ffef2021bc79840bb33447c3db1a80cf3b99df4cdc16b99db6a",
@@ -15464,7 +15464,7 @@
     "packages/ui/gallery/states/practice.error-final.not-served.json": "f40900d9b3062758b99b8435b910deb20f50e8e9fc5808e9038274f58ac726c3",
     "packages/ui/gallery/states/practice.error-retriable.json": "9c47d919991fb623d452b3e0021067582e56cdf820b14f28a310238a2ed31c55",
     "packages/ui/gallery/states/practice.loading.json": "d3fd1d7f3da20b38f1d416a32769f0368e3c93fbf664533990089d5a9c8790dc",
-    "packages/ui/gallery/states/printed-report.canonical.json": "415cd8fa5e7f6e33dff9997dd6fe5a842185ef0d50897ce54d7ae758f83ebc37",
+    "packages/ui/gallery/states/printed-report.canonical.json": "8aead6516528d4356f47406f11dee86e746cf2c50a4a209f076c07c60e9a8077",
     "packages/ui/gallery/states/profile-picker.canonical.json": "bb4c70fb9ccdf0ff0a918b9632802cf4292224c67153e0950fe24cbdbefb12fc",
     "packages/ui/gallery/states/profile-picker.empty.json": "4f62eabc07834b253d098c33b93b5a3ff295ea7872ba2bc245278eceef7152b9",
     "packages/ui/gallery/states/profile-picker.error-final.json": "c46959086abfd46a2293dcbba464e87559f4f08947ddb8872fc6b155dcb53c53",
@@ -15580,7 +15580,7 @@
     "packages/ui/gallery/states/settings.canonical.json": "aa896d324357af8e16a91b596237ead1d9c9cbb3dcbcb3027b91309f1b205f91",
     "packages/ui/gallery/states/settings.error-retriable.json": "36886a64677fa79d2a333e12ec508d083cc821ddc9267d3ddc25bd98c3a6ea58",
     "packages/ui/gallery/states/settings.loading.json": "2667ad3023c40e557a76ce7daa0a31dd1620aa6db5def23ef52de2a151da7e50",
-    "packages/ui/gallery/states/study-agreement.canonical.json": "ad74f61c3b320786e68ae0542bfdcead758c48ebbbce3cfbec9453435323cc4d",
+    "packages/ui/gallery/states/study-agreement.canonical.json": "4170dead985f730ef94662649743200a6b74ae9904528ac2cb8b944bd1a4a1ff",
     "packages/ui/gallery/states/study-workspace.canonical.audio.json": "cf042a26c232529cf6824ddd7cfc53fb56e8d3e2e839a32524875dde9915f140",
     "packages/ui/gallery/states/study-workspace.canonical.cards.json": "b465391c29f533f77de0a404c4639087a5e74958297f42ab9ba8c3806448f95a",
     "packages/ui/gallery/states/study-workspace.canonical.chapters.json": "88bab8b907ba478a6be52e690e164f4554db24054660b171e5e71867f8c3a12e",
@@ -15899,7 +15899,7 @@
     "packages/ui/gallery/states/worked-search.loading.json": "3169dc86db4254501b1e351e1a18a97c583e6da512a3b4a38cdf6b43177581da",
     "packages/ui/gallery/states/your-turn-line.canonical.json": "c83e03d83ea0aaabeda7e7a1c693c170920c5b8246ef25d45637a6c6a86e9a7a"
    },
-   "version": "2026-10-26.1"
+   "version": "2026-10-28.1"
   }
  },
  "version": 1

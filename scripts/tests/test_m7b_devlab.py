@@ -57,8 +57,14 @@ def test_devlab_gate_logic() -> None:
 # --- EVL-15 ---------------------------------------------------------------------------------------------------------
 
 # Synthetic candidates of each size the harness must tell apart; JM-D11 ships Muse Glimmer only.
-PARAMS = {"muse-glimmer-30b": 30.0, "synthetic-8b": 8.0, "synthetic-12b": 12.0, "synthetic-26b": 26.0,
-          "synthetic-30b": 30.0, "synthetic-31b": 31.0}
+PARAMS = {
+    "muse-glimmer-30b": 30.0,
+    "synthetic-8b": 8.0,
+    "synthetic-12b": 12.0,
+    "synthetic-26b": 26.0,
+    "synthetic-30b": 30.0,
+    "synthetic-31b": 31.0,
+}
 
 
 def _results() -> dict[str, dict[str, Any]]:

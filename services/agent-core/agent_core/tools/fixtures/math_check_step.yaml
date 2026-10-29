@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: math_check_step
-version: 2
+version: 3
 valid_args:
 - prev: x-3=5
   next: x=8

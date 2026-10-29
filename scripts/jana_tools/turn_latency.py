@@ -460,7 +460,9 @@ async def main_async(args: argparse.Namespace) -> int:
             for _ in range(args.repeat):
                 for case in cases:
                     if gateway.run_usd() >= args.max_usd:
-                        raise SystemExit(f"stopped before {case.name}: this run reached its --max-usd {args.max_usd:.2f}")
+                        raise SystemExit(
+                            f"stopped before {case.name}: this run reached its --max-usd {args.max_usd:.2f}"
+                        )
                     if case.follows is None:
                         engines[case.name] = await open_engine(gateway, case.subject, out, supervisor)
                     elif case.follows not in engines:

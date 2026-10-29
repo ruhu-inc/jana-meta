@@ -1,6 +1,6 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: math_simplify
-version: 1
+version: 2
 valid_args:
 - expression: (x+1)^2
   form: expanded

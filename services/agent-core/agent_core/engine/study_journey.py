@@ -117,7 +117,7 @@ class StudyJourney:
         parents = dict(self.conn.execute("SELECT aid_id,parent_aid_id FROM study_aid_parents"))
 
         def path(identity: str) -> set[str]:
-            seen = set()
+            seen: set[str] = set()
             while identity not in seen and len(seen) < 64:
                 seen.add(identity)
                 if identity not in parents:
@@ -202,6 +202,7 @@ class StudyJourney:
                         retry_quiz=retry,
                     )
                 elif out["cards_due"]:
+                    assert cards is not None  # cards_due is only counted when there are cards
                     out.update(phase="flashcards", next_aid_id=cards["aid_id"])
                 else:
                     out.update(phase="complete", next_aid_id=quiz["aid_id"])

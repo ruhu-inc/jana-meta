@@ -95,9 +95,9 @@ def questions(conn: sqlite3.Connection, subject_id: str, on_map: set[str]) -> li
             kept.extend(k for k in dict.fromkeys(kcs) if k not in kept)
         counts = by_session.setdefault(str(session_id), Counter())
         seen = first_seen.setdefault(str(session_id), {})
-        for kc in kcs:
-            counts[kc] += 1
-            seen.setdefault(kc, int(seq))
+        for kc_id in kcs:
+            counts[kc_id] += 1
+            seen.setdefault(kc_id, int(seq))
 
     def session_kc(session_id: str) -> str | None:
         counts = by_session.get(session_id)
@@ -166,7 +166,7 @@ def mistakes(
     """The learner's diagnosed mistakes on this map's KCs, most seen first: the misconception's student name, its
     status and evidence count, and its root gap (the earlier skill, whether a teacher reviewed the link, and the gap
     path from it to the KC)."""
-    out = []
+    out: list[dict[str, Any]] = []
     rows = _rows(
         conn,
         "SELECT misconception_id, kc_id, status, evidence_count, last_seen_at"
@@ -176,7 +176,8 @@ def mistakes(
         if str(kc_id) not in on_map:
             continue
         record = content.record("misconceptions", str(mc_id)) or {}
-        gap = record.get("root_gap") if isinstance(record.get("root_gap"), dict) else {}
+        root_gap = record.get("root_gap")
+        gap = root_gap if isinstance(root_gap, dict) else {}
         root = str(gap.get("kc_id")) if gap.get("kc_id") else None
         idea = gap.get("idea")
         reviewers = (record.get("review") or {}).get("reviewers") or []

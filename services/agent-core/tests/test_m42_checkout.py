@@ -9,7 +9,9 @@ from test_m10e_consent import with_api
 def test_pending_profile_does_not_disable_an_already_approved_profile():
     stored = {
         "profiles": ["approved_adult", "pending_learner"],
-        "consent_needed": ["pending_learner"], "period_end": 2000, "ended_at": None,
+        "consent_needed": ["pending_learner"],
+        "period_end": 2000,
+        "ended_at": None,
     }
     assert subscription.state(stored, 1000) == "pending_consent"
     assert subscription.covers(stored, "approved_adult", 1000)

@@ -85,7 +85,9 @@ def evl22_dataset_deidentified():
 
     value = study_dataset(subjects())
     assert "PRIVATE-CANARY" not in json.dumps(value)
-    assert all(set(row) == {"study_id", "events", "kc_mastery"} for row in value)
+    # The device's research allow-list (EVL-22, CUR-26, SKL-28): nothing else a student row carries survives.
+    keys = {"study_id", "events", "kc_mastery", "item_responses", "skill_sessions"}
+    assert all(set(row) == keys for row in value)
     assert {r["study_id"] for r in value}.isdisjoint({r["study_id"] for r in study_dataset(subjects())})
 
 

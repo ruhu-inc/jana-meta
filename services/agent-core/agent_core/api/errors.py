@@ -124,3 +124,12 @@ def invalid(name: str, instance: Any) -> ApiError | None:
     """`validation_failed` for a body that breaks its contract, value-free; None when it keeps it."""
     problems = violations(name, instance)
     return ApiError("validation_failed", problems[0], details={"errors": problems[:20]}) if problems else None
+
+
+def cloud_refusal(error: ValueError) -> str:
+    """The reason a Study cloud call was refused. The api layer may not import `agent_core.net` (ARC-18), so a refusal
+    is known by its shape, as the engine knows it: a ValueError carrying a `reason`. Any other ValueError re-raises."""
+    reason = getattr(error, "reason", None)
+    if not isinstance(reason, str):
+        raise error
+    return reason

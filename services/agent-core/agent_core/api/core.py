@@ -157,7 +157,9 @@ class CoreService:
         self.reflector: ReflectorQueue | None = None
         # The router the research agent's conversation calls through (SPEC §18.1a), once the app attaches it: the
         # Study model handle exists only with a local model, and the conversation is online only.
-        self.research_router: Callable[[], Any] | None = None  # the device's Reflector jobs (AGT-26), once the app attaches it
+        self.research_router: Callable[[], Any] | None = (
+            None  # the device's Reflector jobs (AGT-26), once the app attaches it
+        )
         self.records = records
         self.engine_factory = engine_factory
         self.voice_engines: dict[str, Engine] = {}  # provisional/released voice work, owned by the adapter
@@ -1004,9 +1006,11 @@ class CoreService:
         lesson = entry.engine_state.lesson_id is not None
         why_step = self._why_step(entry, body) if body["intent"] == "why" else None
         sketch = body["intent"] == "check_my_working" and bool(body.get("capture_id"))  # a photographed sketch
-        if body["intent"] not in ("ask", "answer", "stuck", "board_line", "show_step", "why") and not (
-            lesson and body["intent"] == "next_step"
-        ) and not sketch:
+        if (
+            body["intent"] not in ("ask", "answer", "stuck", "board_line", "show_step", "why")
+            and not (lesson and body["intent"] == "next_step")
+            and not sketch
+        ):
             raise ApiError("validation_failed", f"intent {body['intent']!r} is not available yet",
                            details={"errors": ["$.intent: not available in this version"]})  # fmt: skip
         if any(block["type"] == "image_ref" for block in body["content"]):
@@ -1216,8 +1220,14 @@ class CoreService:
         the part and the saved session projection both lose it."""
         self._guard()
         for entry in self.mine():
-            part = next((p["part_id"] for p in entry.state["parts"].values()
-                         if (p.get("sketch") or {}).get("sketch_id") == sketch_id), None)
+            part = next(
+                (
+                    p["part_id"]
+                    for p in entry.state["parts"].values()
+                    if (p.get("sketch") or {}).get("sketch_id") == sketch_id
+                ),
+                None,
+            )
             if part is None:
                 continue
             if entry.engine is not None:
@@ -1253,8 +1263,9 @@ class CoreService:
         previous = events.turn_id, events._index
         visual = entry.state["visuals"][visual_id]
         events.turn_id = entry.state["parts"][visual["part_id"]]["turn_id"]
-        events._index = max((p["index"] for p in entry.state["parts"].values()
-                            if p["turn_id"] == events.turn_id), default=-1) + 1
+        events._index = (
+            max((p["index"] for p in entry.state["parts"].values() if p["turn_id"] == events.turn_id), default=-1) + 1
+        )
         try:
             yield engine
         finally:
@@ -1277,9 +1288,12 @@ class CoreService:
         try:
             key = exercise_key(spec, body["part_id"])
             with self._visual_event_turn(entry, visual_id) as engine:
-                step = engine.open_manipulation(visual_id, {body["part_id"]: key},
-                                               "Match the selected part on the diagram.",
-                                               str(spec.get("params", {}).get("variable", "x")))
+                step = engine.open_manipulation(
+                    visual_id,
+                    {body["part_id"]: key},
+                    "Match the selected part on the diagram.",
+                    str(spec.get("params", {}).get("variable", "x")),
+                )
         except ManipulationRefused as refused:
             raise ApiError(refused.code, refused.detail) from None
         self.persist(entry)
@@ -1287,7 +1301,7 @@ class CoreService:
 
     async def answer_manipulation(self, visual_id: str, body: dict[str, Any]) -> dict[str, Any]:
         """VSL-42: the values the student set on a manipulable visual, checked by the same tool as the typed line."""
-        from agent_core.engine.manipulation import ManipulationRefused
+        from agent_core.engine.manipulation import ManipulationRefused, checker_value
 
         self._guard()
         self.assessment_guard()
@@ -1301,21 +1315,11 @@ class CoreService:
             raise ApiError("tutor_locked", "the tutor is still answering", details={"turn_id": entry.active_turn})
 
         async def checked(name: str, args: dict[str, Any]) -> tuple[Any, str | None]:
-            from agent_core.tools.executor import ToolCall
-
-            engine = self._engine(entry)
-            result = await engine.deps.executor.run_one(
-                ToolCall(f"call_visual{new_id('cli')[4:]}_0", name, args),
-                "checker", engine._tool_session("checker", "full"),
-            )
-            if result.get("status") != "ok":
-                return None, None
-            checks = result.get("meta", {}).get("checks") or []
-            return result.get("data", {}).get("value"), checks[0]["check_id"] if checks else None
+            return await checker_value(self._engine(entry), name, args)
 
         try:
             with self._visual_event_turn(entry, visual_id) as engine:
-                result = await engine.answer_manipulation(visual_id, body, self.check_tool or checked)
+                result: dict[str, Any] = await engine.answer_manipulation(visual_id, body, self.check_tool or checked)
         except ManipulationRefused as refused:
             raise ApiError(refused.code, refused.detail) from None
         self.persist(entry)
