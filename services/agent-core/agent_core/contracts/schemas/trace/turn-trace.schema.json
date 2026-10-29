@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/trace/turn-trace.schema.json sha256 7f7239ab3b9ea72abb443925532f8b463e8914e0a2286190bc33a9f09461c556; do not edit",
+ "$comment": "GENERATED from contracts/trace/turn-trace.schema.json sha256 e273682b9cebd940cde991a4e4f2e684d2f142eae4a58cbfdfc7fa265e321164; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/trace/turn-trace",
  "title": "Turn trace record",
@@ -97,7 +97,8 @@
     "title",
     "index_rebuild",
     "capture",
-    "research_chat"
+    "research_chat",
+    "companion"
    ]
   },
   "session_ref": {
@@ -1284,7 +1285,8 @@
        "cloud_voice",
        "study_materials",
        "telemetry",
-       "crash_reports"
+       "crash_reports",
+       "tutor_memory_online"
       ]
      }
     },
@@ -1301,7 +1303,8 @@
        "cloud_voice",
        "study_materials",
        "telemetry",
-       "crash_reports"
+       "crash_reports",
+       "tutor_memory_online"
       ]
      },
      "additionalProperties": {
@@ -1585,7 +1588,9 @@
     "compaction",
     "judge",
     "item_drafter",
-    "research_chat"
+    "research_chat",
+    "companion",
+    "checkin"
    ]
   },
   "effort": {

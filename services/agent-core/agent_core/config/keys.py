@@ -96,6 +96,8 @@ class Settings(BaseModel):
     # VOC-49, retired by D126: the wake word is gone (a hands-free conversation starts from a button or Ctrl+Shift+V).
     # The key is kept so stored profiles and event history stay valid; it is ignored.
     wake_word: bool = key(False, serves="VOC-49", layers=STUDENT_PREFERENCE)
+    # SPEC §19.3.4 (W8, JM-D24): a desktop notification for a due check-in, off by default; the Home card is always on.
+    checkin_notifications: bool = key(False, serves="LRN-35", layers=STUDENT_PREFERENCE)
 
     # --- build and environment (OPS-35) ---
     environment: Literal["dev", "staging", "pilot", "production"] = key(
@@ -652,6 +654,8 @@ class Settings(BaseModel):
     retention_checkpoint_days: int = key(7, serves="DAT-08", layers=ENGINEERING, unit="days", ge=1, le=365)
     retention_spill_max_h: float = key(24.0, serves="DAT-08", layers=ENGINEERING, unit="h", ge=1, le=168)
     retention_note_days: int = key(180, serves="DAT-08", layers=ENGINEERING, unit="days", ge=1, le=3650)
+    # SPEC §19.3.4 (W8): a resolved check-in (answered, dismissed, expired or detached) is kept this long.
+    retention_commitment_days: int = key(30, serves="DAT-08", layers=ENGINEERING, unit="days", ge=1, le=3650)
     retention_digest_weeks: int = key(26, serves="DAT-08", layers=ENGINEERING, unit="weeks", ge=1, le=520)
     retention_alert_days: int = key(90, serves="DAT-08", layers=ENGINEERING, unit="days", ge=1, le=3650)
     retention_audit_days: int = key(400, serves="DAT-08", layers=ENGINEERING, unit="days", ge=1, le=3650)

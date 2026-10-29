@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/commands.schema.json sha256 190c940ce453ffe8a9fdb04f851e37466c16e8bbba30f5232eab7dd9ffe8a29c; do not edit",
+ "$comment": "GENERATED from contracts/api/commands.schema.json sha256 8d56e9951a6102cda5e4d30615bdeb048dd4eefda1481a6b56d1cbef9e29017c; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/commands",
  "title": "Command bodies",
@@ -357,7 +357,8 @@
      "enum": [
       "guided",
       "solution",
-      "check_working"
+      "check_working",
+      "study_companion"
      ]
     },
     "subject": {
@@ -396,7 +397,8 @@
         "practice_item",
         "lesson",
         "exam_review",
-        "resume"
+        "resume",
+        "companion"
        ]
       },
       "ref": {
@@ -457,7 +459,8 @@
      "enum": [
       "guided",
       "solution",
-      "check_working"
+      "check_working",
+      "study_companion"
      ]
     },
     "subject": {
@@ -492,7 +495,8 @@
       "practice_item",
       "lesson",
       "exam_review",
-      "resume"
+      "resume",
+      "companion"
      ]
     }
    },
@@ -624,6 +628,13 @@
        "type": "null"
       }
      ]
+    },
+    "actions": {
+     "type": "object",
+     "maxProperties": 200,
+     "additionalProperties": {
+      "$ref": "https://jana.dev/contracts/api/events#/$defs/ev_companion_action"
+     }
     }
    },
    "required": [
@@ -2515,6 +2526,10 @@
     "wake_word": {
      "type": "boolean",
      "default": false
+    },
+    "checkin_notifications": {
+     "type": "boolean",
+     "default": false
     }
    },
    "required": [
@@ -2607,6 +2622,9 @@
      "type": "boolean"
     },
     "wake_word": {
+     "type": "boolean"
+    },
+    "checkin_notifications": {
      "type": "boolean"
     }
    },
@@ -4372,7 +4390,8 @@
     "cloud_voice",
     "study_materials",
     "research_use",
-    "model_training_research"
+    "model_training_research",
+    "tutor_memory_online"
    ]
   },
   "ConsentSwitch": {
@@ -4736,6 +4755,119 @@
        "type": "null"
       }
      ]
+    },
+    "activity": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "activity",
+       "kc_id",
+       "statement",
+       "result",
+       "aid_kind",
+       "count",
+       "day"
+      ],
+      "properties": {
+       "activity": {
+        "enum": [
+         "quiz_item",
+         "card_review",
+         "aid_made"
+        ]
+       },
+       "kc_id": {
+        "anyOf": [
+         {
+          "type": "string",
+          "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "statement": {
+        "anyOf": [
+         {
+          "type": "string",
+          "maxLength": 400
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "result": {
+        "anyOf": [
+         {
+          "enum": [
+           "correct",
+           "incorrect",
+           "skipped",
+           "unverifiable",
+           "again",
+           "hard",
+           "good",
+           "easy"
+          ]
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "aid_kind": {
+        "anyOf": [
+         {
+          "enum": [
+           "notes",
+           "summary",
+           "chat",
+           "flashcards",
+           "quiz",
+           "audio_overview",
+           "lesson_plan",
+           "chapters",
+           "concept_map"
+          ]
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "count": {
+        "anyOf": [
+         {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "day": {
+        "type": "string",
+        "format": "date"
+       }
+      }
+     }
+    },
+    "companion_summary": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/CompanionSummary"
+      },
+      {
+       "type": "null"
+      }
+     ]
     }
    },
    "required": [
@@ -4796,6 +4928,22 @@
     "updated_ts": {
      "type": "integer",
      "minimum": 0
+    },
+    "confidence": {
+     "enum": [
+      "tentative",
+      "supported"
+     ]
+    },
+    "fading": {
+     "type": "boolean"
+    },
+    "recall_sessions": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "withheld_online": {
+     "type": "boolean"
     }
    },
    "required": [
@@ -7511,6 +7659,28 @@
     },
     "reason_code": {
      "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/payload_plan_generated/properties/blocks/items/properties/reason_code"
+    },
+    "study_cards": {
+     "type": "array",
+     "maxItems": 10,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "deck_id",
+       "card_id"
+      ],
+      "properties": {
+       "deck_id": {
+        "type": "string",
+        "pattern": "^dek_[0-9A-HJKMNP-TV-Z]{26}$"
+       },
+       "card_id": {
+        "type": "string",
+        "pattern": "^fcd_[0-9A-HJKMNP-TV-Z]{26}$"
+       }
+      }
+     }
     }
    },
    "required": [
@@ -7713,6 +7883,34 @@
      "type": "array",
      "items": {
       "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/kc_id"
+     }
+    },
+    "study_activity": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "quiz_items",
+      "quiz_correct",
+      "cards_reviewed",
+      "aids_made"
+     ],
+     "properties": {
+      "quiz_items": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "quiz_correct": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "cards_reviewed": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "aids_made": {
+       "type": "integer",
+       "minimum": 0
+      }
      }
     }
    },
@@ -9332,6 +9530,469 @@
     "questions",
     "mistakes"
    ]
+  },
+  "StudyVisit": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "session_id",
+    "resumed"
+   ],
+   "properties": {
+    "session_id": {
+     "type": "string",
+     "pattern": "^ses_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "resumed": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Opener": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "opener_id",
+    "text",
+    "facts"
+   ],
+   "properties": {
+    "opener_id": {
+     "type": "string",
+     "format": "date"
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 240
+    },
+    "facts": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "last_session_date",
+      "last_session_mode",
+      "last_subject",
+      "next_step",
+      "learner_cards_due",
+      "study_cards_due",
+      "exam_distance_days",
+      "pack_ready",
+      "checkin_id"
+     ],
+     "properties": {
+      "last_session_date": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "last_session_mode": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 32
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "last_subject": {
+       "anyOf": [
+        {
+         "enum": [
+          "mathematics",
+          "physics",
+          "chemistry",
+          "biology",
+          "accounting"
+         ]
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "next_step": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 120
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "learner_cards_due": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "study_cards_due": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "exam_distance_days": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "pack_ready": {
+       "type": "boolean"
+      },
+      "checkin_id": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 30
+        },
+        {
+         "type": "null"
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "CompanionOpen": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {}
+  },
+  "CompanionSummary": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "cursor_seq",
+    "updated_at",
+    "topics",
+    "misconceptions",
+    "next_step",
+    "episodes"
+   ],
+   "properties": {
+    "version": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "cursor_seq": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "updated_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "topics": {
+     "type": "array",
+     "maxItems": 6,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "label",
+       "sessions",
+       "last_at"
+      ],
+      "properties": {
+       "kc_id": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 200
+       },
+       "sessions": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "last_at": {
+        "type": "string",
+        "format": "date-time"
+       }
+      }
+     }
+    },
+    "misconceptions": {
+     "type": "array",
+     "maxItems": 4,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "misconception_id",
+       "label",
+       "status",
+       "updated_at"
+      ],
+      "properties": {
+       "misconception_id": {
+        "type": "string",
+        "pattern": "^mc\\.[a-z0-9_.]+$",
+        "maxLength": 96
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 200
+       },
+       "status": {
+        "enum": [
+         "suspected",
+         "active",
+         "resolving",
+         "resolved"
+        ]
+       },
+       "updated_at": {
+        "type": "string",
+        "format": "date-time"
+       }
+      }
+     }
+    },
+    "next_step": {
+     "anyOf": [
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "text",
+        "reason_code",
+        "updated_at"
+       ],
+       "properties": {
+        "text": {
+         "type": "string",
+         "maxLength": 120
+        },
+        "reason_code": {
+         "type": "string",
+         "maxLength": 40
+        },
+        "updated_at": {
+         "type": "string",
+         "format": "date-time"
+        }
+       }
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "episodes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "CompanionOpened": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "session_id",
+    "thread_id",
+    "resumed",
+    "opener",
+    "summary"
+   ],
+   "properties": {
+    "session_id": {
+     "type": "string",
+     "pattern": "^ses_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "thread_id": {
+     "type": "string",
+     "pattern": "^cth_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "resumed": {
+     "type": "boolean"
+    },
+    "opener": {
+     "$ref": "#/$defs/Opener"
+    },
+    "summary": {
+     "$ref": "#/$defs/CompanionSummary"
+    }
+   }
+  },
+  "Commitment": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "commitment_id",
+    "kind",
+    "subject",
+    "kc_id",
+    "text",
+    "due_from",
+    "due_until",
+    "dedupe_key",
+    "confidence",
+    "state",
+    "source",
+    "source_session_id",
+    "created_at",
+    "shown_at",
+    "resolved_at"
+   ],
+   "properties": {
+    "commitment_id": {
+     "type": "string",
+     "pattern": "^cmt_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "kind": {
+     "enum": [
+      "event_checkin",
+      "deadline_check",
+      "open_loop",
+      "due_reviews",
+      "pack_ready"
+     ]
+    },
+    "subject": {
+     "anyOf": [
+      {
+       "enum": [
+        "mathematics",
+        "physics",
+        "chemistry",
+        "biology",
+        "accounting"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "kc_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "text": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 140
+    },
+    "due_from": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "due_until": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "dedupe_key": {
+     "type": "string",
+     "maxLength": 160
+    },
+    "confidence": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "state": {
+     "enum": [
+      "pending",
+      "shown",
+      "opened",
+      "dismissed",
+      "answered",
+      "expired",
+      "detached"
+     ]
+    },
+    "source": {
+     "enum": [
+      "extractor",
+      "heartbeat"
+     ]
+    },
+    "source_session_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 40
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "shown_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "resolved_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "CheckinsDue": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "items"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 1,
+     "items": {
+      "$ref": "#/$defs/Commitment"
+     }
+    }
+   }
   }
  }
 }

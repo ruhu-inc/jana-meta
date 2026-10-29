@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/learning/learning-event.schema.json sha256 70d752aa87fd3a08be17adf959636d9a57adca6eac06f46e24d449c39169d01b; do not edit",
+ "$comment": "GENERATED from contracts/learning/learning-event.schema.json sha256 780bd88eff8d7c38bc6cfe8dbc901363d0b121b256569286f9bf321dd70d6de3; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/learning/learning-event",
  "title": "LearningEvent",
@@ -447,6 +447,23 @@
    "unevaluatedProperties": false
   },
   {
+   "title": "study_activity",
+   "allOf": [
+    {
+     "$ref": "#/$defs/envelope"
+    }
+   ],
+   "properties": {
+    "type": {
+     "const": "study_activity"
+    },
+    "payload": {
+     "$ref": "#/$defs/payload_study_activity"
+    }
+   },
+   "unevaluatedProperties": false
+  },
+  {
    "title": "erased",
    "allOf": [
     {
@@ -481,7 +498,8 @@
       "injection_flagged",
       "profile_updated",
       "item_exposed",
-      "skills_delivered"
+      "skills_delivered",
+      "study_activity"
      ]
     },
     "payload": {
@@ -605,7 +623,9 @@
       "revision",
       "diagnostic",
       "mastery_check",
-      "review"
+      "review",
+      "study",
+      "study_companion"
      ]
     },
     "subject": {
@@ -619,7 +639,8 @@
       "practice",
       "mock",
       "review",
-      "detour"
+      "detour",
+      "study"
      ]
     },
     "hardware_class": {
@@ -1170,7 +1191,8 @@
       "tutor_name",
       "tutor_avatar",
       "faster_tutor",
-      "wake_word"
+      "wake_word",
+      "checkin_notifications"
      ]
     },
     "old_value": {},
@@ -1287,8 +1309,12 @@
          "exam_phase",
          "revisit_moved_on",
          "mastery_check",
-         "mock_follow_up"
+         "mock_follow_up",
+         "due_reviews_study"
         ]
+       },
+       "study_cards": {
+        "$ref": "#/$defs/study_cards"
        }
       }
      }
@@ -1766,6 +1792,142 @@
         "type": "boolean"
        }
       }
+     }
+    }
+   }
+  },
+  "payload_study_activity": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "activity",
+    "ref",
+    "kc_tags",
+    "outcome",
+    "rating",
+    "aid_kind",
+    "count"
+   ],
+   "properties": {
+    "activity": {
+     "enum": [
+      "quiz_item",
+      "card_review",
+      "aid_made",
+      "source_added",
+      "pack_ready",
+      "journey_step"
+     ]
+    },
+    "ref": {
+     "type": "string",
+     "maxLength": 64,
+     "pattern": "^(aid|att|card|rsr|jny):[0-9A-Za-z_:]{1,59}$"
+    },
+    "kc_tags": {
+     "type": "array",
+     "maxItems": 3,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "weight"
+      ],
+      "properties": {
+       "kc_id": {
+        "$ref": "#/$defs/kc_id"
+       },
+       "weight": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 1
+       }
+      }
+     }
+    },
+    "outcome": {
+     "anyOf": [
+      {
+       "enum": [
+        "correct",
+        "incorrect",
+        "skipped",
+        "unverifiable"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "rating": {
+     "anyOf": [
+      {
+       "enum": [
+        "again",
+        "hard",
+        "good",
+        "easy"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "aid_kind": {
+     "anyOf": [
+      {
+       "enum": [
+        "notes",
+        "summary",
+        "chat",
+        "flashcards",
+        "quiz",
+        "audio_overview",
+        "lesson_plan",
+        "chapters",
+        "concept_map"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "count": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 200
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "study_cards": {
+   "type": "array",
+   "maxItems": 10,
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "deck_id",
+     "card_id"
+    ],
+    "properties": {
+     "deck_id": {
+      "type": "string",
+      "pattern": "^dek_[0-9A-HJKMNP-TV-Z]{26}$"
+     },
+     "card_id": {
+      "type": "string",
+      "pattern": "^fcd_[0-9A-HJKMNP-TV-Z]{26}$"
      }
     }
    }

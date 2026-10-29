@@ -79,6 +79,11 @@
   "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "version": 1
  },
+ "make_aid": {
+  "params_sha256": "5bca31172a82b70222ad0b48db1d85f01f77243cfb17fe9c7492264a6a727e28",
+  "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "version": 1
+ },
  "math_check_answer": {
   "params_sha256": "8590d5f335f7f88b1e83af8b14481a5bc061d7ba9b0b2f8f3ec45091befd5dc2",
   "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
@@ -154,24 +159,44 @@
   "params_small_sha256": "f86d3c5cd48161ba25503b5f38b9b3890a076c0fa72895cf48315754bbe2e494",
   "version": 2
  },
+ "plan": {
+  "params_sha256": "99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
+  "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "version": 1
+ },
+ "progress_read": {
+  "params_sha256": "99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
+  "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "version": 1
+ },
  "progress_update": {
   "params_sha256": "b863c2c7ea943a7f6b97d5713a90d4aa8abbb101ca2c5a83c45c846b623227fc",
   "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "version": 1
  },
  "session_recall": {
-  "params_sha256": "437b4c622e22b8724c3e5fd96dc2f1c2f130f9406a0f3193a57d8790a0060a03",
+  "params_sha256": "a7267cd12350437277b4ab8cb781bdd45a01d8f38ab13976b7c8239a9d7fb658",
   "params_small_sha256": "437b4c622e22b8724c3e5fd96dc2f1c2f130f9406a0f3193a57d8790a0060a03",
-  "version": 1
+  "version": 2
  },
  "skill": {
   "params_sha256": "527d5926aaaa8e7144b931b97cfd55624646c7ee3bad38e095fe3b7f3809b652",
   "params_small_sha256": "527d5926aaaa8e7144b931b97cfd55624646c7ee3bad38e095fe3b7f3809b652",
   "version": 2
  },
+ "start_research": {
+  "params_sha256": "b9f2f614ac63630e0141a1342497f8a68f599a69da0a5f91dee7f4985919bbe5",
+  "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "version": 1
+ },
  "stats_compute": {
   "params_sha256": "1ff3d97c60e76195b0e01bd4995a9daa18efe056bbcce6be2308d1699f7bbae5",
   "params_small_sha256": "57792501a203c5605fb59c4e512d2f56f74e3830d2c9ed4e09ba25d002e32770",
+  "version": 1
+ },
+ "study_search": {
+  "params_sha256": "e78f8095aafbe0a6dbf3f93f4df1bb5b86cdd08a9d03523dcf07361f019bb68b",
+  "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
   "version": 1
  },
  "units_check_dimensions": {

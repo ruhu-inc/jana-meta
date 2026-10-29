@@ -10,7 +10,8 @@ from typing import Any
 
 from agent_core.tools.spec import SessionCtx, ToolSpec
 
-MODEL_ROLES = frozenset({"coach", "diagnoser", "solver", "checker", "reflector", "auxiliary", "item_drafter"})
+MODEL_ROLES = frozenset({"coach", "diagnoser", "solver", "checker", "reflector", "auxiliary", "item_drafter",
+                         "companion"})  # fmt: skip
 # Names a model may use to try to hand work to another role. No tool by these names exists or ever will: the engine
 # alone calls roles (AGT-03, AGT-13), so a call to one is refused as a policy matter, never repaired to a near name.
 DELEGATION_NAMES = frozenset(
@@ -40,7 +41,10 @@ def denial(role: str, spec: ToolSpec, session: SessionCtx, grants: dict[str, lis
         return f"{spec.name} changes what the student sees; only the engine applies it from the tutor turn"
     if not granted(role, spec, grants):
         return f"the {role} role is not granted {spec.name}"
-    if risk == "memory_write" and role not in ("reflector", "engine"):
+    # SPEC §19.3.3 (W8): the companion's `make_aid` writes a Study job to the learner's own workspace, never a note;
+    # the companion may run the write tools of its own `study` toolset only (its grant still names each one).
+    study_write = role == "companion" and spec.toolset == "study"
+    if risk == "memory_write" and role not in ("reflector", "engine") and not study_write:
         return "only the Reflector or the engine writes memory"
     if risk == "egress" and (spec.name != "python_run" or "cloud_tier" not in session.enabled_online_features):
         return "this tool sends data off the device and its online feature is off"

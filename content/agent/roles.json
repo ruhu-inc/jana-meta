@@ -506,6 +506,55 @@
       "last_reviewed_at": "2026-10-08",
       "status": "draft",
       "stage": "S2"
+    },
+    {
+      "id": "companion",
+      "version": "0.1",
+      "name": "Companion",
+      "kind": "specialist",
+      "audience": "student",
+      "model_role": "companion",
+      "toolsets": [
+        "memory",
+        "study"
+      ],
+      "tools": [
+        "memory_recall",
+        "session_recall",
+        "study_search",
+        "progress_read",
+        "plan",
+        "make_aid",
+        "start_research"
+      ],
+      "output_mode": "structured",
+      "output_schema": "companion-turn.schema.json",
+      "soul": "full",
+      "prompt_mode": "by_class",
+      "permissions": {
+        "address_student": true,
+        "delegate": false,
+        "write_memory": "none",
+        "open_cards": false
+      },
+      "limits": {
+        "max_iterations": 3,
+        "max_tool_rounds": 2,
+        "max_output_tokens": {
+          "low": 300,
+          "mid": 300,
+          "high": 400,
+          "cloud": 400
+        },
+        "wall_clock_s": 20,
+        "first_token_s": 3
+      },
+      "background": false,
+      "owner": "Engine lead",
+      "last_reviewed_by": "Safety lead",
+      "last_reviewed_at": "2026-10-29",
+      "status": "draft",
+      "stage": "S2"
     }
   ]
 }

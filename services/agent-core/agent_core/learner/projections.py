@@ -200,6 +200,12 @@ def opportunity(ctx: Context, event: StoredEvent) -> Closed | None:
     return Closed(attempt, verdict, outcomes, max(rungs, default=0), len(rungs), not_learned)
 
 
+# Learning events that are never mastery, review or misconception evidence: a plan is the planner's own output, and
+# Study activity is topic-tagged practice against a model-written key (SPEC §19.3.2, JM-D22, JM-D26). The mastery
+# (with its review cards) and misconception projections return on them before anything else.
+NON_EVIDENCE_TYPES = frozenset({"plan_generated", "plan_decision", "study_activity"})
+
+
 def closes(ctx: Context, event: StoredEvent) -> bool:
     """Whether a verdict closes an opportunity. Projections read the log through `store.supersession` (D98): a
     re-marked verdict is read at its own place carrying its correction, and the correcting verdict is skipped where it
@@ -285,6 +291,8 @@ class MasteryProjection:
     tables: tuple[str, ...] = ("kc_mastery", "subject_ability", "review_cards")
 
     def fold(self, ctx: Context, event: StoredEvent) -> None:
+        if event.type in NON_EVIDENCE_TYPES:
+            return
         if closes(ctx, event):
             self._closed(ctx, event)
         elif event.type == "mastery_check":
@@ -587,6 +595,52 @@ class NotesProjection:
             )
 
 
+FADING_MS = 90 * 86_400_000  # SPEC §19.3.5: no update and no newer cited evidence for 90 days
+
+
+@dataclass(frozen=True)
+class NoteLifecycle:
+    """A note's derived standing (SPEC §19.3.5, §19.5.6; JM-D28): never written by a model, never stored."""
+
+    confidence: str  # "tentative" or "supported"
+    fading: bool
+
+
+def note_lifecycle(conn: sqlite3.Connection, note_ids: Iterable[str], now_ms: int) -> dict[str, NoteLifecycle]:
+    """Derived from what the notes projection already folds: the evidence every write of the note cited (its
+    `note_written` events, an update's included) is `supported` when it spans two or more distinct session ids, else
+    `tentative`; `fading` when the note's last write and its newest cited evidence are both older than 90 days.
+    Derived at read, because fading moves with the clock; a replay gives the same answer for the same moment."""
+    out: dict[str, NoteLifecycle] = {}
+    for note_id in dict.fromkeys(note_ids):
+        row = conn.execute("SELECT source_event_ids, updated_at FROM notes WHERE note_id = ?", (note_id,)).fetchone()
+        if row is None:
+            continue
+        cited = set(json.loads(row[0] or "[]"))
+        for (payload,) in conn.execute(
+            "SELECT payload FROM events WHERE type = 'note_written' AND erased_at IS NULL"
+            " AND json_extract(payload, '$.note_id') = ?",
+            (note_id,),
+        ):
+            cited.update(json.loads(payload).get("source_event_ids") or [])
+        sessions: set[str] = set()
+        newest = 0
+        ids = sorted(cited)
+        for start in range(0, len(ids), 500):
+            chunk = ids[start : start + 500]
+            marks = ", ".join("?" for _ in chunk)
+            for session_id, occurred in conn.execute(
+                f"SELECT session_id, occurred_at FROM events WHERE erased_at IS NULL AND event_id IN ({marks})",  # noqa: S608
+                chunk,
+            ):
+                if session_id:
+                    sessions.add(str(session_id))
+                newest = max(newest, int(occurred))
+        last = max(int(row[1] or 0), newest)
+        out[note_id] = NoteLifecycle("supported" if len(sessions) >= 2 else "tentative", now_ms - last > FADING_MS)
+    return out
+
+
 class MisconceptionsProjection:
     """Misconceptions matched by the checker or a probe (PED-22), and the student's disputes (LRN-37).
 
@@ -635,6 +689,8 @@ class MisconceptionsProjection:
         return "active" if evidence >= self.active_evidence else "suspected"
 
     def fold(self, ctx: Context, event: StoredEvent) -> None:
+        if event.type in NON_EVIDENCE_TYPES:
+            return
         if event.type == "misconception_evidence":
             self._matched(ctx, event)
         elif event.type == "correction" and event.payload.get("target") == "misconception":
@@ -784,14 +840,16 @@ class StudyPlansProjection:
     unfinished one."""
 
     name = "study_plans"
-    code_version = "study_plans.1"
+    # .2: a warm-up of Study cards (SPEC §19.4, W8) completes with reviews of its own cards, never with practice.
+    code_version = "study_plans.2"
     tables: tuple[str, ...] = ("study_plans",)
 
     def fold(self, ctx: Context, event: StoredEvent) -> None:
         payload = event.payload
         t = event.stamp.physical
         if event.type == "plan_generated":
-            blocks = [{**b, "target": block_target(b["kind"], b.get("kc_ids", []), ctx.params), "done": 0,
+            blocks = [{**b, "target": len(b["study_cards"]) if b.get("study_cards") else
+                       block_target(b["kind"], b.get("kc_ids", []), ctx.params), "done": 0,
                        "completed_at": None} for b in payload["blocks"]]  # fmt: skip
             items = {"phase": payload["phase"], "minutes": payload["minutes"], "blocks": blocks,
                      "deferred_reviews": payload.get("deferred_reviews", 0), "started_at": None}  # fmt: skip
@@ -818,6 +876,8 @@ class StudyPlansProjection:
             self._progress(ctx, t, {k["kc_id"] for k in closed.attempt["kc_ids"]}, WORK_BLOCKS)
         elif event.type == "mock_submitted":
             self._progress(ctx, t, None, ("mock",))
+        elif event.type == "study_activity" and payload.get("activity") == "card_review":
+            self._study_card(ctx, t, str(payload.get("ref", "")).removeprefix("card:"))
         elif event.type == "mastery_check" and payload["check_state"] in ("passed", "failed"):
             self._progress(ctx, t, {payload["kc_id"]}, ("mastery_check",))
 
@@ -830,9 +890,31 @@ class StudyPlansProjection:
             return
         items = json.loads(row[1])
         block = next((b for b in items["blocks"] if b["kind"] in kinds and b["completed_at"] is None
+                      and not b.get("study_cards")
                       and (kcs is None or not b.get("kc_ids") or kcs & set(b["kc_ids"]))), None)  # fmt: skip
         if block is None:
             return
+        self._advance(ctx, t, row[0], items, block)
+
+    def _study_card(self, ctx: Context, t: int, card_id: str) -> None:
+        """A Study card reviewed (a `study_activity` card review): the started plan's Study warm-up advances once per
+        listed card, whoever's scheduler moved it (Study's own; the learner model's cards are untouched, JM-D26)."""
+        row = ctx.conn.execute(
+            "SELECT plan_id, items FROM study_plans WHERE status = 'started' ORDER BY created_at DESC, plan_id DESC"
+            " LIMIT 1"
+        ).fetchone()
+        if row is None:
+            return
+        items = json.loads(row[1])
+        block = next((b for b in items["blocks"] if b["completed_at"] is None and card_id in
+                      {c["card_id"] for c in b.get("study_cards", [])}
+                      and card_id not in b.get("reviewed", [])), None)  # fmt: skip
+        if block is None:
+            return
+        block["reviewed"] = [*block.get("reviewed", []), card_id]
+        self._advance(ctx, t, row[0], items, block)
+
+    def _advance(self, ctx: Context, t: int, plan_id: str, items: dict[str, Any], block: dict[str, Any]) -> None:
         block["done"] += 1
         if block["done"] >= block["target"]:
             block["completed_at"] = t
@@ -843,7 +925,7 @@ class StudyPlansProjection:
                     b["completed_at"] = t
         status = "done" if all(b["completed_at"] is not None for b in items["blocks"]) else "started"
         ctx.conn.execute("UPDATE study_plans SET items = ?, status = ?, updated_at = ? WHERE plan_id = ?",
-                         (_dumps(items), status, t, row[0]))  # fmt: skip
+                         (_dumps(items), status, t, plan_id))  # fmt: skip
 
 
 def week_start(day: int) -> int:

@@ -413,7 +413,9 @@ def test_memory_tools_registered_and_hidden() -> None:
     early = EARLY_TOOLS["S1"]
     assert early <= set(reg.specs) and early <= set(build_entries(REGISTER, "S1"))
     assert not early & set(register_entries(REGISTER, "S1")), "the register's S1 catalogue is unchanged"
-    assert {reg[name].stage for name in early} == {"S2"} and {reg[name].toolset for name in early} == {"memory"}
+    # The memory tools, and W8's study toolset (SPEC §19.3.3), released only to a companion session.
+    assert {reg[name].stage for name in early} == {"S2"}
+    assert {reg[name].toolset for name in early} == {"memory", "study"}
     grants = REGISTER["roleGrants"]
     manifest = ["skill", "memory_recall", "session_recall"]
     assert role_tools("coach", manifest, reg, grants) == ["skill"], "an S1 role is not offered them"

@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/ops/governance-records.schema.json sha256 08c8fe67579942d1b276cbdb275a2c9e6bae5827fec8a6326578c7a6528d8a94; do not edit",
+ "$comment": "GENERATED from contracts/ops/governance-records.schema.json sha256 3d066117dddd79e93fbb313a05595affa2196d49d1b192333db8df81c231f04b; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/ops/governance-records",
  "title": "Governance evidence records",
@@ -1615,7 +1615,8 @@
        "relay",
        "cloud_voice",
        "model_training_research",
-       "study_materials"
+       "study_materials",
+       "tutor_memory_online"
       ]
      }
     },

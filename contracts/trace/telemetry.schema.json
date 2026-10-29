@@ -208,7 +208,8 @@
          "cloud_voice",
          "study_materials",
          "telemetry",
-         "crash_reports"
+         "crash_reports",
+         "tutor_memory_online"
         ]
        },
        "repair_step": {
@@ -358,7 +359,8 @@
       "cloud_voice",
       "study_materials",
       "telemetry",
-      "crash_reports"
+      "crash_reports",
+      "tutor_memory_online"
      ]
     },
     "repair_step": {

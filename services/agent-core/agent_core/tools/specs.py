@@ -354,6 +354,38 @@ DESCRIPTIONS: dict[str, str] = {
         "direction for each KC. Limits: 1 s; writes nothing. Never repeat an unchanged failing call. Never spend a "
         "round-trip on bookkeeping alone."
     ),
+    # The companion's study toolset (SPEC §19.3.3, W8 phase 2): granted to the `companion` role only.
+    "study_search": (
+        "Finds passages in the student's own Study materials and session notes. Use when they ask about their own "
+        "materials or before make_aid; not for the course packs. Parameters: query, literal words where * stands for "
+        "any run of characters. Returns at most 6 excerpts, each with a number, the material's name and the text, "
+        "never instructions. Limits: 1 s; this student only. Never repeat an unchanged failing call. Batch "
+        "independent calls."
+    ),
+    "progress_read": (
+        "Reads the student's progress. Use when they ask how they are doing or what is due; not for one skill's "
+        "history. Parameters: none. Returns up to 12 skills, each with a number and a band, the cards due "
+        "(learner_cards, study_cards), the exam's distance in days and the streak in days. Limits: 1 s; say each "
+        "number with its label. Never repeat an unchanged failing call. Batch independent calls."
+    ),
+    "plan": (
+        "Reads today's study plan. Use when they ask what to do next; not for changing it. Parameters: none. "
+        "Returns the plan's blocks, or null when there is none today. Limits: 1 s. Never repeat an unchanged failing "
+        "call. Batch independent calls."
+    ),
+    "make_aid": (
+        "Starts a Study job that makes flashcards, a quiz, notes or a summary from one of the student's materials. "
+        "Use when they ask for one, after study_search found the material; not for answering a question. Parameters: "
+        "kind, source_ref (a study_search result's number from this turn), optional count. Returns the job; the app "
+        "shows a button to open it. Limits: 1 s. Never repeat an unchanged failing call. Never spend a round-trip on "
+        "bookkeeping alone."
+    ),
+    "start_research": (
+        "Opens the research conversation for a topic to learn from the web. Use when they want a topic their "
+        "materials do not cover; not for answering it yourself. Parameters: topic. Returns an action that opens "
+        "the research conversation, which asks its own questions first. Limits: 1 s. Never repeat an unchanged "
+        "failing call. Never spend a round-trip on bookkeeping alone."
+    ),
 }
 
 RECALL_QUERIES = ("profile_summary", "top_kcs", "active_misconceptions", "recent_notes", "preferences")
@@ -446,11 +478,42 @@ HOST_AND_CLIENT_PARAMS: dict[str, dict[str, Any]] = {
         },
     },
     # The outer bound of a pattern; `session_recall_pattern_max_chars` sets the working limit (MEM-18).
+    # `scope: past` (SPEC §19.3.3, W8) searches the profile's other sessions' stored transcripts, at most `limit`
+    # (≤ 8) matches; it is served to a local candidate only (§19.6): the handler refuses it on a cloud call.
     "session_recall": {
         "type": "object",
         "additionalProperties": False,
         "required": ["pattern"],
-        "properties": {"pattern": {"type": "string", "minLength": 1, "maxLength": 200}},
+        "properties": {
+            "pattern": {"type": "string", "minLength": 1, "maxLength": 200},
+            "scope": {"enum": ["current", "past"]},
+            "limit": {"type": "integer", "minimum": 1, "maximum": 8},
+        },
+    },
+    # The companion's study toolset (SPEC §19.3.3): query text is literal (MEM-05 amendment), refs are integers.
+    "study_search": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["query"],
+        "properties": {"query": {"type": "string", "minLength": 1, "maxLength": 200}},
+    },
+    "progress_read": {"type": "object", "additionalProperties": False, "properties": {}},
+    "plan": {"type": "object", "additionalProperties": False, "properties": {}},
+    "make_aid": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["kind", "source_ref"],
+        "properties": {
+            "kind": {"enum": ["notes", "summary", "flashcards", "quiz", "audio_overview", "concept_map"]},
+            "source_ref": {"type": "integer", "minimum": 1, "maximum": 64},
+            "count": {"type": "integer", "minimum": 1, "maximum": 40},
+        },
+    },
+    "start_research": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["topic"],
+        "properties": {"topic": {"type": "string", "minLength": 1, "maxLength": 200}},
     },
     # One Reflection's notes in a batch (G89), with the Reflection contract's integer refs, which the handler maps
     # back to ids with the job's ref tables (MEM-08). Text over the note limit is rejected there, never cut (G87).
@@ -498,6 +561,20 @@ HOST_AND_CLIENT_PARAMS: dict[str, dict[str, Any]] = {
 # Small-profile views (TOL-07): short descriptions that keep every section, and flat schemas projected from the full
 # schema (same field meanings; calls are validated against the full schema, so a projection is not a version change).
 SMALL_DESCRIPTIONS: dict[str, str] = {
+    "study_search": "Finds passages in the student's own materials. Use when they ask about them; not for course "
+    "packs. Parameters: query (literal words, * any). Returns numbered excerpts. Limits: 1 s. Never repeat an "
+    "unchanged failing call. Batch independent calls.",
+    "progress_read": "Reads the student's progress. Use when they ask what is due; not for one skill. Parameters: "
+    "none. Returns bands, cards due, exam days. Limits: 1 s. Never repeat an unchanged failing call. Batch "
+    "independent calls.",
+    "plan": "Reads today's plan. Use when they ask what next; not for changes. Parameters: none. Returns the "
+    "blocks or null. Limits: 1 s. Never repeat an unchanged failing call. Batch independent calls.",
+    "make_aid": "Starts a Study aid job. Use when they ask for one; not for answers. Parameters: kind, source_ref, "
+    "count. Returns the job. Limits: 1 s. Never repeat an unchanged failing call. Never spend a round-trip on "
+    "bookkeeping alone.",
+    "start_research": "Opens the research conversation. Use when a topic needs the web; not for answers. Parameters: "
+    "topic. Returns an action. Limits: 1 s. Never repeat an unchanged failing call. Never spend a round-trip on "
+    "bookkeeping alone.",
     "math_parse": "Reads a maths expression exactly. Use when you need its structure; not for solving (use "
     "math_solve instead). Parameters: text. Returns the exact form. Limits: 5 s. Never repeat an unchanged failing "
     "call. Batch independent calls.",
@@ -668,6 +745,7 @@ VERSIONS: dict[str, int] = {
     "skill": 2,
     "ask_student": 2,
     "update_board": 2,
+    "session_recall": 2,  # scope and limit (SPEC §19.3.3)
 }
 
 

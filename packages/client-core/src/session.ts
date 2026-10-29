@@ -13,7 +13,7 @@ import { clientId } from "./ids.js";
 import { DeltaQueue, type Clock, type Envelope } from "./queue.js";
 import { readEnvelope } from "./tolerant.js";
 import { forgetNote } from "./memory.js";
-import { lastWorked } from "./recent.js";
+import { companionMode, lastWorked } from "./recent.js";
 import { subjectName, type SubjectName } from "./setup.js";
 import { markFailed, markForgotten, markSending, optimistic, reduce, removeSketch } from "./reducer.js";
 import { connectionKey, emptyConnection, emptyStore, type ConnectionState, type Store } from "./store.js";
@@ -31,6 +31,8 @@ export const KNOWN_EVENTS = new Set([
   "board.annotate", "visual.sketch", "visual.await", "pacing.command",
   // VOC-53, D130: a spoken open-chat question's answer; SpeechTools hands it to Ask anything or the study Chat tab.
   "voice.answer",
+  // SPEC §19.3.3: a durable button of the companion thread (Study's "Your tutor"), kept in the store's `actions`.
+  "companion.action",
 ]);
 
 /** The core's address and per-launch token, from the shell; `refresh` asks again after the core restarted. A profile's
@@ -193,7 +195,7 @@ export class SessionController {
       if (error instanceof CommandError && error.code === "profile_token_expired") throw error;
       return null;
     });
-    const found = listed?.sessions.find((s) => !s.archived && s.subject === body.subject && continues(s, body.origin.kind, topic));
+    const found = listed?.sessions.find((s) => !s.archived && !companionMode(s) && s.subject === body.subject && continues(s, body.origin.kind, topic));
     return found !== undefined ? found.session_id : SessionController.create(launch, body, options);
   }
 

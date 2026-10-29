@@ -8,6 +8,10 @@
     "allow-pick-install-source",
     "allow-pick-profile-archive",
     "allow-update-recovery",
-    "allow-rollback-update"
+    "allow-rollback-update",
+    "allow-checkin-permission",
+    "allow-notify-checkin",
+    "allow-cancel-checkins",
+    "allow-take-checkin-click"
   ]
 }

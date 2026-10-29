@@ -10,6 +10,7 @@ import { moveVisual, selectBoardLine, syncNewVisual } from "./visuals.js";
 import {
   connectionKey,
   emptyConnection,
+  type ActionRec,
   type AnnotationRec,
   type BoardRec,
   type MarkTargetRec,
@@ -301,6 +302,16 @@ function apply(store: Store, sessionId: string, envelope: Envelope): Store {
     }
     case "memory.forgotten":
       return markForgotten(store, event.note_id as string);
+    case "companion.action": {
+      // A durable button of the companion thread (SPEC §19.3.3): from a tool result, never from model text. The same
+      // action id again replaces it, as the core's projection folds it into `actions`.
+      const id = event.action_id as string;
+      const action: ActionRec = {
+        type: "companion.action", action_id: id, action: event.action as ActionRec["action"], payload: { ...(event.payload as ActionRec["payload"]) },
+        label_key: event.label_key as string, session_id: sessionId,
+      };
+      return { ...store, actions: put(store.actions, id, action) };
+    }
     case "turn.end": {
       const turn = tutorTurn(store, turnId);
       let next: Store = store;

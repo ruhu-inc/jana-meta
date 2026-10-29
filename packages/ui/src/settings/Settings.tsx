@@ -16,7 +16,7 @@
 // and updates, PLT-10, PLT-14); and from stage 3 Voice where the app has it. Jana is for learners aged 18 and over
 // (JM-D15), so there is no parent summary or alerts section. A section this app does not have yet says so.
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { SettingsSections, STAGE_2_SECTIONS, type AssetEntry, type ChooseInstallSource, type NoticeEntry, type ProfileController, type StudentPreferences } from "@jana/client-core";
+import { SettingsSections, STAGE_2_SECTIONS, type AssetEntry, type CheckinNotifier, type ChooseInstallSource, type NoticeEntry, type ProfileController, type StudentPreferences } from "@jana/client-core";
 import type { Settings as SettingsRecord } from "@jana/contracts-ts";
 import { Ledger } from "../connectivity/Ledger.js";
 import { ScreenHeader } from "../frame/Frame.js";
@@ -39,8 +39,10 @@ import { AboutPanel, CrashReview, LicencePanel } from "./Support.js";
 import { TutorSection } from "./TutorSection.js";
 
 // The plain switches; `character_shortcuts` (optional: an older core does not return it) has its own (CharacterKeys),
-// `faster_tutor` (API 1.9, D103) sits in Tutor models (StoredSwitch), and `wake_word` is retired (D126) and never shown.
-type Toggle = Exclude<{ [K in keyof StudentPreferences]-?: NonNullable<StudentPreferences[K]> extends boolean ? K : never }[keyof StudentPreferences], "character_shortcuts" | "faster_tutor" | "wake_word">;
+// `faster_tutor` (API 1.9, D103) sits in Tutor models (StoredSwitch), `wake_word` is retired (D126) and never shown, and
+// `checkin_notifications` (SPEC §19.5.5, optional: an older core does not return it) sits under Personal tutor memory
+// online in Online features.
+type Toggle = Exclude<{ [K in keyof StudentPreferences]-?: NonNullable<StudentPreferences[K]> extends boolean ? K : never }[keyof StudentPreferences], "character_shortcuts" | "faster_tutor" | "wake_word" | "checkin_notifications">;
 
 /** The student preference switches, by the section of TABLE UXS-46a they belong to. */
 export const PREFERENCE_SECTIONS: { section: "accessibility" | "study"; keys: Toggle[] }[] = [
@@ -206,8 +208,10 @@ function Preferences({ profiles, settings, section, onOpenKnows, onKeys }: {
   );
 }
 
-export function Settings({ profiles, onClose, onOpenKnows, chooseSource, voiceSettings, notices, assets, section = null }: {
+export function Settings({ profiles, onClose, onOpenKnows, chooseSource, voiceSettings, notices, assets, notifier, section = null }: {
   profiles: ProfileController; onClose?: () => void; onOpenKnows?: () => void; chooseSource?: ChooseInstallSource | undefined; voiceSettings?: ReactNode;
+  /** The computer's notification permission (the desktop shell's), asked before Check-in notifications turn on. */
+  notifier?: Pick<CheckinNotifier, "permission"> | undefined;
   /** The section to open at (the student menu's Language, Get help, plan and back-up), once it is on the page; `at`
    * tells two requests for the same section apart. */
   section?: { id: string; at: number } | null;
@@ -260,7 +264,7 @@ export function Settings({ profiles, onClose, onOpenKnows, chooseSource, voiceSe
   const body = (id: SectionId): ReactNode => {
     switch (id) {
       case "online_features":
-        return <Card><div className="py-3"><OnlineFeaturesSection profiles={profiles} chooseSource={chooseSource} /></div></Card>;
+        return <Card><div className="py-3"><OnlineFeaturesSection profiles={profiles} chooseSource={chooseSource} notifier={notifier} /></div></Card>;
       case "profiles":
         return <Card><div className="py-3"><ProfilesSection profiles={profiles} /></div></Card>;
       case "tutor_models":

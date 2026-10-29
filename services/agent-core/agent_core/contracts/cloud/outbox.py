@@ -202,6 +202,7 @@ class TraceTelemetrySeriesItemLabels(BaseModel):
             "study_materials",
             "telemetry",
             "crash_reports",
+            "tutor_memory_online",
         ]
         | None
     ) = None
@@ -296,6 +297,7 @@ class TraceTelemetryLabels(BaseModel):
             "study_materials",
             "telemetry",
             "crash_reports",
+            "tutor_memory_online",
         ]
         | None
     ) = None

@@ -13,6 +13,7 @@ is pinned to. Every query is ordered on stable keys, so the same tables always g
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -509,3 +510,155 @@ def session_history(conn: sqlite3.Connection, session_id: str) -> list[Transcrip
         out.append((ref, 10_000 + step_idx, TranscriptLine(ref, "board", latex)))
     out.sort(key=lambda item: (item[0], item[1]))
     return [line for _, _, line in out]
+
+
+# --- Study activity (SPEC §19.3.2, W8): what the learner did in Study, as the knows view and Progress show it ---------
+
+STUDY_SHOWN = ("quiz_item", "card_review", "aid_made")
+
+
+def recent_study_activity(conn: sqlite3.Connection, content: ContentLabels, n: int = 8) -> list[dict[str, Any]]:
+    """The newest `n` Study activities in the knows view's words: what kind, the pack's statement of its first topic
+    tag (never a title or the learner's text), the result word, the aid's kind and size, and the UTC day."""
+    rows = conn.execute(
+        "SELECT payload, occurred_at FROM events WHERE type = 'study_activity' AND erased_at IS NULL"
+        " AND json_extract(payload, '$.activity') IN ('quiz_item', 'card_review', 'aid_made')"
+        " ORDER BY occurred_at DESC, seq DESC LIMIT ?",
+        (max(n, 0),),
+    ).fetchall()
+    out = []
+    for raw, at in rows:
+        payload = json.loads(raw)
+        tags = [t["kc_id"] for t in payload.get("kc_tags", [])[:1]]
+        result = payload.get("outcome") if payload["activity"] == "quiz_item" else payload.get("rating")
+        out.append({
+            "activity": payload["activity"],
+            "kc_id": tags[0] if tags else None,
+            "statement": (content.kc_statement(tags[0]) or None) if tags else None,
+            "result": result,
+            "aid_kind": payload.get("aid_kind"),
+            "count": payload.get("count"),
+            "day": datetime.fromtimestamp(int(at) / 1000, UTC).date().isoformat(),
+        })  # fmt: skip
+    return out
+
+
+def study_activity_counts(conn: sqlite3.Connection, since_ms: int) -> dict[str, int]:
+    """Study activity since `since_ms` for Progress's "Study activity" line: quiz questions answered (a skipped one
+    is not), how many were right, cards reviewed and aids made."""
+    rows = conn.execute(
+        "SELECT json_extract(payload, '$.activity'), json_extract(payload, '$.outcome'), count(*) FROM events"
+        " WHERE type = 'study_activity' AND erased_at IS NULL AND occurred_at >= ? GROUP BY 1, 2",
+        (since_ms,),
+    ).fetchall()
+    quiz = [(outcome, n) for kind, outcome, n in rows if kind == "quiz_item" and outcome != "skipped"]
+    return {
+        "quiz_items": sum(n for _, n in quiz),
+        "quiz_correct": sum(n for outcome, n in quiz if outcome == "correct"),
+        "cards_reviewed": sum(n for kind, _, n in rows if kind == "card_review"),
+        "aids_made": sum(n for kind, _, n in rows if kind == "aid_made"),
+    }
+
+
+# --- the companion's fixed queries (SPEC §19.3.3, W8 phase 2) -------------------------------------------------------
+
+STUDY_EXCERPTS_MAX = 6
+STUDY_EXCERPT_CHARS = 400
+STUDY_LABEL_CHARS = 80
+
+
+@dataclass(frozen=True)
+class StudyExcerpt:
+    """One literal match in the learner's own materials: where it is (a source's revision or a session note) and the
+    excerpt. The ids stay on the device's side of the tool: the model sees an integer ref."""
+
+    kind: Literal["source", "note"]
+    record_id: str
+    revision: int
+    label: str
+    text: str
+
+
+def study_excerpts(
+    conn: sqlite3.Connection, segments: Sequence[str], n: int = STUDY_EXCERPTS_MAX
+) -> list[StudyExcerpt]:
+    """`study_search`'s fixed query: the literal pieces (`memory.recall._segments`, `*` the only wildcard, never a
+    regular expression) found in order in one sentence of a ready, non-private source's current revision or of a
+    ready, non-private session note; at most `n`, each at most 400 characters with its 80-character label."""
+    from agent_core.memory.recall import _find, _window
+
+    if not segments:
+        return []
+    out: list[StudyExcerpt] = []
+    rows = conn.execute(
+        "SELECT s.source_id, s.current_revision, s.body, c.body FROM study_sources s JOIN study_chunks c"
+        " ON c.source_id = s.source_id AND c.revision = s.current_revision WHERE s.private = 0 ORDER BY s.source_id,"
+        " c.ordinal"
+    ).fetchall()
+    for source_id, revision, source_body, chunk_body in rows:
+        source, chunk = json.loads(source_body), json.loads(chunk_body)
+        if source.get("state") not in ("ready", "partial"):
+            continue
+        for sentence in re.split(r"(?<=[.!?])\s+|\n+", str(chunk.get("text", ""))):
+            flat = " ".join(sentence.split())
+            hit = _find(flat, segments)
+            if hit is None:
+                continue
+            label = str(source.get("title", ""))[:STUDY_LABEL_CHARS]
+            excerpt = _window(flat, hit[0], hit[1], STUDY_EXCERPT_CHARS)
+            out.append(StudyExcerpt("source", str(source_id), int(revision), label, excerpt))
+            if len(out) >= n:
+                return out
+    try:
+        notes = conn.execute(
+            "SELECT note_id, title, statements FROM session_notes WHERE state = 'ready' AND private = 0"
+            " ORDER BY note_id"
+        ).fetchall()
+    except sqlite3.Error:
+        notes = []
+    for note_id, title, statements in notes:
+        for statement in json.loads(statements):
+            text = statement.get("text") if isinstance(statement, dict) else None
+            if not isinstance(text, str):
+                continue
+            flat = " ".join(text.split())
+            hit = _find(flat, segments)
+            if hit is None:
+                continue
+            out.append(StudyExcerpt("note", str(note_id), 0, str(title or "")[:STUDY_LABEL_CHARS],
+                                    _window(flat, hit[0], hit[1], STUDY_EXCERPT_CHARS)))  # fmt: skip
+            if len(out) >= n:
+                return out
+    return out
+
+
+@dataclass(frozen=True)
+class ProgressOverview:
+    """`progress_read`'s fixed query: bands (most recently practised first), cards due in both schedulers, the
+    nearest exam's distance and the streak. Never a probability."""
+
+    bands: tuple[tuple[str, str, str], ...]  # (kc_id, statement, band)
+    learner_cards: int
+    study_cards: int
+    exam_distance_days: int | None
+    streak_days: int
+
+
+def progress_overview(conn: sqlite3.Connection, content: ContentLabels, settings: Settings, today: str,
+                      end_of_today_ms: int, n: int = 12) -> ProgressOverview:  # fmt: skip
+    from agent_core.memory.render import BANDS
+
+    kcs = top_kcs(conn, content, None, n, settings)
+    bands = tuple((k.kc_id, k.statement, BANDS.get(k.state, "learning")) for k in kcs[:n])
+    learner_cards = len(due_reviews(conn, today))
+    study = conn.execute(
+        "SELECT count(*) FROM study_flashcards f JOIN study_decks d ON d.deck_id = f.deck_id JOIN study_revisions r"
+        " ON r.source_id = d.source_id AND r.revision = d.revision WHERE f.due_at IS NOT NULL AND f.due_at < ?"
+        " AND json_extract(f.body, '$.suspended') = 0",
+        (end_of_today_ms,),
+    ).fetchone()[0]
+    summary = profile_summary(conn, today=today, settings=settings)
+    distance = int(summary.exam_distance.split()[1]) if summary.exam_distance and summary.exam_distance.startswith(
+        "in ") else None  # fmt: skip
+    row = conn.execute("SELECT streak_days FROM engagement_state").fetchone()
+    return ProgressOverview(bands, learner_cards, int(study or 0), distance, int(row[0]) if row else 0)

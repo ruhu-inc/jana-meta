@@ -263,8 +263,15 @@ class Offer(_Strict):
     amount: int = Field(ge=0)
 
 
+# The `Limits` the gateway holds itself, never signed into the entitlement (its `PlanLimits` has no such key).
+GATEWAY_HELD_LIMITS = frozenset({"companion_turns_per_day", "tutor_memory_jobs_per_day"})
+
+
 class Limits(_Strict):
-    """A plan's fair-use limits per student (TABLE BIZ-18a, the entitlement's `PlanLimits`); unset means none."""
+    """A plan's fair-use limits per student (TABLE BIZ-18a, the entitlement's `PlanLimits`); unset means none. The
+    personal learning agent's two daily caps (SPEC §19.4, §19.7) are held by the gateway itself, per session pseudonym
+    per day (`cloud_gateway.companion`): the entitlement's `PlanLimits` does not carry them, so `granted` leaves them
+    out of what the checkout signs."""
 
     ask_anything_per_day: int | None = Field(None, ge=0)
     uploads_per_day: int | None = Field(None, ge=0)
@@ -274,9 +281,13 @@ class Limits(_Strict):
     recording_hours_per_month: int | None = Field(None, ge=0)
     podcasts_per_day: int | None = Field(None, ge=0)
     voice_minutes_per_month: int | None = Field(None, ge=0)
+    companion_turns_per_day: int | None = Field(None, ge=0)  # the Study companion's turns (W8, SPEC §19.7)
+    tutor_memory_jobs_per_day: int | None = Field(None, ge=0)  # the Reflector's jobs on Spark (W8, JM-D21)
 
     def granted(self) -> dict[str, int]:
-        return {name: value for name, value in self.model_dump().items() if value is not None}
+        """The limits the entitlement signs: every one set, except those the gateway holds itself."""
+        return {name: value for name, value in self.model_dump().items()
+                if value is not None and name not in GATEWAY_HELD_LIMITS}  # fmt: skip
 
 
 class Taste(_Strict):
@@ -329,6 +340,14 @@ PLANS = Path(__file__).with_name("plans.toml")
 
 def packaged_plans() -> Plans:
     return Plans.model_validate(tomllib.loads(PLANS.read_text()))
+
+
+class CompanionConfig(_Strict):
+    """The personal learning agent's calls on the chat route (W8, SPEC §19.4, §19.7): the Study companion's turns and
+    the Reflector's tutor-memory jobs. Each call holds its upper bound against this daily spend, per session pseudonym
+    per day, before it is sent; the turn and job counts are the plan's `Limits`."""
+
+    per_day_usd: float = key(0.50, serves="BIZ-08", unit="USD/day", ge=0)
 
 
 class Objectives(_Strict):
@@ -438,6 +457,7 @@ class GatewayConfig(_Strict):
     podcast_speech: PodcastSpeech = Field(default_factory=PodcastSpeech)
     sam: Sam = Field(default_factory=Sam)
     research: Research = Field(default_factory=Research)
+    companion: CompanionConfig = Field(default_factory=CompanionConfig)
     ask_search_results: int = key(6, serves="STU-20", unit="sources", ge=1, le=10)
     ask_max_tokens: int = key(4096, serves="STU-20", unit="tokens", ge=512, le=16384)
     objectives: Objectives = Field(default_factory=Objectives)

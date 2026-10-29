@@ -1,0 +1,19 @@
+# W8 phase 3 Study-memory case (SPEC §19.9): written before any run; checked by code in tests/w8_scenarios.py.
+case: cloud_block_dat18
+rubric: >-
+  Every cloud request in a Study session with the consent off carries only MDL-25 fields; with it on, only the §19.6
+  list, scrubbed.
+profile: {display_name: Ama, level: O, subjects: [physics], exam_date: "2027-06-01"}
+term: zorblat
+notes:
+  - "Divides distance by time correctly once the units match"
+  - "Learns graphs best through the zorblat method"
+transcript_line: "qxtranscript I always mix up speed and velocity"
+expect:
+  consent_off:
+    notes: false
+    lines: ["About this student", "Profile:", "Skills in focus:", "Mistakes being watched:", "- kc.", "- mc."]
+  consent_on:
+    notes: ["Divides distance by time correctly once the units match"]
+    withheld: ["Learns graphs best through the zorblat method"]
+  never: ["Ama", "2027-06-01", "qxtranscript", "zorblat", "reading level"]

@@ -15,6 +15,7 @@ from __future__ import annotations
 import sqlite3
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Literal
 
 from agent_core.config import Settings
@@ -33,6 +34,7 @@ from agent_core.memory.queries import (
 )
 from agent_core.memory.refs import RefOutOfRange, RefTable
 from agent_core.memory.render import (
+    BANDS,
     NOTES_CLOSE,
     NOTES_OPEN,
     RECORDS_LINE,
@@ -41,6 +43,7 @@ from agent_core.memory.render import (
     escape_note,
     wrap_notes,
 )
+from agent_core.memory.scrub import scrub_for_egress
 
 QueryId = Literal["profile_summary", "top_kcs", "active_misconceptions", "recent_notes", "preferences"]
 QUERY_IDS: tuple[QueryId, ...] = ("profile_summary", "top_kcs", "active_misconceptions", "recent_notes", "preferences")
@@ -125,11 +128,18 @@ def memory_recall(
     session_date: str | None = None,
     expect_profile: str | None = None,
     capture: CaptureFilter | None = None,
+    egress_terms: Sequence[str] | None = None,
+    recalled_in: tuple[str, str] | None = None,
 ) -> RecallResult:
     """A live read of one fixed query. Refs (at most `MAX_REFS`, plain integers in the session's note table) are
     allowed only with `recent_notes`, where they name the notes to expand; without refs, `recent_notes` returns the
     newest `snapshot_recent_notes`. A note deleted since the snapshot is simply absent. `expect_profile`, when
-    given, must be the profile the store belongs to."""
+    given, must be the profile the store belongs to.
+
+    `egress_terms` (SPEC §19.6, W8 phase 3): the call is a cloud call under `tutor_memory_online`; the answer carries
+    only what the cloud_notes variant may: notes that pass `scrub_for_egress` (with these Redactor terms), KC ids with
+    bands, misconception ids, the cloud profile line's fields, and no preferences. `recalled_in` = (session id, day):
+    one `note_recalls` row per note returned (§19.3.5)."""
     if query_id not in QUERY_IDS:
         raise RecallRefused(f"unknown query {query_id!r}")
     if not isinstance(refs, Sequence) or isinstance(refs, str | bytes):
@@ -144,8 +154,21 @@ def memory_recall(
         raise RecallRefused(str(error)) from None
     _own_profile(conn, expect_profile)
     capture = capture or default_filter(settings)
+    cloud = egress_terms is not None
+    if cloud and query_id == "preferences":
+        raise RecallRefused("preferences are not read for a cloud model")
     items: list[dict[str, object]]
-    if query_id == "profile_summary":
+    if query_id == "profile_summary" and cloud:
+        p = profile_summary(conn, today=session_date, settings=settings)
+        items = [{"level": p.level, "subjects": list(p.subjects), "exam": p.exam_distance,
+                  "solution_policy": p.solution_policy}]  # fmt: skip
+    elif query_id == "top_kcs" and cloud:
+        kcs = top_kcs(conn, content, topic_id, settings.snapshot_top_kcs, settings)
+        items = [{"skill": k.kc_id, "state": BANDS.get(k.state, k.state), "hint_use": k.hint_use} for k in kcs]
+    elif query_id == "active_misconceptions" and cloud:
+        found = active_misconceptions(conn, content, topic_id, settings.snapshot_misconceptions_max)
+        items = [{"mistake": m.misconception_id, "status": m.status} for m in found]
+    elif query_id == "profile_summary":
         p = profile_summary(conn, today=session_date, settings=settings)
         items = [{"level": p.level, "subjects": list(p.subjects), "exam": p.exam_distance,
                   "reading_level": p.reading_level, "support_level": p.support_level,
@@ -169,10 +192,34 @@ def memory_recall(
         # A note that fails the render check is left out without taking a place; a note outside the session's table
         # (written after the snapshot) is shown without a ref (0).
         passing = [n for n in notes if not render_check(n.text, settings, capture)]
+        if cloud:
+            passing = [n for n in passing if scrub_for_egress(n.text, settings, capture, egress_terms or ()) is None]
         if not wanted:
             passing = passing[: settings.snapshot_recent_notes]
         items = [_note_item(n, note_refs.ref_of(n.note_id) if n.note_id in note_refs.ids else 0) for n in passing]
+        if recalled_in is not None:
+            record_recalls(conn, [n.note_id for n in passing], *recalled_in)
     return RecallResult(query_id, tuple(items), RECALL_MARKER)
+
+
+def record_recalls(conn: sqlite3.Connection, note_ids: Sequence[str], session_id: str, day: str) -> None:
+    """One `note_recalls` row per note, session and day (SPEC §19.3.5): device-local, never egress (JM-D27). A
+    database without the table (before v21) records nothing."""
+    session = session_id.removeprefix("ses_")
+    try:
+        conn.executemany("INSERT OR IGNORE INTO note_recalls (note_id, session_id, day) VALUES (?, ?, ?)",
+                         [(note_id, session, day) for note_id in dict.fromkeys(note_ids)])  # fmt: skip
+    except sqlite3.OperationalError:
+        return
+
+
+def recall_sessions(conn: sqlite3.Connection) -> dict[str, int]:
+    """How many sessions each note was recalled in (SPEC §19.3.5)."""
+    try:
+        rows = conn.execute("SELECT note_id, count(DISTINCT session_id) FROM note_recalls GROUP BY note_id")
+        return {str(r[0]): int(r[1]) for r in rows}
+    except sqlite3.OperationalError:
+        return {}
 
 
 # --- session recall (MEM-18) ---------------------------------------------------------------------------------------
@@ -227,4 +274,50 @@ def session_recall(conn: sqlite3.Connection, session_id: str, pattern: str, sett
         out.append(RecallMatch(line.turn_ref, line.source, escaped[: settings.session_recall_match_chars]))
         if len(out) >= settings.session_recall_max_matches:
             break
+    return out
+
+
+# --- past sessions (SPEC §19.3.3, W8 phase 2) ------------------------------------------------------------------
+
+PAST_MATCH_CHARS = 200
+PAST_MAX = 8
+
+
+@dataclass(frozen=True)
+class PastMatch:
+    session_date: str  # YYYY-MM-DD of the session's start
+    subject: str | None
+    source: Literal["student", "tutor", "board"]
+    text: str  # at most 200 characters, escaped
+
+
+def session_recall_past(conn: sqlite3.Connection, session_id: str, pattern: str, settings: Settings,
+                        limit: int = PAST_MAX) -> list[PastMatch]:  # fmt: skip
+    """`session_recall` with `scope: "past"`: the same literal match (`_segments`, `_find`; `*` the only wildcard) over
+    the profile's other sessions' stored transcripts, newest session first, at most `limit` (≤ 8) matches of at most
+    200 characters, each with its session's date and subject. Purged transcripts hold nothing to find. Served to a
+    local candidate only (§19.6): the handler refuses it on a cloud call."""
+    if not isinstance(pattern, str) or len(pattern) > settings.session_recall_pattern_max_chars:
+        raise RecallRefused(f"the pattern is at most {settings.session_recall_pattern_max_chars} characters")
+    segments = _segments(pattern)
+    if not segments or all(not piece.strip() for piece in segments):
+        raise RecallRefused("the pattern has no text to look for")
+    limit = max(1, min(int(limit), PAST_MAX))
+    rows = conn.execute(
+        "SELECT session_id, subject, started_at FROM sessions WHERE session_id <> ? AND transcript_purged_at IS NULL"
+        " ORDER BY started_at DESC, session_id DESC",
+        (session_id.removeprefix("ses_"),),
+    ).fetchall()
+    out: list[PastMatch] = []
+    for sid, subject, started in rows:
+        day = datetime.fromtimestamp(int(started) / 1000, UTC).date().isoformat()
+        for line in session_history(conn, str(sid)):
+            flat = " ".join(line.text.split())
+            hit = _find(flat, segments)
+            if hit is None:
+                continue
+            window = escape_markup(_window(flat, hit[0], hit[1], PAST_MATCH_CHARS))
+            out.append(PastMatch(day, subject, line.source, window[:PAST_MATCH_CHARS]))
+            if len(out) >= limit:
+                return out
     return out

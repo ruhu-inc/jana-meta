@@ -157,6 +157,10 @@ ROUTES: dict[str, Rule] = {
     "POST /v1/study/sources/{source_id}/open": _IDS,
     "POST /v1/study/sources/{source_id}/archive": _IDS,
     "DELETE /v1/study/sources/{source_id}/archive": _IDS,
+    "POST /v1/study/session": _IDS,  # the Study screen opens its session of the day (SPEC §19.3.2); an empty body
+    "POST /v1/companion": _IDS,  # opens today's episode of the companion's thread (SPEC §19.3.3); an empty body
+    "POST /v1/checkins/{commitment_id}/dismiss": _IDS,  # a check-in put away (SPEC §19.3.4); no body
+    "POST /v1/checkins/{commitment_id}/open": _IDS,  # the thread opened with a check-in's question; no body
     "POST /v1/study/search": Exempt("read-only bounded local search, never persisted or sent to a model"),
     # A Generate focus and the kept topics reach the model with the request, so they are screened with it (STU-21).
     "POST /v1/study/quizzes/{quiz_id}/items/{item_id}/help": Screened(

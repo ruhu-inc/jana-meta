@@ -36,10 +36,12 @@ caller, which runs it once the open sessions have dropped the note.
 
 from __future__ import annotations
 
+import contextlib
+import json
 import re
 import sqlite3
 from collections import Counter
-from collections.abc import Callable, Collection, Iterable, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -50,8 +52,9 @@ from agent_core.memory import policy
 from agent_core.memory.capture import CaptureFilter, default_filter
 from agent_core.memory.policy import Candidate, Rejection, content_hash
 from agent_core.memory.queries import NoteRecord, ReviewItem, memory_saving, review_items, stored_notes
-from agent_core.store.events import COLUMNS, MERGE_ORDER, StoredEvent
+from agent_core.store.events import COLUMNS, MERGE_ORDER, StoredEvent, iso_ms
 from agent_core.store.ids import new_ulid
+from agent_core.store.sqlite import transaction
 from agent_core.store.supersession import read_log
 
 Actor = Literal["student", "system_expiry"]
@@ -111,12 +114,40 @@ def code_summary(conn: sqlite3.Connection, session_id: str, subject: str | None)
         (sid,),
     )  # a re-marked answer counts as its latest marking, once (ASM-23, CUR-36)
     correct = sum(e.payload.get("outcome") == "correct" for e in read_log(map(StoredEvent.from_row, verdicts)))
+    study = _study_summary(conn, sid, subject)
+    if study is not None:
+        return study
     topic = f"{subject.capitalize()} session" if subject else "Session"
     attempts, hints = int(counts.get("attempt", 0)), int(counts.get("hint", 0))
     if not attempts and not hints:
         return f"{topic}: talked through the work; no answers were checked."
     return (f"{topic}: {attempts} answer{'s' if attempts != 1 else ''} checked, {correct} correct, "
             f"{hints} hint{'s' if hints != 1 else ''} used.")  # fmt: skip
+
+
+def _study_summary(conn: sqlite3.Connection, sid: str, subject: str | None) -> str | None:
+    """A Study session's summary from its `study_activity` events (SPEC §19.3.2): counts only, or None when the
+    session has none (a tutoring session, or a Study visit with nothing done)."""
+    rows = conn.execute(
+        "SELECT json_extract(payload, '$.activity'), json_extract(payload, '$.outcome'), count(*) FROM events"
+        " WHERE session_id = ? AND type = 'study_activity' AND erased_at IS NULL GROUP BY 1, 2",
+        (sid,),
+    ).fetchall()
+    if not rows:
+        return None
+    asked = sum(n for kind, outcome, n in rows if kind == "quiz_item" and outcome != "skipped")
+    right = sum(n for kind, outcome, n in rows if kind == "quiz_item" and outcome == "correct")
+    cards = sum(n for kind, _, n in rows if kind == "card_review")
+    aids = sum(n for kind, _, n in rows if kind == "aid_made")
+    parts = []
+    if asked:
+        parts.append(f"{asked} quiz question{'s' if asked != 1 else ''} answered, {right} right")
+    if cards:
+        parts.append(f"{cards} card{'s' if cards != 1 else ''} reviewed")
+    if aids:
+        parts.append(f"{aids} study aid{'s' if aids != 1 else ''} made")
+    topic = f"{subject.capitalize()} in Study" if subject else "Study"
+    return f"{topic}: " + ("; ".join(parts) if parts else "looked over your materials") + "."
 
 
 def _repeats(summary: str, text: str) -> bool:
@@ -175,6 +206,8 @@ def forget(
         when = now_ms if now_ms is not None else stored[0].recorded_at
         erased.extend(_erase_written(learner, c, [note_id], when))
         _scrub_summaries(c, [str(row[0])])
+        with contextlib.suppress(sqlite3.OperationalError):  # SPEC §19.3.5: its recall counts go with it
+            c.execute("DELETE FROM note_recalls WHERE note_id = ?", (note_id,))
 
     deleted = NewEvent("note_deleted", {"note_id": note_id, "actor_role": actor}, source=SOURCE_OF[actor],
                        occurred_at=now_ms)  # fmt: skip
@@ -728,3 +761,123 @@ def resolve_review(
     if gone:
         compact_storage(conn)  # the removed text leaves the file, the log and the index too (LRN-37)
     return True
+
+
+# --- the companion thread's rolling summary (SPEC §19.5.3, W8 phase 2) ------------------------------------------
+
+SUMMARY_TYPES = ("attempt", "verdict", "review", "misconception_evidence", "study_activity", "plan_generated")
+SUMMARY_TOPICS_MAX = 6
+SUMMARY_MISCONCEPTIONS_MAX = 4
+SUMMARY_DAYS = 30
+
+
+def summary_body() -> dict[str, Any]:
+    """An empty `CompanionSummary`."""
+    return {"version": 0, "cursor_seq": 0, "updated_at": None, "topics": [], "misconceptions": [], "next_step": None,
+            "episodes": 0}  # fmt: skip
+
+
+def _summary_kcs(type_: str, payload: Mapping[str, Any]) -> list[str]:
+    if type_ == "attempt":
+        return [k["kc_id"] for k in payload.get("kc_ids", []) if isinstance(k, dict) and "kc_id" in k]
+    if type_ == "study_activity":
+        return [t["kc_id"] for t in payload.get("kc_tags", []) if isinstance(t, dict) and "kc_id" in t]
+    if type_ in ("review", "misconception_evidence"):
+        kc = payload.get("kc_id")
+        return [kc] if isinstance(kc, str) else []
+    return []
+
+
+def _iso_or_none(ms: int | None) -> str | None:
+    return iso_ms(int(ms)) if ms is not None else None
+
+
+def fold_companion_summary(conn: sqlite3.Connection, thread_id: str, content: Any, *, now_ms: int) -> dict[str, Any]:
+    """Fold the learning events after the stored `cursor_seq` into the thread's summary, in one transaction, by code
+    only (§19.5.3): topics by KC (a session counts once per KC however many folds its events span; `last_at`
+    moves), misconceptions with the learner model's current status, the next step from the latest plan's main block,
+    and the episode count. Entries untouched for 30 days leave. `version` and `cursor_seq` advance together, so a
+    replay from the event log with the same clock gives the same body. No free text: labels are the packs'."""
+    with transaction(conn):
+        row = conn.execute("SELECT version, cursor_seq, body_json FROM companion_summary WHERE thread_id = ?",
+                           (thread_id,)).fetchone()  # fmt: skip
+        if row is None:
+            raise LookupError("no such companion thread")
+        version, cursor = int(row[0]), int(row[1])
+        body = json.loads(row[2]) or summary_body()
+        marks = ", ".join("?" for _ in SUMMARY_TYPES)
+        rows = conn.execute(
+            f"SELECT {COLUMNS} FROM events WHERE seq > ? AND erased_at IS NULL AND type IN ({marks})"  # noqa: S608
+            f" ORDER BY seq",
+            (cursor, *SUMMARY_TYPES),
+        ).fetchall()
+        window = [StoredEvent.from_row(r) for r in rows]
+        topics = {t["kc_id"]: dict(t) for t in body.get("topics", [])}
+        counted: dict[str, set[str]] = {}  # session -> KCs already counted for it (this fold, and before the cursor)
+
+        def before(session_id: str) -> set[str]:
+            if session_id not in counted:
+                earlier = conn.execute(
+                    f"SELECT {COLUMNS} FROM events WHERE session_id = ? AND seq <= ? AND erased_at IS NULL"  # noqa: S608
+                    f" AND type IN ({marks})",
+                    (session_id, cursor, *SUMMARY_TYPES),
+                ).fetchall()
+                counted[session_id] = {kc for r in earlier for e in [StoredEvent.from_row(r)]
+                                       for kc in _summary_kcs(e.type, e.payload)}  # fmt: skip
+            return counted[session_id]
+
+        touched_mcs: set[str] = {m["misconception_id"] for m in body.get("misconceptions", [])}
+        plan: StoredEvent | None = None
+        for event in window:
+            if event.type == "plan_generated":
+                plan = event
+            if event.type == "misconception_evidence" and isinstance(event.payload.get("misconception_id"), str):
+                touched_mcs.add(event.payload["misconception_id"])
+            for kc in _summary_kcs(event.type, event.payload):
+                entry = topics.setdefault(kc, {"kc_id": kc, "label": str(content.kc_statement(kc) or kc)[:200]
+                                               if content is not None else kc, "sessions": 0,
+                                               "last_at": iso_ms(event.occurred_at)})  # fmt: skip
+                session = event.session_id
+                if session is not None and kc not in before(session):
+                    entry["sessions"] = int(entry["sessions"]) + 1
+                    counted[session].add(kc)
+                if iso_ms(event.occurred_at) > entry["last_at"]:
+                    entry["last_at"] = iso_ms(event.occurred_at)
+        cutoff = iso_ms(now_ms - SUMMARY_DAYS * 86_400_000)
+        kept_topics = [t for t in topics.values() if t["sessions"] >= 1 and t["last_at"] >= cutoff]
+        kept_topics.sort(key=lambda t: (t["last_at"], t["kc_id"]), reverse=True)
+        misconceptions = []
+        for mc in sorted(touched_mcs):
+            found = conn.execute("SELECT status, last_seen_at FROM learner_misconceptions WHERE misconception_id = ?",
+                                 (mc,)).fetchone()  # fmt: skip
+            if found is None:
+                continue
+            updated = iso_ms(int(found[1]))
+            if updated < cutoff:
+                continue
+            name = content.misconception_name(mc) if content is not None else None
+            misconceptions.append({"misconception_id": mc, "label": str(name or mc)[:200], "status": str(found[0]),
+                                   "updated_at": updated})  # fmt: skip
+        misconceptions.sort(key=lambda m: (m["updated_at"], m["misconception_id"]), reverse=True)
+        next_step = body.get("next_step")
+        if plan is not None:
+            main = next((b for b in plan.payload.get("blocks", []) if b.get("kind") in ("main", "mock")), None)
+            kcs = main.get("kc_ids", []) if main else []
+            if main is not None:
+                label = (content.kc_statement(kcs[0]) if content is not None and kcs else None) or (
+                    "a mock exam" if main.get("kind") == "mock" else "the plan's main block"
+                )
+                next_step = {"text": f"Next: {label}"[:120], "reason_code": str(main.get("reason_code") or
+                             main.get("kind"))[:40], "updated_at": iso_ms(plan.occurred_at)}  # fmt: skip
+        if next_step is not None and next_step["updated_at"] < cutoff:
+            next_step = None
+        episodes = int(conn.execute("SELECT count(*) FROM companion_episodes WHERE thread_id = ?",
+                                    (thread_id,)).fetchone()[0])  # fmt: skip
+        newest = window[-1].seq if window else cursor
+        out = {"version": version + (1 if window or episodes != body.get("episodes") else 0), "cursor_seq": newest,
+               "updated_at": iso_ms(now_ms), "topics": kept_topics[:SUMMARY_TOPICS_MAX],
+               "misconceptions": misconceptions[:SUMMARY_MISCONCEPTIONS_MAX], "next_step": next_step,
+               "episodes": episodes}  # fmt: skip
+        conn.execute("UPDATE companion_summary SET version = ?, cursor_seq = ?, updated_at = ?, body_json = ?"
+                     " WHERE thread_id = ?", (out["version"], newest, now_ms, json.dumps(out), thread_id))  # fmt: skip
+    return out

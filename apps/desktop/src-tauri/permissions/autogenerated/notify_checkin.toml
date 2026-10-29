@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-notify-checkin"
+description = "Enables the notify_checkin command without any pre-configured scope."
+commands.allow = ["notify_checkin"]
+
+[[permission]]
+identifier = "deny-notify-checkin"
+description = "Denies the notify_checkin command without any pre-configured scope."
+commands.deny = ["notify_checkin"]

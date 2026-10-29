@@ -29,6 +29,7 @@ from agent_core.api.stream import PROTOCOL, Connection, RingPool, control, frame
 from agent_core.config import Settings
 from agent_core.contracts import errors as contract_errors
 from agent_core.engine import offers
+from agent_core.engine.companion import CompanionContext, CompanionDesk
 from agent_core.engine.events import new_id
 from agent_core.engine.input import normalise_blocks, normalise_input
 from agent_core.engine.lessons import LessonDesk
@@ -40,6 +41,7 @@ from agent_core.engine.session_notes import SessionNotesQueue
 from agent_core.engine.state import SessionState, state_from_json, state_to_json
 from agent_core.engine.steering import Steer
 from agent_core.engine.study import StudyQueue
+from agent_core.engine.study_session import StudyVisits
 from agent_core.engine.titles import chat_title
 from agent_core.engine.turn import Engine, TurnIds
 from agent_core.engine.tutor_flows import MODES, decide_mode_change
@@ -57,6 +59,23 @@ EngineFactory = Callable[[SessionState], Engine]
 # another profile's session answers 404, indistinguishable from a missing one. Each request runs in its own task, so
 # the value never leaks between requests.
 CURRENT_PROFILE: contextvars.ContextVar[str | None] = contextvars.ContextVar("current_profile", default=None)
+
+
+def _companion_schema() -> tuple[str, dict[str, Any], Any]:
+    """The companion role's output (contracts/agents/companion-turn), for the opener's wording call (§19.5.2)."""
+    from jsonschema import Draft202012Validator
+
+    from agent_core.contracts import document
+
+    schema = {k: v for k, v in document("agents/companion-turn").items() if k not in ("$schema", "$id")}
+    return "CompanionTurn", schema, Draft202012Validator(schema)
+
+
+def _checkin_schema() -> dict[str, Any]:
+    """The check-in extractor's output (contracts/agents/commitment, SPEC §19.5.5)."""
+    from agent_core.contracts import document
+
+    return {k: v for k, v in document("agents/commitment").items() if k not in ("$schema", "$id")}
 
 
 def new_epoch() -> str:
@@ -286,6 +305,37 @@ class CoreService:
             self.clock_ms,
             self.settings,
         )
+        # The Study screen's session of the day and the activity it records (SPEC §19.3.2, W8): on the open
+        # profile's learner database only, with the installed packs' labels; its end is the study_end write point.
+        self.study_visits = StudyVisits(
+            lambda: self.records.learner if self.records is not None and self.records_profile is not None else None,
+            self.clock_ms,
+            self.settings,
+            content=lambda: self.study.content() if self.study.content is not None else None,
+            hardware_class=lambda: self.records.hardware_class if self.records is not None else "mid",
+            on_end=self._study_ended,
+        )
+        self.study.activity = self.study_visits
+        # Your tutor in Study (SPEC §19, W8 phase 2): the profile's companion thread and its daily episodes; the
+        # opener's wording goes through the online router the research conversation uses.
+        self.companion = CompanionDesk(
+            lambda: self.records.learner if self.records is not None and self.records_profile is not None else None,
+            self.clock_ms,
+            self.settings,
+            content=lambda: self.study.content() if self.study.content is not None else None,
+            router=lambda: self.research_router() if self.research_router is not None else None,
+            schema=_companion_schema,
+        )
+        # Check-ins (SPEC §19.5.5, W8 phase 3): the extractor after a companion turn, the heartbeat, the due query.
+        from agent_core.engine.checkins import CheckinDesk
+
+        self.checkins = CheckinDesk(
+            lambda: self.records.learner if self.records is not None and self.records_profile is not None else None,
+            self.clock_ms,
+            self.settings,
+            schema=_checkin_schema,
+            study_cards_due=self.companion.study_cards_due,
+        )
         for session_id, record in store.load_all().items():
             self._restore(session_id, record)
         if records is not None:
@@ -388,6 +438,12 @@ class CoreService:
                                       session_date=self._today(), subject=subject, request=request,
                                       turn_id=turn_id)  # fmt: skip
 
+    def _study_ended(self, session_id: str, subject: str | None, session_date: str) -> None:
+        """The Study screen closed or went idle: its session's `study_end` Reflector job (SPEC §19.4, MEM-06)."""
+        if self.reflector is not None and self.records_profile is not None and not self.shutting_down:
+            self.reflector.trigger("study_end", self.records_profile, session_id, session_date=session_date,
+                                   subject=subject)  # fmt: skip
+
     def _session_ended(self, session_id: str, reason: str) -> None:
         self.session_notes.scan()
         entry = self.sessions.get(session_id)
@@ -434,6 +490,12 @@ class CoreService:
         per quiet period. Returns the sessions queued."""
         idle_ms = int(self.settings.memory_idle_write_min * 60_000)
         records, now, queued = self.records, self.clock_ms(), []
+        if (ended := self.study_visits.idle_check(now)) is not None:  # the Study screen, quiet for 20 minutes
+            queued.append(ended)
+        queued += self.end_stale_companion()  # the companion's episodes: idle 20 minutes, or of an earlier day
+        if self.records is not None and self.records.learner is not None and self.records_profile is not None:
+            with contextlib.suppress(Exception):  # check-ins' heartbeat: on app open, then every 30 minutes
+                self.checkins.heartbeat(now)
         for session_id, state in list(records.open.items()) if records is not None else []:
             entry = self.sessions.get(session_id)
             quiet = now - state.last_activity >= idle_ms and not self._turn_running()
@@ -484,6 +546,7 @@ class CoreService:
         if running:
             grace = self.settings.shutdown_grace_s if grace_s is None else min(grace_s, self.settings.shutdown_grace_s)
             await asyncio.wait([e.task for e in running if e.task], timeout=grace)
+        self.study_visits.end("interrupted", notify=False)  # an open Study session ends with the app (§19.3.2)
         if self.records is not None:
             self.records.shutdown(self.clock_ms())  # open learning sessions end interrupted (LRN-01)
         for entry in self.sessions.values():
@@ -526,8 +589,114 @@ class CoreService:
             engine.on_memory_request = lambda turn, words, entry=entry: self._memory_request(entry, words, turn)
             if self.learn is not None:  # the lesson player's reads for a lesson session (AGT-22)
                 engine.lesson_desk = LessonDesk(self.learn)
+            if entry.meta.get("mode") == "study_companion":
+                self._attach_companion(engine)
             entry.engine = engine
         return entry.engine
+
+    def _share_materials(self) -> bool:
+        """`study_materials` effective for the open profile (§19.6): a cloud companion call may then search the
+        learner's own materials, as Ask anything's `share_own` decides."""
+        layer = getattr(self, "online", None)
+        conn = self.records.learner.conn if self.records is not None and self.records.learner is not None else None
+        try:
+            return bool(layer is not None and "study_materials" in layer.features_on()
+                        and layer.cloud_effective(self.records_profile, conn))  # fmt: skip
+        except Exception:
+            return False
+
+    def _attach_companion(self, engine: Engine) -> None:
+        """A `study_companion` session's engine: its companion context and the study toolset, bound to the session's
+        profile through the same `MemoryAccess` as the memory tools (SPEC §19.3.3, §19.4)."""
+        from agent_core.api.ask import _index
+        from agent_core.engine.memory_tools import StudyTools
+
+        def make_job(body: dict[str, Any]) -> dict[str, Any]:
+            job = dict(self.study.desk().create_job(body))
+            self.study.poll()  # it runs once the turn is over (ARC-32: background work waits for the student)
+            return job
+
+        engine.companion = CompanionContext(self.companion, share_materials=self._share_materials,
+                                            knowledge=lambda: _index(self), checkins=self.checkins)  # fmt: skip
+        if engine.memory is not None:
+            tools = StudyTools(engine.memory, self.settings, engine._cloud, share=self._share_materials,
+                               planner=lambda: self.planner() if self.planner is not None else None,
+                               make_job=make_job, clock=self.clock_ms)  # fmt: skip
+            tools.bind(engine.deps.executor.host_executors)
+            engine.study_tools = tools
+
+    async def open_companion(self, checkin: dict[str, Any] | None = None) -> dict[str, Any]:
+        """POST /v1/companion: today's episode of the thread, opened or resumed (SPEC §19.3.3, JM-D23); with a
+        check-in (POST /v1/checkins/{id}/open, §19.3.4), the episode carries its id and opens with its question."""
+        self._guard()
+        learner = self.records.learner if self.records is not None else None
+        if learner is None or self.records_profile is None:
+            raise ApiError("not_found", "the companion needs an open learner database")
+
+        def start_session() -> str:
+            row = learner.conn.execute("SELECT level, subjects FROM profile").fetchone()
+            subjects = json.loads(row[1] or "[]") if row else []
+            first = next((x if isinstance(x, str) else x.get("subject") for x in subjects), None) or "physics"
+            body = {"client_session_id": new_id("cli"), "mode": "study_companion", "subject": first,
+                    "level": row[0] if row and row[0] in ("O", "A") else "O",
+                    "origin": {"kind": "companion", "ref": None}}  # fmt: skip
+            return str(self.create_session(body)["session_id"])
+
+        def resume(session_id: str) -> bool:
+            entry = self.sessions.get(session_id)
+            return entry is not None
+
+        return await self.companion.open(start_session, resume, checkin=checkin)
+
+    def end_companion(self, reason: str = "student_left") -> list[str]:
+        """End today's open episodes (the Study screen's close) and any stale one: the summary is folded first, then
+        the core's learning session ends, which queues its `session_end` Reflector job (§19.5.4)."""
+        if self.records is None or self.records.learner is None or self.records_profile is None:
+            return []
+        ended = []
+        try:
+            episodes = self.companion.open_episodes()
+        except Exception:
+            return []
+        for episode in episodes:
+            if self.companion.end(episode, reason):
+                if self.records is not None:
+                    state = self.records.open.get(episode.session_id)
+                    if state is not None:
+                        self.records.end(episode.session_id, reason if reason in ("completed", "student_left",
+                                         "idle_timeout", "interrupted") else None, self.clock_ms())  # fmt: skip
+                    else:
+                        self._reflect_ended(episode.session_id)
+                ended.append(episode.session_id)
+        return ended
+
+    def end_stale_companion(self) -> list[str]:
+        """Episodes of an earlier day, or idle for 20 minutes (JM-D23), end; on restart this finds the stale ones."""
+        if self.records is None or self.records.learner is None or self.records_profile is None:
+            return []
+        ended = []
+        with contextlib.suppress(Exception):
+            for episode in self.companion.stale():
+                reason = "idle_timeout" if episode.profile_day == self.companion.day() else "completed"
+                if self.companion.end(episode, reason):
+                    state = self.records.open.get(episode.session_id)
+                    if state is not None:
+                        self.records.end(episode.session_id, reason, self.clock_ms())
+                    else:
+                        self._reflect_ended(episode.session_id)
+                    ended.append(episode.session_id)
+        return ended
+
+    def _reflect_ended(self, session_id: str) -> None:
+        """An episode whose learning session is not open here (a restart): its session_end job, as `backlog` would."""
+        if self.reflector is None or self.records_profile is None:
+            return
+        row = self.records.learner.conn.execute(  # type: ignore[union-attr]
+            "SELECT subject, started_at FROM sessions WHERE session_id = ?", (session_id.removeprefix("ses_"),)
+        ).fetchone()
+        day = time.strftime("%Y-%m-%d", time.gmtime(int(row[1]) / 1000)) if row else self._today()
+        self.reflector.trigger("session_end", self.records_profile, session_id, session_date=day,
+                               subject=row[0] if row else None)  # fmt: skip
 
     def _on_event(self, entry: SessionEntry, envelope: dict[str, Any]) -> None:
         shown = student_view(envelope)  # every stream and snapshot today is student scope (API-11)
@@ -580,6 +749,7 @@ class CoreService:
             finish(profile_id)
         if self.reflector is not None:
             self.reflector.cancel_profile(profile_id)
+        self.checkins.cancel_all()  # SPEC §19.3.4: extractions still running write nothing for the closed profile
         self.session_notes.pause()
         draining = (
             idle
@@ -604,6 +774,7 @@ class CoreService:
             self.pool.forget(entry.session_id)
             del self.sessions[entry.session_id]
         if self.activator is not None and self.records_profile == profile_id:
+            self.study_visits.end("interrupted", notify=False)  # and its Study session (§19.3.2)
             if self.records is not None:
                 self.records.shutdown(self.clock_ms())  # its open learning sessions end interrupted (LRN-01)
             if draining:
@@ -794,8 +965,9 @@ class CoreService:
         return lesson_id, str(found["title"])[:120]
 
     def list_sessions(self, limit: int = 20, before: str | None = None) -> dict[str, Any]:
-        visible = sorted((e.meta for e in self.mine() if not e.meta["archived"]),
-                         key=lambda m: m["session_id"], reverse=True)  # fmt: skip
+        # The companion's daily episodes are opened from Study (SPEC §19.4), not listed with tutoring sessions.
+        listed = (e.meta for e in self.mine() if not e.meta["archived"] and e.meta["mode"] != "study_companion")
+        visible = sorted(listed, key=lambda m: m["session_id"], reverse=True)
         if before is not None:
             visible = [m for m in visible if m["session_id"] < before]
         page = visible[: max(1, min(limit, 100))]
@@ -1101,7 +1273,10 @@ class CoreService:
         entry.active_turn = ids.turn_id
         new_problem = entry.engine_state.problem is None or entry.engine_state.solved or body["intent"] == "ask"
         new_problem = new_problem and not (guarded and entry.engine_state.problem is not None)
-        if sketch and not guarded:
+        if entry.meta.get("mode") == "study_companion":
+            # The companion's thread (SPEC §19.5.1): the same input guard first, then its own turn, never a problem.
+            work = engine.companion_turn(text, ids=ids, source=input_source)
+        elif sketch and not guarded:
             from agent_core.engine.sketch_photo import sketch_turn
 
             # Snap your sketch (JM-D10): the drawing is compared with the problem's checked diagram.

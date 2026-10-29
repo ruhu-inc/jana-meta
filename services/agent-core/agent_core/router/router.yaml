@@ -72,6 +72,17 @@ roles:
       tools: true
     priority: 7
     concurrency: 4
+  # The Study companion's thread (SPEC §19.4, W8 phase 2): one move per turn, at most two tool rounds.
+  companion:
+    tier: fast
+    prefer: cloud
+    reasoning: low
+    max_iter: 3
+    temperature: 0.5
+    output: companion-turn.schema.json
+    output_retries: 1
+    prompt_mode: by_class
+    priority: 8
   reflector:
     tier: strong
     prefer: local
@@ -113,6 +124,13 @@ auxiliary:
     model: cloud:primary/fast-model
     reasoning: low
     priority: 6
+  checkin:
+    # The check-in extractor (SPEC §19.5.5): one structured call after a companion turn whose words name a day. It
+    # runs where the turn ran: a turn served on this computer keeps its extraction here.
+    inherit: true
+    model: cloud:primary/fast-model
+    reasoning: none
+    priority: 2
   judge:
     tier: judge
     reasoning: low
@@ -203,6 +221,11 @@ cloud:
   - judge
   - vision
   - research_chat
+  - companion
+  - checkin
+  # The Reflector reaches the cloud only while tutor_memory_online is effective (SPEC §19.4, JM-D21): the router's
+  # memory_online() gate; it stays a background role.
+  - reflector
 budget:
   per_session_usd: 3.0
   per_student_day_usd: 10.0

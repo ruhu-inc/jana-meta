@@ -141,6 +141,11 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
                     "INSERT INTO idempotency_responses VALUES (?,?,?,?,?)",
                     (key, sha, status, json.dumps({"sources": selections, "body": payload}), core.clock_ms()),
                 )
+            # SPEC §19.3.2: a Study command keeps the screen's session open, and the activity it asked for while the
+            # command's transaction was open is written now, after that transaction committed (its one seam).
+            with contextlib.suppress(Exception):
+                core.study_visits.touch()
+                core.study_visits.flush()
             core.study.poll()
             return response(payload, status)
         except StudyError as error:
@@ -195,6 +200,27 @@ def add_routes(app: FastAPI, core: CoreService) -> None:
             )
 
         return read(request, get)
+
+    @app.post("/v1/study/session")
+    async def open_visit(request: Request) -> Response:
+        """The Study screen opens: its session of the day, new or resumed (SPEC §19.3.2)."""
+
+        async def run(d: StudyDesk, body: Any) -> Any:
+            try:
+                session_id, resumed = core.study_visits.open()
+            except LookupError:
+                raise ApiError("not_found") from None
+            return {"session_id": session_id, "resumed": resumed}
+
+        return await command(request, None, run, atomic_command=False)
+
+    @app.delete("/v1/study/session")
+    async def end_visit(request: Request) -> Response:
+        """The Study screen closes: its session ends and its study_end write point is queued (SPEC §19.4)."""
+        desk()
+        core.study_visits.end("student_left")
+        core.end_companion("student_left")  # the thread's episode ends with the screen (JM-D23)
+        return Response(status_code=204, headers={"Cache-Control": "no-store"})
 
     @app.get("/v1/study/library")
     async def library(request: Request) -> Response:

@@ -72,6 +72,8 @@ export { characterKeysStored, inTextField, moveRegion, sessionCharacterKeys, use
 export { KeyboardHelp, SHORTCUTS } from "./frame/KeyboardHelp.js";
 export { Home, partOfDay, type HomeMaterials, type HomePickup, type HomeSubject } from "./home/Home.js";
 export { DailyGoalChip } from "./home/DailyGoal.js";
+export { LastTimeCard } from "./home/LastTimeCard.js";
+export { CheckinCard } from "./home/CheckinCard.js";
 export { AskAnswer, type AskActions } from "./home/AskAnswer.js";
 export { PlanCard, useBlockText, type PlanActions, type PlanNames } from "./home/PlanCard.js";
 export { Progress, ProgressContent, type ProgressActions, type ProgressNames } from "./progress/Progress.js";
@@ -103,6 +105,7 @@ export { FasterTutorProvider, useFasterTutor } from "./status/faster.js";
 export * from "./learn/Assessment.js";
 export * from "./learn/SavedQuestions.js";
 export * from "./learn/SessionNotes.js";
-export { StudyWorkspace, type StudyTab } from "./learn/StudyWorkspace.js";
+export { StudyWorkspace, type StudyRequest, type StudyTab } from "./learn/StudyWorkspace.js";
+export { CompanionThread, type CompanionThreadSource } from "./learn/CompanionThread.js";
 export { StudyJourney } from "./learn/StudyJourney.js";
 export { LearningJourney } from "./learn/LearningJourney.js";

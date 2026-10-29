@@ -27,6 +27,7 @@ FEATURE_GATES: dict[str, str] = {
     "research_data": "pilot_start",
     "support_bundles": "pilot_start",
     "cloud_tier": "cloud_tier",
+    "tutor_memory_online": "cloud_tier",  # SPEC §19.6 (W8): rides the cloud tier; its DPIA row is the same gate
     "study_materials": "s3_launch",
     "web_client": "web_launch",
     "cloud_backup": "s4_launch",

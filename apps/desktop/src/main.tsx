@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import type { Launch } from "@jana/client-core";
 import "./app.css";
 import { LaunchScreen } from "@jana/ui/launch";
-import { launchInfo, pickInstallSource, pickProfileArchive, rollbackUpdate, updateRecovery } from "./launch.js";
+import { desktopCheckinNotifier, launchInfo, pickInstallSource, pickProfileArchive, rollbackUpdate, updateRecovery } from "./launch.js";
 
 let info: Promise<{ base_url: string; token: string }> | null = null;
 const launch: Launch = {
@@ -24,7 +24,8 @@ const root = container.__jana_root;
 const launching = (failed: boolean) => <div className="flex h-screen"><LaunchScreen failed={failed} onRetry={() => window.location.reload()} /></div>;
 root.render(launching(false));
 void import("./App.js").then(({ App, createRuntime }) => {
-  const runtime = createRuntime(launch);
+  // Check-in notifications go through the shell (SPEC §19.5.5); a browser build has none.
+  const runtime = createRuntime(launch, undefined, desktopCheckinNotifier() ?? undefined);
   runtime.chooseSource = pickInstallSource;
   runtime.chooseArchive = pickProfileArchive;
   runtime.updateRecovery = updateRecovery;

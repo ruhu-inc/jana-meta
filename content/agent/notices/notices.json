@@ -36,6 +36,12 @@
       "version": "2026-10.d1",
       "status": "draft",
       "text": "Talk with the tutor using the online voice service. While you talk, your voice is sent to our online voice service to be turned into text, and the tutor's words to be turned into speech. Neither is stored there, and your learning record stays on this computer."
+    },
+    {
+      "id": "tutor_memory_online",
+      "version": "2026-10.d1",
+      "status": "draft",
+      "text": "Let the online tutor remember how you learn. What leaves this computer: your tutor's short notes about how you learn, and one-line records of what you practised, so the online tutor can remember you. Never your documents, your conversations, your name or your exam dates. Meta does not store these requests or train on them. This switch needs the online tutor, and you can turn it off at any time."
     }
   ]
 }

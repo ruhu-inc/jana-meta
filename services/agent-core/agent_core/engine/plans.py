@@ -30,6 +30,7 @@ from agent_core.learner.mastery import BANDS, DAY_MS, KcEvidence, MasteryParams,
 from agent_core.learner.profile import merge_profile
 from agent_core.learner.projections import local_date, week_start
 from agent_core.learner.service import Learner, NewEvent
+from agent_core.memory.queries import study_activity_counts
 from agent_core.store.assessment import AssessmentStore
 from agent_core.store.ids import new_ulid
 from agent_core.store.pack_index import PackIndex
@@ -151,7 +152,21 @@ class PlanDesk:
                      and countdown["days"] <= s.exam_frontload_days else None)  # fmt: skip
         return planner.PlannerState(info, infos, tuple((d.kc_id, d.retrievability) for d in due), moved,
                                     profile["support_level"] == "extra", taken, self._days_since_mock(now),
-                                    chosen_kc, self._mock_follow_up(), frontload)  # fmt: skip
+                                    chosen_kc, self._mock_follow_up(), frontload, self._study_due(now))  # fmt: skip
+
+    def _study_due(self, now: int) -> tuple[tuple[str, str], ...]:
+        """Study's own due cards (SPEC §19.4) as (deck_id, card_id): due by the end of the profile's local today,
+        soonest first, at most `planner.STUDY_CARDS_MAX`, from decks whose source revision still exists and never a
+        suspended card (a stale source's cards are suspended)."""
+        p = self.params
+        end = (p.local_day(now) + 1) * DAY_MS - p.learner_day_offset_minutes * 60_000
+        rows = self.conn.execute(
+            "SELECT f.deck_id, f.card_id FROM study_flashcards f JOIN study_decks d ON d.deck_id = f.deck_id"
+            " JOIN study_revisions r ON r.source_id = d.source_id AND r.revision = d.revision"
+            " WHERE f.due_at < ? AND json_extract(f.body, '$.suspended') = 0 ORDER BY f.due_at, f.card_id LIMIT ?",
+            (end, planner.STUDY_CARDS_MAX),
+        )
+        return tuple((str(deck), str(card)) for deck, card in rows)
 
     def _mock_follow_up(self) -> tuple[str, ...]:
         """The weak KCs of the latest marked mock (its report's practice KCs: the questions that lost marks), which the
@@ -249,7 +264,10 @@ class PlanDesk:
             blocks.append({"index": index, "kind": block["kind"], "kc_ids": kc_ids,
                            "minutes": block["minutes"], "status": state, "done": block.get("done", 0),
                            "target": block.get("target", 0), **({"reason_code": block["reason_code"]}
-                                                                if block.get("reason_code") else {})})  # fmt: skip
+                                                                if block.get("reason_code") else {}),
+                           **({"study_cards": [{"deck_id": c["deck_id"], "card_id": c["card_id"]}
+                                               for c in block["study_cards"][: planner.STUDY_CARDS_MAX]]}
+                              if block.get("study_cards") else {})})  # fmt: skip
         if status == "proposed" and alternatives is None:
             alternatives = self.alternatives(plan_id)
         options = [b.payload() for b in (alternatives or ())] if status == "proposed" else []
@@ -284,6 +302,9 @@ class PlanDesk:
 
     def block_text(self, block: Mapping[str, Any]) -> str:
         minutes = f"about {block['minutes']} min"
+        if block["kind"] == "warmup" and block.get("study_cards"):
+            count = len(block["study_cards"])
+            return f"Warm-up: {count} Study card{'s' if count != 1 else ''} ({minutes})"
         if block["kind"] == "warmup":
             count = len(block["kc_ids"])
             return f"Warm-up: {count} review{'s' if count != 1 else ''} ({minutes})"
@@ -488,6 +509,10 @@ class PlanDesk:
             },
             "streak": {"days": streak.days, "freezes_left": streak.freezes_left, "counted_today": streak.counted_today},
             "moved_today": moved,
+            # SPEC §19.1: the week's Study activity, one quiet line (activity, never mastery; JM-D26).
+            "study_activity": study_activity_counts(
+                self.conn, (p.local_day(now) - 6) * DAY_MS - p.learner_day_offset_minutes * 60_000
+            ),
         }
 
     def _history(self, kcs: Sequence[str], now: int) -> list[dict[str, Any]]:

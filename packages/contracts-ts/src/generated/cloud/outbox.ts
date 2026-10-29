@@ -164,7 +164,8 @@ export interface TraceTelemetrySeriesItemLabels {
     | "cloud_voice"
     | "study_materials"
     | "telemetry"
-    | "crash_reports";
+    | "crash_reports"
+    | "tutor_memory_online";
   repair_step?: "unique_id" | "name_repair" | "json_repair" | "type_coercion" | "normalize" | "salvaged_from_text";
   gate?: "no_answer_leak" | "verification" | "budget" | "safety" | "schema" | "other";
 }
@@ -238,7 +239,8 @@ export interface TraceTelemetryLabels {
     | "cloud_voice"
     | "study_materials"
     | "telemetry"
-    | "crash_reports";
+    | "crash_reports"
+    | "tutor_memory_online";
   repair_step?: "unique_id" | "name_repair" | "json_repair" | "type_coercion" | "normalize" | "salvaged_from_text";
   gate?: "no_answer_leak" | "verification" | "budget" | "safety" | "schema" | "other";
 }

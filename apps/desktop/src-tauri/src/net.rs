@@ -603,7 +603,7 @@ mod tests {
     }
 
     const TABLE: &str = include_str!("../../../../services/agent-core/agent_core/net/policy.json");
-    const TABLE_FEATURES: [&str; 10] = [
+    const TABLE_FEATURES: [&str; 11] = [
         "cloud_tier",
         "downloads",
         "update_checks",
@@ -614,6 +614,7 @@ mod tests {
         "study_materials",
         "telemetry",
         "crash_reports",
+        "tutor_memory_online",
     ];
     const DOWNLOADS_HOST: &str = "downloads.dev.jana.invalid";
     const UPDATES_HOST: &str = "updates.dev.jana.invalid";

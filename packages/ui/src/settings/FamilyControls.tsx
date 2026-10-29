@@ -1,7 +1,7 @@
 // Settings → Online features and Settings → Profiles (TABLE UXS-46a, UXS-29): two sections, both open, with no PIN or
 // elevation (D86, D87); online features carry the study screen's research consents below them.
 import { useEffect, useState, type ReactNode } from "react";
-import { ADULT_BAND, type ChooseInstallSource, type FamilySettings, type ProfileController } from "@jana/client-core";
+import { ADULT_BAND, type CheckinNotifier, type ChooseInstallSource, type FamilySettings, type ProfileController } from "@jana/client-core";
 import type { CreateProfile, PackList } from "@jana/contracts-ts";
 import { useT } from "../i18n.js";
 import { Button, ConfirmDialog, Disclosure, ErrorState, Notice, useToggle } from "../primitives/index.js";
@@ -138,12 +138,13 @@ function Group({ id, children }: { id: (typeof FAMILY_GROUPS)[number]; children:
 }
 
 /** Settings → Online features (UXS-07): the switches, then the study screen's research consents (PRV-06, D87). */
-export function OnlineFeaturesSection({ profiles, chooseSource }: { profiles: ProfileController; chooseSource?: ChooseInstallSource | undefined }) {
+export function OnlineFeaturesSection({ profiles, chooseSource, notifier }: { profiles: ProfileController; chooseSource?: ChooseInstallSource | undefined;
+  /** The computer's notification permission, for Check-in notifications (SPEC §19.5.5). */ notifier?: Pick<CheckinNotifier, "permission"> | undefined }) {
   return (
     <Group id="online">
       {(run) => (
         <>
-          <OnlineFeatures profiles={profiles} run={run} />
+          <OnlineFeatures profiles={profiles} run={run} notifier={notifier} />
           {/* The study screen: the open profile's research consents, below the features (UXS-07, PRV-06, D87). */}
           <Studies profiles={profiles} chooseSource={chooseSource} />
         </>

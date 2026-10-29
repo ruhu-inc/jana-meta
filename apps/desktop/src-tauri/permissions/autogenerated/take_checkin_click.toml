@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-take-checkin-click"
+description = "Enables the take_checkin_click command without any pre-configured scope."
+commands.allow = ["take_checkin_click"]
+
+[[permission]]
+identifier = "deny-take-checkin-click"
+description = "Denies the take_checkin_click command without any pre-configured scope."
+commands.deny = ["take_checkin_click"]

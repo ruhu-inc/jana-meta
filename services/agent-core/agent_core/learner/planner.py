@@ -8,7 +8,8 @@ block. There is no daily cap: every further request plans again from the current
 
 - Warm-up: due review cards (exam-capped, LRN-13), lowest retrievability first, at most `review_cap_items` and at
   most `review_cap_share` of the plan's estimated minutes; the rest wait for later suggestions (LRN-29), unless the
-  student asks for every due review now.
+  student asks for every due review now. Study's own due cards (SPEC §19.4) follow in one more warm-up block,
+  `due_reviews_study`, filling what the learner-model warm-up leaves of the same item cap and minutes share.
 - Main: the KC maximising exam_weight x (1 - P) x (1 + boost x failed_recently) among the subjects chosen for this
   suggestion, replaced by its weakest prerequisite when a prerequisite is under the readiness bar; a lesson when the
   KC is not started, else practice. A KC whose stuck-cap revisit date has come is revisited first. After a mock, the
@@ -42,6 +43,7 @@ SECURE = ("mastered", "needs_review")
 
 BLOCK_KCS_MAX = 50  # PlanBlock.kc_ids maxItems
 BLOCKS_MAX = 12  # PlanBlock.index 0 to 11
+STUDY_CARDS_MAX = 10  # PlanBlock.study_cards maxItems
 
 
 @dataclass(frozen=True)
@@ -77,6 +79,8 @@ class PlannerState:
     follow_up: tuple[str, ...] = ()
     # LRN-44: the subject of the nearest exam date when it is within `exam_frontload_days`, else None.
     frontload: str | None = None
+    # SPEC §19.4: Study's due cards as (deck_id, card_id), soonest first, at most STUDY_CARDS_MAX.
+    study_due: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -85,6 +89,7 @@ class Block:
     kc_ids: tuple[str, ...]
     minutes: int
     reason_code: str
+    study_cards: tuple[tuple[str, str], ...] = ()  # (deck_id, card_id): a Study warm-up's due cards
 
     def payload(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": self.kind, "minutes": self.minutes}
@@ -92,6 +97,8 @@ class Block:
             out["reason_code"] = self.reason_code
         if self.kc_ids:
             out["kc_ids"] = list(self.kc_ids)
+        if self.study_cards:
+            out["study_cards"] = [{"deck_id": deck, "card_id": card} for deck, card in self.study_cards]
         return out
 
 
@@ -275,8 +282,16 @@ def plan(state: PlannerState, s: Settings, *, all_reviews: bool = False) -> Plan
     # (D54), are consecutive warm-up blocks, within the plan's BLOCKS_MAX blocks.
     take = min(take, BLOCK_KCS_MAX * (BLOCKS_MAX - len(blocks)))
     reviews = [kc for kc, _ in due[:take]]
-    blocks[:0] = [Block("warmup", tuple(part), warmup_minutes(len(part), s), "due_reviews")
-                  for part in (reviews[i : i + BLOCK_KCS_MAX] for i in range(0, take, BLOCK_KCS_MAX))]  # fmt: skip
+    warmups = [Block("warmup", tuple(part), warmup_minutes(len(part), s), "due_reviews")
+               for part in (reviews[i : i + BLOCK_KCS_MAX] for i in range(0, take, BLOCK_KCS_MAX))]  # fmt: skip
+    # SPEC §19.4: Study's due cards follow in one warm-up block of their own, in what the learner-model warm-up
+    # leaves of the review share (all of them, to the contract's ten, when every due review is asked for).
+    cards = state.study_due[:STUDY_CARDS_MAX]
+    if cards and len(blocks) + len(warmups) < BLOCKS_MAX:
+        extra = len(cards) if all_reviews else study_share(take, len(cards), rest, s)
+        if extra:
+            warmups.append(Block("warmup", (), warmup_minutes(extra, s), "due_reviews_study", cards[:extra]))
+    blocks[:0] = warmups
     return Plan(phase, tuple(blocks), len(due) - take, tuple(subjects), tuple(alternatives))
 
 
@@ -291,6 +306,21 @@ def warmup_size(due: int, rest: int, s: Settings) -> int:
     if not rest:
         return take
     while take and warmup_minutes(take, s) > s.review_cap_share * (warmup_minutes(take, s) + rest) + 1e-9:
+        take -= 1
+    return take
+
+
+def study_share(taken: int, cards: int, rest: int, s: Settings) -> int:
+    """The Study cards that fit after `taken` learner-model reviews (SPEC §19.4): the two warm-ups together hold at
+    most `review_cap_items` items, and their minutes at most `review_cap_share` of the whole plan's."""
+    take = max(0, min(cards, s.review_cap_items - taken))
+
+    def minutes(n: int) -> int:
+        return (warmup_minutes(taken, s) if taken else 0) + (warmup_minutes(n, s) if n else 0)
+
+    if not rest:
+        return take
+    while take and minutes(take) > s.review_cap_share * (minutes(take) + rest) + 1e-9:
         take -= 1
     return take
 
@@ -327,6 +357,7 @@ def reorder(proposal: Plan, order: Sequence[int]) -> Plan:
 
 def from_payload(payload: Mapping[str, Any]) -> Plan:
     """A stored proposal back as a plan (its alternatives are recomputed when the student asks to change it)."""
-    blocks = tuple(Block(b["kind"], tuple(b.get("kc_ids", ())), int(b["minutes"]), str(b.get("reason_code") or ""))
+    blocks = tuple(Block(b["kind"], tuple(b.get("kc_ids", ())), int(b["minutes"]), str(b.get("reason_code") or ""),
+                         tuple((str(c["deck_id"]), str(c["card_id"])) for c in b.get("study_cards", ())))
                    for b in payload["blocks"])  # fmt: skip
     return Plan(str(payload["phase"]), blocks, int(payload.get("deferred_reviews", 0)), ())

@@ -1,13 +1,22 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: session_recall
-version: 1
+version: 2
 valid_args:
 - pattern: 14 m/s
 - pattern: speed*top
+- pattern: projectile
+  scope: past
+- pattern: graphs
+  scope: current
+  limit: 3
 invalid_args:
 - pattern: ''
 - query: speed
 - pattern: 7
+- pattern: speed
+  scope: yesterday
+- pattern: speed
+  limit: 9
 description_lint:
   sections:
   - what

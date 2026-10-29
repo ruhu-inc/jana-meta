@@ -20,7 +20,8 @@ from agent_core.store.sqlite import transaction
 RETIRED_POLICY_KEY = "solution_policy"
 PREFERENCES = ("low_power", "text_scale", "locale", "memory_saving", "notifications", "reduced_motion", "read_aloud",
                "easy_read", "extra_time_percent", "speech_rate", "speech_voice", "theme",
-               "character_shortcuts", "tutor_name", "tutor_avatar", "faster_tutor", "wake_word")  # fmt: skip
+               "character_shortcuts", "tutor_name", "tutor_avatar", "faster_tutor", "wake_word",
+               "checkin_notifications")  # fmt: skip
 KEYS = PREFERENCES
 # Keys that exist nowhere (TCH-13, D53, D54): a write of any of them is refused by the API contract and the table.
 REMOVED = ("daily_minutes", "allowed_modes", "study_hours", "homework_hours", "locked_keys", "retention_days",

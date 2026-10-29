@@ -194,7 +194,7 @@ def agt13_envelope_schema(tmp_path: Path):
 
 def prm05_manifest_lint():
     manifests = sorted((CONTENT / "roles").glob("*.md"))
-    assert {p.stem for p in manifests} == {"coach", "diagnoser", "solver", "checker", "reflector"}
+    assert {p.stem for p in manifests} == {"coach", "diagnoser", "solver", "checker", "reflector", "companion"}
     for path in manifests:
         assert manifest_errors(path) == [], path
     register = {r["id"]: r for r in json.loads((CONTENT / "roles.json").read_text())["roles"]}

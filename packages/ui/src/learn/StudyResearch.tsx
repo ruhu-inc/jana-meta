@@ -21,8 +21,11 @@ type Start = { topic: string } | { capture_id: string };
 type Phase = { kind: "start" } | { kind: "talking"; start: Start; history: R.ChatEntry[]; turn: R.ChatTurn | null }
   | { kind: "brief"; start: Start; brief: R.Brief } | { kind: "pack"; id: string };
 
-export function StudyResearch({ controller, initialCapture, onCaptureUsed, onOpenSource, onPracticeDiagram, disabled }: {
+export function StudyResearch({ controller, initialCapture, topicRequest, onCaptureUsed, onOpenSource, onPracticeDiagram, disabled }: {
   controller: StudyWorkspaceController;
+  /** A topic handed over by the companion's "Research this topic" (SPEC §19.3.3): filled in for the learner, who starts
+   * the conversation themselves (it is never skipped). A new `seq` fills it again. */
+  topicRequest?: { topic: string; seq: number } | null;
   /** A practised diagram's capture: the conversation starts from it (from the diagram drill's "Make a study pack"). */
   initialCapture?: string | null;
   onCaptureUsed?: (() => void) | undefined;
@@ -67,6 +70,14 @@ export function StudyResearch({ controller, initialCapture, onCaptureUsed, onOpe
     onCaptureUsed?.();
     void ask({ capture_id: initialCapture }, [], null);
   }, [initialCapture]);
+
+  const topicField = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!topicRequest) return;
+    setPhase({ kind: "start" });
+    setTopic(topicRequest.topic.slice(0, 200));
+    requestAnimationFrame(() => { topicField.current?.scrollIntoView?.({ block: "center" }); topicField.current?.focus({ preventScroll: true }); });
+  }, [topicRequest?.seq]);
 
   // A pack still being made is read again every few seconds (each read brings it up to date on the device).
   const shownId = phase.kind === "pack" ? phase.id : null;
@@ -179,7 +190,7 @@ export function StudyResearch({ controller, initialCapture, onCaptureUsed, onOpe
     <h2 id="study-research" className="text-ui font-semibold text-ink">{t("study.research.heading")}</h2>
     <p className="text-meta text-muted">{t("study.research.help")}</p>
     <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); const asked = topic.trim(); if (asked.length < 3) return; void ask({ topic: asked.slice(0, 200) }, [], null); }}>
-      <label className="flex min-w-0 flex-1 basis-56 flex-col gap-1 text-ui text-ink">{t("study.research.topic_label")}<input className={FIELD_LOOK} value={topic} maxLength={200} disabled={busy || disabled} onChange={(e) => setTopic(e.target.value)} /></label>
+      <label className="flex min-w-0 flex-1 basis-56 flex-col gap-1 text-ui text-ink">{t("study.research.topic_label")}<input ref={topicField} className={FIELD_LOOK} value={topic} maxLength={200} disabled={busy || disabled} onChange={(e) => setTopic(e.target.value)} /></label>
       <Button type="submit" disabled={busy || disabled || topic.trim().length < 3}>{t("study.research.research")}</Button>
     </form>
     {busy && <p role="status" className="text-meta text-muted">{t("study.research.thinking")}</p>}

@@ -325,6 +325,33 @@ class StudyWorkspaceCitation(BaseModel):
     quote: Annotated[str, Field(max_length=500, min_length=1)]
 
 
+class StudyWorkspaceLearnerBlockKcsItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kc_id: Annotated[
+        str,
+        Field(pattern="^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"),
+    ]
+    band: Literal["not_started", "learning", "secure"]
+
+
+type MisconceptionId = Annotated[str, Field(max_length=96, pattern="^mc\\.[a-z0-9_.]+$")]
+
+
+class StudyWorkspaceLearnerBlock(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    level: Literal["O", "A"] | None
+    subjects: Annotated[
+        list[Literal["mathematics", "physics", "chemistry", "biology", "accounting"]],
+        Field(max_length=5),
+    ]
+    kcs: Annotated[list[StudyWorkspaceLearnerBlockKcsItem], Field(max_length=24)]
+    misconception_ids: Annotated[list[MisconceptionId], Field(max_length=8)]
+
+
 type Topic = Annotated[str, Field(max_length=120, min_length=1)]
 
 
@@ -627,6 +654,7 @@ class StudyWorkspaceProcessingRequest(BaseModel):
     settings: StudyWorkspaceGenerateSettings | None = None
     syllabus_outline: Annotated[str | None, Field(max_length=8000, min_length=1)] = None
     previous_response: Annotated[str | None, Field(max_length=8000, min_length=1)] = None
+    learner: StudyWorkspaceLearnerBlock | None = None
 
 
 type StudyProcessingRequest = Annotated[StudyWorkspaceProcessingRequest, Field(title="StudyProcessingRequest")]

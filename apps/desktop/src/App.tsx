@@ -34,17 +34,17 @@ import { objectiveForKc, objectiveForLesson, objectiveForTopic, type LearningObj
 // box searches the installed worked solutions instead (UXS-51).
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
-  AskController, StudyWorkspaceController, SessionNotesController, SavedQuestionsController, AssessmentController, CLIENT_KEYS, ExamDateController, HistoryController, KnowsController, LessonController, LOCKED_STATES, MockController, PastPaperController, PlanController, PracticeController, ProfileController, ProgressController, SUBJECT_CODES, SUBJECT_NAMES,
+  AskController, CHECKIN_REFRESH_MS, CompanionController, StudyWorkspaceController, SessionNotesController, SavedQuestionsController, AssessmentController, CLIENT_KEYS, ExamDateController, HistoryController, KnowsController, LessonController, LOCKED_STATES, MockController, PastPaperController, PlanController, PracticeController, ProfileController, ProgressController, SUBJECT_CODES, SUBJECT_NAMES,
   SearchController, SessionController, StoreHolder, SubjectMapController, ConceptMapController, clientId, examLock, groupSessions, installedSubjects, finishSetup, kcSubjectCode, nextBlock,
   parseAssets, parseNotices, readDegraded, readLicence, readProfile, readSetup, readSubjectMap, subjectName, tutorAnswers, tutorReach, tutorSetup, typedCapture, helpTurn, type HelpKind, DailyGoal, goalProgress,
-  type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
+  type CheckinNotifier, type CompanionAction, type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
 } from "@jana/client-core";
 import {
-  AskAnswer, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
+  AskAnswer, CompanionThread, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, LastTimeCard, CheckinCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
   ConceptMapRendererProvider, GapLinkProvider, ResearchLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
-  useProfiles, useRecentSessions, useT, type AskContext, type StudyTab, type FramePlace, type LessonInProgress, type LockedPlace, type ReportNames, type SidebarContent, type SubjectChoice,
+  useProfiles, useRecentSessions, useT, type AskContext, type StudyRequest, type StudyTab, type FramePlace, type LessonInProgress, type LockedPlace, type ReportNames, type SidebarContent, type SubjectChoice,
 } from "@jana/ui";
 import { ConceptMapSvg, RENDERERS } from "@jana/renderers";
 import { errors, type api_commands } from "@jana/contracts-ts/client";
@@ -88,6 +88,11 @@ export interface AppRuntime {
   goal: DailyGoal;
   /** Home's one input and Ask anything (UXS-67, STU-20). */
   ask: AskController;
+  /** The Last time card on Home and in Study (SPEC §19.5.2, W8 phase 1), **Your tutor** (phase 2) and the check-in
+   * card (phase 3). */
+  companion: CompanionController;
+  /** Check-in notifications through the desktop shell (SPEC §19.5.5, JM-D24); absent outside the shell. */
+  notifier?: CheckinNotifier & { takeClick?: () => Promise<string | null> };
   launch: Launch;
   fetch?: typeof fetch;
   chooseSource?: ChooseInstallSource;
@@ -112,20 +117,21 @@ function StudyPlace({ controller, chat, children }: { controller: StudyWorkspace
   return <>{children(stable)}</>;
 }
 
-export function createRuntime(launch: Launch, fetchImpl?: typeof fetch): AppRuntime {
+export function createRuntime(launch: Launch, fetchImpl?: typeof fetch, notifier?: AppRuntime["notifier"]): AppRuntime {
   const holder = new StoreHolder();
   const profiles = new ProfileController(launch, holder, fetchImpl === undefined ? {} : { fetch: fetchImpl });
   profiles.onClear(clearRenderCaches);
   const knows = new KnowsController(profiles);
   const runtime: AppRuntime = {
     holder, profiles, knows, map: new SubjectMapController(profiles), conceptMap: new ConceptMapController(profiles), lessons: new LessonController(profiles), practice: new PracticeController(profiles), mocks: new MockController(profiles), pastPapers: new PastPaperController(profiles), examDates: new ExamDateController(profiles),
-    studyWorkspace: new StudyWorkspaceController(profiles, new BrowserLocalSpeech(), new BrowserPodcastAudio()), sessionNotes: new SessionNotesController(profiles), savedQuestions: new SavedQuestionsController(profiles), assessments: new AssessmentController(profiles), plans: new PlanController(profiles), progress: new ProgressController(profiles), history: new HistoryController(profiles), search: new SearchController(profiles), goal: new DailyGoal(profiles), ask: new AskController(profiles), launch,
+    studyWorkspace: new StudyWorkspaceController(profiles, new BrowserLocalSpeech(), new BrowserPodcastAudio()), sessionNotes: new SessionNotesController(profiles), savedQuestions: new SavedQuestionsController(profiles), assessments: new AssessmentController(profiles), plans: new PlanController(profiles), progress: new ProgressController(profiles), history: new HistoryController(profiles), search: new SearchController(profiles), goal: new DailyGoal(profiles), ask: new AskController(profiles), companion: new CompanionController(profiles, { ...(fetchImpl === undefined ? {} : { fetch: fetchImpl }), ...(notifier === undefined ? {} : { notifier }) }), launch,
+    ...(notifier === undefined ? {} : { notifier }),
   };
   return fetchImpl === undefined ? runtime : { ...runtime, fetch: fetchImpl };
 }
 
 type TutorTarget = SessionTarget;
-type Screen = S2Screen | "study" | "notes" | "history" | "session-history" | "knows" | "knows-from-settings";
+type Screen = S2Screen | "study" | "notes" | "history" | "session-history" | "knows" | "knows-from-settings" | "knows-from-study";
 type Opened = SessionController | "failed" | null;
 /** First run: "Who's learning?", then the hand-off for the student who was added (UXS-10). */
 type FirstRunStep = { step: "who"; resume?: boolean } | { step: "restore" } | { step: "handoff"; name: string } | { step: "tutor"; next: Screen } | { step: "interview"; next: Screen } | null;
@@ -353,6 +359,10 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   const [studyResume, setStudyResume] = useState<"next" | "lesson" | "quiz" | null>(null);
   const [studySource, setStudySource] = useState<{ source_id: string; revision: number } | null>(null);
   const [studyResearch, setStudyResearch] = useState<string | null>(null); // a practised diagram's capture (SPEC §18)
+  // Somewhere Study is asked to go (SPEC §19.3.3): a companion button, or the plan's due Study cards.
+  const [studyRequest, setStudyRequest] = useState<StudyRequest | null>(null);
+  // A check-in opened from Home (SPEC §19.5.5): Study opens **Your tutor** with it instead of the day's plain opener.
+  const studyCheckin = useRef<string | null>(null);
   // The student menu (D115): Settings at a section, the keyboard help, and what it says about the student.
   const [settingsAt, setSettingsAt] = useState<{ id: string; at: number } | null>(null);
   const studySettingsReturn = useRef<{ profile: string | null; source: string | null } | null>(null);
@@ -430,9 +440,21 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   // The tutor's subject once a profile is open: the one the student last worked on, if it is installed, otherwise the
   // first installed subject (every subject at O level when no pack is installed yet).
   const active = view.active;
-  useEffect(() => { setStudyResume(null); setStudySource(null); setStudyResearch(null); }, [active]);
-  useEffect(() => { if (screen !== "study") { setStudyResume(null); setStudySource(null); } }, [screen]);
+  useEffect(() => { setStudyResume(null); setStudySource(null); setStudyResearch(null); setStudyRequest(null); }, [active]);
+  useEffect(() => { if (screen !== "study") { setStudyResume(null); setStudySource(null); setStudyRequest(null); } }, [screen]);
   useEffect(() => { if (active && studyAvailable && screen === "home") void runtime.studyWorkspace.load(); }, [active, studyAvailable, screen, runtime.studyWorkspace]);
+  // The Study screen's session of the day (SPEC §19.3.2): opened while the screen shows, ended when it closes; the
+  // Last time card in Study's library is read with it, and **Your tutor**'s episode of the day is opened or resumed
+  // (SPEC §19.3.3), its stream running while Study shows.
+  useEffect(() => {
+    if (!active || screen !== "study") return;
+    void runtime.studyWorkspace.enter();
+    void runtime.companion.loadOpener();
+    const checkin = studyCheckin.current;
+    studyCheckin.current = null;
+    void (checkin !== null ? runtime.companion.openCheckin(checkin) : runtime.companion.open());
+    return () => { void runtime.studyWorkspace.leave(); runtime.companion.close(); };
+  }, [active, screen, runtime.studyWorkspace, runtime.companion]);
   const journey = useMemo(() => new LearningJourneyController(profiles), [profiles]);
   const journeyView = useSyncExternalStore(journey.subscribe, journey.getView, journey.getView);
   const assessmentView = useSyncExternalStore(runtime.assessments.subscribe, runtime.assessments.getView, runtime.assessments.getView);
@@ -456,6 +478,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     };
   }, [profiles, runtime.fetch, active, degraded.read, installedKey]);
   useEffect(() => profiles.onClear(() => {
+    studyCheckin.current = null;
     setHeld(null);
     setNoteReference(null);
     setTutorTarget(null);
@@ -586,6 +609,28 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   const [studyTab, setStudyTab] = useState<StudyTab>("generate");
   const progressView = useSyncExternalStore(runtime.progress.subscribe, runtime.progress.getView, runtime.progress.getView);
   const examDatesView = useSyncExternalStore(runtime.examDates.subscribe, runtime.examDates.getView, runtime.examDates.getView);
+  const companionView = useSyncExternalStore(runtime.companion.subscribe, runtime.companion.getView, runtime.companion.getView);
+  // **Your tutor** (SPEC §19.3.3): left out of Study altogether on a core without the thread, as the Last time card is.
+  const companionThread = useSyncExternalStore(runtime.companion.subscribe, runtime.companion.getThread, runtime.companion.getThread);
+  const checkinView = useSyncExternalStore(runtime.companion.subscribe, runtime.companion.getCheckin, runtime.companion.getCheckin);
+  // The due query again every 30 minutes while a profile is open (§19.5.5); a lock or switch drops the card.
+  useEffect(() => {
+    if (active === null) return;
+    const timer = setInterval(() => void runtime.companion.loadCheckins(), CHECKIN_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [active, runtime.companion]);
+  // A click on a check-in notification brings the window forward; the app then opens Home, where the card is.
+  useEffect(() => {
+    const takeClick = runtime.notifier?.takeClick;
+    if (active === null || takeClick === undefined) return;
+    const focused = () => void takeClick().then((clicked) => {
+      if (clicked === null || profiles.getView().active !== active) return;
+      setScreen("home");
+      void runtime.companion.loadCheckins();
+    }, () => undefined);
+    window.addEventListener("focus", focused);
+    return () => window.removeEventListener("focus", focused);
+  }, [active, profiles, runtime.notifier, runtime.companion]);
   const [progressVersion, setProgressVersion] = useState(0);
   // Read once Home or Progress is on screen (not behind first run's hand-off).
   const unlocked = lock === null;
@@ -601,6 +646,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     if (shown === "home" && unlocked) {
       void runtime.plans.load();
       void runtime.examDates.load(); // the countdown and any reminder due, on this computer only (LRN-44)
+      void runtime.companion.loadOpener(); // the Last time card: facts by code, read again on every visit (§19.5.2)
+      void runtime.companion.loadCheckins(); // today's check-in, if one is due (§19.5.5)
     }
     void runtime.progress.load();
   }, [runtime, shown, unlocked, progressVersion]);
@@ -964,10 +1011,56 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     }
     if (lesson) openPractice(kcSubject(lesson.kc_ids[0] ?? "") ?? undefined, lesson.kc_ids);
   };
+  /** The deck of a warm-up's due Study cards (SPEC §19.4, `open_study_deck`): Study opens it in its material. */
+  const openStudyDeck = (deckId: string) => { setStudyRequest({ kind: "target", deck_id: deckId }); setScreen("study"); };
+  /** A button in **Your tutor** (SPEC §19.3.3): each opens the place it names, with what the engine put in its payload
+   * (never anything the model wrote, except the learner's own question handed to the tutor). */
+  const companionAction = (action: CompanionAction) => {
+    const payload = action.payload;
+    switch (action.action) {
+      case "open_tutor": {
+        // A homework question goes to the guided tutor as a new question (PED-01).
+        const question = payload.question?.trim() ?? "";
+        const subject = subjectName(shownTarget?.subject ?? "") ?? installed[0]?.subject ?? null;
+        if (question === "" || !tutorOffered || lock !== null || protectedCheck !== undefined || subject === null) { setScreen("tutor"); return; }
+        firstQuestions.start({ subject, content: [{ type: "text", text: question }] });
+        return;
+      }
+      case "open_practice": {
+        const kcIds = payload.kc_ids ?? [];
+        openPractice(kcIds[0] === undefined ? undefined : kcSubject(kcIds[0]) ?? undefined, kcIds);
+        return;
+      }
+      case "open_study_job":
+        setStudyRequest({ kind: "target", ...(payload.job_id !== undefined ? { job_id: payload.job_id } : {}), ...(payload.aid_id !== undefined ? { aid_id: payload.aid_id } : {}) });
+        setScreen("study");
+        return;
+      case "open_study_deck":
+        if (payload.deck_id !== undefined) openStudyDeck(payload.deck_id);
+        return;
+      case "open_add_source":
+        setStudyRequest({ kind: "add" });
+        setScreen("study");
+        return;
+      case "open_research":
+        setStudyRequest({ kind: "research", topic: payload.question ?? "" });
+        setScreen("study");
+        return;
+      case "open_plan":
+        setPlanExpanded(true);
+        setScreen("home");
+        return;
+      case "open_knows":
+        setScreen("knows-from-study");
+        return;
+    }
+  };
   /** A plan activity (UXS-12, LRN-28): reviews and practice open a practice set on its ideas, the main activity a lesson
    * when its idea is not started yet (then practice), a timed paper the mock place, and the look back Progress. */
   const openBlock = (block: PlanBlock | null) => {
     if (block === null) return;
+    const deck = block.study_cards?.[0]?.deck_id;
+    if (deck !== undefined && studyAvailable) return openStudyDeck(deck);
     const kc = block.kc_ids[0];
     if (block.kind === "reflect") return openProgress();
     if (block.kind === "mock") return openMock();
@@ -1004,6 +1097,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         onKeepLearning: () => void runtime.plans.propose().then(() => runtime.plans.start()).then((ok) => { if (ok) openBlock(nextBlock(runtime.plans.getView().plan)); }),
         onAnother: () => void runtime.plans.propose(),
         onRetry: () => void runtime.plans.load(),
+        ...(studyAvailable ? { onStudyCards: openStudyDeck } : {}),
       }} />
   );
   const journeyCard = active && lock === null && protectedCheck === undefined && (["home", "learn", "progress"].includes(screen)
@@ -1108,6 +1202,14 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         </div>}
         {...(goalTarget > 0 && planView.plan !== null ? { goal: <DailyGoalChip progress={goalProgress(planView.plan, goalTarget)} onChange={(target) => void runtime.goal.set(target)} /> } : {})}
         countdown={<ExamCountdownCard countdown={examDatesView.countdown} reminders={examDatesView.reminders} onDismiss={(r) => void runtime.examDates.dismiss(r)} onOpen={openMock} />}
+        lastTime={<LastTimeCard view={companionView} {...(studyAvailable ? { onOpenStudy: () => openStudy() } : {})} />}
+        checkin={lock !== null ? undefined : <CheckinCard view={checkinView} onDismiss={(id) => void runtime.companion.dismissCheckin(id)} onOpen={(id) => {
+          // **Your tutor** opens with the check-in as its opener (SPEC §19.5.5): Study's library panel, or its tab.
+          runtime.ask.clear();
+          studyCheckin.current = id;
+          setStudyRequest({ kind: "companion" });
+          setScreen("study");
+        }} />}
         {...(newest?.state === "abandoned" ? { mock: <AbandonedMockCard onNew={openMock} /> } : {})}
         subjects={installed.map((s) => ({ subjectId: s.subjectId, subject: s.subject, label: subjectLabel(s.subject), chosen: s.subjectId === chosenSubject }))}
         onSubject={chooseSubject}
@@ -1172,7 +1274,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
           actions={{ onBrowse: () => setScreen("learn"), onPractise: (kcIds, subject) => openPractice(subject, kcIds) }} />
       );
     }
-    if (screen === "settings") return <Settings section={settingsAt} voiceSettings={<VoiceSettings profiles={profiles} />} profiles={profiles} chooseSource={runtime.chooseSource} notices={NOTICES} assets={ASSETS} onClose={() => {
+    if (screen === "settings") return <Settings section={settingsAt} voiceSettings={<VoiceSettings profiles={profiles} />} profiles={profiles} {...(runtime.notifier !== undefined ? { notifier: runtime.notifier } : {})} chooseSource={runtime.chooseSource} notices={NOTICES} assets={ASSETS} onClose={() => {
       const back = studySettingsReturn.current;
       studySettingsReturn.current = null;
       if (back && back.profile === active) {
@@ -1182,12 +1284,13 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         setScreen("study");
       } else setScreen(tutorOffered ? "tutor" : "learn");
     }} onOpenKnows={() => setScreen("knows-from-settings")} />;
-    if (screen === "knows" || screen === "knows-from-settings" || screen === "knows-from-progress") {
-      const back = screen === "knows" ? "tutor" : screen === "knows-from-progress" ? "progress" : "settings";
+    if (screen === "knows" || screen === "knows-from-settings" || screen === "knows-from-progress" || screen === "knows-from-study") {
+      const back = screen === "knows" ? "tutor" : screen === "knows-from-progress" ? "progress" : screen === "knows-from-study" ? "study" : "settings";
       return <KnowsPage knows={runtime.knows} onClose={() => setScreen(back)} onOpenSettings={() => setScreen("settings")} />;
     }
     if (screen === "study") {
-      const workspace = <StudyWorkspace controller={runtime.studyWorkspace} initialAdd={studyAdd} initialJourney={studyResume} onJourneyOpened={() => setStudyResume(null)} initialSource={studySource} onSourceOpened={() => setStudySource(null)} initialResearch={studyResearch} onResearchOpened={() => setStudyResearch(null)} onJourneyStarted={() => {
+      const workspace = <StudyWorkspace controller={runtime.studyWorkspace} lastTime={<LastTimeCard view={companionView} />}
+        {...(companionThread.status !== "unavailable" ? { companion: (place: "panel" | "tab") => <CompanionThread companion={runtime.companion} onAction={companionAction} place={place} /> } : {})} request={studyRequest} onRequestDone={() => setStudyRequest(null)} initialAdd={studyAdd} initialJourney={studyResume} onJourneyOpened={() => setStudyResume(null)} initialSource={studySource} onSourceOpened={() => setStudySource(null)} initialResearch={studyResearch} onResearchOpened={() => setStudyResearch(null)} onJourneyStarted={() => {
         void journey.load().then((next) => { if (next) void journeyStep(nextJourneyAction(next)); });
       }} onTab={setStudyTab} onPractice={(subject, kcIds) => {
         const objective = kcIds[0] ? objectiveForKc(Object.values(maps), kcIds[0]) : null;

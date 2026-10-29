@@ -22,6 +22,8 @@ export const TOOL_FAMILY: Record<ToolName, ToolFamily> = {
   acc_double_entry: "ledger", acc_statements: "ledger",
   memory_recall: "recall", session_recall: "recall",
   content_search: "lookup", curriculum_lookup: "lookup", skill: "lookup",
+  // The companion's Study tools (SPEC §19.3.3): reads are lookups; an aid or research it starts shows as a button.
+  study_search: "lookup", progress_read: "lookup", plan: "lookup", make_aid: "internal", start_research: "internal",
   show_visual: "visual",
   ask_student: "question",
   update_board: "board", show_hint: "board",

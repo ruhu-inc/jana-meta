@@ -18,6 +18,13 @@ export function journalTail(source: CoreSnapshot): CoreSnapshot {
   return { ...source, messages, parts, boards, visuals: Object.fromEntries(Object.entries(source.visuals).filter(([, v]) => keep.has(v.part_id))), open_requests: source.open_requests.filter((r) => keep.has(r.part_id)) };
 }
 
+/** The session's companion buttons as the snapshot carries them (SPEC §19.3.3), or nothing when it has none. */
+function actionsOf(store: Store, sessionId: string): Pick<CoreSnapshot, "actions"> {
+  const kept = Object.values(store.actions).filter((a) => a.session_id === sessionId);
+  if (kept.length === 0) return {};
+  return { actions: Object.fromEntries(kept.map(({ session_id: _session, ...action }) => [action.action_id, action])) };
+}
+
 /** Compact a long envelope run into the same public snapshot shape; never persist connections or credentials. */
 export function journalSnapshot(store: Store, sessionId: string): CoreSnapshot | null {
   const session = store.sessions[sessionId], cursor = store.cursors[sessionId];
@@ -33,7 +40,7 @@ export function journalSnapshot(store: Store, sessionId: string): CoreSnapshot |
     const b = store.boards[id]; return b ? [[id, { ...b, order: b.step_ids, awaiting: b.await }]] : [];
   }));
   const active = turns.find((t) => t.status === "streaming");
-  return journalTail({ session: { session_id: session.session_id, title: session.title, mode: session.mode as Session["mode"], subject: session.subject, topic_id: session.topic_id, created_ts: session.created_ts, updated_ts: session.updated_ts, archived: session.archived }, cursor, messages, parts, boards, visuals: Object.fromEntries(Object.entries(store.visuals).filter(([, v]) => parts[v.part_id]).map(([id, v]) => [id, { ...v, step_index: v.step }])), open_requests: Object.values(store.requests).filter((r) => parts[r.part_id] && r.state === "open"), active_turn: active ? { turn_id: active.turn_id, status: active.phase ?? {} } : null });
+  return journalTail({ session: { session_id: session.session_id, title: session.title, mode: session.mode as Session["mode"], subject: session.subject, topic_id: session.topic_id, created_ts: session.created_ts, updated_ts: session.updated_ts, archived: session.archived }, cursor, messages, parts, boards, visuals: Object.fromEntries(Object.entries(store.visuals).filter(([, v]) => parts[v.part_id]).map(([id, v]) => [id, { ...v, step_index: v.step }])), open_requests: Object.values(store.requests).filter((r) => parts[r.part_id] && r.state === "open"), active_turn: active ? { turn_id: active.turn_id, status: active.phase ?? {} } : null, ...actionsOf(store, sessionId) });
 }
 
 export class SessionJournal {

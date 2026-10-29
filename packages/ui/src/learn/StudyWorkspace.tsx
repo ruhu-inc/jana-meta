@@ -2,7 +2,7 @@
 // material on the left (a recording with its player, chapters and transcript, STU-22) and its study tools on the
 // right: the Generate panel with each tool's settings (STU-21, D118) and Chat, with the ask box docked at the foot of
 // the tools so a question about the material is always one step away.
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { followUps, type GenerateTool, type HelpKind, type StudyContracts as W, type StudyWorkspaceController } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
@@ -19,9 +19,15 @@ import { StudyJourney } from "./StudyJourney.js";
 import { citationKey, StudyCitations } from "./StudyCitation.js";
 
 const ACCEPT = ".pdf,.txt,.md,.docx,.odt,.pptx,.odp,.png,.jpg,.jpeg,.webp,.wav,.mp3,.m4a,.mp4,.webm,.ogg,.flac,.aac,.mov,.mkv,.avi";
-export type StudyTab = "generate" | "chat";
+export type StudyTab = "generate" | "chat" | "companion";
 type Tab = StudyTab;
 const TABS: readonly Tab[] = ["generate", "chat"];
+/** With the companion thread (SPEC §19.4): **Your tutor** is a third tab beside Generate and Chat. */
+const TABS_WITH_COMPANION: readonly Tab[] = [...TABS, "companion"];
+/** Somewhere the app asks Study to go (SPEC §19.3.3, a companion button or the plan's due Study cards): a job, aid or
+ * deck opened in its material, the add panel, research with a topic filled in (never started for the learner), or
+ * **Your tutor** (a check-in opened from Home, §19.5.5: the library's panel, or its tab inside an open material). */
+export type StudyRequest = { kind: "target"; job_id?: string; aid_id?: string; deck_id?: string } | { kind: "add" } | { kind: "research"; topic: string } | { kind: "companion" };
 const STUDY_HELP = ["hint", "walk_through"] as const;
 /** The tab an aid of this kind lives under: a chat reply under Chat, every generated aid under Generate. */
 const tabOf = (kind: string): Tab => (kind === "chat" ? "chat" : "generate");
@@ -29,7 +35,9 @@ const tabOf = (kind: string): Tab => (kind === "chat" ? "chat" : "generate");
 const picked = (answer: string | undefined) => (answer ?? "").split(",").filter(Boolean);
 
 /** `onTab` hears which tab is open: the voice conversation lives in Chat (VOC-53, D130). */
-export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened }: { controller: StudyWorkspaceController; /** A practised diagram's capture: Study's research starts from it (SPEC §18). */ initialResearch?: string | null; onResearchOpened?: () => void; onPractice?: (subject: string, kcIds: string[]) => void; onTab?: (tab: Tab) => void; onReviewAccess?: () => void; initialAdd?: "paste" | null; onJourneyStarted?: (node: string, subject: string) => void; initialJourney?: "next" | "lesson" | "quiz" | null; onJourneyOpened?: () => void; initialSource?: Pick<W.Source, "source_id" | "revision"> | null; onSourceOpened?: () => void }) {
+export function StudyWorkspace({ controller, lastTime, companion, request, onRequestDone, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened }: { controller: StudyWorkspaceController; /** The Last time card in the library (SPEC §19.5.2). */ lastTime?: ReactNode;
+  /** **Your tutor** (SPEC §19.4): the library's panel above the sources and a third tab inside a material, one thread. */ companion?: (place: "panel" | "tab") => ReactNode;
+  /** A place to go, once (a companion button, the plan's due Study cards); `onRequestDone` hears it was handled. */ request?: StudyRequest | null; onRequestDone?: () => void; /** A practised diagram's capture: Study's research starts from it (SPEC §18). */ initialResearch?: string | null; onResearchOpened?: () => void; onPractice?: (subject: string, kcIds: string[]) => void; onTab?: (tab: Tab) => void; onReviewAccess?: () => void; initialAdd?: "paste" | null; onJourneyStarted?: (node: string, subject: string) => void; initialJourney?: "next" | "lesson" | "quiz" | null; onJourneyOpened?: () => void; initialSource?: Pick<W.Source, "source_id" | "revision"> | null; onSourceOpened?: () => void }) {
   const openLesson = useOpenLesson(), openTopic = useOpenTopic();
   const view = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView), t = useT();
   const [journeyChoices, setJourneyChoices] = useState<Record<string, string>>({});
@@ -86,6 +94,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
   const [pasting, setPasting] = useState(initialAdd === "paste"), [managing, setManaging] = useState(false), [dragging, setDragging] = useState(false);
   const [tab, setTab] = useState<Tab>(view.aid ? tabOf(view.aid.kind) : "generate");
   useEffect(() => { onTab?.(tab); }, [onTab, tab]);
+  useEffect(() => { if (!companion && tab === "companion") setTab("generate"); }, [companion, tab]);
   useEffect(() => { if (view.aid) setTab(tabOf(view.aid.kind)); }, [view.aid?.aid_id, view.aid?.kind]);
   const resultPanel = useRef<HTMLElement>(null), quizHelpPanel = useRef<HTMLElement>(null);
   useEffect(() => { if (view.quizHelp) { quizHelpPanel.current?.focus({ preventScroll: true }); quizHelpPanel.current?.scrollIntoView?.({ block: "nearest" }); } }, [view.quizHelp?.jobId, view.quizHelp?.aid?.aid_id]);
@@ -105,6 +114,28 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
     });
     return () => { live = false; };
   }, [controller, initialJourney]);
+  // A place the app asks for (SPEC §19.3.3): handled after the workspace mounts and its library is read, as a source
+  // the app opens is, so a development build's double mount never cancels it.
+  const requestDone = useRef(onRequestDone);
+  requestDone.current = onRequestDone;
+  const [researchTopic, setResearchTopic] = useState<{ topic: string; seq: number } | null>(null);
+  const addPanel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!request) return;
+    let live = true;
+    void controller.load().then(async () => {
+      if (!live) return;
+      if (request.kind === "target") await controller.openTarget(request);
+      else if (request.kind === "companion") { if (controller.getView().source) setTab("companion"); }
+      else {
+        if (controller.getView().source) controller.close();
+        if (request.kind === "add") { setAdding(true); setPasting(false); requestAnimationFrame(() => addPanel.current?.scrollIntoView?.({ block: "start" })); }
+        else setResearchTopic((current) => ({ topic: request.topic, seq: (current?.seq ?? 0) + 1 }));
+      }
+      if (live) requestDone.current?.();
+    });
+    return () => { live = false; };
+  }, [controller, request]);
   const sourceOpened = useRef(onSourceOpened);
   sourceOpened.current = onSourceOpened;
   useEffect(() => {
@@ -250,8 +281,10 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
       <p className="text-ui text-muted">{t("study.library_intro")}</p>
       <div className="flex flex-wrap gap-2">{activityButton}{view.sets.length > 0 && <Button size="sm" tone="ghost" onClick={() => setAllSetsOpen(true)}><Icon name="learn" size={16} />{t("study.all_sets")}</Button>}</div>
     </header>
+    {lastTime}
+    {companion?.("panel")}
     {status}
-    <div hidden={!adding && !pasting && view.sources.length > 0} className="flex flex-col gap-4 rounded-card border border-line bg-canvas p-5">
+    <div ref={addPanel} hidden={!adding && !pasting && view.sources.length > 0} className="flex flex-col gap-4 rounded-card border border-line bg-canvas p-5">
       {/* A drop zone over the native picker, which stays in the tab order (focus rings the whole zone). */}
       <label data-study-drop={dragging ? "over" : ""} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDragging(true); } }} onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); const file = e.dataTransfer.files[0]; if (file && !view.busy) void controller.upload(file, undefined, preferCloud); }}
@@ -279,7 +312,7 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
     <Dialog open={confirm !== null} heading={t("study.private_source")} closeLabel={t("action.cancel")} onClose={() => setConfirm(null)}><p className="text-ui">{t("study.private_confirm")}</p><Button onClick={() => { const id = confirm; setConfirm(null); if (id) void controller.open(id); }}>{t("study.open_private")}</Button></Dialog>
     {/* Before any material the tools show what they will do, greyed (STU-21). */}
     {view.sources.length === 0 && view.status === "ready" && <GenerateTools disabled empty onPick={() => undefined} />}
-    <StudyResearch controller={controller} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
+    <StudyResearch controller={controller} initialCapture={initialResearch ?? null} topicRequest={researchTopic} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
     {topicMaps}
     {jobs(view.jobs.filter((job) => ["running", "queued", "waiting_online", "paused"].includes(job.state)))}
   </section>{activityDialog}<Dialog open={allSetsOpen} heading={t("study.all_sets")} closeLabel={t("action.close")} onClose={() => setAllSetsOpen(false)} wide><MySets sets={view.sets} busy={view.busy} heading={false} onOpen={(set) => { setAllSetsOpen(false); void controller.openSet(set); }} /></Dialog></>;
@@ -379,9 +412,10 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
     {/* The study tools */}
     <aside aria-label={t("study.aids")} className="flex w-full shrink-0 flex-col border-t border-line bg-canvas @4xl:min-h-0 @4xl:w-[28rem] @4xl:border-t-0 @4xl:border-s @6xl:w-[32rem]">
       <div role="tablist" aria-label={t("study.aids")} className="flex min-h-14 shrink-0 items-center gap-1 overflow-x-auto border-b border-line px-3">
-        {TABS.map((name) => <Button key={name} role="tab" size="sm" tone="ghost" aria-selected={tab === name} onClick={() => setTab(name)}>{t(`study.tab.${name}`)}</Button>)}
+        {(companion ? TABS_WITH_COMPANION : TABS).map((name) => <Button key={name} role="tab" size="sm" tone="ghost" aria-selected={tab === name} onClick={() => setTab(name)}>{t(`study.tab.${name}`)}</Button>)}
       </div>
       <div role="tabpanel" aria-label={t(`study.tab.${tab}`)} className="flex flex-col gap-4 px-5 py-4 @4xl:min-h-0 @4xl:flex-1 @4xl:overflow-y-auto">
+        {tab === "companion" ? companion?.("tab") : <>
         {savedJourney && <StudyJourney journey={savedJourney} busy={view.busy} onReviewDue={() => { void controller.refreshDueReview(); }} onContinue={() => { if (savedJourney.phase === "make_quiz" && shown?.aid_id === savedJourney.cards_aid_id) pick("quiz", shown.aid_id); else void controller.continueJourney(); }} onLesson={() => { void controller.continueJourney("lesson"); }} onResults={() => { void controller.continueJourney("quiz"); }} />}
         {status}
         {jobs(currentJobs)}
@@ -479,9 +513,10 @@ export function StudyWorkspace({ controller, onPractice, onTab, onReviewAccess, 
           </section>}
         </article>}
         <span>{activityButton}</span>
+        </>}
       </div>
       {/* The ask box: always here, whichever tool is open */}
-      <form className="flex shrink-0 flex-col gap-3 border-t border-line px-4 pt-3 pb-4" onSubmit={(e) => { e.preventDefault(); const item = tab === "generate" ? view.quiz?.items[quizPosition] : undefined;
+      <form hidden={tab === "companion"} className="flex shrink-0 flex-col gap-3 border-t border-line px-4 pt-3 pb-4" onSubmit={(e) => { e.preventDefault(); const item = tab === "generate" ? view.quiz?.items[quizPosition] : undefined;
         const work = item ? controller.requestQuizHelp(item.item_id, view.quizHelp?.itemId === item.item_id ? view.quizHelp.kind : "walk_through", readableConfirmed, chatPrompt) : chatContext ? controller.generate("chat", 10, readableConfirmed, preferCloud, chatPrompt, undefined, chatContext) : controller.generate("chat", 10, readableConfirmed, preferCloud, chatPrompt);
         void work.then(() => { if (!controller.getView().error) setChatPrompt(""); }); }}>
         {tab === "generate" && view.quiz && !view.result && view.quiz.items[quizPosition] && <HelpChips kinds={STUDY_HELP} disabled={view.busy || !!accessBlocked || helpPending || view.quiz.status !== "ready"} onHelp={(kind) => { const item = view.quiz?.items[quizPosition]; if (item) help(kind, item.item_id); }} />}

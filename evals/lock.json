@@ -7436,6 +7436,17 @@
    "files": {},
    "version": "2026-10-09.1"
   },
+  "companion": {
+   "files": {
+    "services/agent-core/tests/scenarios/w8/checkin_sunday.yaml": "91b83b70164a1fdfd4e94bf9bbfb4fab2f2d47e9d02b853d7a41bceaa1cfb2de",
+    "services/agent-core/tests/scenarios/w8/cloud_block_dat18.yaml": "ddd9249cc2c7e7d3d69bc9f7a32d2d849a905480f52dde06a7c0479fdde49a09",
+    "services/agent-core/tests/scenarios/w8/companion_recall_local.yaml": "1da0b6629ee8fbbca73bd7225e847d946ccbb9f863f697111a212d793a7a4120",
+    "services/agent-core/tests/scenarios/w8/last_time_card.yaml": "871766684850d027318d8a873a2e9f5712ee3abea6bd87db61a64c8fd6826d5a",
+    "services/agent-core/tests/scenarios/w8/research_level_known.yaml": "ebba1438c16ca4ad04ec91a8c3a814eac71013933d079ffc75a0ecd05a623726",
+    "services/agent-core/tests/scenarios/w8/study_quiz_activity.yaml": "8f7898f68d83be3bf0d8a2476a0d52b76844d516fc9c5fea3342f501caddf60a"
+   },
+   "version": "2026-10-29.3"
+  },
   "content_packs": {
    "files": {
     "content/curriculum/acc/o/items/itm.acc.o.accounting_equation.0001.yaml": "6cf782d8bbb98efd96fd4055caf27bce0dfe14b4e6c591d62f3b3c1faefb6244",

@@ -333,6 +333,7 @@ type ApiEventsOnlineFeature = Annotated[
         "study_materials",
         "telemetry",
         "crash_reports",
+        "tutor_memory_online",
     ],
     Field(title="ApiEventsOnlineFeature"),
 ]
@@ -375,6 +376,7 @@ class ApiEventsEvEgressNotice(BaseModel):
             "audio",
             "transcript",
             "document",
+            "tutor_notes",
         ]
     ]
 

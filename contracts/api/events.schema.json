@@ -128,7 +128,8 @@
     "tool",
     "checking",
     "retrying",
-    "compacting"
+    "compacting",
+    "recalling"
    ],
    "x-open-enum": true
   },
@@ -196,7 +197,8 @@
     "cloud_voice",
     "study_materials",
     "telemetry",
-    "crash_reports"
+    "crash_reports",
+    "tutor_memory_online"
    ],
    "x-open-enum": true
   },
@@ -1801,7 +1803,8 @@
        "diagnostics",
        "audio",
        "transcript",
-       "document"
+       "document",
+       "tutor_notes"
       ]
      },
      "uniqueItems": true
@@ -2666,7 +2669,8 @@
        "tutor_name",
        "tutor_avatar",
        "faster_tutor",
-       "wake_word"
+       "wake_word",
+       "checkin_notifications"
       ]
      }
     }
@@ -2786,6 +2790,9 @@
     },
     {
      "$ref": "#/$defs/ev_pacing_command"
+    },
+    {
+     "$ref": "#/$defs/ev_companion_action"
     }
    ]
   },
@@ -3308,6 +3315,73 @@
     "root_kc_id",
     "misconception_id"
    ]
+  },
+  "ev_companion_action": {
+   "description": "A durable button in the companion thread (SPEC §19.3.3): emitted by the engine from a tool result, never from model text, folded into the session projection's `actions`, so it survives a reconnect and a restart.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "type",
+    "action_id",
+    "action",
+    "payload",
+    "label_key"
+   ],
+   "properties": {
+    "type": {
+     "const": "companion.action"
+    },
+    "action_id": {
+     "type": "string",
+     "pattern": "^act_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "action": {
+     "enum": [
+      "open_tutor",
+      "open_practice",
+      "open_study_job",
+      "open_add_source",
+      "open_research",
+      "open_plan",
+      "open_knows",
+      "open_study_deck"
+     ]
+    },
+    "payload": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "question": {
+       "type": "string",
+       "maxLength": 2000
+      },
+      "job_id": {
+       "type": "string",
+       "pattern": "^stj_[0-9A-HJKMNP-TV-Z]{26}$"
+      },
+      "aid_id": {
+       "type": "string",
+       "pattern": "^aid_[0-9A-HJKMNP-TV-Z]{26}$"
+      },
+      "deck_id": {
+       "type": "string",
+       "pattern": "^dek_[0-9A-HJKMNP-TV-Z]{26}$"
+      },
+      "kc_ids": {
+       "type": "array",
+       "maxItems": 8,
+       "items": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       }
+      }
+     }
+    },
+    "label_key": {
+     "type": "string",
+     "maxLength": 80
+    }
+   }
   }
  }
 }

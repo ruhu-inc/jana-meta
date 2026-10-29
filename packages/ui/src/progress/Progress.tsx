@@ -8,7 +8,7 @@
 // never as a loss; nothing here counts down, ranks or blames (LRN-35). Links lead to "What your tutor knows" (UXS-28),
 // the notes (UXS-52) and the session history (UXS-48). States: loading, canonical, empty (nothing studied yet), error-retriable, not served.
 import { useEffect, useId, useState, useSyncExternalStore } from "react";
-import { gradeShown, type KcState, type ProgressController, type ProgressState, type ProgressSubject } from "@jana/client-core";
+import { gradeShown, type KcState, type ProgressController, type ProgressState, type ProgressSubject, type ProgressView } from "@jana/client-core";
 import { ScreenHeader } from "../frame/Frame.js";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
@@ -32,6 +32,20 @@ export interface ProgressNames {
   subject: (subject: string) => string;
   /** An idea's statement, when the subject map is known; else the topic's title is shown with its state. */
   kc: (kcId: string) => string | null;
+}
+
+/** The week's Study activity as one quiet line (SPEC §19.1): what was done in Study, never a mastery claim (JM-D26).
+ * Nothing done there this week, nothing said. */
+function StudyActivityLine({ activity }: { activity: NonNullable<ProgressView["study_activity"]> }) {
+  const t = useT();
+  const { quiz_items: questions, quiz_correct: right, cards_reviewed: cards, aids_made: aids } = activity;
+  if (questions + cards + aids === 0) return null;
+  const parts = [
+    ...(questions > 0 ? [t("progress.study_activity.quiz", { count: questions, right })] : []),
+    ...(cards > 0 ? [t("progress.study_activity.cards", { count: cards })] : []),
+    ...(aids > 0 ? [t("progress.study_activity.aids", { count: aids })] : []),
+  ];
+  return <p data-progress-study={questions + cards + aids} className="flex items-center gap-2 text-meta text-muted"><Icon name="study" size={16} />{t("progress.study_activity.title")}: {parts.join(" · ")}</p>;
 }
 
 /** A topic is secure when every one of its ideas is. */
@@ -204,6 +218,7 @@ export function ProgressContent({ state, names, actions }: { state: ProgressStat
         <div className="flex flex-col gap-3">
           <MovedToday moved={progress.moved_today} names={names} states={states} {...(actions.onLearn !== undefined && started ? { onLearn: actions.onLearn } : {})} />
           <StudyLine days={progress.streak.days} freezes={progress.streak.freezes_left} minutes={progress.time_studied.minutes_7d} sessions={progress.time_studied.sessions_7d} />
+          {progress.study_activity !== undefined && <StudyActivityLine activity={progress.study_activity} />}
         </div>
         {!started && (
           <section data-progress-empty="" className="flex flex-col items-start gap-3 rounded-card border border-line bg-canvas p-6">

@@ -784,7 +784,8 @@ class AppRuntime:
         internal = profile_id[4:] if profile_id else self.implicit[0]
         if internal == self.stores.profile_id:
             source = self.memory_source()
-            yield KnowsDesk(source, self.settings) if source is not None else None
+            yield KnowsDesk(source, self.settings, memory_online=self.memory_online_on,
+                            terms=self.profile_terms) if source is not None else None  # fmt: skip
             return
         if profile_id is None or self.directory is None:
             yield None
@@ -953,9 +954,19 @@ class AppRuntime:
             schemas = bundled_schemas()
 
             def model() -> ReflectorModel | None:
-                if "local" not in self.providers:
+                # SPEC §19.4, §19.6 (W8 phase 3): while tutor_memory_online is effective the Reflector's router also
+                # holds the cloud tier's providers, and its gate lets a reflector call reach them; otherwise it is the
+                # device's runtime alone, as before (MDL-25).
+                online = self.memory_online_on()
+                cloud = self.cloud_for_session() if online else None
+                if "local" not in self.providers and cloud is None:
                     return None
-                return ReflectorModel(self._router(), assets, self.settings, schemas, frozenset(reg.specs))
+                router = self._router(cloud.providers if cloud is not None else None)
+                router.memory_online = self.memory_online_on
+                if cloud is not None:
+                    router.network, router.budget = cloud.network, cloud.budget
+                return ReflectorModel(router, assets, self.settings, schemas, frozenset(reg.specs),
+                                      memory_online=self.memory_online_on, terms=self.profile_terms)  # fmt: skip
 
             spill = self.stores.learner_path.parent / "spill" if self.stores else self.data_root / "spill"
             self._reflector = ReflectorQueue(
@@ -1009,8 +1020,15 @@ class AppRuntime:
         if self.stores is not None:
             # The session belongs to the profile whose learner database is open now; its memory tools stay bound to
             # that profile and refuse once another profile's database is open (TOL-23, DAT-14).
-            engine.bind_memory(MemoryAccess(self.stores.profile_id, self.memory_source))
+            memory = engine.bind_memory(MemoryAccess(self.stores.profile_id, self.memory_source))
             bound_profile_id = self.stores.profile_id
+
+            def memory_online() -> bool:  # the session's own profile only (§19.6): never another's consent
+                same = self.stores is not None and self.stores.profile_id == bound_profile_id
+                return same and self.memory_online_on()
+
+            memory.memory_online = memory_online
+            memory.terms = self.profile_terms
 
             def completed_question(text: str, subject: str) -> tuple[dict[str, Any], str] | None:
                 if self.stores is None or self.stores.profile_id != bound_profile_id:
@@ -1217,16 +1235,35 @@ class AppRuntime:
         if self.online is None or self.stores is None:
             return None
         profile = self.public_profile()
-        terms = [self.stores.profile_id, self.stores.device_id, profile or ""]
-        row = self.stores.learner.execute("SELECT display_name FROM profile LIMIT 1").fetchone()
-        if row is not None:
-            terms.append(str(row[0]))
+        terms = self.profile_terms()
         stored = subscriptions.load(self.stores.device)
         now = int(time.time() * 1000)
         spend = DeviceSpend(self.stores.device, profile or "", subscriptions.allowance_period(stored, now),
                             lambda: int(time.time() * 1000))  # fmt: skip
         return cloud_session(self.online, self.settings, profile_id=profile, terms=terms, spend=spend,
                              allowance_tokens=stored.get("allowance_tokens"))  # fmt: skip
+
+    def profile_terms(self) -> list[str]:
+        """The Redactor's terms for the open profile: its ids and display name (cloud requests, and the egress scrub
+        of notes under tutor_memory_online, SPEC §19.6)."""
+        if self.stores is None:
+            return []
+        terms = [self.stores.profile_id, self.stores.device_id, self.public_profile() or ""]
+        row = self.stores.learner.execute("SELECT display_name FROM profile LIMIT 1").fetchone()
+        if row is not None:
+            terms.append(str(row[0]))
+        return [t for t in terms if t]
+
+    def memory_online_on(self) -> bool:
+        """Personal tutor memory online is in effect for the open profile (SPEC §19.6, JM-D21): the cloud tier is on
+        (switch, subscription, consent and its accepted notice) and the profile's `tutor_memory_online` consent and
+        switch are too. Without the connectivity layer it is never on."""
+        if self.online is None or self.stores is None or not self.cloud_tier_on():
+            return False
+        try:
+            return bool(self.online.memory_online_effective(self.public_profile(), self.stores.learner))
+        except Exception:
+            return False
 
     def cloud_tier_on(self) -> bool:
         """The cloud tier is in effect for the open profile (MDL-24, ARC-11, D70): with the connectivity layer, the

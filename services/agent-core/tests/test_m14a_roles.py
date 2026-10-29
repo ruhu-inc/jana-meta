@@ -147,7 +147,7 @@ def agt01_roles_register_matches_manifests() -> None:
     register = json.loads((CONTENT / "roles.json").read_text())["roles"]
     toolsets = REGISTER
     specialists = [r for r in register if r["kind"] == "specialist"]
-    assert {r["id"] for r in specialists} == {"coach", "diagnoser", "solver", "checker", "reflector"}
+    assert {r["id"] for r in specialists} == {"coach", "diagnoser", "solver", "checker", "reflector", "companion"}
     for row in specialists:
         for path in (CONTENT / "roles" / f"{row['id']}.md",):
             meta = load_manifest(path).meta
@@ -164,7 +164,8 @@ def agt01_roles_register_matches_manifests() -> None:
                 == []
             ), path
     audiences = {r["id"]: r["audience"] for r in register}
-    assert [r for r, a in audiences.items() if a == "student"] == ["coach"]
+    # The Coach in a tutoring session, and the companion in Study's thread (SPEC §19, W8), each the only voice there.
+    assert [r for r, a in audiences.items() if a == "student"] == ["coach", "companion"]
     # Auxiliary roles: one manifest each, team audience, no tools, a structured output with its schema (AGT-02).
     auxiliary = {r["id"]: r for r in register if r["kind"] == "auxiliary" and r["id"] in AUX_ROLES}
     assert set(auxiliary) == set(AUX_ROLES)  # TABLE AGT-02a (the item drafter is S5, AGT-30)

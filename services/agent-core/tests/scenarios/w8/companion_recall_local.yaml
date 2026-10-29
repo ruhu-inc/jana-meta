@@ -1,0 +1,17 @@
+# W8 phase 2 Study-memory case (SPEC §19.9): written before any run; checked by code in tests/w8_scenarios.py.
+case: companion_recall_local
+rubric: >-
+  On a local candidate, "what did we say about projectiles" returns the seeded past-session line; on a cloud candidate
+  the turn offers no past recall and answers from the summary.
+past_session:
+  subject: physics
+  line: "a projectile launched at 30 degrees lands farther than one at 60 degrees"
+  kc: kc.phy.o.motion.free_fall
+ask: "What did we say about projectiles?"
+model:
+  - {tool: session_recall, args: {pattern: "projectile", scope: past}}
+  - {text: "Last time you saw that a 30 degree launch lands farther than a 60 degree one."}
+expect:
+  local_match: "a projectile launched at 30 degrees lands farther than one at 60 degrees"
+  cloud_refused: true
+  summary_topic: kc.phy.o.motion.free_fall

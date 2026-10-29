@@ -1,0 +1,14 @@
+{
+  "version": 0,
+  "cursor_seq": 0,
+  "updated_at": "2026-01-15T09:30:00Z",
+  "topics": [],
+  "misconceptions": [],
+  "next_step": {
+    "text": "x",
+    "reason_code": "x",
+    "updated_at": "2026-01-15T09:30:00Z"
+  },
+  "episodes": 0,
+  "__unknown_field__": 1
+}

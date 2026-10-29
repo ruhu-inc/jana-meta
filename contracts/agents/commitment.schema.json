@@ -1,0 +1,71 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://jana.dev/contracts/agents/commitment",
+ "title": "Commitment",
+ "description": "The check-in extractor's reply (SPEC §19.5.5, role `checkin`): at most one commitment proposed from the student's own text of one companion turn. Code decides what is kept: confidence at least 0.6, a due day today or within 14 days, and a text that passes the capture filter and the write policy.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "found",
+  "kind",
+  "subject",
+  "due_day",
+  "text",
+  "confidence"
+ ],
+ "properties": {
+  "found": {
+   "type": "boolean"
+  },
+  "kind": {
+   "anyOf": [
+    {
+     "enum": [
+      "event_checkin",
+      "deadline_check",
+      "open_loop"
+     ]
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "subject": {
+   "anyOf": [
+    {
+     "enum": [
+      "mathematics",
+      "physics",
+      "chemistry",
+      "biology",
+      "accounting"
+     ]
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "due_day": {
+   "anyOf": [
+    {
+     "type": "string",
+     "format": "date"
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "text": {
+   "type": "string",
+   "maxLength": 140
+  },
+  "confidence": {
+   "type": "number",
+   "minimum": 0,
+   "maximum": 1
+  }
+ }
+}

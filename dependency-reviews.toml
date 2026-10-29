@@ -514,6 +514,13 @@ maintainer_health = "Official Tauri plugin maintained in the Tauri plugins works
 size = "About 90 KB source plus the native dialog dependency"
 shipped = true
 
+[cargo.tauri-plugin-notification]
+purpose = "Desktop notifications for the tutor's check-ins, only with the student's setting on and the OS permission granted; the body is a fixed template per kind (SPEC §19.5.5, JM-D24)"
+licence = "Apache-2.0 OR MIT"
+maintainer_health = "Official Tauri plugin maintained in the Tauri plugins workspace"
+size = "About 120 KB source plus the platform notification bindings"
+shipped = true
+
 [cargo.keyring-core]
 purpose = "Common credential-store API for the shell's keychain bridge holding the core's device secrets (SEC-17, D97)"
 licence = "MIT OR Apache-2.0"

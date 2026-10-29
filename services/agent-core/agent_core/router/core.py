@@ -217,6 +217,9 @@ class Router:
     # UXS-03, MDL-05: the student chose "Use the faster tutor" on this computer: a role of the strong tier is served
     # by the fast tier's candidates (the Reflector, which runs in the background, keeps its own).
     prefer_fast: Callable[[], bool] | None = None
+    # SPEC §19.4 (W8 phase 3): `tutor_memory_online` effective for the open profile. The Reflector is in the cloud's
+    # roles_allowed, and is barred from the cloud whenever this says no (MDL-25 stays the default).
+    memory_online: Callable[[], bool] = lambda: False
     _turns: int = 0
     _cloud_text: bool = False
 
@@ -239,8 +242,10 @@ class Router:
     def _cloud_block(self, role: str) -> str | None:
         """Why a cloud candidate cannot serve this role now (MDL-05, MDL-24, MDL-29), or None."""
         cloud = self.config.cloud
-        if not cloud.get("enabled") or role == "reflector" or role not in cloud.get("roles_allowed", []):
+        if not cloud.get("enabled") or role not in cloud.get("roles_allowed", []):
             return "cloud tier off"
+        if role == "reflector" and not self.memory_online():
+            return "cloud tier off"  # MDL-25 unless tutor_memory_online is effective (SPEC §19.4)
         if not self.cloud_on(role):
             return "cloud tier off"
         online = self.network is None or self.network() in USABLE_NETWORK

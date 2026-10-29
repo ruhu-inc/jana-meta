@@ -72,6 +72,35 @@ def dat18_egress_field_allowlist(tmp_path: Path, feature: str):
                     assert errors("cloud/gateway#/$defs/ChatCompletionRequest", sent.json()) == []
                     assert sent.json()["messages"] == [{"role": "user", "content": "What is speed?"}]
                     assert sent.headers["x-session-pseudonym"] == provider.pseudonym
+                elif feature == "tutor_memory_online":
+                    # SPEC §19.6 (W8): the row's fields are the cloud tier's chat request; what it adds is the
+                    # cloud_notes block, scrubbed. A note naming a profile term stays on the device.
+                    from agent_core.config import Settings
+                    from agent_core.memory.render import fit_block
+                    from agent_core.memory.snapshot import freeze
+                    from agent_core.store.ids import new_ulid
+                    from memory_harness import DAY, PACK, store
+
+                    held = store()
+                    kept = held.note("Divides distance by time correctly", new_ulid())
+                    private = held.note("Learns graphs best through the zorblat method", new_ulid())  # a profile term
+                    settings = Settings()
+                    frozen = freeze(held.conn, PACK, settings, subject="physics", topic_id=None, session_date=DAY)
+                    block = fit_block(frozen, variant="cloud_notes", allowance_chars=4000, settings=settings,
+                                      terms=("zorblat",))  # fmt: skip
+                    assert block.withheld_note_ids == (private,) and block.shown_note_ids == (kept,)
+                    enable(online, "cloud_tier")  # the consent requires the cloud tier; its requests ride it
+                    online.record_notice("prf_private", "cloud_tier", True)
+                    provider = GatewayProvider(online.client, lambda: online.host_for("cloud_tier"), "primary",
+                                               redactor=Redactor(("MUST-STAY-LOCAL",)),
+                                               profile_id="prf_private")  # fmt: skip
+                    await provider.complete("strong", [Message("system", block.text), Message("user", "Reflect.")],
+                                            [], role="reflector")  # fmt: skip
+                    sent = fake.requests[-1]
+                    assert errors("cloud/gateway#/$defs/ChatCompletionRequest", sent.json()) == []
+                    assert sent.headers["x-jana-role"] == "reflector"
+                    assert "Divides distance by time correctly" in sent.json()["messages"][0]["content"]
+                    assert "zorblat" not in json.dumps(sent.json())
                 elif feature == "telemetry":
                     good = json.loads(telemetry_payload())
                     with pytest.raises(ValueError):
@@ -103,7 +132,7 @@ def dat18_egress_field_allowlist(tmp_path: Path, feature: str):
                     assert errors(crash_reports.CONTRACT, fake.requests[-1].json()) == []
                 wire = json.dumps([r.json() for r in fake.requests]) + json.dumps([r.headers for r in fake.requests])
                 assert "MUST-STAY-LOCAL" not in wire and "prf_private" not in wire
-                if feature != "cloud_tier":
+                if feature not in ("cloud_tier", "tutor_memory_online"):
                     assert all("authorization" not in r.headers and "cookie" not in r.headers for r in fake.requests)
             finally:
                 await online.stop()

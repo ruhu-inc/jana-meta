@@ -13,6 +13,7 @@ the order of the registry of profile stores (`store.profile_stores`), the same r
 
 from __future__ import annotations
 
+import datetime
 import shutil
 import sqlite3
 from collections.abc import Callable
@@ -250,6 +251,17 @@ def _notes(job: Job) -> int:
     return len(expired)
 
 
+def _note_recalls(job: Job) -> int:
+    """A note's recall rows go with the note (a forget deletes them at once) and at `retention_note_days` from their
+    day, as notes do (SPEC §19.3.5)."""
+    cutoff = datetime.datetime.fromtimestamp(job.cutoff("retention_note_days", DAY_MS) / 1000, datetime.UTC)
+    return job.learner.execute(
+        "DELETE FROM note_recalls WHERE day < ?"
+        " OR note_id NOT IN (SELECT note_id FROM notes WHERE status <> 'deleted')",
+        (cutoff.date().isoformat(),),
+    ).rowcount
+
+
 def _older(table: str, column: str, key: str, unit_ms: int, database: str = "learner") -> Purge:
     def purge(job: Job) -> int:
         conn = job.learner if database == "learner" else job.device
@@ -324,6 +336,21 @@ RULES: tuple[Rule, ...] = (
     Rule("past papers", "learner", ("past_papers",), removed_by="student deletion or DAT-09"),
     Rule("exam dates", "learner", ("exam_dates",), removed_by="student deletion or DAT-09"),
     Rule("study notes", "learner", ("study_notes",), removed_by="student deletion or DAT-09"),
+    # SPEC §19.4 (W8): the companion thread. An episode is a session's row and goes with it; its turns are purged at
+    # `retention_transcript_days` like any session's (it ends daily). The rolling summary lasts while the profile does.
+    Rule("companion episodes", "learner", ("companion_episodes",), removed_by="its session or DAT-09"),
+    Rule(
+        "companion summary", "learner", ("companion_summary",), removed_by="DAT-09; no free text, kept with the profile"
+    ),
+    # SPEC §19.3.4, §19.3.5 (W8 phase 3): operational, device-local rows (JM-D27).
+    Rule(
+        "check-ins",
+        "learner",
+        ("commitments",),
+        _older("commitments", "resolved_at", "retention_commitment_days", DAY_MS),
+        ("retention_commitment_days",),
+    ),
+    Rule("note recalls", "learner", ("note_recalls",), _note_recalls, ("retention_note_days",)),
     Rule(
         "source study workspace",
         "learner",
