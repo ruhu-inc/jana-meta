@@ -25,5 +25,6 @@
     "safety_flagged": "local",
     "injection_flagged": "local",
     "profile_updated": "local",
-    "study_activity": "local"
+    "study_activity": "local",
+    "memory_requested": "local"
 }

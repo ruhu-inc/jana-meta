@@ -2,7 +2,7 @@
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/agents/companion-turn",
  "title": "Companion turn",
- "description": "One reply of the Study companion (SPEC §19.3.3, role `companion`): at most 600 characters and at most one action. `ref` is an integer from a tool result of this turn; the engine resolves it.",
+ "description": "One reply of the Study companion (SPEC \u00a719.3.3, role `companion`): at most 600 characters and at most one action. `ref` is an integer from a tool result of this turn; the engine resolves it.",
  "type": "object",
  "additionalProperties": false,
  "required": [
@@ -54,6 +54,17 @@
      "type": "null"
     }
    ]
+  },
+  "fact_refs": {
+   "description": "Select typed facts supplied by the engine; code renders the claim and source. Never rewrite progress claims in text.",
+   "type": "array",
+   "uniqueItems": true,
+   "maxItems": 2,
+   "items": {
+    "type": "integer",
+    "minimum": 1,
+    "maximum": 64
+   }
   }
  }
 }

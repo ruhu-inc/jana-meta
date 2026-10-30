@@ -18,9 +18,10 @@ number of records a read returned, from which the engine's memory-use line is ma
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from collections.abc import Callable, Collection, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
@@ -77,20 +78,28 @@ class NoteJob:
     also: Callable[[sqlite3.Connection], object] | None = None
     now_ms: int | None = None
     applied: Applied | None = None
+    correction: tuple[str, str] | None = None
+    require_scope: Callable[[], None] = lambda: None
 
 
 def apply_notes(job: NoteJob, args: dict[str, Any], settings: Settings) -> dict[str, Any]:
     """`memory_note` for one Reflection: refs mapped back, then one atomic apply (AGT-26). A ref outside the lists
     shown, or a malformed action, fails the whole call and nothing is applied (MEM-08)."""
+    job.require_scope()
     try:
         actions = actions_from_reflection({"notes": args.get("actions") or []}, job.given, subject=job.subject)
     except (RefOutOfRange, ReflectionInvalid) as error:
         raise InvalidArguments(f"{type(error).__name__}: {error}") from None
+    if job.correction is not None:
+        actions = [replace(a, action="update", target_note_id=job.correction[0]) for a in actions if a.action == "add"][
+            :1
+        ]
     summary = summary_text(args.get("summary"), job.capture) if job.capture is not None else None
     applied = apply_reflection(job.learner, actions, session_id=job.session_id, session_date=job.given.session_date,
                                summary=summary or job.fallback_summary, settings=settings, role=job.role,
                                capture=job.capture, consolidation=job.consolidation, student_texts=job.student_texts,
-                               forgotten_hashes=job.forgotten_hashes, now_ms=job.now_ms, also=job.also)  # fmt: skip
+                               forgotten_hashes=job.forgotten_hashes, now_ms=job.now_ms, also=job.also,
+                               explicit_correction=job.correction)  # fmt: skip
     job.applied = applied
     return {"applied": len(applied.applied), "blocked": applied.blocked,
             "rejected": [r.code for r in applied.rejected], "pending_review": len(applied.pending_review),
@@ -142,6 +151,10 @@ class MemoryTools:
 
     async def search(self, args: dict[str, Any], context: CallContext) -> dict[str, Any]:
         conn, _ = self._conn()
+        if self.cloud() and getattr(context.session, "role", None) == "companion":
+            # Even the current episode can contain local-only or withdrawn-consent turns.
+            # Only the provenance-filtered conversation builder may supply cloud history.
+            raise InvalidArguments("companion conversations are searched only on this computer's own model")
         if args.get("scope") == "past":
             # SPEC §19.6: past-conversation excerpts never ride a cloud call, whatever the consents.
             if self.cloud():
@@ -266,15 +279,59 @@ class StudyTools:
         from agent_core.memory.queries import study_excerpts
         from agent_core.memory.recall import _segments
 
-        query = str(args["query"])
+        query = str(args.get("query") or "")
         if len(query) > 200:
             raise InvalidArguments("the query is at most 200 characters")
-        segments = _segments(query)
-        if not segments or all(not piece.strip() for piece in segments):
-            raise InvalidArguments("the query has no text to look for")
+        segments = [piece for piece in _segments(query) if piece.strip()]
         conn, _ = self._conn()
-        items = self._items(study_excerpts(conn, segments))
-        return {"marker": RECALL_MARKER, "items": items}
+        items = self._items(study_excerpts(conn, segments)) if segments else []
+        if items:
+            return {"marker": RECALL_MARKER, "items": items}
+        # No query, or nothing matched its words: the library's ready sources, each with a ref make_aid can name, so
+        # the learner's own wording for a source never has to match its title (§19 fix, 2026-10-30).
+        return {"marker": RECALL_MARKER, "items": [], "sources": self._sources(conn)}
+
+    def _ready(self, conn: sqlite3.Connection) -> list[tuple[str, int, str, str, str]]:
+        """The library's ready, unarchived sources, newest first, at most eight: (id, revision, title, kind, day). A
+        private source is left out of an online call (STU-15)."""
+        try:
+            archived = {str(r[0]) for r in conn.execute("SELECT source_id FROM study_library_archive")}
+        except sqlite3.OperationalError:  # a database without the archive (a test store before v13)
+            archived = set()
+        out = []
+        for source_id, revision, private, body in conn.execute(
+            "SELECT source_id, current_revision, private, body FROM study_sources ORDER BY updated_at DESC, source_id"
+        ):
+            found = json.loads(body)
+            if found.get("state") != "ready" or source_id in archived or (private and self.cloud()):
+                continue
+            day = str(found.get("updated_at") or "")[:10]
+            title, kind = str(found.get("title") or ""), str(found.get("kind") or "")
+            out.append((str(source_id), int(revision), title, kind, day))
+        return out[:8]
+
+    @staticmethod
+    def _title(conn: sqlite3.Connection, source_id: str) -> str:
+        row = conn.execute("SELECT body FROM study_sources WHERE source_id = ?", (source_id,)).fetchone()
+        return str(json.loads(row[0]).get("title") or "") if row else ""
+
+    @staticmethod
+    def _from_pack(conn: sqlite3.Connection, source_id: str) -> bool:
+        try:
+            row = conn.execute("SELECT 1 FROM study_research WHERE json_extract(body, '$.source_id') = ? LIMIT 1",
+                               (source_id,)).fetchone()  # fmt: skip
+        except sqlite3.OperationalError:
+            return False
+        return row is not None
+
+    def _sources(self, conn: sqlite3.Connection) -> list[dict[str, Any]]:
+        listed = []
+        for source_id, revision, title, kind, day in self._ready(conn):
+            known = next((r for r, v in self.refs.items() if v == ("source", source_id, revision)), None)
+            ref = known if known is not None else len(self.refs) + 1
+            self.refs[ref] = ("source", source_id, revision)
+            listed.append({"ref": ref, "title": escape_note(title), "kind": kind, "ready": day})
+        return listed
 
     async def progress(self, args: dict[str, Any], context: CallContext) -> dict[str, Any]:
         from agent_core.memory.queries import progress_overview
@@ -303,6 +360,16 @@ class StudyTools:
         kind = str(args["kind"])
         ref = args.get("source_ref")
         found = self.refs.get(ref) if type(ref) is int else None
+        if ref is None and found is None:  # the only ready source is the one meant (§19 fix, 2026-10-30)
+            conn, _ = self._conn()
+            ready = self._ready(conn)
+            if len(ready) == 1:
+                found = ("source", ready[0][0], ready[0][1])
+            elif not ready:
+                raise InvalidArguments("there is no ready source in Study to make it from")
+            else:
+                raise InvalidArguments("several sources are ready: call study_search with no query to list them, "
+                                       "then pass the source's number as source_ref")  # fmt: skip
         if found is None or found[0] != "source":
             raise InvalidArguments("source_ref must be a source's number from a study_search result of this turn")
         if self.make_job is None:
@@ -316,7 +383,17 @@ class StudyTools:
             job = self.make_job(body)
         except ValueError as error:
             raise InvalidArguments(f"Study refused it: {getattr(error, 'reason', 'invalid_study_request')}") from None
-        return {"job_id": job["job_id"], "action": {"action": "open_study_job", "payload": {"job_id": job["job_id"]}}}
+        # What was asked for, as data the reply may state ("10 flashcards" binds to it, §19.5.1 fact binding).
+        # What was made, as labelled records the reply may state and the engine words when the reply is refused:
+        # "10 flashcards" binds to `flashcard_cards` (§19 fix, 2026-10-30).
+        conn, _ = self._conn()
+        made: dict[str, Any] = {"kind": kind, "title": escape_note(self._title(conn, found[1])),
+                                "from_pack": self._from_pack(conn, found[1])}  # fmt: skip
+        unit = {"flashcards": "flashcard_cards", "quiz": "quiz_questions"}.get(kind)
+        if unit is not None and args.get("count") is not None:
+            made[unit] = int(args["count"])
+        return {"job_id": job["job_id"], "made": made,
+                "action": {"action": "open_study_job", "payload": {"job_id": job["job_id"]}}}  # fmt: skip
 
     async def start_research(self, args: dict[str, Any], context: CallContext) -> dict[str, Any]:
         topic = " ".join(str(args["topic"]).split())[:200]

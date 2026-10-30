@@ -1,5 +1,111 @@
 # Learning agent specification review
 
+## Implementation follow-up — 30 October 2026
+
+The original review below is historical. The seven-stage implementation now includes profile/egress guards, local
+remember/correct/forget commands, persistent paginated history and offline access, typed source-rendered progress
+facts, encrypted companion restoration, durable cloud admission, and inspectable teaching evidence.
+
+The three-day simulated acceptance journey passes through the app API and real storage: a learner states
+preferences, studies and answers a practice question, restarts, continues an agreement, corrects and forgets memories,
+exports and restores an encrypted profile, receives a sourced progress statement, and switches profiles and back.
+The latest integration run passed **80 tests** covering companion follow-ups, fact binding, profile/cloud boundaries,
+the journey, opener, gateway and online memory. Earlier implementation checks also passed for history/offline access,
+archive rejection and restoration, erasure/retention, teaching observations, durable budgets, UI and client behavior.
+These runs overlap; their counts must not be added into a unique-test total.
+The requirement audit also recorded a fresh named run of seven archive and four teaching-observation cases:
+all 11 pass, covering authorized history, deletion-aware import, invalid provenance, explanation sources and
+assisted versus delayed independent outcomes without promoting observations to mastery.
+
+The seven-stage implementation and regression follow-ups are complete. The final original rebuild benchmark passed
+within its unchanged 10-second limit after the other agent's bulk test processes finished; the complete test,
+including fixture setup, took 38.29 seconds. All six memory API cases also pass on the final source snapshot.
+The broad backend files have all run. Completed coverage includes 40 power-loss recovery cycles, the
+306-combination development safety suite, the 10,000-turn engine stress test, the 1,000-turn API lifecycle stress test,
+and content-only offline learning. The current file inventory accounts for all 317 agent-core/cloud-gateway test
+files through original partitions and supplemental runs. The final 80-file agent-core partition recorded 955 passes,
+one skip and eight failures; all eight failures now have passing original follow-ups.
+
+The gateway partition finished with 484 passes, one skip and three failures sharing a structured-output contract
+regression. The contract now explicitly declares supported response-format fields while retaining the schema-name
+restriction and arbitrary nested output schema. Regenerated bindings pass all three original failures and three
+companion-gateway cases, including lossless request-model parsing; 31 gateway guard/adapter/admission checks also
+pass. Code generation, Python typing (690 files), UI typing and affected lint/formatting checks pass after this fix.
+
+Other failures found during the gate have been addressed or independently rechecked:
+
+- Standalone voice announcements retain compatibility with profile ownership checks. Answer-only voice tests now
+  disable incidental filler timers; dedicated filler tests use a controlled clock and assembly barrier. The affected
+  voice/boundary run passed 99 cases, and all eight parity cases pass after fixing its last timing assumption.
+- The private-history route inventory includes authenticated companion history; all four history tests pass.
+- Study search's small-model description is 278 characters, within its existing 280-character limit; three relevant
+  description/schema checks pass and the tool snapshot is unchanged.
+- Erasure registry, durability boundary, role/tool, demo, engine-flow and S1 topic-journey failures have passing
+  original regressions.
+  A diagnostic-thread stall required restarting unfinished coverage with its dump timer disabled.
+
+The worker timing failure is resolved. `sec08_pathological_inputs_bounded` reproduced at 5.72 seconds despite
+available CPU capacity: a rejected input waited for replacement startup before its error returned. The supervisor
+now kills and removes that worker immediately and tracks replacement separately. Three deterministic regressions
+failed before the fix and pass afterwards, covering delayed/failed startup, waiting callers and shutdown. The real
+worker/sandbox run passed 17 cases including the original 2.5-second bound; its two assertions that assumed completed
+replacement were updated to check immediate removal and subsequent recovery, and both original cases now pass.
+Five integration cases also pass for rejection, queued callers, shutdown, error envelopes and crash recording.
+**Goal status: complete.** `dat05_rebuild_time_budget` passes in the final quiet validation window.
+Replay now reuses the current event's opportunity
+across projections and caches parsed stamps on immutable events. All 34 replay/correction/migration cases pass.
+A paired 100,012-event diagnostic retains the exact checksum and reduces CPU time from 9.44 to 9.02 seconds, but
+elapsed time remains about 11.6 seconds. That early diagnostic used raw SQLite and initially empty projections, so
+it is not acceptance evidence. A further check with the app's database pragmas and populated projections measured
+9.75 CPU seconds and 12.33 elapsed seconds with the same checksum. The prior original benchmark failed at
+11.83 seconds against its unchanged 10-second limit. After the other bulk test processes finished, the original
+benchmark passed unchanged (`/tmp/jana-learning-agent-event-rebuild-quiet.xml`). This verifies the acceptance bound
+in that window, not a guarantee under arbitrary host contention. All 22 memory/archive/teaching/journey checks
+pass after the replay changes.
+Two voice-off tests now pass after waiting for their startup handshake before teardown: the diagnostic showed cold
+engine construction taking 1.87–2.15 seconds after an immediate disconnect, crossing the test's two-second close
+deadline. That deadline is unchanged. No production limits were relaxed. The earlier learner-rebuild timing check
+passed unchanged once host load fell. Implementation, functional acceptance and the final performance gate are
+verified. The final benchmark can be reproduced with:
+
+```sh
+.venv/bin/pytest -q services/agent-core/tests/test_m6b_events.py::dat05_rebuild_time_budget --tb=short -o faulthandler_timeout=0
+```
+
+| Stage | Implementation and verification evidence | Current result |
+| --- | --- | --- |
+| 1. Isolation and cloud boundaries | `test_w8_companion_boundaries.py`: profile switches during queued opens, model/tool/compaction work and callbacks; retry-time consent withdrawal; local-only recall, history and compaction. | Targeted tests pass. |
+| 2. Explicit memory commands | `test_companion_memory_commands.py`: restart persistence, committed acknowledgements, self-report evidence, version-pinned corrections, ambiguous deletion and forgotten-context exclusion. | Targeted tests pass. |
+| 3. Continuity and offline access | `test_companion_continuity.py`, client companion tests and `companion-thread.test.tsx`: paginated history, offline access, restored runtime, local-only provenance and forward migration 22. | Targeted tests pass. |
+| 4. Fact binding | `test_companion_fact_binding.py`: code-rendered references preserve metric, value, period and source; invalid references and representative unsupported claims are rejected. | Targeted tests pass. |
+| 5. Restoration and durable budgets | `test_companion_archive.py`, existing deletion/export tests and `test_companion_durable_budget.py`: authorized history, deletion-aware import, rebuilt summary cursors, invalid provenance rejection and persistent account admission. | Targeted and compatibility tests pass. |
+| 6. Teaching evidence and explanations | `test_teaching_observations.py` and knows UI tests: self-report versus practice, recorded assistance, delayed checked performance, conflicting outcomes, source references and no mastery mutation. | Targeted tests pass. |
+| 7. Complete learner journey | `test_learning_agent_journey.py`: simulated three-day API/storage journey, including public practice commands, restored source-backed progress and switching profiles in both directions; broad backend files covered with failure follow-ups. | Journey and final rebuild benchmark pass. |
+
+Concrete decisions and limits:
+
+- Daily cloud limits bind to the authenticated account and are shared across its profiles/devices. The gateway has
+  no authenticated learner identity; client-chosen pseudonyms cannot be trusted to create separate allowances.
+- Forgetting removes saved memory and excludes older dialogue from model recall. Authorized history remains readable.
+  The durable forget cutoff cannot weaken after clock rollback and audit retention.
+  Restoration on this device respects known erasures. An older archive on an unrelated offline device cannot learn
+  about a subsequent deletion without receiving its deletion state.
+- Recent dialogue context is bounded to 100 scanned messages and 12,000 characters, with local recall for deeper
+  retained history. Retention still applies; this is durable personal context, not unlimited memory.
+- Raw companion conversation search stays local in both current and past scopes. Restored learner and tutor
+  messages retain their local-only provenance; cloud replay uses only the filtered history builder.
+  Companion compaction also stays local because it consumes history before that filter, with a deterministic
+  fallback when no local model is available and a profile check before each model attempt.
+- Teaching observations distinguish explicit preferences, assistance and later checked performance. They remain
+  tentative associations, with no claim that a method caused learning or that Study activity proves mastery.
+- The acceptance journey uses a simulated clock and scripted language model. A live demo and measured learner
+  outcomes are separate evidence; passing these tests does not establish hackathon results or educational efficacy.
+
+Implementation decisions and regression pointers are recorded in SPEC §19's Stage 1–7 follow-up. The findings below
+are retained as the rationale and review history, rather than silently rewritten as a new source review.
+
+---
+
 ## 1. Verdict
 
 Rework §19 before building it. The proposed Study evidence can corrupt mastery, several contract extensions cannot validate or persist, and the cloud-memory flow contradicts its consent notice. Keep the November 4 scope to a bounded subset after the blockers below are resolved; the persistent thread, cloud reflection and note lifecycle are not small extensions to the existing implementation.

@@ -121,6 +121,6 @@ export {
   CHECKIN_KINDS, CHECKIN_NOTIFICATION_KEYS, CHECKIN_REFRESH_MS, COMPANION_ACTIONS, COMPANION_MESSAGE_MAX, CompanionController, EMPTY_CHECKIN, EMPTY_COMPANION, EMPTY_THREAD,
   companionActions, companionThread, readCheckinsDue, readCompanionOpened, readCompanionSummary, readOpener,
   type CheckinNotifier, type CheckinView, type Commitment, type CommitmentKind,
-  type CompanionAction, type CompanionActionKind, type CompanionEntry, type CompanionOpened, type CompanionSummary, type CompanionThreadView, type CompanionView, type Opener,
+  type CompanionAction, type CompanionActionKind, type CompanionNotice, type CompanionEntry, type CompanionOpened, type CompanionSummary, type CompanionThreadView, type CompanionView, type Opener,
   type OpenerFacts,
 } from "./companion.js";

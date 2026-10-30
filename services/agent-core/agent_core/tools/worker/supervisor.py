@@ -53,6 +53,9 @@ class WorkerSupervisor:
     _all: list[WorkerProcess] = field(default_factory=list)
     _missed: dict[int, int] = field(default_factory=dict)
     _respawning: int = 0
+    _replacements: set[asyncio.Task[None]] = field(default_factory=set)
+    _changed: asyncio.Event = field(default_factory=asyncio.Event)
+    _closed: bool = False
     # OBS-16: told of each worker killed for a limit, a timeout, a crash or a policy denial (tool, code, call id), so
     # the core keeps a crash record; it never sees arguments or values.
     on_recycle: Callable[[str, str, str], object] | None = None
@@ -67,6 +70,8 @@ class WorkerSupervisor:
             await self._add_worker()
 
     async def _add_worker(self) -> bool:
+        if self._closed:
+            return False
         try:
             worker = self.factory()
         except SandboxUnavailable as error:
@@ -74,31 +79,62 @@ class WorkerSupervisor:
                 log.error("the tool worker is not started without its OS sandbox: %s", error)
             self.sandbox_refused = str(error) or "sandbox unavailable"
             return False
-        await worker.start()
         try:
+            await worker.start()
             hello = await worker.hello(self.placement, timeout=self.settings.worker_warm_target_s * 3)
         except WorkerCallError as error:
             log.error("worker handshake refused (code %s); opening the circuit", error.code)
             await worker.close()
             self._open_circuit()
             return False
-        except (WorkerExited, TimeoutError):
+        except (WorkerExited, TimeoutError, OSError):
+            await worker.close()
+            return False
+        except asyncio.CancelledError:
+            await worker.close()
+            raise
+        if self._closed:
             await worker.close()
             return False
         self.functions = {f["name"]: f for f in hello["functions"]}
         self._all.append(worker)
-        await self._idle.put(worker)
+        self._return_worker(worker)
         return True
 
     async def close(self) -> None:
-        for worker in list(self._all):
-            await worker.close()
+        self._closed = True
+        self._changed.set()
+        workers = list(self._all)
         self._all.clear()
+        while not self._idle.empty():
+            self._idle.get_nowait()
+        # Join in-flight startup rather than cancelling subprocess creation. A late handshake sees _closed and
+        # closes its process without putting it back into the pool.
+        await asyncio.gather(*(worker.close() for worker in workers), *list(self._replacements))
+
+    def _return_worker(self, worker: WorkerProcess) -> None:
+        if not self._closed:
+            self._idle.put_nowait(worker)
+            self._changed.set()
+
+    async def _take_worker(self) -> WorkerProcess | None:
+        while not self._closed and not self.circuit_open:
+            try:
+                return self._idle.get_nowait()
+            except asyncio.QueueEmpty:
+                if not (self._all or self._respawning):
+                    return None
+                # No await between checking state and clearing the event: a returning worker or finished
+                # replacement cannot notify in that gap. Failed startup wakes every waiter to return unavailable.
+                self._changed.clear()
+                await self._changed.wait()
+        return None
 
     # --- circuit ------------------------------------------------------------------------------------------
 
     def _open_circuit(self) -> None:
         self.circuit_open_until = self.clock() + self.settings.worker_circuit_open_s
+        self._changed.set()
 
     @property
     def circuit_open(self) -> bool:
@@ -112,14 +148,17 @@ class WorkerSupervisor:
 
     def compute_available(self) -> bool:
         """Compute tools are offered only while the circuit is closed and a worker answered the handshake."""
-        return not self.circuit_open and bool(self._all)
+        return not self._closed and not self.circuit_open and bool(self._all)
 
-    async def _replace(self, worker: WorkerProcess) -> None:
+    def _begin_replacement(self, worker: WorkerProcess) -> asyncio.Task[None] | None:
+        # Kill and remove synchronously before returning the failed check. Warm-up/backoff belongs to pool
+        # recovery, not the rejected call's deadline; no next call can acquire this worker again.
         worker.kill()
-        with contextlib.suppress(Exception):
-            await worker.close(grace=0.2)
+        if self._closed:
+            return None  # close() already owns every remaining worker and any pending startup
         if worker in self._all:
             self._all.remove(worker)
+        self._missed.pop(id(worker), None)
         now = self.clock()
         window = self.settings.worker_circuit_window_s
         self.restarts = [t for t in self.restarts if now - t < window] + [now]
@@ -129,17 +168,35 @@ class WorkerSupervisor:
         backoff = self.settings.worker_respawn_backoff_s
         delay = backoff[min(len(self.restarts) - 1, len(backoff) - 1)] if backoff else 0
         self._respawning += 1
+        task = asyncio.create_task(self._respawn(worker, delay))
+        self._replacements.add(task)
+        task.add_done_callback(self._replacements.discard)
+        self._changed.set()
+        return task
+
+    async def _respawn(self, worker: WorkerProcess, delay: float) -> None:
         try:
-            await asyncio.sleep(delay)
-            await self._add_worker()
+            with contextlib.suppress(Exception):
+                await worker.close(grace=0.2)
+            if not self._closed:
+                await asyncio.sleep(delay)
+                await self._add_worker()
+        except Exception:
+            log.exception("tool worker replacement failed")
         finally:
             self._respawning -= 1
+            self._changed.set()
+
+    async def _replace(self, worker: WorkerProcess) -> None:
+        task = self._begin_replacement(worker)
+        if task is not None:
+            await task
 
     # --- calls --------------------------------------------------------------------------------------------
 
     async def call(self, name: str, version: int, args: dict[str, Any], check_id: str, deadline_ms: int,
                    call_id: str | None = None, conventions: dict[str, Any] | None = None) -> CallOutcome:  # fmt: skip
-        if self.circuit_open or not (self._all or self._respawning):
+        if self._closed or self.circuit_open or not (self._all or self._respawning):
             return CallOutcome(error="worker_unavailable", detail="the checking worker is unavailable")
         params: dict[str, Any] = {
             "call_id": call_id or check_id,
@@ -152,15 +209,17 @@ class WorkerSupervisor:
         if conventions:
             params["conventions"] = conventions
         for attempt in (1, 2):
-            worker = await self._idle.get()
+            worker = await self._take_worker()
+            if worker is None:
+                return CallOutcome(error="worker_unavailable", detail="the checking worker is unavailable")
             outcome = await self._call_once(worker, params, deadline_ms / 1000)
             if outcome.error in RECYCLE_AFTER:
                 if self.on_recycle is not None:
                     with contextlib.suppress(Exception):  # a failed record never fails the call
                         self.on_recycle(name, str(outcome.error), str(params["call_id"]))
-                await self._replace(worker)
+                self._begin_replacement(worker)
             else:
-                await self._idle.put(worker)
+                self._return_worker(worker)
             if outcome.data.get("busy") and attempt == 1:
                 continue  # BUSY is retried once (TOL-25)
             return outcome
@@ -196,4 +255,4 @@ class WorkerSupervisor:
                 self._missed.pop(id(worker), None)
                 await self._replace(worker)
             else:
-                await self._idle.put(worker)
+                self._return_worker(worker)

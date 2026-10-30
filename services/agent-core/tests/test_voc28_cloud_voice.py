@@ -335,6 +335,10 @@ def voc28_off_means_local(tmp_path, monkeypatch, why):
         try:
             assert (await asyncio.wait_for(sock.outgoing.get(), 5))["type"] == "websocket.accept"
             assert local and runtime._active.path == "local_sidecar"
+            # Finish the voice handshake before timing teardown. Its first state event constructs the cold tutor
+            # engine synchronously; that startup work is separate from routing and disconnect handling.
+            configured = await asyncio.wait_for(local[0].sent.get(), 30)
+            assert configured["type"] == "session.update"
         finally:
             await sock.close()
             await runtime.close()

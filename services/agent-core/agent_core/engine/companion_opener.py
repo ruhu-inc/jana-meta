@@ -12,6 +12,7 @@ no candidate, the template stays the wording, always.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -24,6 +25,7 @@ import yaml
 from agent_core.engine.exam_dates import ExamDesk
 from agent_core.learner.service import Learner
 from agent_core.memory.queries import due_reviews, profile_summary
+from agent_core.memory.reflect_input import EVIDENCE_TYPES
 
 DEFAULT_TEMPLATES = Path(__file__).resolve().parents[4] / "content" / "agent" / "templates" / "engine.en.yaml"
 MAX_FACTS = 3
@@ -46,7 +48,11 @@ def _templates(path: str) -> OpenerTemplates:
     modes = {str(k): str(v) for k, v in (opener.get("modes") or {}).items()}
     texts = {str(k): str(v) for k, v in opener.items() if k != "modes"}
     # The thread's own engine-written lines (phase 2, §19.5.1): the hand-over to the tutor, the canned turn.
-    texts.update({str(k): str(v) for k, v in (data["companion"].get("turn") or {}).items()})
+    for k, v in (data["companion"].get("turn") or {}).items():
+        if isinstance(v, dict):  # a group of lines, as `made.flashcards`
+            texts.update({f"{k}.{kk}": str(vv) for kk, vv in v.items()})
+        else:
+            texts[str(k)] = str(v)
     # Check-ins (phase 3, §19.5.5): one line per kind, as `checkin.<kind>`.
     texts.update({f"checkin.{k}": str(v) for k, v in (data["companion"].get("checkin") or {}).items()})
     missing = [k for k in ("first_time", "last_time", "due_only", "pack_ready") if k not in texts]
@@ -95,9 +101,13 @@ def facts(learner: Learner, settings: Any, now_ms: int) -> Facts:
     """The opener's facts from the open learner database, by code only."""
     conn = learner.conn
     today = _day(learner, now_ms)
+    # The last ended session that holds learning (an attempt, a hint, a check, Study activity, …): the hand-off's
+    # scripted interview and any session the learner opened and left without learning never count (§19 fix).
     last = conn.execute(
-        "SELECT mode, subject, ended_at FROM sessions WHERE ended_at IS NOT NULL ORDER BY ended_at DESC, session_id"
-        " DESC LIMIT 1"
+        "SELECT mode, subject, ended_at FROM sessions s WHERE ended_at IS NOT NULL AND EXISTS (SELECT 1 FROM events e"
+        " WHERE e.session_id = s.session_id AND e.erased_at IS NULL AND e.type IN (SELECT value FROM json_each(?)))"
+        " ORDER BY ended_at DESC, session_id DESC LIMIT 1",
+        (json.dumps([t for t in EVIDENCE_TYPES if t != "memory_requested"]),),
     ).fetchone()
     due = len(due_reviews(conn, today))
     days: list[int] = []
@@ -137,10 +147,13 @@ def chosen(found: Facts) -> list[str]:
     return [name for name, present in order if present][:MAX_FACTS]
 
 
-def word(found: Facts, picked: list[str], templates: OpenerTemplates) -> str:
-    """The template wording of the chosen facts: every number in it is a chosen fact, beside its label."""
+def word(found: Facts, picked: list[str], templates: OpenerTemplates, *, thread: bool = False) -> str:
+    """The template wording of the chosen facts: every number in it is a chosen fact, beside its label. `thread`:
+    the first bubble of **Your tutor**, which with nothing to say greets the learner (`first_time_thread`) rather
+    than describing the card (`first_time`)."""
     if not picked:
-        return templates.text("first_time")
+        greeting = thread and "first_time_thread" in templates.texts
+        return templates.text("first_time_thread" if greeting else "first_time")
     clauses = []
     for name in picked:
         if name == "due":

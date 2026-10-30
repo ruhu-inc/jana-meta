@@ -168,7 +168,13 @@ def prv11_knows_page_complete(tmp_path: Path) -> None:
             versions = (review["pending_version"], review["target_version"])
             assert versions == (w.note(pending).last_event_id, w.note(kept).last_event_id)
             assert body["memory_saving"] is True
-            assert body["sharing"] == {"backup": False, "devices": False, "parent_view": False, "cloud_tutor": False}
+            assert body["sharing"] == {
+                "backup": False,
+                "devices": False,
+                "parent_view": False,
+                "cloud_tutor": False,
+                "tutor_memory": False,
+            }  # SPEC §19.6: personal tutor memory online (W8 fix)
         finally:
             await stop_core(r)
 
@@ -456,10 +462,19 @@ def test_misconception_and_preference_corrections(tmp_path: Path) -> None:
             assert (await page.send("PATCH", "/preferences/bedtime", {"value": "late"})).status_code == 404
             cleared = await page.send("PATCH", "/preferences/unprompted_help", {"value": None})
             assert cleared.json()["preferences"] == []
-            rows = page.learner.conn.execute("SELECT payload FROM events WHERE type = 'correction' ORDER BY seq")
+            rows = page.learner.conn.execute(
+                "SELECT payload FROM events WHERE type = 'correction' AND erased_at IS NULL ORDER BY seq"
+            )
             actions = [(json.loads(p)["target"], json.loads(p)["action"]) for (p,) in rows]
             assert actions == [("misconception", "dispute"), ("misconception", "undispute"),
-                               ("preference", "override"), ("preference", "clear_override")]  # fmt: skip
+                               ("preference", "clear_override")]  # fmt: skip
+            # The erased override is a content-free tombstone, so an older archive cannot revive it locally.
+            assert (
+                page.learner.conn.execute(
+                    "SELECT count(*) FROM events WHERE type='correction' AND erased_at IS NOT NULL"
+                ).fetchone()[0]
+                == 1
+            )
         finally:
             await stop_core(r)
 

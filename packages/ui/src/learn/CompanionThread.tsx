@@ -4,6 +4,8 @@
 // result (`companion.action`), each labelled with its own copy key and kept in the store, so a reconnect or a restart
 // shows them again. Everything the model wrote is shown as text, never as markup: no Markdown, no HTML, no links.
 // The same thread is the library's panel and a tab beside Generate and Chat inside a material.
+// Where the online tutor serves the profile and it has never answered its first-use notice (ARC-10), the open asks it
+// here before the thread's first cloud turn, and the answer goes with the same open (W8 fix 2026-10-29).
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { COMPANION_MESSAGE_MAX, companionActions, companionThread, type CompanionAction, type CompanionController, type CompanionEntry } from "@jana/client-core";
 import { useT } from "../i18n.js";
@@ -12,7 +14,7 @@ import { Button, ErrorState, IconButton, Loader } from "../primitives/index.js";
 import { ComposerShell } from "../primitives/ComposerShell.js";
 
 /** What the thread reads and does: the companion controller, or a stand-in with the same members (the tests). */
-export type CompanionThreadSource = Pick<CompanionController, "holder" | "getThread" | "subscribe" | "send" | "retry">;
+export type CompanionThreadSource = Pick<CompanionController, "holder" | "getThread" | "subscribe" | "send" | "retry" | "answerNotice" | "loadEarlier">;
 
 const ACTION_KEY = "study.companion.action.";
 const NO_ENTRIES: CompanionEntry[] = [];
@@ -81,8 +83,12 @@ export function CompanionThread({ companion, onAction, place = "panel" }: {
   const store = useSyncExternalStore(companion.holder.subscribe, companion.holder.getState, companion.holder.getState);
   const sessionId = thread.session_id;
   const entries = useMemo(() => (sessionId === null ? NO_ENTRIES : companionThread(store, sessionId)), [store, sessionId]);
+  const visibleIds = new Set(entries.flatMap((entry) => entry.kind === "tutor"
+    ? [entry.turn_id] : [entry.key, store.messages[entry.key]?.message_id ?? ""]));
+  const earlier = (thread.history ?? []).filter((item) => !visibleIds.has(item.id));
   const actions = useMemo(() => (sessionId === null ? NO_ACTIONS : companionActions(store, sessionId)), [store, sessionId]);
   const [draft, setDraft] = useState("");
+  const [answering, setAnswering] = useState(false);
   const list = useRef<HTMLOListElement>(null);
   const last = entries[entries.length - 1];
   const lastText = last === undefined ? "" : `${last.key}:${last.kind === "tutor" ? `${last.text.length}:${last.status}` : last.state}`;
@@ -90,11 +96,15 @@ export function CompanionThread({ companion, onAction, place = "panel" }: {
     const el = list.current;
     if (el !== null) el.scrollTop = el.scrollHeight;
   }, [entries.length, lastText, actions.length]);
-  const ready = thread.status === "ready" && sessionId !== null;
+  const ready = thread.status === "ready" && thread.notice === null && sessionId !== null;
   const send = () => {
     if (companion.send(draft) !== null) setDraft("");
   };
   const heading = place === "tab" ? "companion-title-tab" : "companion-title";
+  const answer = (choice: "accepted" | "declined") => {
+    setAnswering(true);
+    void companion.answerNotice(choice).finally(() => setAnswering(false));
+  };
   return (
     <section aria-labelledby={heading} data-companion-thread={sessionId ?? ""} data-companion-place={place}
       className={`flex flex-col gap-3 ${place === "panel" ? "rounded-card border border-line bg-canvas px-5 py-4" : ""}`}>
@@ -105,8 +115,24 @@ export function CompanionThread({ companion, onAction, place = "panel" }: {
       {(thread.status === "idle" || thread.status === "opening") && thread.opener === null && <Loader label={t("study.companion.opening")} />}
       {thread.status === "unavailable" && <p className="text-ui text-muted">{t("study.companion.unavailable")}</p>}
       {thread.status === "failed" && <ErrorState message={t(failureKey(thread.error))} />}
-      {(thread.opener !== null || entries.length > 0) && (
+      {thread.notice !== null && (
+        <div role="group" aria-labelledby={`${heading}-notice`} data-companion-notice={thread.notice ?? ""} className="flex flex-col gap-2 rounded-card border border-line p-3">
+          <p id={`${heading}-notice`} className="text-ui font-semibold text-ink">{t("study.companion.notice.title")}</p>
+          <p className="text-ui text-ink">{t(thread.notice === "notice_declined" ? "study.companion.notice.declined" : "study.companion.notice.body")}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button tone="primary" disabled={answering} onClick={() => answer("accepted")}>{t("egress.first_use.ok")}</Button>
+            {thread.notice !== "notice_declined" && <Button tone="ghost" disabled={answering} onClick={() => answer("declined")}>{t("egress.first_use.keep_local")}</Button>}
+          </div>
+        </div>
+      )}
+      {thread.can_reply === false && thread.notice === null && <p className="text-ui text-muted">{t("study.companion.offline_history")}</p>}
+      {(thread.history_cursor || thread.history_error) && <Button tone="ghost" disabled={thread.history_loading} onClick={() => void companion.loadEarlier()}>{t(thread.history_error ? "study.companion.history_failed" : "study.companion.history_more")}</Button>}
+      {(thread.opener !== null || entries.length > 0 || earlier.length > 0) && (
         <ol ref={list} role="log" aria-live="polite" aria-label={t("study.companion.title")} className={`flex flex-col gap-3 overflow-y-auto ${place === "panel" ? "max-h-96" : "max-h-[60vh]"}`}>
+          {earlier.map((item) => <li key={item.id} data-history-id={item.id} data-said={item.role === "user" ? "student" : "tutor"} className={`flex max-w-[85%] flex-col gap-1 ${item.role === "user" ? "self-end" : "self-start"}`}>
+            <span className="text-meta text-faint">{t(item.role === "user" ? "study.companion.you" : "study.companion.tutor")} · {new Date(item.created_at).toLocaleDateString()}</span>
+            <p className="whitespace-pre-wrap break-words rounded-card bg-panel px-3 py-2 text-body text-ink">{item.text}</p>
+          </li>)}
           {thread.opener !== null && (
             <li data-said="tutor" data-opener={thread.opener.opener_id} className="flex max-w-[85%] flex-col gap-1 self-start">
               <span className="text-meta text-faint">{t("study.companion.tutor")}</span>

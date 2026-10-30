@@ -38,6 +38,9 @@ export function StudyResearch({ controller, initialCapture, topicRequest, onCapt
   const [topic, setTopic] = useState(""), [reply, setReply] = useState(""), [extra, setExtra] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null);
   const [packs, setPacks] = useState<R.Record[]>([]);
+  // The online tutor's first-use notice (ARC-10): the conversation goes to it, so a profile that has not answered it
+  // is asked here, and its answer goes with the same turn.
+  const [notice, setNotice] = useState<{ start: Start; history: R.ChatEntry[]; answer: string | null; skip: boolean } | null>(null);
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   // A Study controller without the research agent (an older or a partial one) shows the panel with no saved packs.
@@ -47,10 +50,10 @@ export function StudyResearch({ controller, initialCapture, topicRequest, onCapt
     const code = typeof err === "object" && err !== null && "code" in err ? String((err as { code: unknown }).code) : "generic";
     if (alive.current) setError(code);
   };
-  const ask = async (start: Start, history: R.ChatEntry[], answer: string | null, skip = false) => {
-    setBusy(true); setError(null);
+  const ask = async (start: Start, history: R.ChatEntry[], answer: string | null, skip = false, cloudNotice?: "accepted") => {
+    setBusy(true); setError(null); setNotice(null);
     try {
-      const turn = await controller.researchChat({ start, history, answer, skip });
+      const turn = await controller.researchChat({ start, history, answer, skip, ...(cloudNotice ? { cloud_notice: cloudNotice } : {}) });
       if (!alive.current) return;
       const said: R.ChatEntry[] = answer === null ? history : [...history, { role: "learner", text: answer, asks: null }];
       if (turn.kind === "brief" && turn.brief) { setPhase({ kind: "brief", start, brief: turn.brief }); return; }
@@ -59,7 +62,11 @@ export function StudyResearch({ controller, initialCapture, topicRequest, onCapt
         return;
       }
       setPhase({ kind: "talking", start, turn, history: said }); // out of scope: Jana's own words, then start again
-    } catch (err) { failed(err); } finally { if (alive.current) setBusy(false); }
+    } catch (err) {
+      const reason = typeof err === "object" && err !== null && "details" in err ? (err as { details?: { reason?: unknown } }).details?.reason : undefined;
+      if (alive.current && (reason === "notice_required" || reason === "notice_declined")) setNotice({ start, history, answer, skip });
+      else failed(err);
+    } finally { if (alive.current) setBusy(false); }
   };
   // A capture handed over from the diagram drill starts its conversation once, however often this effect runs (a
   // development build runs effects twice; a second turn at once would collide with the first).
@@ -105,7 +112,17 @@ export function StudyResearch({ controller, initialCapture, topicRequest, onCapt
     } catch (err) { failed(err); } finally { if (alive.current) setBusy(false); }
   };
 
-  const errorLine = error !== null && <ErrorState message={t(`study.research.error.${error}`) === `study.research.error.${error}` ? t("study.research.error.generic") : t(`study.research.error.${error}`)} />;
+  const errorLine = <>
+    {error !== null && <ErrorState message={t(`study.research.error.${error}`) === `study.research.error.${error}` ? t("study.research.error.generic") : t(`study.research.error.${error}`)} />}
+    {notice !== null && <div role="group" aria-labelledby="study-research-notice" className="flex flex-col gap-2 rounded-card border border-line p-3" data-research-notice>
+      <p id="study-research-notice" className="text-ui font-semibold text-ink">{t("study.research.notice.title")}</p>
+      <p className="text-ui text-ink">{t("study.research.notice.body")}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button tone="primary" disabled={busy} onClick={() => { const n = notice; void ask(n.start, n.history, n.answer, n.skip, "accepted"); }}>{t("egress.first_use.ok")}</Button>
+        <Button tone="ghost" disabled={busy} onClick={() => setNotice(null)}>{t("study.research.notice.not_now")}</Button>
+      </div>
+    </div>}
+  </>;
 
   if (phase.kind === "talking") {
     const turn = phase.turn, out = turn?.kind === "out_of_scope", fromPhoto = "capture_id" in phase.start;

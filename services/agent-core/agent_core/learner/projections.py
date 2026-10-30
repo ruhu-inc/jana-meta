@@ -105,6 +105,9 @@ class Context:
     migrations: KcMigrations = NO_MIGRATIONS
     # The log's re-marks during a replay (ASM-23, CUR-36): a note resting only on replaced markings is withdrawn.
     remarks: Supersession = field(default_factory=Supersession)
+    # Replay-only, cleared before each migrated event is folded: projections share one reconstruction of the
+    # current opportunity, never a cached result from an earlier verdict, session, correction or rebuild.
+    opportunities: dict[str, Closed | None] | None = None
 
 
 class Projection(Protocol):
@@ -163,6 +166,14 @@ def session_events(ctx: Context, event: StoredEvent) -> list[StoredEvent]:
 
 
 def opportunity(ctx: Context, event: StoredEvent) -> Closed | None:
+    if ctx.opportunities is None:
+        return _read_opportunity(ctx, event)
+    if event.event_id not in ctx.opportunities:
+        ctx.opportunities[event.event_id] = _read_opportunity(ctx, event)
+    return ctx.opportunities[event.event_id]
+
+
+def _read_opportunity(ctx: Context, event: StoredEvent) -> Closed | None:
     """The opportunity a verdict belongs to: attempts at the same problem step in the session, their latest
     (non-superseded) verdicts in order, and the hints shown for that step."""
     verdict = event.payload
@@ -1235,7 +1246,8 @@ class Projector:
                 self.conn.execute(f"DELETE FROM {table}")  # noqa: S608 - table names are the projection's own
         sessions: dict[str, list[StoredEvent]] = {}
         remarks = self.supersession()
-        ctx = replace(self.ctx, sessions=sessions, remarks=remarks)
+        opportunities: dict[str, Closed | None] = {}
+        ctx = replace(self.ctx, sessions=sessions, remarks=remarks, opportunities=opportunities)
         last_seq, cursor = 0, None
         for row in self.conn.execute(f"SELECT {COLUMNS} FROM events ORDER BY {MERGE_ORDER}"):  # noqa: S608
             stored = StoredEvent.from_row(row)
@@ -1245,6 +1257,7 @@ class Projector:
                 for read in ctx.migrations.event(event):  # read through the KC migrations (CUR-10)
                     if read.session_id is not None:
                         sessions.setdefault(read.session_id, []).append(read)
+                    opportunities.clear()
                     for projection in projections:
                         projection.fold(ctx, read)
             last_seq, cursor = max(last_seq, stored.seq), stored.order

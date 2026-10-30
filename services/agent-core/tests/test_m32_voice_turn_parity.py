@@ -137,7 +137,7 @@ def test_voc12_one_honest_filler_plays_before_acceptance_and_never_releases_the_
 
     async def scenario():
         core, sid, runtime, socket, endpoint, client, instructions = await setup_adapter(
-            tmp_path, replies=[{"stall_s": 0.6, **tutor(SAFE)}]
+            tmp_path, replies=[{"stall_s": 0.6, **tutor(SAFE)}], fillers=True
         )
         core.settings = core.settings.model_copy(update={"voice_filler_after_ms": 50})
         runtime.adapter.keep_alive_s = 0.02
@@ -175,25 +175,33 @@ def test_voc12_one_honest_filler_plays_before_acceptance_and_never_releases_the_
 
 
 @pytest.mark.parametrize(("after_ms", "filler"), [(100, True), (3000, False)])
-def test_voc12_filler_time_counts_from_the_request_while_the_turns_engine_is_assembled(tmp_path, after_ms, filler):
-    """Assembling the fork's engine takes most of a second on a real device. The filler's time counts from the
-    request and the filler plays while the engine is still being assembled; a turn accepted before its time comes
-    plays none (VOC-12)."""
+def test_voc12_filler_time_counts_from_the_request_while_the_turns_engine_is_assembled(
+    tmp_path, monkeypatch, after_ms, filler
+):
+    """VOC-12 counts from the request, including assembly. Control elapsed time and assembly completion so the
+    assertion measures ordering, not the speed of this host's real engine construction."""
     import json
+    import threading
     import time
+    from types import SimpleNamespace
 
+    from agent_core.api import voice_adapter
     from agent_core.api.voice_adapter import FILLERS
     from agent_core.contracts.voice.engine_llm_adapter import Request as AdapterRequest
 
-    assembly_s = 0.8
+    elapsed = [0.0]
+    release = threading.Event()
+    monkeypatch.setattr(voice_adapter, "time", SimpleNamespace(monotonic=lambda: elapsed[0], time=time.time))
 
     async def scenario():
-        core, sid, runtime, socket, _, client, instructions = await setup_adapter(tmp_path)
+        core, sid, runtime, socket, _, client, instructions = await setup_adapter(tmp_path, fillers=True)
         core._engine(core.sessions[sid])  # the live engine exists before the spoken turn, as on a device
         factory = core.engine_factory
 
         def slow(state):
-            time.sleep(assembly_s)
+            elapsed[0] = 0.8
+            if filler:
+                assert release.wait(10), "the filler must be emitted while assembly is still blocked"
             return factory(state)
 
         core.engine_factory = slow
@@ -201,23 +209,24 @@ def test_voc12_filler_time_counts_from_the_request_while_the_turns_engine_is_ass
             update={"voice_filler_after_ms": after_ms, "voice_cloud_filler_after_ms": after_ms}
         )
         runtime.adapter.keep_alive_s = 0.02
-        asked = time.monotonic()
         stream = runtime.adapter.stream(AdapterRequest.model_validate(body(instructions, QUESTION)))
         try:
             lines, heard = [], None
             async for line in stream:
                 lines.append(line)
                 if heard is None and FILLERS[0] in line:
-                    heard = time.monotonic() - asked
+                    heard = elapsed[0]
                     assert not runtime.adapter.jobs  # the turn's engine is still being assembled
+                    release.set()
             spoken = "".join(json.loads(line[6:])["choices"][0]["delta"].get("content", "")
                              for line in lines if line.startswith("data: {"))  # fmt: skip
             if filler:
-                assert heard is not None and heard < assembly_s / 2
+                assert heard == 0.8
                 assert spoken == FILLERS[0] + " " + SAFE and sum(FILLERS[0] in line for line in lines) == 1
             else:
                 assert heard is None and spoken == SAFE
         finally:
+            release.set()
             await stream.aclose()
             await socket.close()
             await runtime.close()

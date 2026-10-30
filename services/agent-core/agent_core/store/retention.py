@@ -282,7 +282,9 @@ NOTICE_SHOWN = "remark.notice_shown"
 
 def _audit_log(job: Job) -> int:
     return job.learner.execute(
-        "DELETE FROM audit_log WHERE at IS NOT NULL AND at <= ? AND NOT (action = ? AND NOT EXISTS"
+        "DELETE FROM audit_log WHERE at IS NOT NULL AND at <= ?"
+        " AND audit_id NOT IN (SELECT audit_id FROM audit_log WHERE action = 'memory_context_changed'"
+        " ORDER BY rowid DESC LIMIT 1) AND NOT (action = ? AND NOT EXISTS"
         " (SELECT 1 FROM audit_log shown WHERE shown.action = ? AND shown.target = audit_log.audit_id))",
         (job.cutoff("retention_audit_days", DAY_MS), PENDING_NOTICE, NOTICE_SHOWN),
     ).rowcount
@@ -338,6 +340,9 @@ RULES: tuple[Rule, ...] = (
     Rule("study notes", "learner", ("study_notes",), removed_by="student deletion or DAT-09"),
     # SPEC §19.4 (W8): the companion thread. An episode is a session's row and goes with it; its turns are purged at
     # `retention_transcript_days` like any session's (it ends daily). The rolling summary lasts while the profile does.
+    Rule(
+        "companion turn provenance", "learner", ("companion_turn_context",), removed_by="transcript cascade or DAT-09"
+    ),
     Rule("companion episodes", "learner", ("companion_episodes",), removed_by="its session or DAT-09"),
     Rule(
         "companion summary", "learner", ("companion_summary",), removed_by="DAT-09; no free text, kept with the profile"

@@ -437,6 +437,13 @@
     },
     "skip": {
      "type": "boolean"
+    },
+    "cloud_notice": {
+     "description": "The learner's answer to the online tutor's first-use notice (ARC-10), sent with the turn the notice was asked for: the conversation goes to the cloud tier, so it is asked before the first turn when the profile has not answered it.",
+     "enum": [
+      "accepted",
+      "declined"
+     ]
     }
    }
   },

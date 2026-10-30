@@ -264,7 +264,33 @@
      "type": "integer"
     },
     "response_format": {
-     "type": "object"
+     "type": "object",
+     "additionalProperties": false,
+     "description": "OpenAI-style response format. A json_schema format's name is letters, digits, `_` and `-`, at most 64 characters, as the providers require (Muse Spark answers 400 on anything else; §19 fix 2026-10-29).",
+     "properties": {
+      "type": {
+       "enum": ["text", "json_object", "json_schema"]
+      },
+      "json_schema": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "name": {
+         "type": "string",
+         "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "description": {
+         "type": "string"
+        },
+        "strict": {
+         "type": "boolean"
+        },
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     }
     },
     "reasoning_effort": {
      "enum": [

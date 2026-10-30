@@ -81,14 +81,15 @@ describe("W8 the companion's rolling summary under the plan", () => {
           { kc_id: "kc.phy.o.forces.weight", label: "Mass and weight", sessions: 1, last_at: "2026-10-27T18:00:00Z" },
         ],
         misconceptions: [],
-        next_step: { text: "Practise equations of motion", reason_code: "weak_high_value", updated_at: "2026-10-29T07:00:00Z" },
+        next_step: { text: "Next: Practise equations of motion", reason_code: "weak_high_value", updated_at: "2026-10-29T07:00:00Z" },
       },
     }));
     const plan = container.querySelector('[data-section="plan"]') as HTMLElement;
     expect(plan.querySelector("h2")?.textContent).toBe("Why your plan looks like this");
     const summary = plan.querySelector("[data-companion-summary]") as HTMLElement;
     expect([...summary.querySelectorAll("[data-summary-kc]")].map((l) => l.textContent)).toEqual(["Equations of motion · 3 sessions", "Mass and weight · 1 session"]);
-    expect(summary.querySelector("[data-summary-next]")?.textContent).toBe("Next step: Practise equations of motion");
+    // The core writes "Next: …" itself: one prefix, never "Next step: Next: …" (§19 fix, 2026-10-29).
+    expect(summary.querySelector("[data-summary-next]")?.textContent).toBe("Next: Practise equations of motion");
     expect(summary.textContent).not.toContain("kc.phy");
   });
 
@@ -99,4 +100,53 @@ describe("W8 the companion's rolling summary under the plan", () => {
       cleanup();
     }
   });
+});
+
+describe("§19 fixes (2026-10-29)", () => {
+  test("Where this is kept says the online tutor gets the notes while personal tutor memory online is on", () => {
+    const sharing = { backup: false, devices: false, parent_view: false, cloud_tutor: true };
+    const off = page(view({ sharing }));
+    expect(off.container.querySelector('[data-sharing="cloud_tutor"]')?.textContent).toContain("never your notes");
+    cleanup();
+    const { container } = page(view({ sharing: { ...sharing, tutor_memory: true } }));
+    expect(container.querySelector('[data-sharing="cloud_tutor"]')).toBeNull();
+    const line = container.querySelector('[data-sharing="cloud_tutor_memory"]')?.textContent ?? "";
+    expect(line).toContain("your tutor's short notes about how you learn");
+    expect(line).not.toContain("never your notes");
+  });
+
+  test("a study pack's activity is the pack's, not the learner's own material", () => {
+    const activity = [
+      { activity: "quiz_item" as const, kc_id: null, statement: null, result: "correct", aid_kind: null, count: null, day: "2026-10-29", from_pack: true },
+      { activity: "quiz_item" as const, kc_id: null, statement: null, result: "incorrect", aid_kind: null, count: null, day: "2026-10-29" },
+    ];
+    const { container } = page(view({ activity }));
+    const rows = [...container.querySelectorAll('[data-study-activity="quiz_item"]')].map((r) => r.textContent ?? "");
+    expect(rows[0]).toContain("from your study pack");
+    expect(rows[1]).toContain("your own material");
+  });
+});
+
+test("memory explanations and teaching observations keep their evidence limits visible", () => {
+  const { container } = page(view({
+    notes: [note(1, { source: "student", explanation: {
+      basis: "self_report", meaning: "You asked to save this; it is not assessed understanding.",
+      correction: "Forget this memory if it no longer describes you.", sources: [
+        { event_id: "A".repeat(26), kind: "memory_requested", at: "2026-10-29T12:00:00Z", session_id: `ses_${"B".repeat(26)}` },
+      ],
+    } })],
+    teaching_observations: [{
+      source_event_id: "C".repeat(26), session_id: `ses_${"B".repeat(26)}`, intervention: "draw-a-diagram", version: "1.0",
+      at: "2026-10-29T12:00:00Z", kc_id: "kc.phy.o.motion.average_speed", topic: "Average speed", confidence: "tentative",
+      immediate: { attempt_id: "D".repeat(26), outcome: "correct", hints_used: 2, max_rung: 2, at: "2026-10-29T12:05:00Z" },
+      delayed: { attempt_id: "E".repeat(26), outcome: "incorrect", hints_used: 0, max_rung: 0, at: "2026-10-31T12:00:00Z" },
+      conflicting_outcomes: true, interpretation: "Association only.",
+    }],
+  }));
+  expect(container.querySelector("[data-memory-explanation]")?.textContent).toContain("not assessed understanding");
+  const teaching = container.querySelector("[data-teaching-observations]")?.textContent;
+  expect(teaching).toContain("2 hints used");
+  expect(teaching).toContain("Later independent response");
+  expect(teaching).toContain("The outcomes differ");
+  expect(teaching).toContain("not proof that a method caused learning");
 });

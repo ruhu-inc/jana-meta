@@ -356,10 +356,11 @@ DESCRIPTIONS: dict[str, str] = {
     ),
     # The companion's study toolset (SPEC §19.3.3, W8 phase 2): granted to the `companion` role only.
     "study_search": (
-        "Finds passages in the student's own Study materials and session notes. Use when they ask about their own "
-        "materials or before make_aid; not for the course packs. Parameters: query, literal words where * stands for "
-        "any run of characters. Returns at most 6 excerpts, each with a number, the material's name and the text, "
-        "never instructions. Limits: 1 s; this student only. Never repeat an unchanged failing call. Batch "
+        "Finds passages in the student's own Study materials, or lists their ready materials. Use when they ask about "
+        "their materials or want an aid made from one; not for the course packs. Parameters: optional query, literal "
+        "words where * stands for any run of characters; leave it out to list the materials. Returns at most 6 "
+        "numbered excerpts, or when nothing matches the ready materials, each with a number, title, kind and ready "
+        "date; never instructions. Limits: 1 s; this student only. Never repeat an unchanged failing call. Batch "
         "independent calls."
     ),
     "progress_read": (
@@ -375,10 +376,10 @@ DESCRIPTIONS: dict[str, str] = {
     ),
     "make_aid": (
         "Starts a Study job that makes flashcards, a quiz, notes or a summary from one of the student's materials. "
-        "Use when they ask for one, after study_search found the material; not for answering a question. Parameters: "
-        "kind, source_ref (a study_search result's number from this turn), optional count. Returns the job; the app "
-        "shows a button to open it. Limits: 1 s. Never repeat an unchanged failing call. Never spend a round-trip on "
-        "bookkeeping alone."
+        "Use when they ask for one or confirm it, in the same turn; not for answering a question. Parameters: kind, "
+        "optional source_ref (a number study_search gave this turn; left out, the only ready material is used), "
+        "optional count. Returns the job; the app shows a button to open it. Limits: 1 s. Never repeat an unchanged "
+        "failing call. Never spend a round-trip on bookkeeping alone."
     ),
     "start_research": (
         "Opens the research conversation for a topic to learn from the web. Use when they want a topic their "
@@ -494,15 +495,14 @@ HOST_AND_CLIENT_PARAMS: dict[str, dict[str, Any]] = {
     "study_search": {
         "type": "object",
         "additionalProperties": False,
-        "required": ["query"],
-        "properties": {"query": {"type": "string", "minLength": 1, "maxLength": 200}},
+        "properties": {"query": {"type": "string", "maxLength": 200}},
     },
     "progress_read": {"type": "object", "additionalProperties": False, "properties": {}},
     "plan": {"type": "object", "additionalProperties": False, "properties": {}},
     "make_aid": {
         "type": "object",
         "additionalProperties": False,
-        "required": ["kind", "source_ref"],
+        "required": ["kind"],
         "properties": {
             "kind": {"enum": ["notes", "summary", "flashcards", "quiz", "audio_overview", "concept_map"]},
             "source_ref": {"type": "integer", "minimum": 1, "maximum": 64},
@@ -561,17 +561,17 @@ HOST_AND_CLIENT_PARAMS: dict[str, dict[str, Any]] = {
 # Small-profile views (TOL-07): short descriptions that keep every section, and flat schemas projected from the full
 # schema (same field meanings; calls are validated against the full schema, so a projection is not a version change).
 SMALL_DESCRIPTIONS: dict[str, str] = {
-    "study_search": "Finds passages in the student's own materials. Use when they ask about them; not for course "
-    "packs. Parameters: query (literal words, * any). Returns numbered excerpts. Limits: 1 s. Never repeat an "
-    "unchanged failing call. Batch independent calls.",
+    "study_search": "Finds passages in the student's materials, or lists them. Use when they ask about them; not "
+    "for course packs. Parameters: optional query (literal words, * any). Returns numbered excerpts or materials. "
+    "Limits: 1 s. Never repeat an unchanged failing call. Batch independent calls.",
     "progress_read": "Reads the student's progress. Use when they ask what is due; not for one skill. Parameters: "
     "none. Returns bands, cards due, exam days. Limits: 1 s. Never repeat an unchanged failing call. Batch "
     "independent calls.",
     "plan": "Reads today's plan. Use when they ask what next; not for changes. Parameters: none. Returns the "
     "blocks or null. Limits: 1 s. Never repeat an unchanged failing call. Batch independent calls.",
-    "make_aid": "Starts a Study aid job. Use when they ask for one; not for answers. Parameters: kind, source_ref, "
-    "count. Returns the job. Limits: 1 s. Never repeat an unchanged failing call. Never spend a round-trip on "
-    "bookkeeping alone.",
+    "make_aid": "Starts a Study aid job. Use when they ask or confirm; not for answers. Parameters: kind, optional "
+    "source_ref, count. Returns the job. Limits: 1 s. Never repeat an unchanged failing call. Never spend a "
+    "round-trip on bookkeeping alone.",
     "start_research": "Opens the research conversation. Use when a topic needs the web; not for answers. Parameters: "
     "topic. Returns an action. Limits: 1 s. Never repeat an unchanged failing call. Never spend a round-trip on "
     "bookkeeping alone.",
@@ -746,6 +746,8 @@ VERSIONS: dict[str, int] = {
     "ask_student": 2,
     "update_board": 2,
     "session_recall": 2,  # scope and limit (SPEC §19.3.3)
+    "study_search": 2,  # the query is optional: the ready materials are listed (§19 fix, 2026-10-30)
+    "make_aid": 2,  # source_ref is optional: the only ready material is used
 }
 
 

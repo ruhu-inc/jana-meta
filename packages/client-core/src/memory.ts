@@ -54,6 +54,7 @@ export interface KnowsNote {
   recall_sessions?: number;
   /** The scrub kept the note out of the online tutor's records (§19.6): it is used on this computer only. */
   withheld_online?: boolean;
+  explanation?: api_commands.MemoryExplanation;
 }
 
 /** A note's lifecycle as the knows page shows it (SPEC §19.5.6), with the defaults for a field the core did not send. */
@@ -120,6 +121,8 @@ export interface Sharing {
   devices: boolean;
   parent_view: boolean;
   cloud_tutor: boolean;
+  /** Personal tutor memory online is in effect (SPEC §19.6); absent from an older core. */
+  tutor_memory?: boolean;
 }
 
 export interface About {
@@ -143,6 +146,8 @@ export interface KnowsActivity {
   aid_kind: string | null;
   count: number | null;
   day: string;
+  /** The material came from a study pack the research agent made (absent from an older core). */
+  from_pack?: boolean;
 }
 const ACTIVITY_KINDS = ["quiz_item", "card_review", "aid_made"] as const;
 
@@ -150,6 +155,7 @@ const ACTIVITY_KINDS = ["quiz_item", "card_review", "aid_made"] as const;
 export type KnowsCompanionSummary = api_commands.CompanionSummary;
 
 export interface KnowsReply {
+  teaching_observations?: api_commands.TeachingObservation[];
   activity?: KnowsActivity[];
   /** The companion thread's rolling summary, when the thread has one (SPEC §19.3.3). */
   companion_summary?: KnowsCompanionSummary | null;
@@ -198,6 +204,12 @@ export function knowsReplyProblems(value: unknown): string[] {
   list("misconceptions", (m) => isObject(m) && isString(m.misconception_id) && isString(m.name) && oneOf(m.status, ["active", "resolving"]));
   list("preferences", isPreference);
   list("notes", isNote);
+  check(Array.isArray(value.notes) && value.notes.every((n) => isObject(n) && (n.explanation === undefined
+    || errors("api/commands#/$defs/MemoryExplanation", n.explanation).length === 0)), "note_explanations");
+  if (value.teaching_observations !== undefined) {
+    list("teaching_observations", (o) => errors("api/commands#/$defs/TeachingObservation", o).length === 0);
+    check(Array.isArray(value.teaching_observations) && value.teaching_observations.length <= 12, "teaching_observations");
+  }
   list("reviews", isReview);
   if (value.records !== undefined) {
     list("records", (r) => isObject(r) && oneOf(r.kind, RECORD_KINDS) && Number.isSafeInteger(r.count) && (r.count as number) > 0);
@@ -227,6 +239,7 @@ export function readKnows(value: unknown): KnowsReply {
 // --- the page's view -------------------------------------------------------------------------------------------------
 
 export interface KnowsView {
+  teaching_observations?: api_commands.TeachingObservation[];
   /** What the learner did in Study, newest first (SPEC §19.3.2). */
   activity?: KnowsActivity[];
   /** The companion thread's rolling summary (SPEC §19.3.3), or null when there is none yet. */
@@ -269,6 +282,7 @@ export function knowsViewOf(reply: KnowsReply): KnowsView {
     sharing: reply.sharing, memory_saving: reply.memory_saving, kcs: [...reply.kcs], misconceptions: [...reply.misconceptions],
     records: [...(reply.records ?? [])], plan_reason: reply.plan_reason ?? null, activity: [...(reply.activity ?? [])],
     ...(reply.companion_summary !== undefined ? { companion_summary: reply.companion_summary } : {}),
+    ...(reply.teaching_observations !== undefined ? { teaching_observations: reply.teaching_observations } : {}),
     preferences: [...reply.preferences], reviews: [...reply.reviews], forgotten: null, error: null, errorOn: null, changed: null,
   };
 }

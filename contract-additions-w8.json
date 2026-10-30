@@ -2139,6 +2139,358 @@
         "$ref": "#/$defs/slot"
       },
       "phase": 3
+    },
+    {
+      "target": "study/research.schema.json",
+      "pointer": "/$defs/ChatRequest/properties/cloud_notice",
+      "requirements": [
+        "§18.1a",
+        "ARC-10"
+      ],
+      "why": "W8 fix (2026-10-29): the research conversation goes to the cloud tier, whose first-use notice a profile that starts in Study has never been asked; the conversation now asks it and sends the answer with the turn.",
+      "value": {
+        "description": "The learner's answer to the online tutor's first-use notice (ARC-10), sent with the turn the notice was asked for: the conversation goes to the cloud tier, so it is asked before the first turn when the profile has not answered it.",
+        "enum": [
+          "accepted",
+          "declined"
+        ]
+      },
+      "phase": "fix"
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/MemoryExplanation",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Inspectable memory provenance and teaching observations; self-report, assistance and delayed evidence remain distinct.",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "basis",
+          "meaning",
+          "correction",
+          "sources"
+        ],
+        "properties": {
+          "basis": {
+            "enum": [
+              "self_report",
+              "practice_observation",
+              "mixed",
+              "activity",
+              "unavailable"
+            ]
+          },
+          "meaning": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "correction": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "sources": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "event_id",
+                "kind",
+                "at",
+                "session_id"
+              ],
+              "properties": {
+                "event_id": {
+                  "type": "string",
+                  "maxLength": 26
+                },
+                "kind": {
+                  "type": "string",
+                  "maxLength": 48
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "session_id": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 30
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/TeachingOutcome",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Inspectable memory provenance and teaching observations; self-report, assistance and delayed evidence remain distinct.",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attempt_id",
+          "outcome",
+          "hints_used",
+          "max_rung",
+          "at"
+        ],
+        "properties": {
+          "attempt_id": {
+            "type": "string",
+            "maxLength": 26
+          },
+          "outcome": {
+            "enum": [
+              "correct",
+              "incorrect",
+              "partial"
+            ]
+          },
+          "hints_used": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "max_rung": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 5
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/TeachingObservation",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Inspectable memory provenance and teaching observations; self-report, assistance and delayed evidence remain distinct.",
+      "value": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_event_id",
+          "session_id",
+          "intervention",
+          "version",
+          "at",
+          "kc_id",
+          "topic",
+          "immediate",
+          "delayed",
+          "confidence",
+          "conflicting_outcomes",
+          "interpretation"
+        ],
+        "properties": {
+          "source_event_id": {
+            "type": "string",
+            "maxLength": 26
+          },
+          "session_id": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "intervention": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "kc_id": {
+            "type": "string",
+            "maxLength": 180
+          },
+          "topic": {
+            "type": "string",
+            "maxLength": 400
+          },
+          "immediate": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TeachingOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "delayed": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TeachingOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "const": "tentative"
+          },
+          "conflicting_outcomes": {
+            "type": "boolean"
+          },
+          "interpretation": {
+            "type": "string",
+            "maxLength": 240
+          }
+        }
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsNote/properties/explanation",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Inspectable memory provenance and teaching observations; self-report, assistance and delayed evidence remain distinct.",
+      "value": {
+        "$ref": "#/$defs/MemoryExplanation"
+      },
+      "phase": 3
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsView/properties/teaching_observations",
+      "requirements": [
+        "§19.3.5"
+      ],
+      "why": "Inspectable memory provenance and teaching observations; self-report, assistance and delayed evidence remain distinct.",
+      "value": {
+        "type": "array",
+        "maxItems": 12,
+        "items": {
+          "$ref": "#/$defs/TeachingObservation"
+        }
+      },
+      "phase": 3
+    },
+    {
+      "target": "cloud/gateway.schema.json",
+      "pointer": "/$defs/ChatCompletionRequest/properties/response_format",
+      "requirements": [
+        "MDL-04",
+        "§19.5.1"
+      ],
+      "why": "W8 fix (2026-10-29): a companion turn's decode-only call named its format `agents/companion-turn`, which Muse Spark refuses with 400; the device now sends a valid name and the gateway refuses an invalid one itself.",
+      "value": {
+        "type": "object",
+        "description": "OpenAI-style response format. A json_schema format's name is letters, digits, `_` and `-`, at most 64 characters, as the providers require (Muse Spark answers 400 on anything else; §19 fix 2026-10-29).",
+        "properties": {
+          "json_schema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,64}$"
+              }
+            }
+          }
+        }
+      },
+      "phase": "fix"
+    },
+    {
+      "target": "trace/turn-trace.schema.json",
+      "pointer": "/properties/mode/enum/-",
+      "requirements": [
+        "OBS-03",
+        "§19.3.3"
+      ],
+      "why": "W8 fix (2026-10-29): a companion turn's trace names its session's mode, study_companion; the enum lacked it.",
+      "value": "study_companion",
+      "phase": "fix"
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsView/properties/sharing/anyOf/0/properties/tutor_memory",
+      "requirements": [
+        "LRN-36",
+        "§19.6"
+      ],
+      "why": "W8 fix (2026-10-29): the knows page's 'Where this is kept' said the online tutor never gets the notes, which is wrong while tutor_memory_online is in effect.",
+      "value": {
+        "type": "boolean",
+        "description": "Personal tutor memory online is in effect (SPEC §19.6): the online tutor also gets the tutor's scrubbed notes."
+      },
+      "phase": "fix"
+    },
+    {
+      "target": "api/commands.schema.json",
+      "pointer": "/$defs/KnowsView/properties/activity/items/properties/from_pack",
+      "requirements": [
+        "§19.1",
+        "§18"
+      ],
+      "why": "W8 fix (2026-10-29): a research pack's quiz items have no curriculum tag, and the knows page called them 'your own material'.",
+      "value": {
+        "type": "boolean",
+        "description": "The material came from a study pack the research agent made (§18), not the learner's own."
+      },
+      "phase": "fix"
+    },
+    {
+      "target": "trace/turn-trace.schema.json",
+      "pointer": "/properties/tool_calls/items/properties/toolset/enum/-",
+      "requirements": [
+        "OBS-03",
+        "§19.3.3"
+      ],
+      "why": "W8 fix (2026-10-30): a companion turn's tool calls are from the study toolset; the trace enum lacked it, so every turn with a study tool failed its trace check after the reply and was recorded as an error.",
+      "value": "study",
+      "phase": "fix"
+    },
+    {
+      "target": "trace/turn-trace.schema.json",
+      "pointer": "/properties/gates/items/properties/detail",
+      "requirements": [
+        "OBS-03",
+        "§19.5.1"
+      ],
+      "why": "W8 fix (2026-10-30): a companion reply refused twice by its gates left no trace of which gate or why.",
+      "value": {
+        "type": "string",
+        "pattern": "^[a-z0-9_:.-]{1,64}$",
+        "description": "What made the gate fire, as a code (for fact binding the number and the unit beside it, `number:10:unit:flashcard`); never the reply's text."
+      },
+      "phase": "fix"
     }
   ]
 }

@@ -62,10 +62,16 @@ export interface CompanionView {
 
 export const EMPTY_COMPANION: CompanionView = { status: "idle", opener: null };
 
+/** Why the open asks the online tutor's first-use notice (ARC-10): never answered, or declined on a computer where no
+ * tutor can run without the online one. */
+export type CompanionNotice = "notice_required" | "notice_declined";
+const NOTICES: readonly string[] = ["notice_required", "notice_declined"] satisfies CompanionNotice[];
+
 /** The thread's episode: the session it runs in, its opener and the rolling summary, as the open answered. */
 export interface CompanionThreadView {
-  /** `unavailable`: a core without the thread (404); `failed`: it could not open now (`error` says why). */
-  status: "idle" | "opening" | "ready" | "failed" | "unavailable";
+  /** `unavailable`: a core without the thread (404); `failed`: it could not open now (`error` says why); `notice`: the
+   * open waits for the learner's answer to the online tutor's first-use notice (`notice` says why). */
+  status: "idle" | "opening" | "ready" | "failed" | "unavailable" | "notice";
   session_id: string | null;
   thread_id: string | null;
   /** True when today's episode was already open (a second open on one day returns the same session). */
@@ -74,9 +80,15 @@ export interface CompanionThreadView {
   summary: CompanionSummary | null;
   /** The error code of the last open that failed (`model_unavailable`, `feature_disabled`, …). */
   error: string | null;
+  notice: CompanionNotice | null;
+  can_reply?: boolean;
+  history?: api_commands.CompanionHistory["items"];
+  history_cursor?: string | null;
+  history_loading?: boolean;
+  history_error?: boolean;
 }
 
-export const EMPTY_THREAD: CompanionThreadView = { status: "idle", session_id: null, thread_id: null, resumed: false, opener: null, summary: null, error: null };
+export const EMPTY_THREAD: CompanionThreadView = { status: "idle", session_id: null, thread_id: null, resumed: false, opener: null, summary: null, error: null, notice: null };
 
 /** The OS side of check-in notifications (JM-D24): the desktop shell, or nothing where there is none (a browser). */
 export interface CheckinNotifier {
@@ -131,6 +143,12 @@ const checkinPath = (id: string, action: "open" | "dismiss") => `/v1/checkins/${
 
 const unavailable = (error: unknown) => error instanceof CommandError && (error.code === "not_found" || error.status === 404 || error.status === 405);
 const codeOf = (error: unknown) => (error instanceof CommandError ? error.code : "unreachable");
+const noticeOf = (error: unknown): CompanionNotice | null => {
+  const reason = error instanceof CommandError && error.code === "feature_disabled" ? error.details?.reason : undefined;
+  return typeof reason === "string" && NOTICES.includes(reason) ? (reason as CompanionNotice) : null;
+};
+/** An open's request, with the learner's answer to the online tutor's notice when it carries one. */
+type OpenRequest = (cloudNotice?: "accepted" | "declined") => Promise<unknown>;
 
 /** One bubble of the thread, as plain text: the student's words, or the tutor's reply to them. Nothing here is markup;
  * the thread renders every string as text (the model's words never become elements). */
@@ -197,6 +215,8 @@ export class CompanionController {
   private thread: CompanionThreadView = EMPTY_THREAD;
   private session: SessionController | null = null;
   private opening: Promise<void> | null = null;
+  /** The open the online tutor's notice was asked for, sent again with the answer. */
+  private asked: OpenRequest | null = null;
   private checkin: CheckinView = EMPTY_CHECKIN;
   /** The check-ins this run has notified about, so a refresh never shows one twice. */
   private readonly notified = new Set<string>();
@@ -207,6 +227,7 @@ export class CompanionController {
       this.session?.close();
       this.session = null;
       this.opening = null;
+      this.asked = null;
       this.set(EMPTY_COMPANION);
       this.setThread(EMPTY_THREAD);
       this.setCheckin(EMPTY_CHECKIN);
@@ -270,8 +291,25 @@ export class CompanionController {
   /** Open or resume today's episode (`POST /v1/companion`) and its stream. Two opens at once share one request; an
    * open on the same day returns the same session, so the stream already running is kept. */
   open(): Promise<void> {
-    this.opening ??= this.openOnce(() => this.profiles.commands.post<unknown>("/v1/companion", {}, clientId())).finally(() => { this.opening = null; });
+    this.opening ??= this.openOnce((cloudNotice) => this.profiles.commands.post<unknown>("/v1/companion", cloudNotice ? { cloud_notice: cloudNotice } : {}, clientId())).finally(() => { this.opening = null; });
     return this.opening;
+  }
+
+  /** The learner's answer to the online tutor's first-use notice (ARC-10) the open asked: the same open again, with
+   * the answer, which the core records for the profile. Declined, the thread stays on this computer where a tutor can
+   * run here; where none can, the notice is shown again saying why. */
+  answerNotice(answer: "accepted" | "declined"): Promise<void> {
+    const request = this.asked;
+    if (request === null || this.thread.notice === null) return Promise.resolve();
+    const before = this.opening;
+    const generation = this.profiles.generation;
+    const settled: Promise<void> = (async () => {
+      await before?.catch(() => undefined);
+      if (generation !== this.profiles.generation) return;
+      await this.openOnce(request, answer);
+    })().finally(() => { if (this.opening === settled) this.opening = null; });
+    this.opening = settled;
+    return settled;
   }
 
   /** Open the check-in `commitmentId` (`POST /v1/checkins/{id}/open`): the reply is the thread's episode, as `open()`'s,
@@ -283,7 +321,8 @@ export class CompanionController {
     if (this.checkin.item?.commitment_id === commitmentId) this.setCheckin({ ...this.checkin, item: null });
     const settled: Promise<void> = (async () => {
       await before?.catch(() => undefined);
-      await this.openOnce(() => this.profiles.commands.post<unknown>(checkinPath(commitmentId, "open"), undefined, clientId()));
+      if (generation !== this.profiles.generation) return;
+      await this.openOnce((cloudNotice) => this.profiles.commands.post<unknown>(checkinPath(commitmentId, "open"), cloudNotice ? { cloud_notice: cloudNotice } : undefined, clientId()));
     })().finally(() => { if (this.opening === settled) this.opening = null; });
     // An `open()` while this one runs waits for it, so the check-in's opener is the one shown.
     this.opening = settled;
@@ -293,15 +332,20 @@ export class CompanionController {
     });
   }
 
-  private async openOnce(request: () => Promise<unknown>): Promise<void> {
+  private async openOnce(request: OpenRequest, cloudNotice?: "accepted" | "declined"): Promise<void> {
     const generation = this.profiles.generation;
-    if (this.thread.session_id === null) this.setThread({ ...this.thread, status: "opening", error: null });
+    if (this.thread.session_id === null) this.setThread({ ...this.thread, status: "opening", error: null, notice: null });
     try {
-      const opened = readCompanionOpened(await request());
+      const opened = readCompanionOpened(await request(cloudNotice));
       if (generation !== this.profiles.generation) return;
+      this.asked = opened.notice ? request : null;
+      const same = this.thread.thread_id === opened.thread_id;
       this.setThread({
-        status: "ready", session_id: opened.session_id, thread_id: opened.thread_id, resumed: opened.resumed, opener: opened.opener, summary: opened.summary, error: null,
+        status: "ready", session_id: opened.session_id, thread_id: opened.thread_id, resumed: opened.resumed, opener: opened.opener, summary: opened.summary, error: null, notice: opened.notice ?? null,
+        can_reply: opened.can_reply ?? true, history: same ? this.thread.history ?? [] : [],
+        history_cursor: same ? this.thread.history_cursor ?? null : null, history_loading: false, history_error: false,
       });
+      void this.loadHistory(false);
       if (this.session?.sessionId === opened.session_id) return;
       this.session?.close();
       const session = new SessionController(this.profiles.launch, this.profiles.holder, opened.session_id, this.options);
@@ -312,7 +356,38 @@ export class CompanionController {
       if (generation !== this.profiles.generation) return;
       // The episode answered but its snapshot could not be read: no stream runs, and the next open tries again.
       if (this.session !== null && this.session.sessionId === this.thread.session_id) { this.session.close(); this.session = null; }
-      this.setThread({ ...this.thread, status: unavailable(error) ? "unavailable" : "failed", error: codeOf(error) });
+      // The online tutor's first-use notice (ARC-10): the thread shows it, and its answer goes with the same open.
+      const notice = noticeOf(error);
+      this.asked = notice !== null ? request : null;
+      if (notice !== null) { this.setThread({ ...this.thread, status: "notice", error: null, notice }); return; }
+      this.setThread({ ...this.thread, status: unavailable(error) ? "unavailable" : "failed", error: codeOf(error), notice: null });
+    }
+  }
+
+  /** Page older retained conversation without opening a model or changing the current episode. */
+  loadEarlier = (): Promise<void> => this.loadHistory(true);
+
+  private async loadHistory(older: boolean): Promise<void> {
+    const generation = this.profiles.generation;
+    const threadId = this.thread.thread_id;
+    if (threadId === null || this.thread.history_loading) return;
+    const cursor = older ? this.thread.history_cursor : null;
+    this.setThread({ ...this.thread, history_loading: true, history_error: false });
+    try {
+      const found = await this.profiles.commands.get<unknown>(`/v1/companion/history?limit=50${cursor ? `&before=${encodeURIComponent(cursor)}` : ""}`);
+      if (generation !== this.profiles.generation || this.thread.thread_id !== threadId) return;
+      if (errors("api/commands#/$defs/CompanionHistory", found).length) throw new Error("invalid history");
+      const page = found as api_commands.CompanionHistory;
+      const seen = new Set<string>();
+      const items = [...page.items, ...(older ? this.thread.history ?? [] : [])].filter((item) => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+      this.setThread({ ...this.thread, history: items, history_cursor: page.next_cursor, history_loading: false });
+    } catch {
+      if (generation === this.profiles.generation && this.thread.thread_id === threadId)
+        this.setThread({ ...this.thread, history_loading: false, history_error: true });
     }
   }
 

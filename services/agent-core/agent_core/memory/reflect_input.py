@@ -28,7 +28,7 @@ from agent_core.store.supersession import read_log
 
 WritePoint = Literal["problem_end", "session_end", "idle", "onboarding_end", "explicit_request", "study_end"]
 EVIDENCE_TYPES = ("attempt", "verdict", "hint", "misconception_evidence", "mastery_check", "review",
-                  "diagnostic_item", "detour", "study_activity")  # fmt: skip
+                  "diagnostic_item", "detour", "study_activity", "memory_requested")  # fmt: skip
 ACTIONS: tuple[NoteActionKind, ...] = ("add", "update", "keep", "drop", "contradiction")
 POINT_WORDS = {"problem_end": "the end of a problem", "session_end": "the end of the session",
                "idle": "a pause in the session", "onboarding_end": "the end of onboarding",
@@ -79,6 +79,8 @@ def _evidence_line(
     type_: str, payload: Mapping[str, Any], content: ContentLabels, kc_refs: RefTable, attempts: Mapping[str, int]
 ) -> str:
     """One event in words built from its fields and pack labels only. A student's answer is never copied in."""
+    if type_ == "memory_requested":
+        return "learner explicitly asked to save a self-report; this is not assessed understanding"
     if type_ == "study_activity":
         return _study_line(payload, content)
     skills = ", ".join(f"skill {kc_refs.ref_of(k)}" for k in _kcs_of(type_, payload)) or "the current step"
@@ -167,6 +169,15 @@ def build_input(
         (sid, *EVIDENCE_TYPES),
     )
     read = [e for e in read_log(map(StoredEvent.from_row, rows)) if cursor is None or e.seq <= cursor]
+    requests = [e for e in read if e.type == "memory_requested"]
+    current_request = max(requests, key=lambda e: e.seq).event_id if requests else None
+    read = [
+        e
+        for e in read
+        if e.type != "memory_requested" or (key.point == "explicit_request" and e.event_id == current_request)
+    ]
+    if key.point == "explicit_request" and current_request is not None:
+        read = [e for e in read if e.event_id == current_request]
     events = [(e.event_id, e.type, e.payload) for e in read[-settings.reflector_max_evidence_lines :]]
     kc_refs = RefTable.of(kc for _, type_, payload in events for kc in _kcs_of(type_, payload))
     event_refs = RefTable.of(event_id for event_id, _, _ in events)

@@ -180,6 +180,7 @@ async def main(
         core.session_class = runtime.session_class
         core.trace_records = runtime.traces.records if runtime.traces is not None else None
         core.capture_trace_sink = runtime._trace_sink if runtime.traces is not None else None
+        core.job_trace_sink = runtime._trace_sink if runtime.traces is not None else None  # research chat (§19 fix)
         core.capture_summary = runtime.traces.perception_summary if runtime.traces is not None else None
         core.erasers.register("traces", runtime.delete_profile_traces)
         core.closers.append(runtime.close)

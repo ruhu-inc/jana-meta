@@ -373,7 +373,7 @@ class Engine(Coordination, Offers, Predictions):
         self.memory_tools: MemoryTools | None = None
         # An explicit "remember that" request (MEM-06): (turn id, the words to keep) for the core's Reflector queue,
         # which runs the job after the reply. The words never reach a log or a trace.
-        self.on_memory_request: Callable[[str, str], None] | None = None
+        self.on_memory_request: Callable[[str, str], bool | None] | None = None
         # The model call in flight: served by a cloud candidate (set by the router's prepare for each candidate it
         # tries), and the tools it offers. A cloud call gets no notes and no `memory_recall` (MEM-13, MDL-25).
         self._call_cloud = False
@@ -619,20 +619,35 @@ class Engine(Coordination, Offers, Predictions):
         """A message in the Study companion's thread (SPEC §19.5.1): the input-guard role and the input guard with its
         distress screening first, exactly as for a tutoring message; then the companion's own turn
         (`engine.companion.run_turn`). The only branch the companion has in this module."""
+        from agent_core.engine.companion_memory import handle as memory_command
+        from agent_core.engine.companion_memory import parse as parse_memory_command
+        from agent_core.engine.profile_scope import ProfileChanged
+
+        self.companion.require_scope()
         turn = self._begin("ask", ids)
         with turn_scope(turn.turn_id):
             try:
-                model = await self._guard_model(text, question=True)
+                command = parse_memory_command(text)
+                model = None if command is not None else await self._guard_model(text, question=True)
+                self.companion.require_scope()
                 stopped, text = self._intake(turn, text, source, model)
                 if stopped is not None:
                     return stopped
+                if command is not None:
+                    result: TurnResult = await memory_command(self, turn, text, command)
+                    return result
                 from agent_core.engine.companion import run_turn
 
                 if self.study_tools is not None:
                     self.study_tools.new_turn()
-                result: TurnResult = await run_turn(self, turn, text)
+                result = await run_turn(self, turn, text)
                 return result
-            except Exception:
+            except ProfileChanged:
+                raise  # profile closure already persisted the session; do not publish another turn.end
+            except Exception as error:
+                # Never silent: a failure after the reply went out (a trace that breaks its contract, say) ends the
+                # turn as an error; the log names its kind (§19 fix, 2026-10-30).
+                self._log("warning", "companion", "turn.crashed", error=type(error).__name__)
                 self._finish_crashed(turn)
                 raise
 

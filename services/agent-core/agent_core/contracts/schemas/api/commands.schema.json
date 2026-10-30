@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/commands.schema.json sha256 8d56e9951a6102cda5e4d30615bdeb048dd4eefda1481a6b56d1cbef9e29017c; do not edit",
+ "$comment": "GENERATED from contracts/api/commands.schema.json sha256 751a10d703efe7a941f8b54dd863e3150787ebf900dc135cf48d2d8ced2f4cda; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/commands",
  "title": "Command bodies",
@@ -4694,6 +4694,9 @@
         },
         "cloud_tutor": {
          "type": "boolean"
+        },
+        "tutor_memory": {
+         "type": "boolean"
         }
        },
        "required": [
@@ -4855,6 +4858,9 @@
        "day": {
         "type": "string",
         "format": "date"
+       },
+       "from_pack": {
+        "type": "boolean"
        }
       }
      }
@@ -4868,6 +4874,13 @@
        "type": "null"
       }
      ]
+    },
+    "teaching_observations": {
+     "type": "array",
+     "maxItems": 12,
+     "items": {
+      "$ref": "#/$defs/TeachingObservation"
+     }
     }
    },
    "required": [
@@ -4944,6 +4957,9 @@
     },
     "withheld_online": {
      "type": "boolean"
+    },
+    "explanation": {
+     "$ref": "#/$defs/MemoryExplanation"
     }
    },
    "required": [
@@ -9670,7 +9686,14 @@
   "CompanionOpen": {
    "type": "object",
    "additionalProperties": false,
-   "properties": {}
+   "properties": {
+    "cloud_notice": {
+     "enum": [
+      "accepted",
+      "declined"
+     ]
+    }
+   }
   },
   "CompanionSummary": {
    "type": "object",
@@ -9836,6 +9859,16 @@
     },
     "summary": {
      "$ref": "#/$defs/CompanionSummary"
+    },
+    "can_reply": {
+     "type": "boolean"
+    },
+    "notice": {
+     "enum": [
+      null,
+      "notice_required",
+      "notice_declined"
+     ]
     }
    }
   },
@@ -9991,6 +10024,255 @@
      "items": {
       "$ref": "#/$defs/Commitment"
      }
+    }
+   }
+  },
+  "CompanionHistory": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "session_id",
+       "role",
+       "text",
+       "created_at"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "maxLength": 100
+       },
+       "session_id": {
+        "type": "string",
+        "pattern": "^ses_[0-9A-HJKMNP-TV-Z]{26}$"
+       },
+       "role": {
+        "enum": [
+         "user",
+         "assistant"
+        ]
+       },
+       "text": {
+        "type": "string",
+        "maxLength": 8000
+       },
+       "created_at": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "maxLength": 256
+      }
+     ]
+    }
+   }
+  },
+  "MemoryExplanation": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "basis",
+    "meaning",
+    "correction",
+    "sources"
+   ],
+   "properties": {
+    "basis": {
+     "enum": [
+      "self_report",
+      "practice_observation",
+      "mixed",
+      "activity",
+      "unavailable"
+     ]
+    },
+    "meaning": {
+     "type": "string",
+     "maxLength": 240
+    },
+    "correction": {
+     "type": "string",
+     "maxLength": 240
+    },
+    "sources": {
+     "type": "array",
+     "maxItems": 20,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "event_id",
+       "kind",
+       "at",
+       "session_id"
+      ],
+      "properties": {
+       "event_id": {
+        "type": "string",
+        "maxLength": 26
+       },
+       "kind": {
+        "type": "string",
+        "maxLength": 48
+       },
+       "at": {
+        "type": "string",
+        "format": "date-time"
+       },
+       "session_id": {
+        "anyOf": [
+         {
+          "type": "string",
+          "maxLength": 30
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "TeachingOutcome": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "attempt_id",
+    "outcome",
+    "hints_used",
+    "max_rung",
+    "at"
+   ],
+   "properties": {
+    "attempt_id": {
+     "type": "string",
+     "maxLength": 26
+    },
+    "outcome": {
+     "enum": [
+      "correct",
+      "incorrect",
+      "partial"
+     ]
+    },
+    "hints_used": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "max_rung": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 5
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "TeachingObservation": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "source_event_id",
+    "session_id",
+    "intervention",
+    "version",
+    "at",
+    "kc_id",
+    "topic",
+    "immediate",
+    "delayed",
+    "confidence",
+    "conflicting_outcomes",
+    "interpretation"
+   ],
+   "properties": {
+    "source_event_id": {
+     "type": "string",
+     "maxLength": 26
+    },
+    "session_id": {
+     "type": "string",
+     "maxLength": 30
+    },
+    "intervention": {
+     "type": "string",
+     "maxLength": 120
+    },
+    "version": {
+     "type": "string",
+     "maxLength": 80
+    },
+    "at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "kc_id": {
+     "type": "string",
+     "maxLength": 180
+    },
+    "topic": {
+     "type": "string",
+     "maxLength": 400
+    },
+    "immediate": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/TeachingOutcome"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "delayed": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/TeachingOutcome"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "confidence": {
+     "const": "tentative"
+    },
+    "conflicting_outcomes": {
+     "type": "boolean"
+    },
+    "interpretation": {
+     "type": "string",
+     "maxLength": 240
     }
    }
   }

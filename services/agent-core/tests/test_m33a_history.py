@@ -64,9 +64,14 @@ def uxs48_history_private(tmp_path: Path):
             assert code(await api.call("GET", f"/v1/history/{session}", profile=token_b)) == "not_found"
             assert code(await api.call("GET", "/v1/history")) == "profile_token_expired"
             assert code(await api.call("GET", f"/v1/history/{session}")) == "profile_token_expired"
+            assert code(await api.call("GET", "/v1/companion/history")) == "profile_token_expired"
             # No sharing, sending, teacher or staff route on history.
             built = {key for key in _routes(tmp_path / "built") if "/history" in key or "share" in key.lower()}
-            assert {key for key in built if "/history" in key} == {"GET /v1/history", "GET /v1/history/{session_id}"}
+            assert {key for key in built if "/history" in key} == {
+                "GET /v1/history",
+                "GET /v1/history/{session_id}",
+                "GET /v1/companion/history",
+            }
             assert not [key for key in built if "history" in key.lower() and "share" in key.lower()]
             for word in ("share", "send", "teacher", "staff", "export"):
                 assert (await api.call("POST", f"/v1/history/{session}/{word}", {}, profile=token_a)).status_code == 404

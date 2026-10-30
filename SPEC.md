@@ -1167,6 +1167,149 @@ bullet passes a named test: `test_w8_companion.py`, `test_w8_rolling_summary.py`
   `providers.base` from the engine (the layer rules), the data inventory, the tool registry snapshot, and the tool
   fixtures (TOL-05: one file per study tool, and `session_recall`'s at version 2 with the past scope).
 
+**Stage 1 boundary hardening, 2026-10-29 (post-review).** The companion binds each open and session to an immutable
+learner-instance scope and a generation invalidated before profile closure. The scope is checked after waiting for
+the opener lock, after model/compaction/tool awaits, before a correction or fallback request, and before storing or
+displaying a result. Check-in extraction also checks ownership and generation after generation; cancelling its task
+is not the only protection. Companion tool handlers check ownership at dispatch before reaching a shared planner or
+Study job creator. Late session callbacks and checkpoints are discarded when their session entry has been
+removed or replaced, including closing and reopening the same profile.
+Session announcements also reject an inactive profile when profile activation is configured; standalone voice
+sessions without a learner database still receive their voice state and failure events.
+
+Cloud prefixes are constructed from the cloud learner variant directly, never by replacing rendered local text.
+The asynchronous candidate prepare callback rechecks `tutor_memory_online` and `study_materials` on every cloud
+candidate. An internal router `request_guard` also checks ownership and effective permissions immediately before
+each provider attempt, after scheduler waits and retry backoff; a 429 retry cannot replay a newly prohibited prompt.
+A turn that has consumed a successful local model reply stays local for subsequent tool/repair rounds:
+its arguments and results may derive from private profile fields or local-only recall. If a permission used by a
+cloud reply is withdrawn, continuation falls back locally or uses the canned response, without replaying the
+derived context online. New assistant transcript rows carry internal permission provenance; locally generated,
+revoked, and legacy assistant rows with unknown provenance remain visible locally but are withheld from cloud
+history. This is a conservative egress boundary, not deletion of the stored conversation. The canned response uses
+the existing `provider_error` stop reason with `degraded=true`; `degraded` is not a valid stop reason in the event
+contract. No public contract or database migration is needed for this stage. Regressions live in
+`test_w8_companion_boundaries.py`.
+
+**Stage 2 explicit memory commands, 2026-10-30 (post-review).** Companion memory commands are interpreted locally
+before any model input guard or cloud request. Existing enum preferences can be remembered, corrected and forgotten
+without a model; only a committed write receives a save acknowledgement. General learning notes use the existing
+local Reflector and announce queued versus saved separately. A `memory_requested` event records self-report evidence
+without the request text; it never contributes to mastery or makes a conversation count as a practice session.
+An explicit correction identifies one saved note by id or exact quoted text, pins its write-event version and passes the
+new wording through the same capture, paraphrase, evidence and size policies. The writer refuses a target changed or
+forgotten while the local model ran. Ambiguous corrections/deletions ask the learner to select an item.
+
+Edits refresh open sessions' snapshots. Replacing or deleting memory commits a text-free context revision in the
+same transaction: older dialogue remains visible to its owner but is excluded from model recall, including earlier
+paraphrases. This deliberately sacrifices some conversational recall until finer per-message provenance is available.
+Memory command transcript rows are not model history. Forget cancels pending extraction instead of restarting an old
+request that could recreate the note. Models cannot acknowledge a write themselves. The learning-event contract and
+local event registry include the new self-report; existing tables suffice, so this stage needs no schema migration.
+Regression coverage: `test_companion_memory_commands.py`, plus the existing memory, Reflector and knows tests.
+
+**Stage 3 continuity, 2026-10-30 (post-review).** Opening the companion and reading its paginated thread history are
+local operations and remain available without a working model. The open response reports conversational availability
+and any unanswered online-tutor notice; the notice does not conceal history. Ordinary chat still requires a serving
+model; local memory commands remain usable. `GET /v1/companion/history` uses a bounded keyset page and enforces the
+current profile. The UI loads earlier episodes separately from the current stream, discards late results on profile
+changes, and offers further pages on demand. History follows the existing transcript retention and export permissions.
+
+Learner migration 22 adds only per-turn provenance (`companion_turn_context`), referencing retained transcript rows
+with cascading deletion. No second transcript copy is stored. The local model receives a bounded recent window across
+days (100 rows scanned, 12,000 characters admitted), rather than dropping everything except the last 24 messages of
+today. Raw previous-day dialogue remains local even if it was originally generated online. Companion compaction is
+also local-only because its input precedes cloud history filtering; it rechecks profile ownership at provider
+dispatch, including retries. Without a local model it uses the existing deterministic compaction fallback.
+Corrections and forgetting
+invalidate earlier recall through the durable revision; the learner can still inspect that history. Deeper past recall
+uses the existing local-only literal-search tool. Agreements in retained dialogue remain available on return; longer
+term reminders remain explicit, inspectable check-ins rather than assumed promises by the model.
+
+**Stage 4 fact binding, 2026-10-30 (post-review).** Companion progress and schedule statements use optional
+`fact_refs` in `companion-turn`: each reference selects a code-built metric with its value, unit, subject, as-of day
+and source. The app renders that statement and source together and offers What your tutor knows for inspection;
+unknown references are rejected. Unconstrained model text supplies teaching suggestions/questions, not numeric
+progress or mastery assertions. Spelled-out counts are checked; a label across a sentence boundary cannot validate
+an unrelated number. A failed review maps to `learning` in the three-band online representation instead of `secure`.
+
+Explicit preferences selected from the existing enum vocabulary may join `cloud_notes` only under effective
+`tutor_memory_online`; ordinary cloud prompts still omit them, and inferred or arbitrary preference text stays local.
+The role asset, output contract and regenerated bindings accompany these decisions. Regression coverage is in
+`test_companion_fact_binding.py` and the existing companion, opener and memory-online tests.
+
+
+**Stage 5 restoration and budgets, 2026-10-30 (post-review; JM-D30–JM-D31).** Encrypted archive version 4 adds
+`companion.json`: summaries, inspectable commitments, recall counters, the context revision, and episode/turn
+provenance only for explicitly authorized transcripts. Import validates fixed columns, table constraints, contracts
+and ownership before creating the profile. Restored transcript context starts local-only; online consent stays
+withdrawn and notification settings default off. The local-only marker applies to both learner and tutor messages,
+including same-day history. Summaries are rebuilt from imported evidence because source database event sequence
+numbers are not portable. A restored same-day episode rebuilds its transient runtime and its
+saved messages remain visible alongside new streamed messages. The latest text-free forget boundary survives audit
+retention, and its time cutoff covers all existing transcript/board timestamps and cannot move backward when the
+device clock changes. On this device, erased
+note/preference event identifiers also suppress obsolete events in older archives;
+if suppression occurs, old dialogue is withheld from model recall and old commitments are discarded. An archive
+copied to an unrelated offline device cannot know deletions that happened after that copy; exports are user-held
+snapshots, not remotely erasable backups.
+
+The gateway currently authenticates an account, not an individual learner. **JM-D30:** its configured daily count
+and spend allowances are shared across that account's profiles, sessions and devices; rotating client pseudonyms or
+restoring a profile cannot obtain a fresh allowance. This deliberately replaces the earlier session-based allowance.
+Per-learner commercial entitlements require an authenticated learner/seat protocol before they can be promised.
+**JM-D31:** `X-Jana-Operation` is a day-scoped opaque hash of one engine turn or stable Reflector job identity.
+Tool rounds, repair and retries count one logical operation, but every upstream attempt reserves its spend bound.
+Each operation allows at most 12 attempts; missing IDs count every request. A tool-result message is not proof of
+prior admission. Abandoned reservations remain charged against available spend until settlement or UTC rollover.
+The gateway's additive forward migration `migration_companion_v2.py` creates the operation ledger; the gateway uses
+idempotent feature migrations rather than the learner database's version counter. Old unassignable session holds
+are conservatively honored until midnight. Day-keyed ledger hashes and operation rows expire at UTC rollover.
+
+**Stage 6 teaching evidence, 2026-10-30 (post-review; JM-D32).** `KnowsNote.explanation` identifies self-report,
+practice, mixed/activity or unavailable evidence, with source event, session and time references and removal controls.
+`KnowsView.teaching_observations` is a bounded read projection of receipted teaching skills and checked practice:
+the preceding attempted skill, next same-session outcome with hint/rung use, and a later unassisted assessment
+response at least one day later. Re-marks come from the current attempts projection. Conflicting outcomes stay
+visible. These records neither mutate mastery nor override preferences. Generated Study activity and self-reports
+never become assessed outcomes. **JM-D32:** associations remain tentative; they are not proof of teaching efficacy
+or a fixed learning style. Local companion prompts can propose a teaching experiment and a later independent check;
+these observation records stay out of cloud prompts. Preferences are described as choices, and the knows page exposes
+the observations separately from preferences and mastery. Existing events suffice; no new learner table is needed.
+
+The Reflector also binds each queued job to its learner instance and memory revision, checks ownership immediately
+before applying notes, and rechecks effective online-memory consent before every provider attempt, including retries.
+Automatic reflection excludes explicit self-report requests; an explicit request cites its own request event rather
+than a previous request or an unrelated practice response.
+
+**Stage 7 acceptance, 2026-10-30 (post-review).** `test_learning_agent_journey.py` passes a three-day simulated clock
+through real app routes/storage: preferences, Study visit/material, close/restart, an earlier agreement, practice
+selection and answer submission through the public HTTP commands and deterministic marker, corrections/forgetting,
+authorized encrypted export/restore, a restored progress claim with its source and current date, and profile switches
+in both directions. Language-model responses and the published question
+bank are synthetic; practice selection retains the real mock-reservation policy. This proves continuity and
+boundaries, not measured learning gains or live-provider quality. Adversarial tests separately cover source binding,
+stale asynchronous results, offline history, invalid archives, and daily admission. Full regression gates accompany
+the targeted acceptance tests; operational/pilot outcomes must be measured separately.
+
+The regression gate also exposed a worker-recovery latency defect (SEC-08/TOL-26): an input rejected immediately by
+the worker still waited for replacement startup before its error reached the caller. A failed worker is now killed
+and removed from the pool before returning that error; backoff and replacement handshake run as tracked recovery
+tasks. A following check waits for a ready worker, or receives `worker_unavailable` if startup fails or the circuit
+opens. Compute tools remain unavailable while no worker is ready. Shutdown joins pending startup and closes late
+workers instead of repopulating the pool. The existing input/deadline, restart and circuit limits are unchanged.
+`test_worker_replacement.py` covers delayed/failed startup, queued callers and shutdown without wall-clock races;
+the existing worker and sandbox suites retain the real-process recovery and pathological-input timing checks.
+
+Replay also avoids reconstructing the same practice opportunity for each projection: its scratch cache is cleared
+before every migrated event and discarded after replay. Parsed HLC stamps are cached only on their immutable
+`StoredEvent`; copied/corrected events are reconstructed from declared dataclass fields. Projection rules and stored
+formats are unchanged, with no migration or version bump. Incremental/replay, re-mark and KC-migration tests retain
+identical state, including the saved 100,012-event diagnostic fixture. The elapsed-time rebuild gate remains a
+separate requirement; reducing CPU work alone does not satisfy it.
+
+
+
 **Phase 3 built 2026-10-29.** Every §19.8 phase 3 bullet passes a named test: `test_w8_memory_online.py`,
 `test_w8_checkins.py`, `test_w8_note_lifecycle.py`, the gateway's `test_w8_companion_limits.py`, the scenarios
 `cloud_block_dat18` and `checkin_sunday`, `test_dat18_egress.py`'s new `tutor_memory_online` row, the UI's
@@ -1225,6 +1368,113 @@ bullet passes a named test: `test_w8_companion.py`, `test_w8_rolling_summary.py`
 - **Not built.** The scenario `study_note_capture.yaml` (§19.9), which grades Study-evidence notes with the evaluation
   grader, no phase's done list names; it is left for the evaluation suite. Held-out copies of the new cases were not made
   (the release key).
+
+**Fixes 2026-10-29** (found running the §19.10 demo path live). Each has a test that would have caught it.
+
+- **The research conversation failed live** ("The research planner isn't available right now", 503
+  `model_unavailable`). Root cause: the profile had answered the Study agreement's notice but never the online tutor's
+  first-use notice (ARC-10), and the research router's gate, `cloud_tier_on()`, requires that notice. So the router
+  dropped its only candidate (`cloud:primary/fast-model`: "cloud tier off") before any provider call. The egress layer
+  that would have asked for the notice was never reached, and nothing else asks it outside a tutoring turn's card. A
+  profile whose first online step is research could never get past it. Fix: the conversation asks the notice itself.
+  The chat route answers `feature_disabled` with `details.reason` `notice_required` (or `notice_declined`); the app
+  shows the notice in the conversation, and its OK sends the same turn with `cloud_notice: "accepted"`
+  (`ChatRequest.cloud_notice`, new), which the core records before the call. To make such failures observable, a
+  provider refusal now carries a fixed-vocabulary `code` (`egress_notice_pending`, `redaction:term`,
+  `http_429:plan_limit`, …). The router keeps it in the call record, and the research route puts the router's reason,
+  the dropped candidates and each refusal's code in the API error's details and in a `research_chat` job trace. Codes
+  only, never prompt text. Tests: `test_w8_research_live_path.py` (the real router and `GatewayProvider` against fake
+  HTTP services; the refusal codes; the route asking and recording the notice) and `study-research.test.tsx`
+  (the notice, then the same turn with the answer). Verified live against the gateway on 8082: 403
+  `notice_required`, OK, then 200 with the online tutor's first question.
+- **The opener counted the onboarding interview as a session.** The hand-off's scripted interview runs in a session
+  with no learning in it. "Last time" now names only an ended session that holds a learning event (the Reflector's
+  evidence types: an attempt, a hint, a check, Study activity, …), so a new profile sees the first-time card. Test:
+  `test_w8_opener.py::test_the_onboarding_interview_and_sessions_without_learning_never_count`; the seeded sessions of
+  the other opener tests and of `last_time_card` now hold a hint.
+- **Copy.** The "What leaves" line of Personal tutor memory online starts with a capital like every other feature's,
+  so the confirmation dialog no longer opens in lowercase; `checkin-card.test.tsx` checks every such line.
+- **A made-up key in a committed test.** Phase 3's `test_w8_memory_online.py` seeded a key-shaped value without a
+  fixture word, which the provider-key scanner (SEC-20) reports in commit 7a92235d. The test now seeds a
+  fixture-marked value, and the scanner's history list names the committed one by its hash, as it does for M20.f's.
+- **Not fixed here (same cause as the research conversation).** A companion turn never offers the first-use card, and
+  the thread does not render cards. On a computer with no local model, a profile that has not answered the online
+  tutor's notice gets only the canned reply in **Your tutor**. It needs the thread to show the notice as the research
+  conversation now does.
+
+**Fixes 2026-10-30** (a second live run of the §19.10 demo path: the research conversation, the pack, the quiz's
+`study_activity`, Progress, the knows page, the first-time card on a fresh profile, the thread's tool answers, the
+homework hand-off and the Reflector on Spark under `tutor_memory_online` all worked). Each fix has a test.
+
+- **A companion turn with a tool round failed** ("Sorry, I couldn't put that together just now", then "Cloud tutor
+  unavailable"). Root cause: the turn's decode-only call sends the companion's output schema as `response_format`, and
+  its name was the contract path `agents/companion-turn`. Muse Spark refuses a format name outside
+  `[A-Za-z0-9_-]{1,64}` with 400 on `name`; the router's one format retry got the same 400. Checked against Spark
+  through the gateway's own adapter: the same request answers 400 with that name and 200 with `CompanionTurn`. A turn
+  whose model answered in its second round (the plan turn) never reached that call, which is why only some turns
+  failed. Fix: every OpenAI-style request now sends a valid format name (`providers/openai_compat.format_name`), and the
+  gateway's ChatCompletionRequest contract states the rule, so the gateway refuses a bad name itself. Companion model
+  requests retain the provider's other response-format fields (`type`, `description`, `strict` and the nested JSON
+  Schema): these fields are explicitly declared so generated Python bindings accept the same formats as JSON Schema
+  validation. The nested output schema remains an arbitrary JSON object. The gateway provider-conformance tests
+  exercise the full request. Companion model
+  calls are now recorded in the turn trace as the Coach's are, a failed turn's `degraded_reason` names the refusal by
+  code (`http_400_…`, `egress_…`) instead of `companion_canned`, and the trace contract's `mode` admits
+  `study_companion` (companion traces were written outside it). Tests: `test_w8_companion_gateway.py` (a study_search
+  round and the decode call through a real `GatewayProvider` against fake HTTP services, each body checked against the
+  gateway contract; the trace of a failed turn). Not re-run live here: the demo's host and gateway were running for the
+  demo on the same data folder, so restart the host to pick the fix up.
+- **The research conversation's intermittent `invalid_output`.** Each check after the call now has a fixed code
+  (`not_structured`, `contract_check` with the failing path, `repeated_question`, `missing_brief`), carried in the API
+  error's details and the job trace (`invalid_output_<code>`), and a reply that fails one is asked for once more before
+  the turn fails. Tests: `test_research_chat.py`.
+- **Copy.** The thread's first bubble with nothing to recall greets the learner (`first_time_thread`) instead of the
+  card's own sentence. The knows page's "Where this is kept" says the online tutor also gets the tutor's notes while
+  personal tutor memory online is in effect (the sharing flags gain `tutor_memory`). The summary's next step is shown
+  as the core writes it ("Next: …"), not as "Next step: Next: …". Tests: `test_w8_demo_fixes.py`,
+  `knows-confidence.test.tsx`.
+- **A study pack's activity.** Study activity whose material came from a research pack is marked `from_pack` and named
+  "from your study pack" on the knows page, not "your own material". Tests: `test_w8_demo_fixes.py`,
+  `knows-confidence.test.tsx`.
+- **Seen live and confirmed:** the Study library's opener showed the first-time card for the fresh profile after the
+  2026-10-29 opener fix.
+
+**Fixes 2026-10-30, second round** (the live re-test after the first: every chat completion answered 200, companion
+turns recorded their model calls, the daily opener, the thread and its buttons survived a restart). Each has a test in
+`test_w8_companion_followups.py`.
+
+- **Companion traces said `error` for turns that succeeded.** Root cause: the trace contract's tool `toolset` enum had
+  no `study` (a phase 2 omission). A turn that used a study tool built a trace that broke its contract; the engine's
+  check of it raised after the reply had gone out, and the crash path then ended the turn as an error. The enum gains
+  `study`, and a crash in a companion turn is now logged by its kind (`companion turn.crashed`) instead of silently.
+- **A confirmed study aid was never made.** `study_search` with no query, or a query whose words match nothing, lists
+  the library's ready materials (newest first, at most eight, never an archived one, a private one only locally), each
+  with a number `make_aid` can take; `make_aid` without `source_ref` uses the only ready material, and with several
+  asks for a number (both tools at version 2). The role prompt says a confirmed request is carried out with `make_aid`
+  in the same turn, never asked again. `make_aid`'s result carries the count asked for, so "10 flashcards" binds to it.
+- **The cost of a turn.** A correction of a final reply is one decode call with no tools, from the history the final
+  call saw: it never opens a tool round. A turn now makes at most two tool rounds and a final call (two to three calls
+  as a rule), plus one correction call when a gate fails, plus the router's one format retry on each of those two
+  calls; never another search. Turn B of the live run ("Yes please, build them") is two calls with one ready material,
+  three with several.
+- **"I found your pack" without a search.** The fact-binding gates now refuse a reply that says it looked in, found or
+  did not find something in the student's materials unless a search ran this turn (`study_search`, or the excerpts the
+  engine recalled by code before the call).
+
+**Fixes 2026-10-30, third round** (the live re-test of the aid flow: `study_search`, `make_aid`, the "Open what was
+made" button and a ready set of 10 cards all worked; the trace read `complete`). Tests in
+`test_w8_companion_followups.py`.
+
+- **A made aid behind a canned reply.** The reply was refused twice by a gate the trace did not name, and the
+  learner saw "Sorry, I couldn't put that together" although the aid had been started. Every companion gate decision
+  (one ask, fact binding, search claim, model claims, the output critic, fact refs) now goes in the trace's gates, with
+  a `detail` code for what fired (fact binding: `number:12:unit:flashcard`; never the reply's text; the trace
+  contract's gate entry gains the optional `detail`). `make_aid`'s result carries what was made as labelled records
+  (`kind`, `title`, `from_pack`, and `flashcard_cards` or `quiz_questions`), so "10 flashcards" binds to it. When the
+  gates refuse a reply twice in a turn that started an aid, the engine says what was made, from the result
+  ("I've started 10 flashcards from your study pack. Open them below."), instead of the canned line; the trace still
+  says `companion_canned`. (`test_m15g_knows_api.py` now expects the sharing flags' `tutor_memory`, added in the first
+  2026-10-30 round.)
 
 ### 19.1 What the learner gets
 
@@ -1432,7 +1682,7 @@ data classes, consent `tutor_memory_online`), and `CONSENT_NOTICE_VERSIONS` in `
 | `agent_core/engine/checkins.py` (new) | 3 | The extractor and heartbeat of §19.5.5; the `commitments` table; cancellation on profile switch (as `ReflectorQueue` does at line 881) and deletion. |
 | `agent_core/store/consents.py`, `api/profiles.py`, `net/policy.json`, `content/agent/notices/notices.json` | 3 | The consent registration of §19.3.5. `states` (line 86) needs no change once the scope is in `PROFILE_SCOPES`. |
 | `contracts/data/schema.sql`, `store/migration_v19.py`, `store/sqlite.py`, `store/profile_stores.py` | 1–3 | The **(storage)** items of §19.3 and the forward migration. |
-| `services/cloud-gateway/cloud_gateway/config.py`, `defaults.toml`, `plans.toml`, `budget.py` | 2, 3 | Typed: `Limits` (line 266) gains `companion_turns_per_day: int | None` and `tutor_memory_jobs_per_day: int | None`; `GatewayConfig` (line 346) gains `companion: CompanionConfig(per_day_usd: float = 0.50)` (`_Strict` forbids unknown keys, line 31). Admission: the chat route reads the device's role (`companion`, `reflector`) as it reads `study` today, reserves the call's upper bound in the ledger under feature `companion` or `reflector`, counts turns and jobs per session pseudonym per day, and refuses with `plan_limit` at the cap; an aid made from the thread is charged to Study's own feature. |
+| `services/cloud-gateway/cloud_gateway/config.py`, `defaults.toml`, `plans.toml`, `budget.py` | 2, 3 | Typed: `Limits` (line 266) gains `companion_turns_per_day: int | None` and `tutor_memory_jobs_per_day: int | None`; `GatewayConfig` (line 346) gains `companion: CompanionConfig(per_day_usd: float = 0.50)` (`_Strict` forbids unknown keys, line 31). Admission: the chat route reads the device's role (`companion`, `reflector`) as it reads `study` today, reserves the call's upper bound in the ledger under feature `companion` or `reflector`, counts logical turns and jobs per authenticated account per UTC day (JM-D30–JM-D31), and refuses with `plan_limit` at the cap; an aid made from the thread is charged to Study's own feature. |
 | `packages/client-core/src/companion.ts` (new), `index.ts`, `memory.ts`, `hydrate.ts`, `reducer.ts` | 1–3 | `CompanionController`: the opener (`GET /v1/companion/opener`, phase 1), open or resume (`POST /v1/companion`, phase 2), the thread's stream through `session.ts`'s pieces, durable `companion.action` state, due check-ins; `memory.ts` reads `confidence`, `fading`, `recall_sessions`, `companion_summary`. |
 | `packages/ui/src/home/LastTimeCard.tsx` (new), `home/Home.tsx` | 1 | The code-built Last time card beside the countdown (`Home.tsx` line 83). |
 | `packages/ui/src/learn/StudyWorkspace.tsx`, `learn/CompanionThread.tsx` (new) | 2 | **Your tutor** is entered from the library view (the branch at line 247, before any source is selected): a panel above the sources, and a third tab beside `TABS` (line 24) inside a source; the thread is the same in both. The opener is the first bubble; action buttons render from the durable `actions` state; `App.tsx` (`Screen`, line 128) deep-links `open_tutor` to `tutor` with `payload.question`. |
@@ -1553,9 +1803,11 @@ cannot show.) When it is effective, and only then:
   (`turn.py` line 2217–2219), under the same scrub.
 
 **Regardless of this consent**, a cloud companion call is offered `study_search` only when `study_materials` is also
-effective (the gate `ask_anything.request_body` applies as `share_own`, line 178), and `session_recall` with
-`scope: "past"` **only to a local candidate**: past-conversation excerpts never ride a cloud call (the current-session
-hit that rides today, `CLOUD_DATA_CLASSES`, `turn.py` line 3853, is unchanged). On a cloud call the companion answers
+effective (the gate `ask_anything.request_body` applies as `share_own`, line 178), and `session_recall` in **both current
+and past scopes only to a local candidate**. The handler also refuses raw companion recall on cloud calls: even the
+current episode can include local-only turns, memory commands or withdrawn-consent context. Cloud dialogue comes
+only from the provenance-filtered history builder. Other learning roles retain their current-session recall policy.
+On a cloud call the companion answers
 "what did we say last week" from the notes and the rolling summary's facts, and says it cannot search past
 conversations online. Device-only always: Study documents, chunks and aids beyond what `study_materials` allows for
 one request, stored transcripts, the display name, exam dates themselves (only the distance), photos, the research

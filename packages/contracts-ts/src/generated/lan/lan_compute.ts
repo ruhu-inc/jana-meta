@@ -120,7 +120,8 @@ export type LearningLearningEvent =
   | LearningLearningEventOneOf25
   | LearningLearningEventOneOf26
   | LearningLearningEventOneOf27
-  | LearningLearningEventOneOf28;
+  | LearningLearningEventOneOf28
+  | LearningLearningEventOneOf29;
 export type LearningLearningEventOneOf1 = LearningLearningEventEnvelope & {
   type?: "item_exposed";
   payload?: LearningLearningEventPayloadItemExposed;
@@ -257,6 +258,10 @@ export type LearningLearningEventOneOf27 = LearningLearningEventEnvelope & {
   payload?: LearningLearningEventPayloadStudyActivity;
 };
 export type LearningLearningEventOneOf28 = LearningLearningEventEnvelope & {
+  type?: "memory_requested";
+  payload?: LearningLearningEventPayloadMemoryRequested;
+};
+export type LearningLearningEventOneOf29 = LearningLearningEventEnvelope & {
   type?:
     | "session_started"
     | "session_ended"
@@ -284,8 +289,9 @@ export type LearningLearningEventOneOf28 = LearningLearningEventEnvelope & {
     | "profile_updated"
     | "item_exposed"
     | "skills_delivered"
-    | "study_activity";
-  payload?: LearningLearningEventOneOf28Payload;
+    | "study_activity"
+    | "memory_requested";
+  payload?: LearningLearningEventOneOf29Payload;
 };
 
 export interface LANComputeServerContract {
@@ -1002,7 +1008,14 @@ export interface LearningLearningEventPayloadStudyActivityKcTagsItem {
   kc_id: LearningLearningEventKcId;
   weight: number;
 }
-export interface LearningLearningEventOneOf28Payload {
+/**
+ * This interface was referenced by `LANComputeServerContract`'s JSON-Schema
+ * via the `definition` "learning_learning_event__payload_memory_requested".
+ */
+export interface LearningLearningEventPayloadMemoryRequested {
+  request_id: string;
+}
+export interface LearningLearningEventOneOf29Payload {
   erased: true;
   erased_at: string;
 }

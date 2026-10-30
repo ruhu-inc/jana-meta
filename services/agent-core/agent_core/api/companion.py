@@ -19,6 +19,7 @@ from agent_core.api.core import CURRENT_PROFILE, CoreService, require
 from agent_core.api.errors import ApiError
 from agent_core.api.profiles import Mutating
 from agent_core.engine.companion_opener import OpenerDesk
+from agent_core.engine.profile_scope import ProfileChanged
 
 
 def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
@@ -31,22 +32,41 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
             raise ApiError("not_found", "the card needs an open learner database")
         return OpenerDesk(records.learner, core.settings, core.clock_ms).opener()
 
-    def opened() -> None:
-        if core.directory is not None and core.directory.exists() and CURRENT_PROFILE.get() != core.records_profile:
-            raise ApiError("not_found", "this profile is not open")
-        if core.tutor_unavailable is not None and core.tutor_unavailable():
-            raise ApiError("model_unavailable", "the tutor cannot run on this computer offline")
+    def opened(body: Any) -> str | None:
+        profile_open()
+        require("CompanionOpen", body or {})
+        online, profile = getattr(core, "online", None), core.records_profile
+        if online is None or profile is None:
+            return None
+        answer = (body or {}).get("cloud_notice")
+        if answer in ("accepted", "declined"):
+            online.record_notice(profile, "cloud_tier", answer == "accepted")
+        assert core.records is not None and core.records.learner is not None
+        if not online.cloud_effective(profile, core.records.learner.conn):
+            return None
+        given = online.notice_answer(profile, "cloud_tier")
+        if given is None:
+            return "notice_required"
+        if given == "declined" and core.tutor_unavailable is not None and core.tutor_unavailable():
+            return "notice_declined"
+        return None
+
+    def availability(reply: dict[str, Any], notice: str | None) -> dict[str, Any]:
+        return {
+            **reply,
+            "notice": notice,
+            "can_reply": notice is None and not (core.tutor_unavailable is not None and core.tutor_unavailable()),
+        }
 
     @app.post("/v1/companion")
     async def open_thread(request: Request) -> Response:
         async def run(body: Any) -> tuple[int, Any]:
-            opened()
-            require("CompanionOpen", body or {})
+            notice = opened(body)
             try:
                 reply = await core.open_companion()
             except LookupError:
                 raise ApiError("not_found", "the companion needs an open learner database") from None
-            return 200, require("CompanionOpened", reply)
+            return 200, require("CompanionOpened", availability(reply, notice))
 
         return await mutating(request, run)
 
@@ -64,6 +84,19 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
             raise ApiError("not_found", "this profile is not open")
         if core.records is None or core.records.learner is None or core.records_profile is None:
             raise ApiError("not_found", "check-ins need an open learner database")
+
+    @app.get("/v1/companion/history")
+    async def history(limit: int = 50, before: str | None = None) -> Any:
+        from agent_core.engine.companion_history import public_page
+
+        profile_open()
+        if not 1 <= limit <= 100:
+            raise ApiError("validation_failed", "history limit must be between 1 and 100")
+        assert core.records is not None and core.records.learner is not None
+        try:
+            return require("CompanionHistory", public_page(core.records.learner.conn, limit=limit, before=before))
+        except ValueError:
+            raise ApiError("validation_failed", "invalid history cursor") from None
 
     @app.get("/v1/checkins/due")
     async def checkins_due() -> Any:
@@ -84,12 +117,16 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
     @app.post("/v1/checkins/{commitment_id}/open")
     async def checkin_open(commitment_id: str, request: Request) -> Response:
         async def run(body: Any) -> tuple[int, Any]:
-            opened()
+            notice = opened(body)
             profile_open()
             try:
                 checkin = core.checkins.opening(commitment_id)
             except LookupError:
                 raise ApiError("not_found", "no such check-in") from None
-            return 200, require("CompanionOpened", await core.open_companion(checkin=checkin))
+            try:
+                reply = await core.open_companion(checkin=checkin)
+            except ProfileChanged:
+                raise ApiError("not_found", "the check-in's profile is no longer open") from None
+            return 200, require("CompanionOpened", availability(reply, notice))
 
         return await mutating(request, run)

@@ -273,12 +273,19 @@ class Ack(BaseModel):
     receiver_time: Datetime
 
 
-class LearningLearningEventOneOf28Payload(BaseModel):
+class LearningLearningEventOneOf29Payload(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     erased: Literal[True]
     erased_at: str
+
+
+class LearningLearningEventPayloadMemoryRequested(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    request_id: Annotated[str, Field(max_length=100, min_length=1)]
 
 
 type Count = Annotated[int, Field(ge=1, le=200)]
@@ -899,6 +906,14 @@ class LearningLearningEventOneOf28(LearningLearningEventEnvelope):
     model_config = ConfigDict(
         extra="forbid",
     )
+    type: Literal["memory_requested"]
+    payload: LearningLearningEventPayloadMemoryRequested
+
+
+class LearningLearningEventOneOf29(LearningLearningEventEnvelope):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     type: Literal[
         "session_started",
         "session_ended",
@@ -927,10 +942,11 @@ class LearningLearningEventOneOf28(LearningLearningEventEnvelope):
         "item_exposed",
         "skills_delivered",
         "study_activity",
+        "memory_requested",
     ]
     payload: Annotated[
-        LearningLearningEventOneOf28Payload,
-        Field(title="LearningLearningEventOneOf28Payload"),
+        LearningLearningEventOneOf29Payload,
+        Field(title="LearningLearningEventOneOf29Payload"),
     ]
 
 
@@ -1100,7 +1116,8 @@ type LearningLearningEvent = Annotated[
     | LearningLearningEventOneOf25
     | LearningLearningEventOneOf26
     | LearningLearningEventOneOf27
-    | LearningLearningEventOneOf28,
+    | LearningLearningEventOneOf28
+    | LearningLearningEventOneOf29,
     Field(title="LearningLearningEvent"),
 ]
 

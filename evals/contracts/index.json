@@ -474,6 +474,18 @@
     "origin": "synthesised"
   },
   {
+    "file": "api/commands/CompanionHistory/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/CompanionHistory",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/CompanionHistory/valid/minimal.json",
+    "contract": "api/commands#/$defs/CompanionHistory",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "api/commands/CompanionOpen/invalid/unknown_property.json",
     "contract": "api/commands#/$defs/CompanionOpen",
     "expect": "invalid",
@@ -1202,6 +1214,18 @@
   {
     "file": "api/commands/MapSyllabus/valid/minimal.json",
     "contract": "api/commands#/$defs/MapSyllabus",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/MemoryExplanation/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/MemoryExplanation",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/MemoryExplanation/valid/minimal.json",
+    "contract": "api/commands#/$defs/MemoryExplanation",
     "expect": "valid",
     "origin": "synthesised"
   },
@@ -2162,6 +2186,30 @@
   {
     "file": "api/commands/SyllabusPoint/valid/minimal.json",
     "contract": "api/commands#/$defs/SyllabusPoint",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/TeachingObservation/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/TeachingObservation",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/TeachingObservation/valid/minimal.json",
+    "contract": "api/commands#/$defs/TeachingObservation",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "api/commands/TeachingOutcome/invalid/unknown_property.json",
+    "contract": "api/commands#/$defs/TeachingOutcome",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "api/commands/TeachingOutcome/valid/minimal.json",
+    "contract": "api/commands#/$defs/TeachingOutcome",
     "expect": "valid",
     "origin": "synthesised"
   },

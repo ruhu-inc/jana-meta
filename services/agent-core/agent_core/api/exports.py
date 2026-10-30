@@ -230,9 +230,17 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
             name, suffix = f"{(display_name or fields['display_name'])[:36]} ({suffix})", suffix + 1
         # Consult only content-free tombstones in the device's existing profiles. No source content is read.
         deleted: dict[str, int] = {}
-        if archive.study_workspace is not None:
-            for existing in d.summaries()["profiles"]:
-                with d.open_learner(existing["profile_id"]) as old:
+        erased_memory: set[str] = set()
+        for existing in d.summaries()["profiles"]:
+            with d.open_learner(existing["profile_id"]) as old:
+                erased_memory.update(
+                    str(r[0])
+                    for r in old.execute(
+                        "SELECT event_id FROM events WHERE erased_at IS NOT NULL"
+                        " AND type IN ('note_written','correction')",
+                    )
+                )
+                if archive.study_workspace is not None:
                     deleted.update(old.execute("SELECT source_id,deleted_at FROM study_tombstones").fetchall())
         created = d.create({"display_name": name, "avatar": fields["avatar"], "level": fields["level"],
                             "subjects": fields["subjects"], "age_band": fields["age_band"],
@@ -254,7 +262,11 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
 
         with importing() as conn:
             events = []
+            memory_removed = False
             for event in archive.events:
+                if event["event_id"] in erased_memory:
+                    memory_removed = True
+                    continue
                 if event["type"] in ("pin_changed", "solution_policy_changed"):
                     continue
                 if (
@@ -289,6 +301,8 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
                     if row["key"] not in PREFERENCES:
                         continue
                     row = {**row, "source": "student" if row["source"] == "adult" else row["source"]}
+                    if row["key"] == "checkin_notifications":
+                        row["value"] = "false"
                     if row["key"] == "tutor_avatar":  # an archive from before the six characters (D103, G119)
                         row["value"] = json.dumps(tutor_avatar(json.loads(row["value"])))
                     conn.execute(
@@ -362,5 +376,21 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
                             marks = ", ".join("?" for _ in row)
                             conn.execute(f"INSERT OR IGNORE INTO {table} ({columns}) VALUES ({marks})",  # noqa: S608
                                          tuple(row.values()))  # fmt: skip
+                if archive.companion is not None:
+                    from agent_core.store.companion_archive import restore as restore_companion
+
+                    restore_companion(conn, archive.companion)
+                if memory_removed:
+                    from agent_core.memory.visibility import advance
+
+                    # Old archives can contain paraphrases in dialogue/check-ins. Keep authorized history visible,
+                    # exclude it from model recall, and do not revive reminders derived from removed memory.
+                    advance(conn, now)
+                    conn.execute("DELETE FROM commitments")
+            if archive.companion is not None:
+                from agent_core.memory.write import fold_companion_summary
+
+                for summary in archive.companion["summaries"]:
+                    fold_companion_summary(conn, summary["thread_id"], core.companion.content(), now_ms=now)
         d.audit("profile.import", internal)
         return new_id_

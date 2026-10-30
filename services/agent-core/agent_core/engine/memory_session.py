@@ -3,7 +3,7 @@
 `SessionMemory` freezes the learner snapshot at the session's first Coach prepare and renders the learner block (tier
 6) from it for each call's variant: local (with the notes in their records wrapper) or cloud (ids and bands only, no
 notes). The snapshot lives in this object only: it is never checkpointed, so a restored session freezes afresh. The
-one change a frozen snapshot allows is a forgotten note leaving it (`without_note`).
+snapshot is refreshed after a committed explicit memory edit or a durable memory revision changes.
 
 A session reaches memory only through `MemoryAccess`, bound to the profile the session belongs to: when the open
 learner database is another profile's (after a switch), every read refuses. Whether saving is on is read again for
@@ -30,6 +30,7 @@ from agent_core.memory.recall import recall_sessions, record_recalls
 from agent_core.memory.refs import RefTable
 from agent_core.memory.render import LearnerBlock, Variant, fit_block
 from agent_core.memory.snapshot import FrozenMemory, freeze
+from agent_core.memory.visibility import revision
 
 SUBJECTS = frozenset({"mathematics", "physics", "chemistry", "biology", "accounting"})
 
@@ -73,6 +74,8 @@ class SessionMemory:
     session_id: str
     frozen: FrozenMemory | None = None
     topic: str | None = None
+    _revision: str = ""
+    _freeze_args: tuple[str, tuple[str, ...], str] | None = None
     _blocks: dict[tuple[str, int], LearnerBlock] = field(default_factory=dict)
     refs: RefTable = field(default_factory=lambda: RefTable.of(()))  # the note refs the Coach was shown (MEM-08)
     progress_seen: dict[str, float] = field(default_factory=dict)  # kc -> probability before the latest verdict
@@ -85,13 +88,23 @@ class SessionMemory:
     def source(self) -> MemorySource | None:
         return self.access.source()
 
+    def refresh(self) -> None:
+        """A committed explicit memory edit invalidates this session's frozen prompt and reference tables."""
+        self.frozen = None
+        self._blocks.clear()
+        self.refs = RefTable.of(())
+
     def freeze(self, *, subject: str, focus: Sequence[str], session_date: str) -> FrozenMemory | None:
         """Run the fixed queries once (MEM-03, MEM-04); later calls return the same snapshot."""
+        source = self.source()
+        if source is not None and revision(source.conn) != self._revision:
+            self.refresh()
         if self.frozen is not None:
             return self.frozen
-        source = self.source()
         if source is None:
             return None
+        self._revision = revision(source.conn)
+        self._freeze_args = (subject, tuple(focus), session_date)
         self.topic = self._topic(source, focus)
         self.frozen = freeze(source.conn, source.content, self.settings, subject=_subject(subject),
                              topic_id=self.topic, session_date=session_date, focus=focus)  # fmt: skip
@@ -126,6 +139,12 @@ class SessionMemory:
     def block(self, variant: Variant, allowance_chars: int) -> LearnerBlock | None:
         """The learner block for a call, rendered once per variant and allowance: the same snapshot always gives the
         same text, so the prompt prefix stays cacheable (MEM-03, LRN-05)."""
+        source = self.source()
+        if source is None:
+            return None
+        if self._freeze_args is not None and (self.frozen is None or revision(source.conn) != self._revision):
+            subject, focus, session_date = self._freeze_args
+            self.freeze(subject=subject, focus=focus, session_date=session_date)
         if self.frozen is None:
             return None
         if variant == "cloud" and self.memory_online():

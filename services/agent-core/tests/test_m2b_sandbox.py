@@ -123,6 +123,9 @@ def sec07_import_allow_list_enforced(tmp_path: Path):
             before = {w.process.pid for w in supervisor._all if w.process}
             outcome = await supervisor.call("operate", 1, {"action": action}, CHECK, 10000)
             assert outcome.error == "policy_denied" and outcome.action_taken is False, (action, outcome)
+            assert not before & {w.process.pid for w in supervisor._all if w.process}
+            # The refused process leaves the pool immediately; a subsequent check waits for the replacement.
+            assert (await supervisor.call("math_parse", 1, {"text": "x+1"}, CHECK, 10000)).ok
             after = {w.process.pid for w in supervisor._all if w.process}
             assert before and after and not (before & after), (action, "the worker was not recycled")
         await supervisor.close()

@@ -17,16 +17,26 @@ from agent_core.contracts import errors
 from agent_core.engine import companion_opener
 from agent_core.engine.companion import CompanionDesk, opener_errors, word_opener
 from agent_core.engine.companion_opener import Facts, OpenerDesk, chosen, facts, load_templates, word
+from agent_core.store.ids import new_ulid
 from memory_harness import Store, at_ms, store
 
 DAY = 86_400_000
 
 
-def _session(held: Store, sid: str, mode: str, subject: str | None, started: int, ended: int | None) -> None:
+def _session(held: Store, sid: str, mode: str, subject: str | None, started: int, ended: int | None,
+             learned: bool = True) -> str:  # fmt: skip
+    """A session of the given mode; `learned` gives it one learning event (a hint), as any real session holds. `sid`
+    is the test's label; the stored id is a ULID, as the event contract requires."""
+    stored = new_ulid(started)
     held.conn.execute(
         "INSERT INTO sessions (session_id, mode, subject, started_at, ended_at) VALUES (?, ?, ?, ?, ?)",
-        (sid, mode, subject, started, ended),
+        (stored, mode, subject, started, ended),
     )
+    if learned:
+        held.learner.record("hint", {"session_id": stored, "problem_ref": f"prob_{sid}", "step_index": 0, "rung": 1,
+                                     "trigger": "student_request", "kc_ids": ["kc.phy.o.motion.average_speed"]},
+                            source="engine", session_id=stored)  # fmt: skip
+    return stored
 
 
 def _due(held: Store, kc: str, due_at: int) -> None:
@@ -228,3 +238,20 @@ def test_a_changed_fact_invalidates_the_cached_wording_phase_2() -> None:
     assert changed["opener"]["facts"]["learner_cards_due"] == 1
     assert changed["opener"]["text"] == "1 card is due now; physics was on 2026-10-10."
     assert errors("api/commands#/$defs/CompanionOpened", changed) == []
+
+
+def test_the_onboarding_interview_and_sessions_without_learning_never_count() -> None:
+    """The hand-off's scripted interview runs in a session with no learning event; neither it nor any session the
+    learner opened and left without learning is "last time": a brand-new profile sees the first-time card (§19 fix,
+    2026-10-29)."""
+    held = store(day="2026-10-11")
+    held.conn.execute("UPDATE profile SET exam_date = NULL")  # a brand-new profile: nothing else to say yet
+    _session(held, "interview", "guided", "mathematics", at_ms("2026-10-11") - 3_600_000,
+             at_ms("2026-10-11") - 3_000_000, learned=False)  # fmt: skip
+    found = OpenerDesk(held.learner, Settings(), held.clock).opener()
+    assert found["facts"]["last_session_date"] is None and found["facts"]["last_session_mode"] is None
+    assert found["text"] == load_templates().text("first_time")
+    # A session with learning in it does count, even an older one.
+    _session(held, "S1", "practice", "physics", at_ms("2026-10-09"), at_ms("2026-10-09") + 600_000)
+    after = OpenerDesk(held.learner, Settings(), held.clock).opener()
+    assert (after["facts"]["last_session_date"], after["facts"]["last_subject"]) == ("2026-10-09", "physics")

@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import type { ResearchContracts as R, StudyWorkspaceController } from "@jana/client-core";
+import { CommandError, type ResearchContracts as R, type StudyWorkspaceController } from "@jana/client-core";
 import { StudyResearch } from "../src/learn/StudyResearch.js";
 import { LocaleProvider } from "../src/i18n.js";
 
@@ -73,6 +73,25 @@ describe("SPEC §18 research agent", () => {
     expect(view.container.querySelector('[data-part="quiz"]')?.getAttribute("data-state")).toBe("failed");
     fireEvent.click(screen.getByRole("button", { name: "Open the pack" }));
     expect(opened).toHaveBeenCalledWith(`src_${"2".repeat(26)}`);
+  });
+
+  test("research_asks_the_online_tutor_notice_then_sends_the_same_turn_with_the_answer", async () => {
+    // A profile that starts in Study has never answered the online tutor's first-use notice (ARC-10): the core says so
+    // and the conversation asks it, then sends the same turn with the answer (§19 fix, 2026-10-29).
+    const { fake, as } = controller([QUESTION]);
+    fake.researchChat.mockImplementationOnce(async () => {
+      throw new CommandError(403, "feature_disabled", false, { reason: "notice_required", feature: "cloud_tier" });
+    });
+    show(as);
+    fireEvent.change(screen.getByLabelText("What do you want to learn about?"), { target: { value: "electrolysis of brine" } });
+    fireEvent.click(screen.getByRole("button", { name: "Research it" }));
+    await screen.findByText("Plan this with the online tutor?");
+    expect(screen.queryByText(/isn't available/)).toBeNull(); // not the planner failure
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+    await screen.findByText("What is this pack for?");
+    expect(fake.researchChat.mock.calls[1]?.[0]).toEqual({ start: { topic: "electrolysis of brine" }, history: [], answer: null,
+      skip: false, cloud_notice: "accepted" });
+    expect(screen.queryByText("Plan this with the online tutor?")).toBeNull();
   });
 
   test("research_skip_goes_straight_to_the_plan", async () => {

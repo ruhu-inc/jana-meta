@@ -80,9 +80,9 @@
   "version": 1
  },
  "make_aid": {
-  "params_sha256": "5bca31172a82b70222ad0b48db1d85f01f77243cfb17fe9c7492264a6a727e28",
+  "params_sha256": "dd5e7d243d492c6f927ee23008b046306e97fef150e756868560f66759f56fe8",
   "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-  "version": 1
+  "version": 2
  },
  "math_check_answer": {
   "params_sha256": "8590d5f335f7f88b1e83af8b14481a5bc061d7ba9b0b2f8f3ec45091befd5dc2",
@@ -195,9 +195,9 @@
   "version": 1
  },
  "study_search": {
-  "params_sha256": "e78f8095aafbe0a6dbf3f93f4df1bb5b86cdd08a9d03523dcf07361f019bb68b",
+  "params_sha256": "0c724c5140a10d5e444a4738ab9383ec08dbfad5830aeee74c0c35f5f9577435",
   "params_small_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-  "version": 1
+  "version": 2
  },
  "units_check_dimensions": {
   "params_sha256": "f154c240b13904738c60c34ee8b3cf0ee49ef9e4a3755e4c84f546c9454f50f3",

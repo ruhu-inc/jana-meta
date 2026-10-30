@@ -23,7 +23,9 @@ from test_m31_voice_socket import Endpoint, Socket
 from test_m32_provisional import SAFE, prepared
 
 
-async def setup_adapter(tmp_path, *, replies=None, early_response=True, connect_factory=None, place="ask"):
+async def setup_adapter(
+    tmp_path, *, replies=None, early_response=True, connect_factory=None, place="ask", fillers=False
+):
     live, factory = await prepared(tmp_path, replies)
     core = CoreService(live.deps.settings, factory, SessionStore(tmp_path / "sessions"), epoch="0000000000000001")
     sid = core.create_session(
@@ -46,6 +48,10 @@ async def setup_adapter(tmp_path, *, replies=None, early_response=True, connect_
         return endpoint
 
     runtime = attach(core, connect, secret="adapter-secret", strict=True)  # noqa: S106 -- synthetic test credential
+    if not fillers:
+        # Answer/checkpoint assertions must not depend on how quickly this host assembles an engine. VOC-12 tests
+        # explicitly enable the real timer and verify the filler independently of the accepted answer.
+        runtime.adapter._filler_after_s = lambda _binding: float("inf")
     app = create_app(core, LaunchSecret("launch-secret"), lambda: 8765, voice=runtime)
     socket = Socket(app, sid, profile=None)
     assert (await socket.receive())["type"] == "websocket.accept"

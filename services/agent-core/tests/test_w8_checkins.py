@@ -208,8 +208,9 @@ def test_the_first_accepted_turn_of_an_opened_checkin_marks_it_answered(tmp_path
                                 today - dt.timedelta(days=1), 0.9, "extractor", None, now - HOUR)  # fmt: skip
             assert made is not None
             held = t.r.core.records.learner.conn  # type: ignore[union-attr]
-            held.execute("UPDATE commitments SET state = 'shown', shown_at = ?, due_from = ?",
-                         (now - 60_000, now - HOUR))  # fmt: skip
+            # Shown a minute ago and due now, whatever the time of day the test runs (a 49-hour window).
+            held.execute("UPDATE commitments SET state = 'shown', shown_at = ?, due_from = ?, due_until = ?",
+                         (now - 60_000, now - HOUR, now + 48 * HOUR))  # fmt: skip
             opened = await t.api.call("POST", f"/v1/checkins/{made['commitment_id']}/open", {}, profile=t.token)
             assert opened.status_code == 200, opened.text
             body = opened.json()

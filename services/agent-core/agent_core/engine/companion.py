@@ -18,7 +18,7 @@ tools, learner block) stays byte-identical; a change-keyed status line is added 
 `companion.action`s. Gates: the schema, one ask, fact binding (a number in the reply must appear in a tool result or
 the status line beside the same label) and the output critic; a failed draft is nudged once, then the canned turn.
 
-Privacy (§19.6, regardless of `tutor_memory_online`): a cloud candidate is never offered past-scope `session_recall`,
+Privacy (§19.6, regardless of `tutor_memory_online`): a cloud candidate is never offered `session_recall`,
 gets `study_search` only while `study_materials` is effective, carries the cloud learner block and no notes. Companion
 turns are not Reflector evidence; the episode's end is its write point.
 """
@@ -37,11 +37,14 @@ from typing import Any
 
 from jsonschema import Draft202012Validator
 
-from agent_core.engine import job_scope
+from agent_core.engine import companion_facts, job_scope
+from agent_core.engine.companion_history import context_rows, record_context
 from agent_core.engine.companion_opener import Facts, OpenerTemplates, chosen, facts, load_templates, word
 from agent_core.engine.events import new_id
+from agent_core.engine.profile_scope import ProfileScope
 from agent_core.learner.service import Learner
 from agent_core.memory.render import NOTES_CLOSE, NOTES_OPEN, RECORDS_LINE, escape_note
+from agent_core.memory.visibility import revision as memory_revision
 from agent_core.memory.write import fold_companion_summary, summary_body
 from agent_core.router import Message
 from agent_core.store.ids import new_ulid
@@ -81,10 +84,16 @@ def labelled_numbers(text: str) -> list[tuple[str, frozenset[str]]]:
     """Each number in `text` with the words beside it (two before, two after), lower-cased and singular: the label a
     reader takes it with ("12 cards" is 12 with cards; "exam in 19 days" is 19 with exam, in, days)."""
     out = []
-    lowered = text.lower()
+    lowered = companion_facts.normalise_numbers(text.lower())
     for match in _NUMBER.finditer(lowered):
-        before = _WORD.findall(lowered[max(0, match.start() - 40) : match.start()])[-2:]
-        after = _WORD.findall(lowered[match.end() : match.end() + 40])[:2]
+        before_text = re.split(r"[;.!?]", lowered[max(0, match.start() - 40) : match.start()])[-1]
+        after_text = re.split(r"[;.!?]", lowered[match.end() : match.end() + 40])[0]
+        before = _WORD.findall(before_text)[-2:]
+        after = _WORD.findall(after_text)[:2]
+        units = {"card", "flashcard", "day", "question", "answer", "review", "percent", "pack"}
+        if after and _singular(after[0]) in units:
+            before = [w for w in before if _singular(w) not in units]
+            after = after[:1]
         out.append((match.group(1), frozenset(_singular(w) for w in (*before, *after))))
     return out
 
@@ -118,18 +127,70 @@ def allowed_numbers(sources: Sequence[Any]) -> dict[str, set[str]]:
     return allowed
 
 
-def fact_binding_errors(text: str, sources: Sequence[Any]) -> list[str]:
-    """Every number in the reply must appear in a tool result or the status line beside the same label: "12 cards"
-    may not become "12 days" (the number and its unit word are matched together)."""
+SEARCH_CLAIM = re.compile(
+    r"\b(?:I(?:'ve| have)?\s+(?:looked|searched|checked|found|went through)|I\s+(?:could not|couldn't|did not|didn't)"
+    r"\s+find|(?:found|see|saw)\s+(?:it\s+)?in\s+your\s+(?:pack|packs|materials?|notes|library|sources?))\b",
+    re.IGNORECASE,
+)
+
+
+def search_claim_errors(text: str, searched: bool) -> list[str]:
+    """A reply may say it looked in, found or did not find something in the student's materials only when a search
+    ran this turn: `study_search`, or the excerpts the engine recalled by code before the call (§19 fix,
+    2026-10-30)."""
+    if not searched and SEARCH_CLAIM.search(text):
+        return ["you said you searched or found something, but no search ran this turn: call study_search or drop it"]
+    return []
+
+
+FACT_UNITS = frozenset({"card", "flashcard", "day", "question", "answer", "review", "percent", "pack"})
+
+
+def fact_binding_findings(text: str, sources: Sequence[Any]) -> list[tuple[str, str]]:
+    """Each number in the reply that no tool result or status line gives beside the same unit, as (number, unit kind:
+    the unit words said beside it, or `none`). A personal progress claim is ("progress", "claim")."""
+    if companion_facts.PERSONAL_PROGRESS.search(text):
+        return [("progress", "claim")]
     allowed = allowed_numbers(sources)
-    problems = []
+    found = []
     for number, label in labelled_numbers(text):
         words = allowed.get(number)
-        if words is None:
-            problems.append(f"{number} is not in any tool result")
-        elif label and not (label & words):
-            problems.append(f"{number} is said with a different label than the tool gave it")
-    return problems
+        # Only unit words establish a numeric relationship. Generic words such as 'in' or 'your' prove nothing.
+        said_units = label & FACT_UNITS
+        if words is None or not said_units or not (said_units & words):
+            found.append((number, "_".join(sorted(said_units)) or "none"))
+    return found
+
+
+def fact_binding_errors(text: str, sources: Sequence[Any]) -> list[str]:
+    """Numbers bind to their own metric/unit, never a neighbouring clause's unrelated word."""
+    return [
+        "personal progress claims require a typed fact reference"
+        if number == "progress"
+        else f"{number} has no matching source metric"
+        for number, _ in fact_binding_findings(text, sources)
+    ]
+
+
+def gate_results(engine: Any, context: Any, reply: Mapping[str, Any]) -> list[tuple[str, list[str], str | None]]:
+    """Every gate a companion reply passes or fails, in order, as (gate, problems, detail code). The detail never
+    holds the reply's text: for fact binding it is the first failing number and the unit said beside it."""
+    text = str(reply.get("text") or "")
+    binding = fact_binding_findings(text, context.sources)
+    out: list[tuple[str, list[str], str | None]] = [
+        ("one_ask", one_ask_errors(text), None),
+        ("fact_binding", fact_binding_errors(text, context.sources),
+         f"number:{binding[0][0]}:unit:{binding[0][1]}"[:64] if binding else None),
+        ("search_claim", search_claim_errors(text, context.searched), None),
+        ("model_claims", companion_facts.model_claim_errors(text), None),
+        ("output_critic", _critic_errors(engine, text), None),
+    ]  # fmt: skip
+    try:
+        companion_facts.selected_text(context.facts, reply.get("fact_refs", []))
+        out.append(("fact_refs", [], None))
+    except ValueError:
+        out.append(("fact_refs", ["fact_refs must select facts supplied in this turn"], None))
+    return out
 
 
 # --- the opener's wording (§19.5.2, phase 2) --------------------------------------------------------------------
@@ -152,6 +213,15 @@ def opener_numbers(found: Facts, picked: Sequence[str]) -> dict[str, set[str]]:
 def opener_errors(text: str, found: Facts, picked: Sequence[str]) -> list[str]:
     """The wording holds every chosen number beside its label and no other number, within 240 characters."""
     problems = []
+    from agent_core.engine.companion_opener import SUBJECTS
+
+    if companion_facts.PERSONAL_PROGRESS.search(text):
+        problems.append("the opener has no evidence for a mastery or improvement claim")
+    for subject in SUBJECTS:
+        if re.search(r"\b" + re.escape(subject) + r"\b", text, re.I) and (
+            "last_session" not in picked or subject != found.last_subject
+        ):
+            problems.append("the subject is not one of the selected facts")
     if not text.strip() or len(text) > OPENER_MAX_CHARS:
         problems.append(f"the opener is empty or longer than {OPENER_MAX_CHARS} characters")
     wanted = opener_numbers(found, picked)
@@ -176,20 +246,31 @@ OPENER_TASK = (
 
 
 async def word_opener(router: Any, found: Facts, picked: Sequence[str], template: str,
-                      schema: tuple[str, dict[str, Any], Draft202012Validator]) -> tuple[str, str]:  # fmt: skip
+                      schema: tuple[str, dict[str, Any], Draft202012Validator],
+                      require_scope: Callable[[], None] = lambda: None) -> tuple[str, str]:  # fmt: skip
     """(text, how): one call words the chosen facts; a wording that breaks the number rule is corrected once, else
     the template is the wording ("model", "corrected", "template")."""
     if router is None or not picked:
         return template, "template"
     lines = "\n".join(f"- {line}" for line in _fact_lines(found, picked))
     prompt = OPENER_TASK.format(facts=lines)
+
+    async def prepare(_candidate: Any, _caps: Any, messages: list[Message]) -> list[Message]:
+        require_scope()
+        return messages
+
+    def request_guard(_candidate: Any) -> None:
+        require_scope()
+
     for attempt in range(2):
+        require_scope()
         try:
             with job_scope(new_id("job")):  # the router serves calls inside a turn or a job only
                 result = await router.complete(ROLE, [Message("user", prompt)], output=schema, temperature=0.4,
-                                               effort="low")  # fmt: skip
+                                               effort="low", prepare=prepare, request_guard=request_guard)  # fmt: skip
         except Exception:  # offline, no candidate, a provider failure: the template, always
             return template, "template"
+        require_scope()
         text = str((result.structured or {}).get("text", "")) if result.schema_valid else ""
         problems = opener_errors(text, found, picked)
         if not problems:
@@ -237,6 +318,17 @@ class CompanionDesk:
     schema: Callable[[], tuple[str, dict[str, Any], Draft202012Validator] | None] = lambda: None
     templates: OpenerTemplates = field(default_factory=load_templates)
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    _generation: int = 0
+
+    def invalidate(self, _profile_id: str) -> None:
+        """End outstanding operations before a profile lock, switch or deletion closes its storage."""
+        self._generation += 1
+
+    def scope(self) -> ProfileScope:
+        return ProfileScope.capture(self.learner(), self._generation)
+
+    def require_scope(self, scope: ProfileScope) -> None:
+        scope.require(self.learner(), self._generation)
 
     # --- storage ---------------------------------------------------------------------------------------------
 
@@ -292,7 +384,9 @@ class CompanionDesk:
         `resume` makes sure an existing one is live. Concurrent opens return the same session (one lock, and the
         table's UNIQUE(profile_day)). With a check-in (§19.3.4) the episode records its id, and the opener is its
         question: the cached wording is bypassed."""
+        scope = self.scope()  # capture before waiting for another profile's opener to release the lock
         async with self._lock:
+            self.require_scope(scope)
             now = self.clock()
             today = self.day(now)
             for stale in self.open_episodes():
@@ -327,6 +421,7 @@ class CompanionDesk:
                 opener = self.checkin_opener(found, now, checkin)
             else:
                 opener = await self.opener(found, now)
+            self.require_scope(scope)
             summary = self.summary()
             return {"session_id": found.session_id, "thread_id": thread, "resumed": resumed, "opener": opener,
                     "summary": summary}  # fmt: skip
@@ -344,8 +439,8 @@ class CompanionDesk:
     async def opener(self, episode: Episode, now: int) -> dict[str, Any]:
         """The opener: facts recomputed on every open; the wording cached per day and kept only while the facts are
         the same (a changed fact invalidates it)."""
-        learner = self.learner()
-        assert learner is not None
+        scope = self.scope()
+        learner = scope.learner
         summary = self.summary()
         found = replace(facts(learner, self.settings, now), study_cards_due=self.study_cards_due(now),
                         next_step=(summary.get("next_step") or {}).get("text"))  # fmt: skip
@@ -354,14 +449,17 @@ class CompanionDesk:
         if cached.get("facts") == view and cached.get("text"):
             return {"opener_id": episode.profile_day, "text": cached["text"], "facts": view}
         picked = chosen(found)
-        template = word(found, picked, self.templates)[:OPENER_MAX_CHARS]
+        template = word(found, picked, self.templates, thread=True)[:OPENER_MAX_CHARS]
         schema = self.schema()
         text, how = (template, "template") if schema is None or not picked else await word_opener(
-            self.router(), found, picked, template, schema)  # fmt: skip
-        conn = self._conn()
+            self.router(), found, picked, template, schema, lambda: self.require_scope(scope))  # fmt: skip
+        self.require_scope(scope)
+        conn = learner.conn
         with transaction(conn):
-            conn.execute("UPDATE companion_episodes SET opener_json = ? WHERE profile_day = ?",
-                         (json.dumps({"facts": view, "text": text, "how": how}), episode.profile_day))  # fmt: skip
+            conn.execute("UPDATE companion_episodes SET opener_json = ?"
+                         " WHERE profile_day = ? AND session_id = ? AND thread_id = ?",
+                         (json.dumps({"facts": view, "text": text, "how": how}), episode.profile_day,
+                          episode.session_id.removeprefix("ses_"), episode.thread_id))  # fmt: skip
         return {"opener_id": episode.profile_day, "text": text, "facts": view}
 
     def study_cards_due(self, now: int) -> int:
@@ -439,11 +537,57 @@ class CompanionContext:
     knowledge: Callable[[], Any] = lambda: None  # the installed packs' index for `ask_route`
     status_key: str | None = None  # the last status line's key: appended again only when it changes
     search_refs: dict[int, tuple[str, int]] = field(default_factory=dict)  # this turn's study_search ref table
+    facts: list[companion_facts.Fact] = field(default_factory=list)
     sources: list[Any] = field(default_factory=list)  # this turn's tool results and status line, for fact binding
     actions: list[dict[str, Any]] = field(default_factory=list)  # durable actions this turn's tools produced
     served_cloud: bool = False  # a call of this turn was served by a cloud candidate (the extractor follows it)
     checkins: Any = None  # the core's CheckinDesk (phase 3, §19.5.5), or None
     checkin_task: Any = None  # the last turn's extraction, for tests and a profile switch's cancel
+    failure: dict[str, Any] | None = None  # the last failed model call's diagnosis, by code (`_traced`)
+    turn_history: list[Any] = field(default_factory=list)  # the messages this turn's final call saw
+    searched: bool = False  # a search of the student's materials ran this turn (by code, or study_search)
+    correct_memory: Callable[[str, str, str, str], bool] = lambda *_: False
+    memory_changed: Callable[[], None] = lambda: None
+    note_forgotten: Callable[[str], None] = lambda _: None
+    scope: ProfileScope = field(init=False)
+    egress: dict[str, bool] = field(default_factory=dict)  # provenance of this turn's generated context
+    recall_revision: str | None = None
+
+    def __post_init__(self) -> None:
+        self.scope = self.desk.scope()
+
+    def require_scope(self) -> None:
+        self.desk.require_scope(self.scope)
+
+    def guard_tools(self, executors: dict[str, Any]) -> None:
+        """Check ownership at dispatch, after the tool runner's awaits and before a shared desk is reached."""
+        for name in (*RECALL_TOOLS, *STUDY_TOOLS):
+            handler = executors.get(name)
+            if handler is None:
+                continue
+
+            async def guarded(args: dict[str, Any], call_context: Any, handler: Any = handler) -> Any:
+                self.require_scope()
+                result = await handler(args, call_context)
+                self.require_scope()
+                return result
+
+            executors[name] = guarded
+
+
+def _egress_allowed(policy: Mapping[str, Any], *, memory: bool, materials: bool) -> bool:
+    return not (
+        policy.get("local_only") or (policy.get("memory") and not memory) or (policy.get("materials") and not materials)
+    )
+
+
+def _cloud_allowed(engine: Any) -> bool:
+    memory = getattr(engine, "memory", None)
+    return _egress_allowed(
+        engine.companion.egress,
+        memory=memory is not None and memory.memory_online(),
+        materials=engine.companion.share_materials(),
+    )
 
 
 def status_line(desk: CompanionDesk, now: int) -> tuple[str, str]:
@@ -482,10 +626,10 @@ def strip_for_cloud(text: str, share_materials: bool, notes_online: str | None =
 
 
 def cloud_tools(names: Sequence[str], share_materials: bool, memory_online: bool = False) -> list[str]:
-    """The tools a cloud companion call is offered: never past-scope recall (enforced in the handler, which refuses
-    `scope: past` on a cloud call), `memory_recall` only under `tutor_memory_online` (its answer scrubbed; MDL-25
+    """The tools a cloud companion call is offered: never raw session recall (also enforced in the handler),
+    `memory_recall` only under `tutor_memory_online` (its answer scrubbed; MDL-25
     otherwise), `study_search` only under `study_materials`."""
-    out = [n for n in names if n != "memory_recall" or memory_online]
+    out = [n for n in names if n != "session_recall" and (n != "memory_recall" or memory_online)]
     if not share_materials:
         out = [n for n in out if n != "study_search"]
     return out
@@ -531,9 +675,16 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     from agent_core.engine.ask_route import route_input
 
     context: CompanionContext = engine.companion
+    context.require_scope()
     desk = context.desk
     templates = desk.templates
     context.sources, context.actions, context.search_refs, context.served_cloud = [], [], {}, False
+    context.failure = None
+    context.turn_history = []
+    context.searched = False
+    context.egress = {}
+    context.facts = []
+    context.recall_revision = memory_revision(context.scope.learner.conn)
     route = route_input(text, context.knowledge())
     # Homework (a problem-shaped message in an installed subject) goes to the guided tutor with no model call
     # (PED-01). A subject question that is not a problem stays here: on Home the same router also sends those to the
@@ -549,49 +700,91 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     if learner is None:
         return _finish(engine, turn, canned(templates), [], user=text, stop="degraded")
     now = desk.clock()
-    notes, online_notes = _recent_notes(engine)
+    notes, _ = _recent_notes(engine)
     excerpts = _excerpts(engine, text)
+    context.searched = bool(excerpts)
     line, key = status_line(desk, now)
     context.sources.append(line)
+    status = facts(learner, desk.settings, now)
+    companion_facts.add_facts(
+        context.facts,
+        companion_facts.from_progress(
+            {
+                "due": {"learner_cards": status.learner_cards_due, "study_cards": desk.study_cards_due(now)},
+                "exam_distance_days": status.exam_distance_days,
+            },
+            period=desk.day(now),
+        ),
+    )
     fence = records_fence(notes, excerpts)
     parts = [p for p in (fence, f"Status: {line}" if key != context.status_key else "") if p]
     context.status_key = key
-    user = "\n\n".join([*parts, f"<student>{escape_note(text)}</student>"])
+    user = "\n\n".join([*parts, _fact_prompt(context), f"<student>{escape_note(text)}</student>"])
     system = _system(engine)
     history = await _history(engine, context)
+    context.require_scope()
     messages = [Message("system", system), *history, Message("user", user)]
     offer = _offer(engine)
     schema = engine.deps.bundled_schemas.get("agents/companion-turn")
     output = ("agents/companion-turn", schema, Draft202012Validator(schema)) if schema else None
-    share = context.share_materials()
-    memory = getattr(engine, "memory", None)
-    online = memory is not None and memory.memory_online()  # tutor_memory_online effective (§19.6)
-    online_fence = records_fence(online_notes, []) if online and online_notes else None
 
-    def prepare(candidate: Any, caps: Any, built: list[Message]) -> Any:
+    async def prepare(candidate: Any, caps: Any, built: list[Message]) -> Any:
         from agent_core.router.core import Prepared
 
+        context.require_scope()
+        engine._call_cloud = candidate.locality != "local"
         if candidate.locality == "local":
             return built
+        if not _cloud_allowed(engine):
+            raise PermissionError("the companion context is no longer permitted online")
+        # Consent is an action permission, not part of the episode snapshot. A fallback, repair or tool round
+        # must see revocations made while the previous model request was in flight.
+        share = context.share_materials()
+        memory = getattr(engine, "memory", None)
+        online = memory is not None and memory.memory_online()
+        _, current_notes = _recent_notes(engine)
+        online_fence = records_fence(current_notes, []) if online and current_notes else None
+        # Keep permission provenance on history, so a withdrawal also removes earlier derived replies. Legacy
+        # assistant rows without provenance stay readable locally but cannot be certified for cloud replay.
+        built = [
+            m for m in built if _egress_allowed(m.extras.get("companion_egress", {}), memory=online, materials=share)
+        ]
         cloud_messages = [Message(m.role, strip_for_cloud(m.content, share, online_fence) if m.role == "user" else
                                   _cloud_system_text(engine, m.content) if m.role == "system" else m.content,
-                                  tool_calls=m.tool_calls, tool_call_id=m.tool_call_id, name=m.name)
+                                  tool_calls=m.tool_calls, tool_call_id=m.tool_call_id, name=m.name, extras=m.extras)
                           for m in built]  # fmt: skip
+        context.egress["memory"] = context.egress.get("memory", False) or online
+        context.egress["materials"] = context.egress.get("materials", False) or share
         names = cloud_tools([s.name for s in offer], share, online)
         return Prepared(cloud_messages, [_schema_of(engine, s) for s in offer if s.name in names])
 
     reply: dict[str, Any] | None = None
     nudged = False
-    for _attempt in range(2):
+    decisions: dict[str, dict[str, Any]] = {}
+    for attempt in range(2):
         try:
-            reply = await _call(engine, turn, messages, offer, output, prepare)
+            # The second pass is a correction of a final reply: no new tool round, only the decode call (§19.5.1:
+            # at most two tool rounds a turn; §19 fix, 2026-10-30).
+            reply = await _call(engine, turn, messages, offer, output, prepare,
+                                tool_rounds=MAX_TOOL_ROUNDS if attempt == 0 else 0)  # fmt: skip
         except Exception as error:
+            context.require_scope()  # never finish a stale turn into the newly active profile
             engine._log("warning", "companion", "turn.failed", error=type(error).__name__)
             return _finish(engine, turn, canned(templates), [], user=text, stop="degraded")
         if reply is None:
             break
-        problems = (one_ask_errors(reply["text"]) + fact_binding_errors(reply["text"], context.sources)
-                    + _critic_errors(engine, reply["text"]))  # fmt: skip
+        results = gate_results(engine, context, reply)
+        for gate, found, detail in results:  # every decision goes in the trace (§19 fix, 2026-10-30)
+            entry = decisions.setdefault(gate, {"gate": gate, "fired": False, "nudges": 0, "attempt": attempt + 1,
+                                                "outcome": "passed"})  # fmt: skip
+            entry["attempt"], entry["nudges"] = attempt + 1, attempt
+            if found:
+                entry["fired"], entry["outcome"] = True, "exhausted_canned"
+                if detail:
+                    entry["detail"] = detail
+            elif entry["fired"]:
+                entry["outcome"] = "passed_after_nudge"
+        problems = [p for _, found, _ in results for p in found]
         if not problems:
             break
         if nudged:
@@ -600,12 +793,16 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
         nudged = True
         engine._log("info", "companion", "gate.nudge", problems=len(problems))
         messages = [
-            *messages,
+            *(context.turn_history or messages),
             Message("assistant", json.dumps(reply)),
             Message("user", "Your reply broke these rules: " + "; ".join(problems) + ". Write it again."),
         ]
+    turn.extra_gates.extend(decisions.values())
     if reply is None:
-        return _finish(engine, turn, canned(templates), context.actions, user=text, stop="degraded")
+        # A reply the gates refused twice: when this turn already did something (an aid started), say that, by code;
+        # otherwise the canned line (§19 fix, 2026-10-30).
+        made = made_line(templates, context.sources)
+        return _finish(engine, turn, made or canned(templates), context.actions, user=text, stop="degraded")
     actions = list(context.actions)
     tools = getattr(engine, "study_tools", None)
     chosen_action = resolve_action(reply.get("action"), tools.bands if tools is not None else {})
@@ -617,16 +814,29 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
         with contextlib.suppress(Exception):
             context.checkin_task = context.checkins.schedule(engine.deps.router, text, engine.state.session_id,
                                                              local_only=not context.served_cloud)  # fmt: skip
-    return _finish(engine, turn, reply["text"][:MAX_REPLY_CHARS], actions, user=text, stop="completed")
+    refs = list(reply.get("fact_refs", []))
+    if refs and not any(a["action"] == "open_knows" for a in actions):
+        actions.append(action_event("open_knows", {}))
+    fact_text = companion_facts.selected_text(context.facts, refs)
+    # Never truncate a code-rendered fact into a different claim. At most two bounded facts fit the reply.
+    while len(fact_text) > MAX_REPLY_CHARS - 100 and refs:
+        refs.pop()
+        fact_text = companion_facts.selected_text(context.facts, refs)
+    words = reply["text"][: MAX_REPLY_CHARS - len(fact_text) - 2]
+    words = "\n\n".join(p for p in (words, fact_text) if p)
+    return _finish(engine, turn, words, actions, user=text, stop="completed")
 
 
-def _cloud_system_text(engine: Any, content: str) -> str:
-    local = engine._learner_block("local")
-    cloud = engine._learner_block("cloud")
-    if local is not None and cloud is not None and local.text:
-        content = content.replace(local.text, cloud.text)
-    content = _NOTES_REGION.sub("", content)
-    return "\n".join(line for line in content.split("\n") if "`memory_recall`" not in line)
+def _fact_prompt(context: CompanionContext) -> str:
+    return "Verified facts (select fact_refs; code renders the statement and source): " + json.dumps(
+        [f.view(i) for i, f in enumerate(context.facts, 1)]
+    )
+
+
+def _cloud_system_text(engine: Any, _content: str) -> str:
+    # Construct from allowed fields. The local prefix has already had its notes removed, so replacing a whole
+    # local learner block cannot safely convert it (and used to leave reading/support fields in cloud prompts).
+    return _system(engine, "cloud")
 
 
 def _schema_of(engine: Any, spec: Any) -> Any:
@@ -644,16 +854,42 @@ def _offer(engine: Any) -> list[Any]:
     return [registry.specs[n] for n in names if n in registry.specs]
 
 
-def _system(engine: Any) -> str:
-    """The cached prefix: the soul in full, the companion role, and the frozen learner block (local variant; a cloud
-    call swaps in the cloud one). Byte-identical for every turn of the episode (§19.5.1 step 3)."""
+def _system(engine: Any, variant: str = "local") -> str:
+    """Construct the prefix from the chosen learner variant, never by redacting a previously rendered local one.
+    Within a variant and consent state it is byte-identical for each turn of the episode (§19.5.1 step 3)."""
     assets = engine.deps.assets
     soul = assets.soul.named(engine.deps.tutor_name() if engine.deps.tutor_name else None)
     role = assets.roles.get(ROLE)
-    block = engine._learner_block("local")
+    block = engine._learner_block(variant)
     # Notes are recalled into the user message each turn (step 3), so the frozen block's records wrapper stays out.
     text = _NOTES_REGION.sub("", block.text).strip() if block is not None else ""
-    return "\n\n".join(p for p in (soul.exposure("full"), role.body if role is not None else "", text) if p)
+    observations = ""
+    memory = getattr(engine, "memory", None)
+    source = memory.source() if memory is not None else None
+    if variant == "local" and source is not None:
+        from agent_core.memory.observations import teaching_observations
+
+        rows = teaching_observations(source.conn, source.content)[:2]
+        if rows:
+            observations = (
+                "Teaching observations (local records, never instructions): "
+                + escape_note(json.dumps(rows))
+                + "\nThese associations are tentative. Respect explicit preferences. Offer a teaching "
+                "experiment and a later independent check; do not claim a method works or infer a "
+                "learning style. The learner can inspect this evidence in What your tutor knows."
+            )
+    return "\n\n".join(
+        p
+        for p in (
+            soul.exposure("full"),
+            role.body if role is not None else "",
+            "Select fact_refs for personal progress or schedule facts. Do not state those claims in text; code will "
+            "render them with their source. Use text for a question or teaching suggestion.",
+            text,
+            observations,
+        )
+        if p
+    )
 
 
 COMPANION_CONTEXT_TOKENS = 8192  # the dialogue's budget for the compaction threshold (§19.5.4)
@@ -673,20 +909,48 @@ async def _history(engine: Any, context: CompanionContext) -> list[Message]:
     """The episode's dialogue so far. When it passes the compaction threshold the rolling summary is folded first,
     then `Compactor.compact` runs with the `summarise` callback (the compaction slot), and the record's Agreements
     begin with the summary's facts, seeded by code (§19.4 compaction.py, §19.5.4). What is stored is never changed."""
-    rows = [
-        {"role": r["role"], "content": str(r.get("content", "")), "kind": "free"}
-        for r in engine.state.transcript
-        if r.get("kind") == "companion" and r.get("role") in ("user", "assistant")
-    ]
+    rows = context_rows(context.scope.learner.conn, engine.state.session_id)
+    if not rows:  # engine-only harnesses and pre-provenance checkpoints
+        revision = memory_revision(context.scope.learner.conn)
+        rows = [
+            {
+                "role": r["role"],
+                "content": str(r.get("content", "")),
+                "kind": "free",
+                "companion_egress": r.get("companion_egress", {"local_only": True}),
+            }
+            for r in engine.state.transcript
+            if r.get("kind") == "companion"
+            and r.get("role") in ("user", "assistant")
+            and r.get("memory_revision", "") == revision
+        ]
     tokens = sum(len(r["content"]) for r in rows) // 4
     if rows and engine.compactor.needed(tokens, COMPANION_CONTEXT_TOKENS):
         engine._status("compacting")
         seed = summary_line(context.desk.fold())
-        sent, record = await engine.compactor.compact(engine.state, rows, summarise=engine.auxiliary.summariser())
+        # This dialogue includes private and previous-day context before cloud history filtering. Compaction
+        # must remain local, including fallback/retry candidates, and keep the original profile ownership.
+        summariser = engine.auxiliary.summariser(local_only=True, require_scope=context.require_scope)
+
+        async def summarise(dialogue: str) -> str:
+            context.require_scope()
+            result: str = await summariser(dialogue)
+            context.require_scope()  # a rejected summary must not trigger a repair after profile closure
+            return result
+
+        sent, record = await engine.compactor.compact(engine.state, rows, summarise=summarise)
+        context.require_scope()
         agreements = record.sections.get("Agreements", "")
         record.sections["Agreements"] = "; ".join(p for p in (seed, agreements) if p)
         rows = [{**m, "content": record.text()} if m.get("kind") == "compaction" else m for m in sent]
-    return [Message("user" if r["role"] == "user" else "assistant", str(r["content"])) for r in rows[-24:]]
+    return [
+        Message(
+            "user" if r["role"] == "user" else "assistant",
+            str(r["content"]),
+            extras={"companion_egress": r.get("companion_egress", {"local_only": True})},
+        )
+        for r in rows
+    ]
 
 
 def _recent_notes(engine: Any) -> tuple[list[str], list[str]]:
@@ -731,14 +995,18 @@ def _excerpts(engine: Any, text: str) -> list[str]:
 
 
 def _critic_errors(engine: Any, text: str) -> list[str]:
+    from agent_core.engine.memory_session import remove_save_claims
     from agent_core.engine.safety import OutputCritic
 
     flagged = OutputCritic().check(text, "cloud")
-    return ["the reply failed the output check"] if flagged is not None else []
+    problems = ["the reply failed the output check"] if flagged is not None else []
+    if remove_save_claims(text)[1] or re.search(r"\bi(?:'ve| have) saved (?:your|a|the)\b", text, re.I):
+        problems.append("only a committed memory command can announce a save")
+    return problems
 
 
 async def _call(engine: Any, turn: Any, messages: list[Message], offer: list[Any], output: Any,
-                prepare: Callable[..., Any]) -> dict[str, Any] | None:  # fmt: skip
+                prepare: Callable[..., Any], tool_rounds: int = MAX_TOOL_ROUNDS) -> dict[str, Any] | None:  # fmt: skip
     """One companion call with at most two tool rounds; returns the validated structured reply, or None."""
     from agent_core.engine.turn import _rewritten
     from agent_core.router.structured import check as check_structured
@@ -748,34 +1016,69 @@ async def _call(engine: Any, turn: Any, messages: list[Message], offer: list[Any
     tools = [_schema_of(engine, s) for s in offer]
     session = engine._tool_session(ROLE, "full")
     history = list(messages)
-    for rounds in range(MAX_TOOL_ROUNDS + 1):
+
+    # A successful local reply may have used private profile fields, memory, or past transcript text. Its
+    # derived arguments/results must stay local for the rest of this turn, including the correction pass.
+    def allow(candidate: Any) -> bool:
+        context.require_scope()
+        return bool(candidate.locality == "local" or _cloud_allowed(engine))
+
+    def request_guard(candidate: Any) -> None:
+        context.require_scope()
+        if memory_revision(context.scope.learner.conn) != context.recall_revision:
+            raise PermissionError("the learner's memory changed during this turn")
+        if candidate.locality != "local" and not _cloud_allowed(engine):
+            raise PermissionError("the companion context is no longer permitted online")
+
+    for rounds in range(tool_rounds + 1):
+        context.require_scope()
+        engine._call_cloud = False  # the router's first local candidate does not invoke prepare
         engine._status("waiting_first_token")
-        if rounds < MAX_TOOL_ROUNDS:
+        context.turn_history = list(history)  # what the final call saw: a correction continues from it
+        if rounds < tool_rounds:
             # As the Coach's loop calls (MDL-22): with the tools and no decode schema, so a tool call can come back.
-            result = await router.complete(ROLE, history, tools, output=None, prepare=prepare, effort="low")
+            result = await _traced(engine, turn, router, history, tools, output=None, prepare=prepare, allow=allow,
+                                   request_guard=request_guard, effort="low")  # fmt: skip
+            context.require_scope()
+            engine._call_cloud = _served_cloud(result)
+            if not engine._call_cloud:
+                context.egress["local_only"] = True
             context.served_cloud |= _served_cloud(result)
             calls = list(result.turn.tool_calls)
             if calls:
                 engine._status("tool")
                 outcomes = await turn.tools.run(calls, ROLE, session, [s.name for s in offer], False, engine.cancelled)
+                context.require_scope()
                 history.append(Message("assistant", result.turn.text, tool_calls=_rewritten(calls, outcomes)))
                 for outcome in outcomes:
                     history.append(Message("tool", outcome.result["output"], tool_call_id=outcome.call_id,
                                            name=outcome.name))  # fmt: skip
+                    if outcome.name == "study_search" and outcome.result.get("status") == "ok":
+                        context.searched = True
                     data = outcome.result.get("data")
                     if outcome.result.get("status") == "ok" and data is not None:
                         context.sources.append(data)
+                        if outcome.name == "progress_read" and isinstance(data, dict):
+                            companion_facts.add_facts(
+                                context.facts, companion_facts.from_progress(data, period=context.desk.day())
+                            )
                         action = data.get("action") if isinstance(data, Mapping) else None
                         if isinstance(action, Mapping) and action.get("action") in ACTION_LABELS:
                             context.actions.append(action_event(str(action["action"]), action.get("payload") or {}))
+                history.append(Message("user", _fact_prompt(context)))
                 continue
             if output is not None:
                 checked = check_structured(result.turn.text, output[2])
                 if not checked.errors and isinstance(checked.value, dict):
                     return dict(checked.value)
         # The decode-only call: the same tools made uncallable, so the cached prefix stays the same (MDL-22).
-        decoded = await router.complete(ROLE, history, tools, output=output, prepare=prepare, tools_off=True,
-                                        effort="low")  # fmt: skip
+        context.require_scope()
+        engine._call_cloud = False
+        decoded = await _traced(engine, turn, router, history, tools, output=output, prepare=prepare, allow=allow,
+                                request_guard=request_guard, tools_off=True, effort="low")  # fmt: skip
+        context.require_scope()
+        if not _served_cloud(decoded):
+            context.egress["local_only"] = True
         context.served_cloud |= _served_cloud(decoded)
         if decoded.schema_valid and isinstance(decoded.structured, dict):
             return dict(decoded.structured)
@@ -783,24 +1086,100 @@ async def _call(engine: Any, turn: Any, messages: list[Message], offer: list[Any
     return None
 
 
+async def _traced(engine: Any, turn: Any, router: Any, messages: list[Message], tools: list[Any], **kw: Any) -> Any:
+    """A companion model call recorded in the turn's trace as the Coach's are (OBS-03): every attempt's model call,
+    a failed one too, and the refusal's code (`http_400:…`, `egress_…`) in `context.failure` for the trace's
+    `degraded_reason`. Codes only, never prompt text."""
+    from agent_core.engine.research_chat import diagnosis
+
+    try:
+        result = await router.complete(ROLE, messages, tools, **kw)
+    except Exception as error:
+        record = getattr(error, "record", None)
+        if record is not None:
+            turn.trace.model_calls.extend(record.model_calls())
+        engine.companion.failure = diagnosis(error)
+        raise
+    turn.trace.model_calls.extend(result.record.model_calls())
+    return result
+
+
+def made_line(templates: Any, sources: Sequence[Any]) -> str | None:
+    """What a successful `make_aid` of this turn started, in the engine's words, from its result record: the kind, the
+    count and whose material, never the model's text. None when no aid was started."""
+    records = [s.get("made") for s in sources if isinstance(s, Mapping)]
+    made = next((m for m in reversed(records) if isinstance(m, Mapping)), None)
+    if made is None:
+        return None
+    kind = str(made.get("kind") or "")
+    where = templates.text("made.pack" if made.get("from_pack") else "made.own")
+    count = made.get("flashcard_cards") or made.get("quiz_questions")
+    if kind == "flashcards" and count:
+        return str(templates.text("made.flashcards", count=int(count), source=where))
+    if kind == "quiz" and count:
+        return str(templates.text("made.quiz", count=int(count), source=where))
+    return str(templates.text("made.other", kind=KIND_WORDS.get(kind, "study aid"), source=where))
+
+
+KIND_WORDS = {"flashcards": "flashcards", "quiz": "quiz", "notes": "notes", "summary": "summary",
+              "audio_overview": "audio overview", "concept_map": "concept map"}  # fmt: skip
+
+
 def _served_cloud(result: Any) -> bool:
     with contextlib.suppress(Exception):
-        return any(c.get("provider_kind") != "local" for c in result.record.model_calls())
+        # Failed cloud attempts do not make a successful local response safe for cloud memory tools.
+        return bool(result.record.model_calls()[-1].get("provider_kind") != "local")
     return False
 
 
-def _finish(engine: Any, turn: Any, text: str, actions: Sequence[dict[str, Any]], *, user: str, stop: str) -> Any:
+def _finish(
+    engine: Any,
+    turn: Any,
+    text: str,
+    actions: Sequence[dict[str, Any]],
+    *,
+    user: str,
+    stop: str,
+    kind: str = "companion",
+) -> Any:
     """The reply as one text part, then each durable action, then the turn's end; the exchange joins the episode's
     transcript (companion turns are not Reflector evidence: they write no learning event)."""
+    engine.companion.require_scope()
+    revision = memory_revision(engine.companion.scope.learner.conn)
+    if (
+        kind == "companion"
+        and engine.companion.recall_revision is not None
+        and (revision != engine.companion.recall_revision)
+    ):
+        text, actions = "Your saved memory changed during this reply. Please send your question again.", []
     part = engine.events.start_part("text")
     engine.events.text(part, text)
     engine.events.end_part(part)
     engine._persist(turn, part, "text", text)
     for action in actions:
         engine.events.emit(dict(action))
-    engine.state.transcript.append({"role": "user", "content": user, "kind": "companion"})
-    engine.state.transcript.append({"role": "assistant", "content": text, "kind": "companion"})
-    turn.stop_reason = "completed" if stop == "completed" else "degraded"
+    engine.state.transcript.append({"role": "user", "content": user, "kind": kind, "memory_revision": revision})
+    engine.state.transcript.append(
+        {
+            "role": "assistant",
+            "content": text,
+            "kind": kind,
+            "companion_egress": dict(engine.companion.egress),
+            "memory_revision": revision,
+        }
+    )
+    record_context(engine.companion.scope.learner.conn, turn.turn_id, kind, dict(engine.companion.egress))
+    turn.stop_reason = "completed" if stop == "completed" else "provider_error"
     turn.degraded = stop != "completed"
-    turn.degraded_reason = None if stop == "completed" else "companion_canned"
+    # A failed model call names what refused it, by code (`http_400_invalid_request`, `egress_…`); a reply that
+    # failed its gates is `companion_canned` (§19 fix).
+    failure = getattr(getattr(engine, "companion", None), "failure", None)
+    if stop == "completed":
+        turn.degraded_reason = None
+    elif failure:
+        from agent_core.engine.research_chat import trace_reason
+
+        turn.degraded_reason = trace_reason(failure)
+    else:
+        turn.degraded_reason = "companion_canned"
     return engine._end(turn, None)

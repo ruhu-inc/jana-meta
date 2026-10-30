@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/study/research.schema.json sha256 1b1c6c26f8f823ae1cd61266b16276f2f76d07e01742e4cc505242d9f9749b86; do not edit",
+ "$comment": "GENERATED from contracts/study/research.schema.json sha256 9929e191f62dde2190f4792e2e93ad73d1a4ea54088fcd40488dee6e51f0c00c; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/study/research",
  "title": "Study research agent",
@@ -430,6 +430,12 @@
     },
     "skip": {
      "type": "boolean"
+    },
+    "cloud_notice": {
+     "enum": [
+      "accepted",
+      "declined"
+     ]
     }
    }
   },
