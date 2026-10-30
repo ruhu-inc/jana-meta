@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/learning/learning-event.schema.json sha256 780bd88eff8d7c38bc6cfe8dbc901363d0b121b256569286f9bf321dd70d6de3; do not edit",
+ "$comment": "GENERATED from contracts/learning/learning-event.schema.json sha256 0971c7010c4c7e153da5f265941e840a70de885a702ef9d2cfcffe59d73a78d7; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/learning/learning-event",
  "title": "LearningEvent",
@@ -464,6 +464,23 @@
    "unevaluatedProperties": false
   },
   {
+   "title": "memory_requested",
+   "allOf": [
+    {
+     "$ref": "#/$defs/envelope"
+    }
+   ],
+   "properties": {
+    "type": {
+     "const": "memory_requested"
+    },
+    "payload": {
+     "$ref": "#/$defs/payload_memory_requested"
+    }
+   },
+   "unevaluatedProperties": false
+  },
+  {
    "title": "erased",
    "allOf": [
     {
@@ -499,7 +516,8 @@
       "profile_updated",
       "item_exposed",
       "skills_delivered",
-      "study_activity"
+      "study_activity",
+      "memory_requested"
      ]
     },
     "payload": {
@@ -1929,6 +1947,20 @@
       "type": "string",
       "pattern": "^fcd_[0-9A-HJKMNP-TV-Z]{26}$"
      }
+    }
+   }
+  },
+  "payload_memory_requested": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "request_id"
+   ],
+   "properties": {
+    "request_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
     }
    }
   }

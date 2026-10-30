@@ -227,6 +227,7 @@ class CoreService:
         # One checker call outside any turn, as the Checker (VSL-42 manipulations); None without a worker.
         self.check_tool: Callable[[str, dict[str, Any]], Awaitable[tuple[Any, str | None]]] | None = None
         self.capture_trace_sink: Callable[[dict[str, Any]], None] | None = None
+        self.job_trace_sink: Callable[[dict[str, Any]], None] | None = None  # job traces written by a route
         self.trace_records: Callable[[], list[dict[str, Any]]] | None = None  # the local trace store's records
         self.rebuild_projections: Callable[[Any, str], None] | None = None  # rebuild a learner DB's projections
         self.retention: Callable[[], None] | None = None  # the DAT-08 job: at start and every interval
@@ -326,6 +327,7 @@ class CoreService:
             router=lambda: self.research_router() if self.research_router is not None else None,
             schema=_companion_schema,
         )
+        self.before_profile_forgotten.append(self.companion.invalidate)
         # Check-ins (SPEC §19.5.5, W8 phase 3): the extractor after a companion turn, the heartbeat, the due query.
         from agent_core.engine.checkins import CheckinDesk
 
@@ -450,16 +452,48 @@ class CoreService:
         if entry is not None and not self.shutting_down:
             self._reflect("session_end", entry)
 
-    def _memory_request(self, entry: SessionEntry, words: str, turn_id: str | None = None) -> None:
+    def _memory_request(self, entry: SessionEntry, words: str, turn_id: str | None = None) -> bool:
         """An explicit "remember that" (MEM-06): one job at once after the reply, on a paraphrase of the words; its
         outcome is told in the turn that asked."""
-        self._reflect("explicit_request", entry, words, turn_id)
+        return self._reflect("explicit_request", entry, words, turn_id)
+
+    def _correct_memory(self, engine: Engine, turn: str, words: str, note_id: str, seen_version: str) -> bool:
+        engine.companion.require_scope()
+        entry = self.sessions.get(engine.state.session_id)
+        if entry is None or self.reflector is None or entry.profile_id != self.records_profile:
+            return False
+        return self.reflector.trigger(
+            "explicit_request",
+            entry.profile_id or "prof_local",
+            entry.session_id,
+            session_date=self._today(),
+            subject=entry.meta.get("subject"),
+            request=words,
+            turn_id=turn,
+            correction=(note_id, seen_version),
+        )
+
+    def memory_changed(self, *, cancel_pending: bool = True) -> None:
+        """Explicit preference/note edits become visible to every open session of this learner immediately."""
+        if cancel_pending and self.reflector is not None and self.records_profile is not None:
+            self.reflector.cancel_profile(self.records_profile)
+        for entry in self.sessions.values():
+            if entry.profile_id != self.records_profile or entry.engine is None:
+                continue
+            if entry.engine.memory is not None:
+                entry.engine.memory.refresh()
+            entry.engine.compactor.previous = None
+            entry.engine.compactor.history.clear()
+            if entry.engine.companion is not None:
+                entry.engine.companion.status_key = None
 
     def _announce(self, session_id: str, event: dict[str, Any], turn_id: str | None = None) -> None:
-        """A note the student asked for, or a request that kept nothing, is announced on its session's stream (MEM-11),
-        in the turn that asked when one is given."""
+        """Publish memory and voice events on their owning session (MEM-11, VOC-24). Profile checks apply when a
+        profile activator is attached; standalone voice sessions need no learner database."""
         entry = self.sessions.get(session_id)
-        if entry is not None:
+        if entry is not None and (self.activator is None or entry.profile_id == self.records_profile):
+            if event.get("type") == "memory.saved":
+                self.memory_changed(cancel_pending=False)
             self._engine(entry).events.emit(event, turn_id=turn_id)
 
     def memory_forgotten(self, note_id: str) -> None:
@@ -468,7 +502,7 @@ class CoreService:
         announcement leaves the session's frames and replay ring too (LRN-37), and a Reflector job running for the
         profile starts again from a view without the note."""
         if self.reflector is not None:
-            self.reflector.forgotten(self.records_profile or "prof_local")
+            self.reflector.cancel_profile(self.records_profile or "prof_local")
         for entry in self.mine():
             if entry.engine is not None:
                 entry.engine.forget_note(note_id)
@@ -617,13 +651,18 @@ class CoreService:
             return job
 
         engine.companion = CompanionContext(self.companion, share_materials=self._share_materials,
-                                            knowledge=lambda: _index(self), checkins=self.checkins)  # fmt: skip
+                                            knowledge=lambda: _index(self), checkins=self.checkins,
+                                            correct_memory=lambda turn, words, note, seen:
+                                                self._correct_memory(engine, turn, words, note, seen),
+                                            memory_changed=self.memory_changed,
+                                            note_forgotten=self.memory_forgotten)  # fmt: skip
         if engine.memory is not None:
             tools = StudyTools(engine.memory, self.settings, engine._cloud, share=self._share_materials,
                                planner=lambda: self.planner() if self.planner is not None else None,
                                make_job=make_job, clock=self.clock_ms)  # fmt: skip
             tools.bind(engine.deps.executor.host_executors)
             engine.study_tools = tools
+        engine.companion.guard_tools(engine.deps.executor.host_executors)
 
     async def open_companion(self, checkin: dict[str, Any] | None = None) -> dict[str, Any]:
         """POST /v1/companion: today's episode of the thread, opened or resumed (SPEC §19.3.3, JM-D23); with a
@@ -644,7 +683,44 @@ class CoreService:
 
         def resume(session_id: str) -> bool:
             entry = self.sessions.get(session_id)
-            return entry is not None
+            if entry is not None:
+                return entry.profile_id == CURRENT_PROFILE.get()
+            # An encrypted archive includes authorized transcripts, never executable engine checkpoints.
+            row = learner.conn.execute(
+                "SELECT subject,started_at FROM sessions WHERE session_id=? AND mode='study_companion'",
+                (session_id.removeprefix("ses_"),),
+            ).fetchone()
+            if row is None:
+                return False
+            profile = learner.conn.execute("SELECT level FROM profile").fetchone()
+            meta = {
+                "session_id": session_id,
+                "title": "",
+                "mode": "study_companion",
+                "subject": row[0],
+                "topic_id": None,
+                "created_ts": row[1],
+                "updated_ts": self.clock_ms(),
+                "archived": False,
+                "origin": "companion",
+            }
+            state = SessionState(
+                session_id,
+                subject=row[0],
+                level=profile[0] if profile else "O",
+                mode="study_companion",
+                origin="companion",
+            )
+            if self.session_class is not None:
+                hardware = self.session_class()
+                if hardware is not None:
+                    state.hardware_class = hardware
+            entry = SessionEntry(
+                session_id, meta, projection.empty(meta, self.epoch), state, profile_id=CURRENT_PROFILE.get()
+            )
+            self.sessions[session_id] = entry
+            self.persist(entry)
+            return True
 
         return await self.companion.open(start_session, resume, checkin=checkin)
 
@@ -699,6 +775,10 @@ class CoreService:
                                subject=row[0] if row else None)  # fmt: skip
 
     def _on_event(self, entry: SessionEntry, envelope: dict[str, Any]) -> None:
+        if self.sessions.get(entry.session_id) is not entry or (
+            self.activator is not None and entry.profile_id != self.records_profile
+        ):
+            return  # late callbacks cannot reach a switched profile or a replacement session after reopening
         shown = student_view(envelope)  # every stream and snapshot today is student scope (API-11)
         if shown is None:
             return
@@ -722,6 +802,8 @@ class CoreService:
             self.records.learning(events)
 
     def persist(self, entry: SessionEntry) -> None:
+        if self.sessions.get(entry.session_id) is not entry:
+            return  # an old task cannot overwrite the checkpoint of a reopened session with the same id
         if self.activator is not None and entry.profile_id != self.records_profile:
             return  # never into another profile's learner database (DAT-14, SEC-19)
         self.store.save(entry.session_id, {"projection": entry.state, "engine": state_to_json(entry.engine_state),
@@ -1194,7 +1276,10 @@ class CoreService:
         text = "\n".join(_block_text(b) for b in body["content"]).strip()
         if not text:
             raise ApiError("validation_failed", "the message is empty", details={"errors": ["$.content: empty"]})
-        if self.tutor_unavailable is not None and self.tutor_unavailable():
+        from agent_core.engine.companion_memory import parse as memory_command
+
+        explicit_memory = entry.meta.get("mode") == "study_companion" and memory_command(text) is not None
+        if not explicit_memory and self.tutor_unavailable is not None and self.tutor_unavailable():
             # PLT-29: content-only with neither a school server nor the online tier; nothing is sent to any model.
             raise ApiError("model_unavailable", "the tutor cannot run on this computer offline")
         guarded = self._guarded(entry, body["content"])
@@ -1313,18 +1398,19 @@ class CoreService:
                 await work
         finally:
             entry.active_turn = None
-            if entry.engine_state.mode in ("guided", "solution", "check_working"):
-                entry.meta["mode"] = entry.engine_state.mode  # the engine switches modes on a request (PED-02)
-            carried = entry.engine.steering.end_of_turn() if entry.engine is not None else []
-            if carried:  # steering that never reached a model call starts the next turn, in order (AGT-17)
-                asyncio.get_running_loop().call_soon(self._start_carried, entry, [s.text for s in carried])
-            if self.records is not None and entry.engine_state.solved:
-                self.records.solved(entry.session_id)
-            self.persist(entry)
-            if self.reflector is not None:
-                self.reflector.activity()  # the idle delay counts from the end of the reply
-                if entry.engine_state.solved and not solved_before:
-                    self._reflect("problem_end", entry)  # the end of a problem (MEM-06)
+            if self.sessions.get(entry.session_id) is entry:
+                if entry.engine_state.mode in ("guided", "solution", "check_working"):
+                    entry.meta["mode"] = entry.engine_state.mode  # the engine switches modes on a request (PED-02)
+                carried = entry.engine.steering.end_of_turn() if entry.engine is not None else []
+                if carried:  # steering that never reached a model call starts the next turn, in order (AGT-17)
+                    asyncio.get_running_loop().call_soon(self._start_carried, entry, [s.text for s in carried])
+                if self.records is not None and entry.engine_state.solved:
+                    self.records.solved(entry.session_id)
+                self.persist(entry)
+                if self.reflector is not None:
+                    self.reflector.activity()  # the idle delay counts from the end of the reply
+                    if entry.engine_state.solved and not solved_before:
+                        self._reflect("problem_end", entry)  # the end of a problem (MEM-06)
 
     def answer_card(self, request_id: str, body: dict[str, Any]) -> dict[str, Any]:
         """API-14: an open card is answered once; the answer becomes the student's next turn. A card answered or

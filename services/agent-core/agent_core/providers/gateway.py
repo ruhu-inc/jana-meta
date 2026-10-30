@@ -10,7 +10,9 @@ the network. Network failures are reported to the connectivity layer (MDL-24) an
 
 from __future__ import annotations
 
+import hashlib
 import logging
+import re
 import secrets
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
@@ -32,6 +34,7 @@ from agent_core.providers.base import (
 )
 from agent_core.providers.errors import provider_error
 from agent_core.providers.openai_compat import assemble_stream, parse_reply, request_body
+from agent_core.trace import current_scope
 
 FEATURE = "cloud_tier"
 PAYLOAD = "cloud_prompt"
@@ -99,7 +102,8 @@ class GatewayProvider:
             kinds = sorted({finding.kind for finding in findings})
             fields = [str(key) for key, value in body.items() if self.redactor.blocks(value)]
             log.warning(f"gateway_redaction_blocked role={settings.get('role')} kinds={kinds} fields={fields}")
-            raise ProviderError("content_filter", "the redaction check blocked the request before it left (MDL-25)")
+            raise ProviderError("content_filter", "the redaction check blocked the request before it left (MDL-25)",
+                                code="redaction:" + ",".join(kinds))  # fmt: skip
         headers = {"x-session-pseudonym": self.pseudonym}
         role = settings.get("role")
         if role in {
@@ -118,11 +122,17 @@ class GatewayProvider:
             "reflector",  # and the Reflector's jobs under tutor_memory_online, each under its own feature
         }:
             headers["x-jana-role"] = str(role)
+        scope = current_scope()
+        if role in ("companion", "reflector") and scope is not None:
+            # A turn/job has one operation across tools, repairs, retries and provider objects. Send neither its
+            # local ID nor a learner ID; rotation of this token never changes the authenticated account's cap.
+            day = time.strftime("%Y-%m-%d", time.gmtime())
+            headers["x-jana-operation"] = hashlib.sha256(f"{day}:{scope.kind}:{scope.id}".encode()).hexdigest()
         if self.token is not None:
             try:
                 headers["authorization"] = f"Bearer {await self.token()}"
             except CredentialRefused as refused:
-                raise ProviderError("auth", str(refused)) from None
+                raise ProviderError("auth", str(refused), code="credential_refused") from None
             except EgressRefused as refused:
                 raise self._refused(refused) from None
             except NetError as error:
@@ -135,30 +145,37 @@ class GatewayProvider:
         error = reply.body.get("error") if isinstance(reply.body, dict) else None
         code = error.get("code") if isinstance(error, dict) else None
         if reply.status == 503 and code == "provider_unavailable":
-            return ProviderError("network_unavailable", "OPS-12: cloud path disabled; use local fallback")
+            return ProviderError("network_unavailable", "OPS-12: cloud path disabled; use local fallback",
+                                 code="http_503:provider_unavailable")  # fmt: skip
         if reply.status == 502 and code == "upstream_unreachable":
             # The gateway answered but could not reach the model provider: on the laptop's own gateway that is the
             # power cut itself (W3). The call is served locally at once, and the connectivity layer re-probes before
             # the cloud is tried again, instead of each call retrying a dead route with backoff.
             self._report("offline")
-            return ProviderError("network_unavailable", "the gateway cannot reach the model provider")
+            return ProviderError("network_unavailable", "the gateway cannot reach the model provider",
+                                 code="http_502:upstream_unreachable")  # fmt: skip
         if reply.status == 429 and code == "plan_limit":
             # SPEC §19.7 (W8): the companion's or the Reflector's daily cap. Only that feature stops for the day: no
             # retry, no pause of the cloud tier (a quota error would pause it), and the call is served locally.
-            return ProviderError("content_filter", "plan_limit: the feature's daily cap at the gateway")
-        return provider_error(reply.status, reply.body, _detail(reply.body), reply.headers)
+            return ProviderError("content_filter", "plan_limit: the feature's daily cap at the gateway",
+                                 code="http_429:plan_limit")  # fmt: skip
+        failed = provider_error(reply.status, reply.body, _detail(reply.body), reply.headers)
+        failed.code = f"http_{reply.status}" + (f":{code}" if isinstance(code, str) and _CODE.fullmatch(code) else "")
+        return failed
 
     def _refused(self, refused: EgressRefused) -> ProviderError:
         # Off, offline, a declined notice: the cloud is unavailable and the router serves the call locally.
         if refused.reason in ("offline",):
             self._report("offline")
-        return ProviderError("network_unavailable", f"egress refused: {refused.reason}")
+        return ProviderError("network_unavailable", f"egress refused: {refused.reason}",
+                             code=f"egress_{refused.reason}")  # fmt: skip
 
     def _network(self, error: NetError) -> ProviderError:
         self._report("limited" if error.kind == "tls" else "offline")
         if error.kind == "timeout":
-            return ProviderError("timeout", error.detail)
-        return ProviderError("network_unavailable", error.kind)
+            return ProviderError("timeout", error.detail, code="net_timeout")
+        return ProviderError("network_unavailable", error.kind, code=f"net_{error.kind}" if _CODE.fullmatch(error.kind)
+                             else "net_error")  # fmt: skip
 
     def _report(self, state: str) -> None:
         if self.on_network_failure is not None:
@@ -195,7 +212,7 @@ class GatewayProvider:
             try:
                 headers["authorization"] = f"Bearer {await self.token()}"
             except CredentialRefused as refused:
-                raise ProviderError("auth", str(refused)) from None
+                raise ProviderError("auth", str(refused), code="credential_refused") from None
             except EgressRefused as refused:
                 raise self._refused(refused) from None
             except NetError as error:
@@ -236,6 +253,9 @@ class GatewayProvider:
 
         async for chunk in assemble_stream(events(), model, effort, self._cost(model), started):
             yield chunk
+
+
+_CODE = re.compile(r"[a-z][a-z0-9_]{0,40}")  # an error code, never free text
 
 
 def _detail(body: Any) -> str:

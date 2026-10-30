@@ -1,0 +1,27 @@
+{
+  "source_event_id": "x",
+  "session_id": "x",
+  "intervention": "x",
+  "version": "x",
+  "at": "2026-01-15T09:30:00Z",
+  "kc_id": "x",
+  "topic": "x",
+  "immediate": {
+    "attempt_id": "x",
+    "outcome": "correct",
+    "hints_used": 0,
+    "max_rung": 0,
+    "at": "2026-01-15T09:30:00Z"
+  },
+  "delayed": {
+    "attempt_id": "x",
+    "outcome": "correct",
+    "hints_used": 0,
+    "max_rung": 0,
+    "at": "2026-01-15T09:30:00Z"
+  },
+  "confidence": "tentative",
+  "conflicting_outcomes": true,
+  "interpretation": "x",
+  "__unknown_field__": 1
+}

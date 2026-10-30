@@ -37,7 +37,7 @@ SUBJECTS = {"mathematics", "physics", "chemistry", "biology", "accounting"}
 Viewer = Literal["student"]
 # The knows page's sharing flags and the consent scope each follows (LRN-36).
 SHARING = {"backup": "cloud_backup", "devices": "multi_device", "parent_view": "parent_remote_view",
-           "cloud_tutor": "cloud_tier"}  # fmt: skip
+           "cloud_tutor": "cloud_tier", "tutor_memory": "tutor_memory_online"}  # fmt: skip
 # The preference keys of the knows page (G90, LRN-37; `preference_key`); the values are checked by the memory layer.
 PREFERENCE_KEYS = frozenset({"start_style", "representation", "pace", "unprompted_help", "self_explanation_prompts"})
 _VERSION = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
@@ -254,6 +254,7 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
         if profile_id == core.records_profile:
             for note_id in note_ids:
                 core.memory_forgotten(note_id)
+            core.memory_changed()
 
     @app.get("/v1/profiles/{profile_id}/knows")
     async def knows_view(profile_id: str, request: Request) -> dict[str, Any]:
@@ -326,7 +327,10 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
                 if not desk.correct_preference(key, body["value"], who):
                     raise ApiError("validation_failed", f"not a value {key} can take")
 
-            return 200, knows(profile_id, request, act)
+            view = knows(profile_id, request, act)
+            if profile_id == core.records_profile:
+                core.memory_changed()
+            return 200, view
 
         return await mutating(request, run)
 

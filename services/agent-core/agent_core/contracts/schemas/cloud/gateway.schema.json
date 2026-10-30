@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/cloud/gateway.schema.json sha256 f8bb76ddb360a47c1daf8312ce0b67baac13217a16a4fc201af2846077660b69; do not edit",
+ "$comment": "GENERATED from contracts/cloud/gateway.schema.json sha256 d82a01d8c9421fa0be998ca25cf698c2308f00bc81c855321c61d6c46e36692d; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/cloud/gateway",
  "title": "Cloud gateway",
@@ -265,7 +265,36 @@
      "type": "integer"
     },
     "response_format": {
-     "type": "object"
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "type": {
+       "enum": [
+        "text",
+        "json_object",
+        "json_schema"
+       ]
+      },
+      "json_schema": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "name": {
+         "type": "string",
+         "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "description": {
+         "type": "string"
+        },
+        "strict": {
+         "type": "boolean"
+        },
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     }
     },
     "reasoning_effort": {
      "enum": [

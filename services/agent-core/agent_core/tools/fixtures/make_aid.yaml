@@ -1,16 +1,18 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: make_aid
-version: 1
+version: 2
 valid_args:
 - kind: flashcards
   source_ref: 1
   count: 10
 - kind: summary
   source_ref: 2
+- kind: flashcards
+  count: 10
 invalid_args:
 - kind: poem
   source_ref: 1
-- kind: quiz
+- source_ref: 1
 - kind: quiz
   source_ref: 0
 - kind: quiz

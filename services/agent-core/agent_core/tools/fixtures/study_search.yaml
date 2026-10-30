@@ -1,11 +1,11 @@
 # Tool fixtures (TOL-05): synthetic, hand-written.
 tool: study_search
-version: 1
+version: 2
 valid_args:
 - query: refraction of light
 - query: momentum
+- {}
 invalid_args:
-- query: ''
 - text: momentum
 - query: 7
 - query: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

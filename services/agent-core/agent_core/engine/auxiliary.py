@@ -79,7 +79,9 @@ class Auxiliaries:
 
     # --- the one bounded call ---------------------------------------------------------------------------------
 
-    async def call(self, role: str, task: str) -> AuxOutcome:
+    async def call(
+        self, role: str, task: str, *, local_only: bool = False, require_scope: Callable[[], None] | None = None
+    ) -> AuxOutcome:
         manifest = self.manifests[role]
         limits = manifest.meta["limits"]
         hardware = self.hardware_class if self.hardware_class in ("low", "mid", "high") else "cloud"
@@ -90,9 +92,16 @@ class Auxiliaries:
         served: str | None = None
         reason: str | None = None
         output: dict[str, Any] | None = None
+
+        def request_guard(_candidate: Any) -> None:
+            if require_scope is not None:
+                require_scope()
+
         try:
             result = await asyncio.wait_for(
                 self.router.complete(role, messages, output=(role, schema, checker),
+                                     allow=(lambda c: c.locality == "local") if local_only else None,
+                                     request_guard=request_guard if require_scope is not None else None,
                                      max_tokens=int(limits["max_output_tokens"][hardware]),
                                      cloud_max_tokens=int(limits["max_output_tokens"]["cloud"])),
                 timeout=float(limits["wall_clock_s"]),
@@ -178,12 +187,19 @@ class Auxiliaries:
             outcome.output, outcome.fallback_reason = None, "title_rejected"
         return topic_name, outcome
 
-    def summariser(self) -> Callable[[str], Awaitable[str]]:
+    def summariser(
+        self, *, local_only: bool = False, require_scope: Callable[[], None] | None = None
+    ) -> Callable[[str], Awaitable[str]]:
         """The compaction role as the Compactor's `summarise`: a failed call returns an empty text, which fails the
         Compactor's validation and ends in its fixed sentence (MEM-16, MEM-17)."""
 
         async def summarise(dialogue: str) -> str:
-            outcome = await self.call("compaction", f"<conversation>\n{_escape(dialogue)}\n</conversation>")
+            outcome = await self.call(
+                "compaction",
+                f"<conversation>\n{_escape(dialogue)}\n</conversation>",
+                local_only=local_only,
+                require_scope=require_scope,
+            )
             return str(outcome.output["agreements"]) if outcome.output is not None else ""
 
         return summarise

@@ -15,7 +15,6 @@ import time
 from collections import Counter
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field, replace
-from functools import partial
 from typing import Any, Literal
 
 from jsonschema import Draft202012Validator
@@ -413,12 +412,15 @@ class Router:
         prepare: Callable[[Candidate, ModelCapabilities, list[Message]], Awaitable[list[Message] | Prepared]]
         | None = None,
         allow: Callable[[Candidate], bool] | None = None,
+        request_guard: Callable[[Candidate], None] | None = None,
         **settings: Any,
     ) -> RouterResult:
         """`output` is (schema name, decode schema, validator) for roles with an output schema. `prepare` rebuilds the
         request for a fallback candidate, and for a first candidate that is a cloud one (what reaches a cloud model is
         the engine's to decide, MEM-13, MDL-25); it may also narrow the tools offered to that candidate. `allow`
-        narrows this call's candidates (a photo reaches a cloud candidate only when the engine allows it, MDL-23)."""
+        narrows this call's candidates (a photo reaches a cloud candidate only when the engine allows it, MDL-23).
+        `request_guard` checks live ownership/consent immediately before every provider attempt, after queue waits
+        and retry backoff. It may raise to abandon the call; it is never forwarded to a provider."""
         if current_scope() is None:
             raise RouterOutsideEngineContextError(f"router.complete({role!r}) called outside an engine turn or job")
         tier, candidates, dropped = await self.candidates(role)
@@ -471,6 +473,7 @@ class Router:
                                 settings,
                                 record,
                                 previous,
+                                request_guard,
                             )
                         except _Reissue as reissue:
                             record.events.append({"event": "reissue", "param": str(reissue)})
@@ -517,6 +520,7 @@ class Router:
         settings: dict[str, Any],
         record: CallRecord,
         fallback_from: str | None,
+        request_guard: Callable[[Candidate], None] | None,
     ) -> RouterResult:
         provider = self.provider_for(candidate)
         caps = await self.capabilities(candidate)
@@ -572,6 +576,12 @@ class Router:
         scheduler = self._scheduler()
         priority = int(entry.get("priority", DEFAULT_PRIORITY))
         stream = bool(entry.get("stream"))
+
+        async def dispatch() -> AssistantTurn:
+            if request_guard is not None:
+                request_guard(candidate)
+            return await self._call(provider, candidate.model, state, tools, call_settings, stream, on_text)
+
         while True:
             attempt += 1
             started = time.monotonic()
@@ -585,7 +595,7 @@ class Router:
                     priority,
                     bool(entry.get("background")),
                     candidate.locality == "local",
-                    partial(self._call, provider, candidate.model, state, tools, call_settings, stream, on_text),
+                    dispatch,
                 )
             except ProviderError as error:
                 record.attempts.append(
@@ -605,6 +615,9 @@ class Router:
                         correction_retry=corrected,
                     )
                 )
+                # What refused the call, by code (never text): read back by a caller's diagnosis (§19 W8 fix).
+                record.refusals.append({"candidate": str(candidate)[:128], "reason": error.reason,
+                                        "code": getattr(error, "code", None), "status": error.status})  # fmt: skip
                 state = await self._recover(
                     error, candidate, role, state, call_settings, retries, record, started_call, first_token_budget_s
                 )

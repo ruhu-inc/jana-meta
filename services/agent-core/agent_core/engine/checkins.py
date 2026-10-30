@@ -41,6 +41,7 @@ from agent_core.engine import job_scope
 from agent_core.engine.companion_opener import OpenerTemplates, load_templates
 from agent_core.engine.events import new_id
 from agent_core.engine.exam_dates import ExamDesk
+from agent_core.engine.profile_scope import ProfileChanged, ProfileScope
 from agent_core.learner.mastery import DAY_MS
 from agent_core.learner.service import Learner
 from agent_core.memory.capture import CaptureFilter, default_filter
@@ -176,6 +177,7 @@ class CheckinDesk:
     study_cards_due: Callable[[int], int] = lambda now: 0
     _tasks: set[asyncio.Task[Any]] = field(default_factory=set)
     _beat: int | None = None
+    _generation: int = 0
 
     def _conn(self) -> sqlite3.Connection:
         learner = self.learner()
@@ -233,6 +235,7 @@ class CheckinDesk:
         schema = self.schema()
         if schema is None:
             return None
+        scope = ProfileScope.capture(self.learner(), self._generation)
         now = self.clock()
         today, _ = self._local(now)
         subjects = self._subjects()
@@ -242,15 +245,31 @@ class CheckinDesk:
             f"The student's subjects: {', '.join(subjects) or 'none'}.",
             f"<student>{escape_note(text[:2000])}</student>",
         ])  # fmt: skip
-        allow = (lambda c: c.locality == "local") if local_only else None
+
+        def allow(candidate: Any) -> bool:
+            scope.require(self.learner(), self._generation)
+            return bool(not local_only or candidate.locality == "local")
+
+        async def prepare(_candidate: Any, _caps: Any, messages: list[Message]) -> list[Message]:
+            scope.require(self.learner(), self._generation)
+            return messages
+
+        def request_guard(_candidate: Any) -> None:
+            scope.require(self.learner(), self._generation)
+
         with job_scope(new_id("job")):
             try:
                 result = await router.complete(SLOT, [Message("user", prompt)],
                                                output=("Commitment", schema, Draft202012Validator(schema)),
-                                               allow=allow, temperature=0.0, effort="none")  # fmt: skip
+                                               allow=allow, prepare=prepare, temperature=0.0,
+                                               request_guard=request_guard, effort="none")  # fmt: skip
             except Exception as error:  # an extractor that cannot run proposes nothing
                 log.info("checkin.extract_failed kind=%s", type(error).__name__)
                 return None
+        try:
+            scope.require(self.learner(), self._generation)
+        except ProfileChanged:
+            return None
         proposal = result.structured if result.schema_valid else None
         capture = self.capture() if self.capture is not None else default_filter(self.settings)
         found = kept(proposal, today, self.settings, capture, subjects)
@@ -270,6 +289,7 @@ class CheckinDesk:
 
     def cancel_all(self) -> None:
         """A profile switch, lock or deletion: extractions still running are cancelled and write nothing."""
+        self._generation += 1
         for task in list(self._tasks):
             task.cancel()
         self._tasks.clear()

@@ -44,6 +44,10 @@ HISTORY_FIXTURES: dict[str, str] = {
         "commit 9ebc55f3 (M20.f): the support-bundle test's made-up api_key, seeded to prove the bundle strips it "
         "(OBS-18); never a provider key. The test now seeds a fixture-marked value."
     ),
+    "735f7219f1e1d1e4655429d75c20e41e96005311b489fe2fb470bd583298dd75": (
+        "commit 7a92235d (W8): test_w8_memory_online.py's made-up key in a note, seeded to prove the egress scrub "
+        "withholds it (SPEC §19.6); never a provider key. The test now seeds a fixture-marked value."
+    ),
 }
 
 

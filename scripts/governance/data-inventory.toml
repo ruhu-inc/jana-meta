@@ -656,42 +656,48 @@ body = { purpose = "The brief the learner approved, the research's progress and 
 created_at = { purpose = "When the learner started the research", retention = "study_research", egress = ["Profile archive and support file"] }
 updated_at = { purpose = "Order and display study packs", retention = "study_research", egress = ["Profile archive and support file"] }
 
-# W8 (SPEC §19.3.3 to §19.3.5, §19.6 PRV-03): the Study companion's operational rows, device-local, never egress.
+# W8 (SPEC §19.3.3 to §19.3.5, §19.6 PRV-03): the Study companion's operational rows, profile-local; included in an explicitly requested encrypted profile archive.
 
 [learner.companion_episodes]
-session_id = { purpose = "The companion session that is this day's episode of the thread", retention = "companion_episodes", egress = "none" }
-thread_id = { purpose = "The profile's one companion thread", retention = "companion_episodes", egress = "none" }
-profile_day = { purpose = "The profile's local day the episode belongs to (one episode a day)", retention = "companion_episodes", egress = "none" }
-opener_json = { purpose = "The opener's facts chosen by code and its cached wording for the day", retention = "companion_episodes", egress = "none" }
-opened_at = { purpose = "When the episode opened", retention = "companion_episodes", egress = "none" }
-ended_at = { purpose = "When the episode ended (Study closed, 20 minutes idle, or a later day)", retention = "companion_episodes", egress = "none" }
-checkin_id = { purpose = "The check-in the episode was opened for, answered by its first accepted turn", retention = "companion_episodes", egress = "none" }
+session_id = { purpose = "The companion session that is this day's episode of the thread", retention = "companion_episodes", egress = ["Profile archive and support file"] }
+thread_id = { purpose = "The profile's one companion thread", retention = "companion_episodes", egress = ["Profile archive and support file"] }
+profile_day = { purpose = "The profile's local day the episode belongs to (one episode a day)", retention = "companion_episodes", egress = ["Profile archive and support file"] }
+opener_json = { purpose = "The opener's facts chosen by code and its cached wording for the day", retention = "companion_episodes", egress = ["Profile archive and support file"] }
+opened_at = { purpose = "When the episode opened", retention = "companion_episodes", egress = ["Profile archive and support file"] }
+ended_at = { purpose = "When the episode ended (Study closed, 20 minutes idle, or a later day)", retention = "companion_episodes", egress = ["Profile archive and support file"] }
+checkin_id = { purpose = "The check-in the episode was opened for, answered by its first accepted turn", retention = "companion_episodes", egress = ["Profile archive and support file"] }
 
 [learner.companion_summary]
-thread_id = { purpose = "The profile's one companion thread", retention = "companion_summary", egress = "none" }
-version = { purpose = "How many times code has folded the summary", retention = "companion_summary", egress = "none" }
-cursor_seq = { purpose = "The last learning event the summary has folded", retention = "companion_summary", egress = "none" }
-updated_at = { purpose = "When the summary was last folded", retention = "companion_summary", egress = "none" }
-body_json = { purpose = "Topics, misconceptions and the next step as ids, pack labels and counts; no free text", retention = "companion_summary", egress = "none" }
+thread_id = { purpose = "The profile's one companion thread", retention = "companion_summary", egress = ["Profile archive and support file"] }
+version = { purpose = "How many times code has folded the summary", retention = "companion_summary", egress = ["Profile archive and support file"] }
+cursor_seq = { purpose = "The last learning event the summary has folded", retention = "companion_summary", egress = ["Profile archive and support file"] }
+updated_at = { purpose = "When the summary was last folded", retention = "companion_summary", egress = ["Profile archive and support file"] }
+body_json = { purpose = "Topics, misconceptions and the next step as ids, pack labels and counts; no free text", retention = "companion_summary", egress = ["Profile archive and support file"] }
 
 [learner.commitments]
-commitment_id = { purpose = "Random identity of a check-in", retention = "commitments", egress = "none" }
-kind = { purpose = "What the check-in asks about: an event, a deadline, an open loop, due reviews or a ready pack", retention = "commitments", egress = "none" }
-subject = { purpose = "The profile's subject it is about, if any", retention = "commitments", egress = "none" }
-kc_id = { purpose = "The knowledge component it is about, if any", retention = "commitments", egress = "none" }
-text = { purpose = "The question in the tutor's words (never a quote), at most 140 characters", retention = "commitments", egress = "none" }
-due_from = { purpose = "When the check-in may first be shown", retention = "commitments", egress = "none" }
-due_until = { purpose = "When it expires, at most 72 hours later", retention = "commitments", egress = "none" }
-dedupe_key = { purpose = "Kind, subject and day, so the same check-in is not made twice", retention = "commitments", egress = "none" }
-confidence = { purpose = "How sure the extractor was that the student named something coming up", retention = "commitments", egress = "none" }
-state = { purpose = "Pending, shown, opened, dismissed, answered, expired or detached", retention = "commitments", egress = "none" }
-source = { purpose = "Whether the extractor or the heartbeat made it", retention = "commitments", egress = "none" }
-source_session_id = { purpose = "The companion session whose turn it came from", retention = "commitments", egress = "none" }
-created_at = { purpose = "When the check-in was made", retention = "commitments", egress = "none" }
-shown_at = { purpose = "When it was shown on Home", retention = "commitments", egress = "none" }
-resolved_at = { purpose = "When it was answered, dismissed, expired or detached", retention = "commitments", egress = "none" }
+commitment_id = { purpose = "Random identity of a check-in", retention = "commitments", egress = ["Profile archive and support file"] }
+kind = { purpose = "What the check-in asks about: an event, a deadline, an open loop, due reviews or a ready pack", retention = "commitments", egress = ["Profile archive and support file"] }
+subject = { purpose = "The profile's subject it is about, if any", retention = "commitments", egress = ["Profile archive and support file"] }
+kc_id = { purpose = "The knowledge component it is about, if any", retention = "commitments", egress = ["Profile archive and support file"] }
+text = { purpose = "The question in the tutor's words (never a quote), at most 140 characters", retention = "commitments", egress = ["Profile archive and support file"] }
+due_from = { purpose = "When the check-in may first be shown", retention = "commitments", egress = ["Profile archive and support file"] }
+due_until = { purpose = "When it expires, at most 72 hours later", retention = "commitments", egress = ["Profile archive and support file"] }
+dedupe_key = { purpose = "Kind, subject and day, so the same check-in is not made twice", retention = "commitments", egress = ["Profile archive and support file"] }
+confidence = { purpose = "How sure the extractor was that the student named something coming up", retention = "commitments", egress = ["Profile archive and support file"] }
+state = { purpose = "Pending, shown, opened, dismissed, answered, expired or detached", retention = "commitments", egress = ["Profile archive and support file"] }
+source = { purpose = "Whether the extractor or the heartbeat made it", retention = "commitments", egress = ["Profile archive and support file"] }
+source_session_id = { purpose = "The companion session whose turn it came from", retention = "commitments", egress = ["Profile archive and support file"] }
+created_at = { purpose = "When the check-in was made", retention = "commitments", egress = ["Profile archive and support file"] }
+shown_at = { purpose = "When it was shown on Home", retention = "commitments", egress = ["Profile archive and support file"] }
+resolved_at = { purpose = "When it was answered, dismissed, expired or detached", retention = "commitments", egress = ["Profile archive and support file"] }
 
 [learner.note_recalls]
-note_id = { purpose = "A note the tutor recalled", retention = "note_recalls", egress = "none" }
-session_id = { purpose = "The session it was recalled in", retention = "note_recalls", egress = "none" }
-day = { purpose = "The day it was recalled", retention = "note_recalls", egress = "none" }
+note_id = { purpose = "A note the tutor recalled", retention = "note_recalls", egress = ["Profile archive and support file"] }
+session_id = { purpose = "The session it was recalled in", retention = "note_recalls", egress = ["Profile archive and support file"] }
+day = { purpose = "The day it was recalled", retention = "note_recalls", egress = ["Profile archive and support file"] }
+
+[learner.companion_turn_context]
+turn_id = { purpose = "Transcript turn whose model-context provenance is recorded", retention = "Transcript: turns, parts, board_steps, checks", egress = ["Profile archive and support file"] }
+memory_revision = { purpose = "Exclude context predating a memory correction or deletion", retention = "Transcript: turns, parts, board_steps, checks", egress = ["Profile archive and support file"] }
+kind = { purpose = "Keep explicit memory commands out of model dialogue", retention = "Transcript: turns, parts, board_steps, checks", egress = ["Profile archive and support file"] }
+egress_json = { purpose = "Permissions required for derived model context", retention = "Transcript: turns, parts, board_steps, checks", egress = ["Profile archive and support file"] }

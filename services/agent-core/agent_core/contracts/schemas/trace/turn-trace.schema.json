@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/trace/turn-trace.schema.json sha256 e273682b9cebd940cde991a4e4f2e684d2f142eae4a58cbfdfc7fa265e321164; do not edit",
+ "$comment": "GENERATED from contracts/trace/turn-trace.schema.json sha256 5a883abfe4aea75dab0aee30928d108716ee1280f946e200c92534f6c5273953; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/trace/turn-trace",
  "title": "Turn trace record",
@@ -145,7 +145,8 @@
     "practice",
     "exam_review",
     "side_question",
-    "revision"
+    "revision",
+    "study_companion"
    ]
   },
   "turn_source": {
@@ -872,7 +873,8 @@
        "plan",
        "memory",
        "meta",
-       "external"
+       "external",
+       "study"
       ]
      },
      "executor": {
@@ -993,6 +995,10 @@
        "exhausted_fallback",
        "skipped"
       ]
+     },
+     "detail": {
+      "type": "string",
+      "pattern": "^[a-z0-9_:.-]{1,64}$"
      }
     }
    }

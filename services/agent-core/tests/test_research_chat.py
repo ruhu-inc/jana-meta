@@ -124,5 +124,18 @@ def test_the_learners_words_are_escaped_data_never_instructions() -> None:
 def test_failures_are_reported_never_guessed() -> None:
     with pytest.raises(ChatError, match="model_unavailable"):
         run(Router([RuntimeError("offline")]))
-    with pytest.raises(ChatError, match="invalid_output"):
-        run(Router([{"kind": "question"}]))
+    # A reply that fails a check after the call is asked for once more; failing again, the turn reports which check,
+    # by code, never the reply (§19 fix, 2026-10-29).
+    twice = Router([{"kind": "question"}, {"kind": "question"}])
+    with pytest.raises(ChatError, match="invalid_output") as failed:
+        run(twice)
+    assert len(twice.calls) == 2
+    assert failed.value.details == {"post_check": "contract_check", "path": "$", "validator": "required",
+                                    "attempts": 2}  # fmt: skip
+
+
+def test_one_reply_that_fails_a_check_is_asked_for_again() -> None:
+    router = Router([{"kind": "question"}, question("purpose")])
+    turn = run(router)
+    assert turn["asks"] == "purpose" and len(router.calls) == 2
+    assert router.calls[0]["prompt"] == router.calls[1]["prompt"], "the same turn, asked again"

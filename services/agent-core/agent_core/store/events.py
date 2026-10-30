@@ -12,9 +12,9 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections.abc import Callable, Iterator, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
-from functools import cache
+from functools import cache, cached_property
 from typing import Any
 
 from agent_core.contracts import document, validate
@@ -73,8 +73,10 @@ class StoredEvent:
     def erased(self) -> bool:
         return self.erased_at is not None
 
-    @property
+    @cached_property
     def stamp(self) -> Stamp:
+        # StoredEvent is immutable. Re-marks/migrations construct a new event, so its timestamp cannot inherit
+        # another event's cached value; repeated projection reads need not parse the same HLC again.
         return Stamp.parse(self.hlc)
 
     @property
@@ -223,7 +225,7 @@ class EventLog:
         )
         if cursor.rowcount == 0:
             return event
-        return StoredEvent(**{**event.__dict__, "seq": int(cursor.lastrowid or 0)})
+        return replace(event, seq=int(cursor.lastrowid or 0))
 
     def apply_remote(
         self, batch: Sequence[dict[str, Any]], on_stored: Callable[[StoredEvent], None] | None = None

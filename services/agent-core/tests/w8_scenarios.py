@@ -104,11 +104,17 @@ def _last_time_card(case: dict[str, Any], tmp: Path) -> list[str]:
 
     held = store(day=case["profile"]["day"])
     _profile(held, case["profile"])
+    from agent_core.store.ids import new_ulid
+
     for n, s in enumerate(case["sessions"]):
+        sid = new_ulid(_ms(s["started"]))
         held.conn.execute(
             "INSERT INTO sessions (session_id, mode, subject, started_at, ended_at) VALUES (?, ?, ?, ?, ?)",
-            (f"S{n}", s["mode"], s["subject"], _ms(s["started"]), _ms(s["ended"])),
+            (sid, s["mode"], s["subject"], _ms(s["started"]), _ms(s["ended"])),
         )
+        held.learner.record("hint", {"session_id": sid, "problem_ref": f"prob_{n}", "step_index": 0, "rung": 1,
+                                     "trigger": "student_request", "kc_ids": ["kc.phy.o.motion.average_speed"]},
+                            source="engine", session_id=sid)  # fmt: skip  # a session with learning in it
     text = OpenerDesk(held.learner, Settings(), held.clock).opener()["text"]
     failures = [f"the card does not name {name!r}: {text!r}" for name in case["expect"]["names"] if name not in text]
     dates = re.findall(r"\d{4}-\d{2}-\d{2}", text)

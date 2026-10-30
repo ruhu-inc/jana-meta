@@ -7,6 +7,7 @@ normalisation (MDL-13, MDL-14, MDL-09)."""
 from __future__ import annotations
 
 import json
+import re
 import time
 from collections.abc import AsyncIterator, Callable
 from typing import Any
@@ -90,6 +91,17 @@ def tool_body(tool: ToolSchema) -> dict[str, Any]:
     }
 
 
+_FORMAT_NAME = re.compile(r"[^A-Za-z0-9_-]")
+
+
+def format_name(name: object) -> str:
+    """A `response_format` schema name as OpenAI-style endpoints accept it: letters, digits, `_` and `-`, at most 64
+    characters. Muse Spark refuses anything else with 400 on `name` (a contract path such as
+    `agents/companion-turn` did, §19 fix 2026-10-29)."""
+    cleaned = _FORMAT_NAME.sub("_", str(name or ""))[:64]
+    return cleaned or "output"
+
+
 def request_body(
     model: str, messages: list[Message], tools: list[ToolSchema], kind: str, settings: dict[str, Any], stream: bool
 ) -> dict[str, Any]:
@@ -113,7 +125,11 @@ def request_body(
     if mode == "json_schema":
         body["response_format"] = {
             "type": "json_schema",
-            "json_schema": {"name": structured.get("name", "output"), "strict": True, "schema": structured["schema"]},
+            "json_schema": {
+                "name": format_name(structured.get("name")),
+                "strict": True,
+                "schema": structured["schema"],
+            },
         }
     elif mode == "json_object":
         body["response_format"] = {"type": "json_object"}

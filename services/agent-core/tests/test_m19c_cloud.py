@@ -642,3 +642,26 @@ def test_device_chat_bodies_match_the_gateway_contract() -> None:
 
     for body in run(bodies()):
         assert contract_errors("cloud/gateway#/$defs/ChatCompletionRequest", body) == [], body
+
+
+def test_companion_operation_id_survives_provider_recreation_without_raw_identity() -> None:
+    from agent_core.trace.context import engine_scope
+
+    async def scenario() -> None:
+        first = GatewayProvider(None, lambda: HOSTS["gateway"], "primary")  # type: ignore[arg-type]
+        second = GatewayProvider(None, lambda: HOSTS["gateway"], "fallback")  # type: ignore[arg-type]
+        headers = []
+        with engine_scope("turn", "trn_" + "A" * 26):
+            for provider in (first, second):
+                _, sent, _ = await provider._prepare(
+                    "fast-model", [Message("user", "Continue")], [], {"role": "companion"}, False
+                )
+                headers.append(sent)
+        assert headers[0]["x-jana-operation"] == headers[1]["x-jana-operation"]
+        assert headers[0]["x-session-pseudonym"] != headers[1]["x-session-pseudonym"]
+        assert "A" * 26 not in json.dumps(headers)
+        with engine_scope("turn", "trn_" + "B" * 26):
+            _, sent, _ = await first._prepare("fast-model", [], [], {"role": "companion"}, False)
+            assert sent["x-jana-operation"] != headers[0]["x-jana-operation"]
+
+    run(scenario())

@@ -77,6 +77,8 @@ methods:
 companion:
   opener:
     first_time: "When you've studied here, this card will say where you left off."
+    # The first bubble of Your tutor when there is nothing yet to recall: a greeting, not the card's own words.
+    first_time_thread: "Hi, I'm your tutor in Study. Ask me what to study next, what's due, or about your materials."
     last_time: "Last time you worked on {subject} {where} {when}"
     due_only: "{facts}."
     pack_ready: "a research pack you asked for is ready in Study"
@@ -112,6 +114,13 @@ companion:
     to_tutor: "That one is for the tutor: they'll work through it with you step by step. Open it below."
     to_study: "That looks like material to study from. Add it to Study and I can help you work through it."
     canned: "Sorry, I couldn't put that together just now. Could you ask me again in a different way?"
+    # When the reply was refused but the turn started an aid (SPEC §19 fix, 2026-10-30): what was made, by code.
+    made:
+      flashcards: "I've started {count} flashcards from {source}. Open them below."
+      quiz: "I've started a quiz of {count} questions from {source}. Open it below."
+      other: "I've started your {kind} from {source}. Open it below."
+      pack: "your study pack"
+      own: "your material"
   # Check-ins (SPEC §19.5.5, phase 3): the heartbeat's questions and every desktop notification's body, one per kind,
   # word for word the app's home.checkin.notify.* (the shell's checkins.rs is tested against those). Never the
   # check-in's own text; no numbers, no names.

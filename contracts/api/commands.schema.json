@@ -4695,6 +4695,10 @@
         },
         "cloud_tutor": {
          "type": "boolean"
+        },
+        "tutor_memory": {
+         "type": "boolean",
+         "description": "Personal tutor memory online is in effect (SPEC §19.6): the online tutor also gets the tutor's scrubbed notes."
         }
        },
        "required": [
@@ -4857,6 +4861,10 @@
        "day": {
         "type": "string",
         "format": "date"
+       },
+       "from_pack": {
+        "type": "boolean",
+        "description": "The material came from a study pack the research agent made (§18), not the learner's own."
        }
       }
      }
@@ -4870,6 +4878,13 @@
        "type": "null"
       }
      ]
+    },
+    "teaching_observations": {
+     "type": "array",
+     "maxItems": 12,
+     "items": {
+      "$ref": "#/$defs/TeachingObservation"
+     }
     }
    },
    "required": [
@@ -4946,6 +4961,9 @@
     },
     "withheld_online": {
      "type": "boolean"
+    },
+    "explanation": {
+     "$ref": "#/$defs/MemoryExplanation"
     }
    },
    "required": [
@@ -9685,10 +9703,18 @@
    }
   },
   "CompanionOpen": {
-   "description": "POST /v1/companion: no body.",
+   "description": "POST /v1/companion and POST /v1/checkins/{commitment_id}/open: an empty body, or the learner's answer to the online tutor's first-use notice.",
    "type": "object",
    "additionalProperties": false,
-   "properties": {}
+   "properties": {
+    "cloud_notice": {
+     "description": "The learner's answer to the online tutor's first-use notice (ARC-10), sent with the open the notice was asked for: a profile the online tutor serves is asked it before the thread's first cloud turn.",
+     "enum": [
+      "accepted",
+      "declined"
+     ]
+    }
+   }
   },
   "CompanionSummary": {
    "description": "The companion thread's rolling summary (SPEC §19.5.3): updated, never regenerated, and written by code only from the learning events after `cursor_seq`. No free text: labels are the packs' own words.",
@@ -9856,6 +9882,16 @@
     },
     "summary": {
      "$ref": "#/$defs/CompanionSummary"
+    },
+    "can_reply": {
+     "type": "boolean"
+    },
+    "notice": {
+     "enum": [
+      null,
+      "notice_required",
+      "notice_declined"
+     ]
     }
    }
   },
@@ -10013,6 +10049,256 @@
      "items": {
       "$ref": "#/$defs/Commitment"
      }
+    }
+   }
+  },
+  "CompanionHistory": {
+   "description": "Profile-local retained conversation across daily episodes. Items ordered oldest first within a reverse chronological page.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "session_id",
+       "role",
+       "text",
+       "created_at"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "maxLength": 100
+       },
+       "session_id": {
+        "type": "string",
+        "pattern": "^ses_[0-9A-HJKMNP-TV-Z]{26}$"
+       },
+       "role": {
+        "enum": [
+         "user",
+         "assistant"
+        ]
+       },
+       "text": {
+        "type": "string",
+        "maxLength": 8000
+       },
+       "created_at": {
+        "type": "integer"
+       }
+      }
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "maxLength": 256
+      }
+     ]
+    }
+   }
+  },
+  "MemoryExplanation": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "basis",
+    "meaning",
+    "correction",
+    "sources"
+   ],
+   "properties": {
+    "basis": {
+     "enum": [
+      "self_report",
+      "practice_observation",
+      "mixed",
+      "activity",
+      "unavailable"
+     ]
+    },
+    "meaning": {
+     "type": "string",
+     "maxLength": 240
+    },
+    "correction": {
+     "type": "string",
+     "maxLength": 240
+    },
+    "sources": {
+     "type": "array",
+     "maxItems": 20,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "event_id",
+       "kind",
+       "at",
+       "session_id"
+      ],
+      "properties": {
+       "event_id": {
+        "type": "string",
+        "maxLength": 26
+       },
+       "kind": {
+        "type": "string",
+        "maxLength": 48
+       },
+       "at": {
+        "type": "string",
+        "format": "date-time"
+       },
+       "session_id": {
+        "anyOf": [
+         {
+          "type": "string",
+          "maxLength": 30
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "TeachingOutcome": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "attempt_id",
+    "outcome",
+    "hints_used",
+    "max_rung",
+    "at"
+   ],
+   "properties": {
+    "attempt_id": {
+     "type": "string",
+     "maxLength": 26
+    },
+    "outcome": {
+     "enum": [
+      "correct",
+      "incorrect",
+      "partial"
+     ]
+    },
+    "hints_used": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "max_rung": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 5
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "TeachingObservation": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "source_event_id",
+    "session_id",
+    "intervention",
+    "version",
+    "at",
+    "kc_id",
+    "topic",
+    "immediate",
+    "delayed",
+    "confidence",
+    "conflicting_outcomes",
+    "interpretation"
+   ],
+   "properties": {
+    "source_event_id": {
+     "type": "string",
+     "maxLength": 26
+    },
+    "session_id": {
+     "type": "string",
+     "maxLength": 30
+    },
+    "intervention": {
+     "type": "string",
+     "maxLength": 120
+    },
+    "version": {
+     "type": "string",
+     "maxLength": 80
+    },
+    "at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "kc_id": {
+     "type": "string",
+     "maxLength": 180
+    },
+    "topic": {
+     "type": "string",
+     "maxLength": 400
+    },
+    "immediate": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/TeachingOutcome"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "delayed": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/TeachingOutcome"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "confidence": {
+     "const": "tentative"
+    },
+    "conflicting_outcomes": {
+     "type": "boolean"
+    },
+    "interpretation": {
+     "type": "string",
+     "maxLength": 240
     }
    }
   }
@@ -13423,7 +13709,7 @@
   {
    "method": "POST",
    "path": "/v1/checkins/{commitment_id}/open",
-   "request": null,
+   "request": "#/$defs/CompanionOpen",
    "response": "#/$defs/CompanionOpened",
    "auth": [
     "launch",
@@ -13433,6 +13719,22 @@
     "not_found",
     "model_unavailable",
     "feature_disabled"
+   ],
+   "stage": "S2",
+   "owner": "W8"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/companion/history",
+   "request": null,
+   "response": "#/$defs/CompanionHistory",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "validation_failed"
    ],
    "stage": "S2",
    "owner": "W8"

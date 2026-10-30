@@ -51,12 +51,12 @@ def test_the_61st_turn_is_refused_with_plan_limit(tmp_path: Path) -> None:
         assert "quota" not in refused.text.lower()  # only the companion stops: the device keeps the cloud tier
         assert 0 < int(refused.headers["retry-after"]) <= 86400
         assert len(h.stubs["meta"].seen) == 60  # the 61st never reached the provider
-        # The tool round of a turn already counted continues it; another role is not counted at all.
-        assert (await ask(h, device, "companion", TOOL_ROUND)).status_code == 200
+        # A tool message alone proves no prior admission; another role is not counted here.
+        assert (await ask(h, device, "companion", TOOL_ROUND)).status_code == 429
         assert (await ask(h, device, "coach")).status_code == 200
-        # The count is per session pseudonym: the next session of the day starts its own.
+        # Authenticated account admission survives a newly created session pseudonym.
         other = Device(key=device.key, credential_id=device.credential_id, token=device.token)
-        assert (await ask(h, other, "companion")).status_code == 200
+        assert (await ask(h, other, "companion")).status_code == 429
         assert (await ask(h, device, "companion")).status_code == 429
         # Nothing stored names the pseudonym; the rows are keyed by the day's hash.
         assert device.pseudonym not in repr(rows(h.client._transport.app.state.gateway, "SELECT * FROM companion_days"))

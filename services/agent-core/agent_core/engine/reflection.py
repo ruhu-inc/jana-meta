@@ -37,6 +37,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import hashlib
 import itertools
 import json
 import logging
@@ -126,6 +127,7 @@ class ReflectorModel:
     # and again before the apply: a consent withdrawn while the cloud call ran drops the job's result.
     memory_online: Callable[[], bool] = lambda: False
     terms: Callable[[], Sequence[str]] = lambda: ()  # the Redactor's profile terms, for the egress scrub
+    require_scope: Callable[[], None] = lambda: None
 
     async def candidate_ready(self, explicit: bool = False) -> bool:
         """A candidate can serve this job now (SPEC §19.4): a local one, or, while `tutor_memory_online` is effective,
@@ -174,9 +176,16 @@ class ReflectorModel:
         candidate is offered only when the job may use one (`local_only` false: §19.6)."""
         output = ("reflection", self.schemas[SCHEMA], validator(SCHEMA))
         allow = (lambda c: c.locality == "local") if local_only else None
+
+        def request_guard(candidate: Any) -> None:
+            self.require_scope()
+            if candidate.locality != "local" and not self.memory_online():
+                raise PermissionError("tutor memory consent was withdrawn")
+
         try:
             result = await self.router.complete("reflector", self.messages(task, session_date, history, trace), [],
-                                                output=output, allow=allow)  # fmt: skip
+                                                output=output, allow=allow, request_guard=request_guard)  # fmt: skip
+            self.require_scope()
         except RouterError as error:
             if error.record is not None:
                 trace.model_calls.extend(error.record.model_calls())
@@ -567,6 +576,7 @@ async def reflect(
     hardware_class: str = "mid",
     now_ms: Callable[[], int] = lambda: int(time.time() * 1000),
     applying: Callable[[], None] = lambda: None,
+    correction: tuple[str, str] | None = None,
 ) -> JobOutcome:
     """One Reflector job, end to end. Never raises for a bad output or a failed call (the outcome says what
     happened); a cancellation before the apply propagates, and nothing is written then."""
@@ -590,7 +600,8 @@ async def reflect(
         log.info("reflector job %s (%s) at %s", status, reason or "-", key.point)
         return JobOutcome(status, reason, applied, saved, None if problems else record)
 
-    with job_scope(trace.trace_id):
+    logical_job = hashlib.sha256(f"{key.profile_id}:{key.session_id}:{key.point}:{key.cursor_seq}".encode()).hexdigest()
+    with job_scope("mem_" + logical_job):
         explicit = key.point == "explicit_request"
         if not memory_saving(conn, settings):
             gates.add("memory_saving", True, "skipped")
@@ -606,6 +617,8 @@ async def reflect(
             return finish("skipped", "content_only")
         done = job_cursor(conn, key.session_id)
         window = _window_types(conn, key.session_id, done, key.cursor_seq)
+        if not explicit:
+            window.discard("memory_requested")
         if "safety_flagged" in window:
             gates.add("safety_window", True, "skipped")
             _mark_done(learner, key, "safety", now_ms())
@@ -676,7 +689,7 @@ async def reflect(
         job = NoteJob(learner, given, key.session_id, subject, role, source.capture, fallback_summary=fallback,
                       consolidation=consolidation, student_texts=_student_texts(conn, key.session_id),
                       forgotten_hashes=forgotten, also=_cursor_writer(key, "applied", counts, now_ms()),
-                      now_ms=now_ms())  # fmt: skip
+                      now_ms=now_ms(), correction=correction, require_scope=model.require_scope)  # fmt: skip
         served_online = any(c.get("provider_kind") != "local" for c in trace.model_calls)
         if served_online and not model.memory_online():
             # §19.4: the consent was withdrawn while the cloud call ran: its result is dropped, nothing is written,
@@ -720,6 +733,7 @@ async def _reflection(
     problem: str | None = None
     for _attempt in range(2):
         output, raw, local = await model.call(given.task, session_date, history, trace, local_only=not cloud_ok)
+        model.require_scope()
         if not local and not cloud_ok:
             return None, "not_local"  # never applied from a cloud model (MDL-25) without tutor_memory_online
         if output is None:
@@ -749,6 +763,7 @@ async def _consolidation(
     cleanly; otherwise the write's own fallback (expiring the oldest Reflector notes) makes room."""
     try:
         output, _, local = await model.call(given.task + CONSOLIDATE, session_date, [], trace, local_only=not cloud_ok)
+        model.require_scope()
         if output is None or (not local and not cloud_ok):
             return []
         return [a for a in actions_from_reflection(output, given, subject=subject) if a.action in ("update", "drop")]
@@ -797,6 +812,7 @@ class ReflectorJob:
     session_date: str
     subject: str | None
     request: str | None = None  # an explicit request's words: in memory only, never logged
+    correction: tuple[str, str] | None = None  # exact note id and write-event version selected by the learner
     starts: int = 0  # how often it was started (a pause puts it back)
     turn_id: str | None = None  # the turn that asked, for an explicit request: its notices go there
 
@@ -843,6 +859,7 @@ class ReflectorQueue:
         subject: str | None,
         request: str | None = None,
         turn_id: str | None = None,
+        correction: tuple[str, str] | None = None,
     ) -> bool:
         """Queue one job for a write point. Returns False when nothing was queued: the queue is closed, the profile's
         store is not open, saving is off (MEM-06), the same job is already waiting, or nothing happened since the
@@ -857,6 +874,23 @@ class ReflectorQueue:
                 key = JobKey(source.learner.log.profile_id, sid, point, window_cursor(conn, sid))
                 _mark_done(source.learner, key, "saving_off", self.clock_ms())
             return False
+        if point == "explicit_request":
+            request_id = turn_id or new_ulid(self.clock_ms())
+            if (
+                conn.execute(
+                    "SELECT 1 FROM events WHERE type = 'memory_requested' AND session_id = ?"
+                    " AND json_extract(payload, '$.request_id') = ?",
+                    (sid, request_id),
+                ).fetchone()
+                is None
+            ):
+                source.learner.record(
+                    "memory_requested",
+                    {"request_id": request_id},
+                    source="student",
+                    session_id=sid,
+                    turn_id=turn_id.removeprefix("trn_") if turn_id else None,
+                )
         key = JobKey(source.learner.log.profile_id, sid, point, window_cursor(conn, sid))
         if point != "explicit_request":
             if any(j.key == key for j in self._all()):
@@ -869,7 +903,13 @@ class ReflectorQueue:
             if key.cursor_seq <= job_cursor(conn, sid) and not summary_due:
                 return False
         job = ReflectorJob(
-            key, profile_ref, session_date, subject if subject in SUBJECTS else None, request, turn_id=turn_id
+            key,
+            profile_ref,
+            session_date,
+            subject if subject in SUBJECTS else None,
+            request,
+            turn_id=turn_id,
+            correction=correction,
         )
         if job.explicit:
             self.pending.appendleft(job)  # at once, after the reply
@@ -1020,15 +1060,32 @@ class ReflectorQueue:
         if source is None or model is None or source.learner.log.profile_id != job.key.profile_id:
             return  # the profile is not open any more: its jobs were cancelled with it
         self._applying = False
+        from agent_core.memory.visibility import revision
+
+        epoch = revision(source.conn)
+
+        def require_scope() -> None:
+            current = self.source()
+            if (
+                self._closed
+                or self.running is not job
+                or current is None
+                or current.learner is not source.learner
+                or revision(source.conn) != epoch
+            ):
+                raise PermissionError("the memory job's learner or memory changed")
+
+        model.require_scope = require_scope
 
         def applying() -> None:
+            require_scope()
             self._applying = True
 
         try:
             outcome = await reflect(source, model, self.executor, job.key, session_date=job.session_date,
                                     subject=job.subject, request=job.request, profile_ref=job.profile_ref,
                                     hardware_class=self.hardware_class(), now_ms=self.clock_ms,
-                                    applying=applying)  # fmt: skip
+                                    applying=applying, correction=job.correction)  # fmt: skip
         except asyncio.CancelledError:
             raise
         except Exception as error:  # a job never breaks the app: the session keeps its events for later

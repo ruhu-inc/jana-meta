@@ -99,15 +99,16 @@ describe("SPEC §19.3.3 companion.action in the store", () => {
   });
 });
 
-function companionCore(reply: () => Response) {
+function companionCore(reply: (body: unknown) => Response) {
   const core = new FakeProfileCore();
-  const opened: { key: string | undefined }[] = [];
+  const opened: { key: string | undefined; body: unknown }[] = [];
   const fetcher = (async (input, init = {}) => {
     const url = new URL(String(input));
     if (url.pathname === "/v1/companion" && (init.method ?? "GET") === "POST") {
-      opened.push({ key: (init.headers as Record<string, string> | undefined)?.["idempotency-key"] });
+      const body: unknown = typeof init.body === "string" ? JSON.parse(init.body) : undefined;
+      opened.push({ key: (init.headers as Record<string, string> | undefined)?.["idempotency-key"], body });
       await new Promise((r) => setTimeout(r, 5));
-      return reply();
+      return reply(body);
     }
     return core.fetch(input, init);
   }) as typeof fetch;
@@ -165,6 +166,46 @@ describe("SPEC §19.3.3 the thread's open and its turns", () => {
       expect(companion.getThread()).toMatchObject({ status, error, session_id: null });
       expect(companion.send("hi")).toBeNull();
     }
+  });
+});
+
+describe("SPEC §19 status (W8 fix 2026-10-29) the online tutor's notice before the thread's first cloud turn", () => {
+  const refused = (reason: string) => new Response(JSON.stringify({ error: { code: "feature_disabled", message: "", retryable: false, action_taken: false, request_id: "req_x", details: { reason, feature: "cloud_tier" } } }), { status: 403 });
+
+  test("an open the core refuses for the notice shows it; the answer goes with the same open, and the thread opens", async () => {
+    const fake = companionCore((body) => ((body as { cloud_notice?: string } | undefined)?.cloud_notice === "accepted" ? ok(OPENED) : refused("notice_required")));
+    const profiles = new ProfileController(fake.core.launch, new StoreHolder(), { fetch: fake.fetch });
+    await profiles.load(); await profiles.unlock(PROFILES[0]!.profile_id);
+    const companion = new CompanionController(profiles, { fetch: fake.fetch });
+    await companion.open();
+    expect(companion.getThread()).toMatchObject({ status: "notice", notice: "notice_required", error: null, session_id: null });
+    expect(companion.send("hi")).toBeNull();
+    await companion.answerNotice("accepted");
+    expect(fake.opened.map((o) => o.body)).toEqual([{}, { cloud_notice: "accepted" }]);
+    expect(companion.getThread()).toMatchObject({ status: "ready", notice: null, session_id: OPENED.session_id });
+    // Answered once: nothing is asked again, and a stray answer sends nothing.
+    await companion.answerNotice("declined");
+    expect(fake.opened).toHaveLength(2);
+    companion.close();
+  });
+
+  test("declined where no tutor can run here, the notice is shown again saying why; other refusals stay failures", async () => {
+    const fake = companionCore((body) => refused((body as { cloud_notice?: string } | undefined)?.cloud_notice === "declined" ? "notice_declined" : "notice_required"));
+    const profiles = new ProfileController(fake.core.launch, new StoreHolder(), { fetch: fake.fetch });
+    await profiles.load(); await profiles.unlock(PROFILES[0]!.profile_id);
+    const companion = new CompanionController(profiles, { fetch: fake.fetch });
+    await companion.open();
+    await companion.answerNotice("declined");
+    expect(fake.opened.map((o) => o.body)).toEqual([{}, { cloud_notice: "declined" }]);
+    expect(companion.getThread()).toMatchObject({ status: "notice", notice: "notice_declined" });
+    companion.close();
+    const off = companionCore(() => refused("switched_off"));
+    const other = new ProfileController(off.core.launch, new StoreHolder(), { fetch: off.fetch });
+    await other.load(); await other.unlock(PROFILES[0]!.profile_id);
+    const thread = new CompanionController(other, { fetch: off.fetch });
+    await thread.open();
+    expect(thread.getThread()).toMatchObject({ status: "failed", error: "feature_disabled", notice: null });
+    thread.close();
   });
 });
 

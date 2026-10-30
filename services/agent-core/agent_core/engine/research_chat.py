@@ -28,12 +28,14 @@ from typing import Any
 from jsonschema import Draft202012Validator
 
 from agent_core.contracts import document
+from agent_core.contracts import errors as contract_errors
 from agent_core.engine import job_scope
 from agent_core.engine.events import new_id
 from agent_core.memory.render import BANDS
 from agent_core.memory.snapshot import freeze
 from agent_core.prompts.untrusted import escape
 from agent_core.router import Message
+from agent_core.trace.record import TraceBuilder, default_build, sha256_of
 
 log = logging.getLogger(__name__)
 
@@ -207,12 +209,70 @@ def tidy(turn: dict[str, Any], start: Start, history: Sequence[dict[str, Any]]) 
 
 
 class ChatError(ValueError):
-    """No usable turn: the reason is an API error code (`model_unavailable`, `invalid_output`)."""
+    """No usable turn: the reason is an API error code (`model_unavailable`, `invalid_output`). `details` says why by
+    code only (the router's reason and trigger, each candidate tried and what refused it): never prompt text."""
+
+    def __init__(self, reason: str, details: dict[str, Any] | None = None) -> None:
+        super().__init__(reason)
+        self.details = details or {}
+
+
+def diagnosis(error: BaseException) -> dict[str, Any]:
+    """Why a router call failed, by code: the reason and fallback trigger, the candidates and why any was dropped,
+    each attempt's provider kind, model and reason, and each provider refusal's code (the egress layer's reason, the
+    redaction kinds, an HTTP status and error code). Nothing of the prompt or a reply."""
+    out: dict[str, Any] = {"error": type(error).__name__[:40]}
+    reason = getattr(error, "reason", None)
+    if isinstance(reason, str):
+        out["router_reason"] = reason[:40]
+    trigger = getattr(error, "trigger", None)
+    if isinstance(trigger, str) and trigger != reason:
+        out["trigger"] = trigger[:40]
+    record = getattr(error, "record", None)
+    if record is not None:
+        out["candidates"] = [str(c)[:128] for c in record.candidates[:8]]
+        if record.dropped:
+            out["dropped"] = {str(k)[:128]: str(v)[:80] for k, v in list(record.dropped.items())[:8]}
+        out["attempts"] = [{k: a.get(k) for k in ("provider_kind", "model_requested", "reason", "error_class")
+                            if a.get(k) is not None} for a in record.attempts[:8]]  # fmt: skip
+        refusals = list(getattr(record, "refusals", []))
+        if refusals:
+            out["provider_errors"] = [{k: e.get(k) for k in ("candidate", "reason", "code", "status")
+                                       if e.get(k) is not None} for e in refusals[:8]]  # fmt: skip
+    return out
+
+
+def job_trace(profile_ref: str | None, settings: Any = None) -> TraceBuilder:
+    """A job trace for one turn of the conversation (`job_name` research_chat). The conversation runs without the
+    soul or a role manifest: its fixed instruction is the whole prompt frame, so that is what `soul_sha256` names."""
+    from agent_core.config import Settings
+
+    assets = {"config_sha256": sha256_of((settings or Settings()).model_dump(mode="json")), "agent_bundle_id": "dev",
+              "soul_sha256": sha256_of(INSTRUCTION), "role_manifests": [], "content_packs": []}  # fmt: skip
+    return TraceBuilder("research", profile_ref or "local", kind="job", build=default_build(), assets=assets)
+
+
+def trace_record(trace: TraceBuilder) -> dict[str, Any] | None:
+    """The finished job trace: its model calls and, on a failure, the refusal's code; None if it breaks its
+    contract (it is then not written)."""
+    trace.status = "error" if trace.degraded else "complete"
+    record = trace.record()
+    record["job_name"] = "research_chat"
+    return None if contract_errors("trace/turn-trace", record) else record
+
+
+def trace_reason(found: dict[str, Any]) -> str:
+    """The job trace's `degraded_reason` for a failed call: the first provider refusal's code, else the router's
+    reason, in the trace's code form."""
+    codes = [e.get("code") for e in found.get("provider_errors", []) if e.get("code")]
+    raw = str(codes[0] if codes else found.get("router_reason") or "model_unavailable")
+    code = re.sub(r"[^a-z0-9_]+", "_", raw.lower()).strip("_")
+    return (code if code[:1].isalpha() else "model_unavailable")[:64]
 
 
 async def next_turn(router: Any, start: Start, history: Sequence[dict[str, Any]], answer: str | None,
                     skip: bool = False, profile: LearnerProfile | None = None,
-                    skipped: Sequence[str] = ()) -> dict[str, Any]:  # fmt: skip
+                    skipped: Sequence[str] = (), trace: Any = None) -> dict[str, Any]:  # fmt: skip
     """The conversation's next turn: a question with its quick replies, the brief, or out of scope. `skipped` names
     questions code passed over (one that would have asked a known level): they count as asked."""
     done = [*asked(history), *skipped]
@@ -221,28 +281,59 @@ async def next_turn(router: Any, start: Start, history: Sequence[dict[str, Any]]
     decode = schema(questions_left, start.photo, known_level=known)
     check = Draft202012Validator(schema(questions_left, start.photo))
     prompt = task(start, history, answer, brief_now=not questions_left, profile=profile, skipped=skipped)
-    with job_scope(new_id("job")):
-        try:
-            result = await router.complete(ROLE, [Message("user", prompt)],
-                                           output=("ResearchChatTurn", decode, Draft202012Validator(decode)),
-                                           temperature=0.3, effort="low")  # fmt: skip
-        except Exception as error:  # the router's failures, offline included
-            log.warning("research_chat.failed kind=%s reason=%s", type(error).__name__, getattr(error, "reason", ""))
-            raise ChatError("model_unavailable") from error
-    turn = result.structured if result.schema_valid else None
-    if known and isinstance(turn, dict) and turn.get("kind") == "brief" and isinstance(turn.get("brief"), dict):
-        turn = {**turn, "brief": {**turn["brief"], "level": "o_level"}}  # JM-D29: by code, before the check
-    if not isinstance(turn, dict) or list(check.iter_errors(turn)):
-        raise ChatError("invalid_output")
-    if turn["kind"] == "question" and (turn.get("asks") in done or not turn.get("question")):
-        if questions_left:  # a repeated or empty question: write the brief instead of asking again
-            return await next_turn(router, start, history, answer, skip=True, profile=profile, skipped=skipped)
-        raise ChatError("invalid_output")
+    failed: dict[str, Any] = {}
+    for attempt in range(2):  # one in-call retry when a reply fails a check after the call (§19 fix, 2026-10-29)
+        with job_scope(trace.trace_id if trace is not None else new_id("job")):
+            try:
+                result = await router.complete(ROLE, [Message("user", prompt)],
+                                               output=("ResearchChatTurn", decode, Draft202012Validator(decode)),
+                                               temperature=0.3, effort="low")  # fmt: skip
+            except Exception as error:  # the router's failures, offline included
+                found = diagnosis(error)
+                log.warning("research_chat.failed %s", json.dumps(found, sort_keys=True))
+                if trace is not None:  # the job trace says what failed, by code
+                    record = getattr(error, "record", None)
+                    trace.model_calls.extend(record.model_calls() if record is not None else [])
+                    trace.degraded, trace.degraded_reason = True, trace_reason(found)
+                raise ChatError("model_unavailable", found) from error
+        record = getattr(result, "record", None)
+        if trace is not None and record is not None:
+            trace.model_calls.extend(record.model_calls())
+        turn = result.structured if result.schema_valid else None
+        if known and isinstance(turn, dict) and turn.get("kind") == "brief" and isinstance(turn.get("brief"), dict):
+            turn = {**turn, "brief": {**turn["brief"], "level": "o_level"}}  # JM-D29: by code, before the check
+        failed = post_check(turn, check, done, questions_left)
+        if not failed:
+            break
+        log.info("research_chat.post_check %s attempt=%d", json.dumps(failed, sort_keys=True), attempt + 1)
+        if failed["post_check"] == "repeated_question" and questions_left:
+            # A repeated or empty question while questions remain: write the brief instead of asking again.
+            return await next_turn(router, start, history, answer, skip=True, profile=profile, skipped=skipped,
+                                   trace=trace)  # fmt: skip
+    if failed:
+        if trace is not None:
+            trace.degraded, trace.degraded_reason = True, f"invalid_output_{failed['post_check']}"[:64]
+        raise ChatError("invalid_output", {**failed, "attempts": 2})
+    assert isinstance(turn, dict)
     if known and turn["kind"] == "question":
         if LEVEL_WORDS.search(str(turn["question"])):  # it would ask the level: the next question or the brief
             return await next_turn(router, start, history, answer, profile=profile,
-                                   skipped=[*skipped, str(turn.get("asks") or "purpose")])  # fmt: skip
+                                   skipped=[*skipped, str(turn.get("asks") or "purpose")], trace=trace)  # fmt: skip
         turn = {**turn, "chips": [c for c in turn["chips"] if not LEVEL_WORDS.search(c)]}
-    if turn["kind"] == "brief" and turn.get("brief") is None:
-        raise ChatError("invalid_output")
     return tidy(turn, start, history)
+
+
+def post_check(turn: Any, check: Draft202012Validator, done: Sequence[str], questions_left: bool) -> dict[str, Any]:
+    """Which check after the call a reply fails, as a fixed code (and, for the contract, the failing path, never a
+    value): `not_structured`, `contract_check`, `repeated_question`, `missing_brief`; empty when it passes."""
+    if not isinstance(turn, dict):
+        return {"post_check": "not_structured"}
+    problems = sorted(check.iter_errors(turn), key=lambda e: list(e.absolute_path))
+    if problems:
+        path = "$" + "".join(f"[{p}]" if isinstance(p, int) else f".{p}" for p in problems[0].absolute_path)
+        return {"post_check": "contract_check", "path": path[:120], "validator": str(problems[0].validator)[:40]}
+    if turn["kind"] == "question" and (turn.get("asks") in done or not turn.get("question")):
+        return {"post_check": "repeated_question"}
+    if turn["kind"] == "brief" and turn.get("brief") is None:
+        return {"post_check": "missing_brief"}
+    return {}

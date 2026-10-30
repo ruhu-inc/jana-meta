@@ -315,7 +315,8 @@ class Gateway:
         if role in companion.FEATURES:
             # The personal learning agent (W8): its bound held and its turn or job counted under its own feature.
             admitted = self.companion.admit(session.account, request.headers[PSEUDONYM_HEADER], role, model,
-                                            forwarded, started)  # fmt: skip
+                                            forwarded, started,
+                                            operation_id=request.headers.get("x-jana-operation"))  # fmt: skip
             if isinstance(admitted, DeviceError):
                 return _error(admitted)
             hold, forwarded = admitted

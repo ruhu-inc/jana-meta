@@ -144,7 +144,8 @@
     "practice",
     "exam_review",
     "side_question",
-    "revision"
+    "revision",
+    "study_companion"
    ]
   },
   "turn_source": {
@@ -871,7 +872,8 @@
        "plan",
        "memory",
        "meta",
-       "external"
+       "external",
+       "study"
       ]
      },
      "executor": {
@@ -992,6 +994,11 @@
        "exhausted_fallback",
        "skipped"
       ]
+     },
+     "detail": {
+      "type": "string",
+      "pattern": "^[a-z0-9_:.-]{1,64}$",
+      "description": "What made the gate fire, as a code (for fact binding the number and the unit beside it, `number:10:unit:flashcard`); never the reply's text."
      }
     }
    }

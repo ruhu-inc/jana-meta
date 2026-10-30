@@ -129,6 +129,7 @@ async def start_core(data_dir: Path, provider: Any = None, settings: Settings | 
     core.session_class = runtime.session_class
     core.trace_records = runtime.traces.records if runtime.traces is not None else None
     core.capture_trace_sink = runtime._trace_sink if runtime.traces is not None else None
+    core.job_trace_sink = runtime._trace_sink if runtime.traces is not None else None  # as __main__ wires it
     core.capture_summary = runtime.traces.perception_summary if runtime.traces is not None else None
     core.erasers.register("traces", runtime.delete_profile_traces)
     core.closers.append(runtime.close)

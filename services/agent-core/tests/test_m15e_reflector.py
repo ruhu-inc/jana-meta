@@ -148,7 +148,14 @@ def mem06_write_points_only(tmp_path: Path) -> None:
 
     async def scenario() -> Any:
         # Hint requests here come seconds apart: without the pacing gap of PED-06 each one is a hint, not a pause.
-        r = await core_with_reflector(tmp_path, provider, hint_min_gap_s=0.0)
+        r = await core_with_reflector(
+            tmp_path,
+            provider,
+            hint_min_gap_s=0.0,
+            worker_warm_target_s=60.0,
+            worker_ping_interval_s=30.0,
+            worker_missed_pings_recycle=10,
+        )
         holder["r"] = r
         queue = r.core.reflector
         assert queue is not None
@@ -162,6 +169,7 @@ def mem06_write_points_only(tmp_path: Path) -> None:
             await _turn(r, session, "remember that a labelled sketch helps me first")
             await queue.idle()
             await _turn(r, session, "s = 10 m", "answer")  # the problem ends, with nothing new since the request
+            assert r.core.sessions[session].engine.state.solved
             await queue.idle()
             await _turn(r, session, "I'm stuck", "stuck")  # more evidence, then a long pause
             real = r.core.clock_ms
@@ -172,8 +180,8 @@ def mem06_write_points_only(tmp_path: Path) -> None:
             await queue.idle()
             await _turn(r, session, "I'm stuck", "stuck")
             other = await r.session()  # switching away ends the learning session
-            # Saving on, but no learning evidence in this session: nothing can be kept, and the student is told so
-            # in the turn that asked (MEM-11, G91).
+            # The scripted model repeats an existing note for a different request: duplicate screening must
+            # decline it, even though the new self-report supplies evidence (MEM-07, G91).
             empty = await _turn(r, other, "remember that I like the units first", "ask")
             await queue.idle()
             declines = [f for f in r.core.sessions[other].engine.events.frames if f["event"]["type"] == "notice"]
@@ -184,9 +192,15 @@ def mem06_write_points_only(tmp_path: Path) -> None:
     points, queued, session, declines, empty, outcomes = run(scenario())
     assert queued == [session]
     assert points == ["explicit_request", "problem_end", "idle", "session_end", "explicit_request"], points
-    assert len(requests_of(provider, "reflector")) == 5, "one Reflector call per write point"
+    summary_only = [(key, outcome) for key, outcome in outcomes if outcome.trace and not outcome.trace["model_calls"]]
+    assert all(
+        outcome.reason == "no_new_events"
+        or (key.point in ("session_end", "idle", "study_end") and outcome.applied and outcome.applied.summary_stored)
+        for key, outcome in summary_only
+    ), [(k.point, o.status, o.reason) for k, o in summary_only]
+    assert len(requests_of(provider, "reflector")) == len(points) - len(summary_only)
     assert during_turn and not any(during_turn), "never while a turn runs"
-    assert outcomes[0][1].saved and not outcomes[-1][1].saved, "the request with no evidence kept nothing"
+    assert outcomes[0][1].saved and not outcomes[-1][1].saved, "the duplicate note was not saved again"
     assert [(f["turn_id"], f["event"]["message_key"]) for f in declines] == [(empty, "memory.declined")]
 
 
@@ -550,13 +564,13 @@ def test_a_note_forgotten_during_a_job_is_not_written_back(tmp_path: Path) -> No
     assert text not in texts and "qzvforgotten" not in " ".join(texts)
 
 
-def test_a_forget_restarts_the_running_job_and_restarts_are_capped(tmp_path: Path) -> None:
-    """A forget (API or Undo) cancels the open profile's running job and puts it back, to start from a fresh view;
+def test_a_forget_cancels_the_running_job_and_restarts_are_capped(tmp_path: Path) -> None:
+    """A forget (API or Undo) cancels stale jobs without requeueing the old request;
     a job paused more than `reflector_max_starts` times is left for the next write point, and an explicit request
     left that way is declined in its turn (AGT-26, MEM-11)."""
     stall = [reflection(note(NOTE, [1], date=TODAY), stall=30.0) for _ in range(4)]
     provider = scripted({"solver": solver_steps(), "checker": checker_steps(), "coach": [*STUCK, tutor(SAFE)],
-                         "reflector": [*stall[:1], reflection(note(NOTE, [1], date=TODAY)), *stall[1:]]})  # fmt: skip
+                         "reflector": stall})  # fmt: skip
 
     async def scenario() -> Any:
         r = await core_with_reflector(tmp_path, provider, reflector_max_starts=2)
@@ -572,9 +586,9 @@ def test_a_forget_restarts_the_running_job_and_restarts_are_capped(tmp_path: Pat
             first = [(k.point, o.status) for k, o in queue.outcomes]
             # An explicit request whose job is paused again and again: dropped after two starts, and declined.
             turn = await _turn(r, session, "remember that a labelled sketch helps me first")
-            await wait_for(lambda: len(requests_of(provider, "reflector")) == 3)
+            await wait_for(lambda: len(requests_of(provider, "reflector")) == 2)
             assert queue.pause()
-            await wait_for(lambda: len(requests_of(provider, "reflector")) == 4)
+            await wait_for(lambda: len(requests_of(provider, "reflector")) == 3)
             assert queue.pause()
             await queue.idle()
             frames = r.core.sessions[session].engine.events.frames
@@ -584,7 +598,7 @@ def test_a_forget_restarts_the_running_job_and_restarts_are_capped(tmp_path: Pat
             await stop_core(r)
 
     first, outcomes, turn, declines = run(scenario())
-    assert first == [("idle", "applied")], "cancelled by the forget, started again and applied once"
-    assert len(requests_of(provider, "reflector")) == 4
+    assert first == [], "forget cancels stale work without restarting it"
+    assert len(requests_of(provider, "reflector")) == 3
     assert outcomes[-1] == ("explicit_request", "dropped", "too_many_starts")
     assert declines == [(turn, "memory.declined")]

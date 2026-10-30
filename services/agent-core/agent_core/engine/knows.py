@@ -21,6 +21,7 @@ from agent_core.config import Settings
 from agent_core.engine.memory_session import MemorySource
 from agent_core.learner.projections import PREFERENCE_VALUES, local_date, note_lifecycle
 from agent_core.memory.capture import default_filter
+from agent_core.memory.observations import explain_note, teaching_observations
 from agent_core.memory.policy import render_check
 from agent_core.memory.queries import NoteRecord, ReviewItem, recent_study_activity, review_items
 from agent_core.memory.recall import recall_sessions
@@ -96,6 +97,7 @@ class KnowsDesk:
         out["recall_sessions"] = int(self._derived.get("recalls", {}).get(note.note_id, 0))
         out["withheld_online"] = bool(self._derived.get("online")) and scrub_for_egress(
             note.text, self.settings, self._capture, tuple(self.terms())) is not None  # fmt: skip
+        out["explanation"] = explain_note(self.source.conn, note)
         return out
 
     def _derive(self, note_ids: Sequence[str]) -> None:
@@ -154,6 +156,7 @@ class KnowsDesk:
             "activity": recent_study_activity(conn, self.source.content),
             # SPEC §19.3.3: the companion thread's rolling summary as last folded by code (none before a first open).
             "companion_summary": self._companion_summary(),
+            "teaching_observations": teaching_observations(conn, self.source.content),
         }  # fmt: skip
 
     def _companion_summary(self) -> dict[str, Any] | None:

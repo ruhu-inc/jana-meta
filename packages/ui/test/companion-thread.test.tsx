@@ -26,7 +26,7 @@ const OPENED: CompanionThreadView = {
     last_session_date: "2026-10-28", last_session_mode: "guided", last_subject: "physics", next_step: null, learner_cards_due: 12,
     study_cards_due: 0, exam_distance_days: null, pack_ready: false, checkin_id: null,
   } },
-  summary: null, error: null,
+  summary: null, error: null, notice: null,
 };
 
 function snapshot(actions?: CoreSnapshot["actions"], seq = 0): CoreSnapshot {
@@ -47,6 +47,10 @@ class FakeCompanion implements CompanionThreadSource {
   private readonly listeners = new Set<() => void>();
   readonly sent: string[] = [];
   readonly retry = vi.fn();
+  readonly loadEarlier = vi.fn(async () => undefined);
+  readonly answers: string[] = [];
+  /** The open sent again with the answer: here, what the core answers it with. */
+  onAnswer: (answer: "accepted" | "declined") => CompanionThreadView = () => OPENED;
   private seq = 0;
   private keys = 0;
 
@@ -59,6 +63,11 @@ class FakeCompanion implements CompanionThreadSource {
   getThread = (): CompanionThreadView => this.thread;
   subscribe = (listener: () => void): (() => void) => { this.listeners.add(listener); return () => this.listeners.delete(listener); };
   setThread(view: CompanionThreadView): void { act(() => { this.thread = view; for (const l of [...this.listeners]) l(); }); }
+  answerNotice = async (answer: "accepted" | "declined"): Promise<void> => {
+    this.answers.push(answer);
+    await Promise.resolve();
+    this.setThread(this.onAnswer(answer));
+  };
 
   send = (text: string): string | null => {
     const words = text.trim();
@@ -172,6 +181,31 @@ describe("W8 Your tutor", () => {
     expect(screen.getByText("Your tutor is not available on this computer yet.")).toBeDefined();
   });
 
+  test("the online tutor's first-use notice is asked in the thread, and the learner's answer is sent with the open", async () => {
+    const companion = new FakeCompanion({ ...EMPTY_THREAD, status: "notice", notice: "notice_required" });
+    const { container } = shown(companion);
+    const notice = screen.getByRole("group", { name: "Talk with the online tutor?" });
+    expect(notice.textContent).toContain("Your messages in this conversation will be sent to the online tutor so it can answer. Your name is not sent.");
+    expect(container.querySelector("[role=alert]")).toBeNull(); // a question, not a failure
+    expect((screen.getByRole("textbox", { name: "Message to your tutor" }) as HTMLTextAreaElement).disabled).toBe(true);
+    await act(async () => { fireEvent.click(within(notice).getByRole("button", { name: "OK" })); });
+    expect(companion.answers).toEqual(["accepted"]);
+    expect(screen.queryByRole("group", { name: "Talk with the online tutor?" })).toBeNull();
+    expect((screen.getByRole("textbox", { name: "Message to your tutor" }) as HTMLTextAreaElement).disabled).toBe(false);
+  });
+
+  test("keeping it on this computer is sent too; where no tutor can run here, the notice says why and offers OK only", async () => {
+    const companion = new FakeCompanion({ ...EMPTY_THREAD, status: "notice", notice: "notice_required" });
+    companion.onAnswer = () => ({ ...EMPTY_THREAD, status: "notice", notice: "notice_declined" });
+    shown(companion);
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Keep it on this computer" })); });
+    expect(companion.answers).toEqual(["declined"]);
+    const notice = screen.getByRole("group", { name: "Talk with the online tutor?" });
+    expect(notice.textContent).toContain("There is no tutor model on this computer, so your tutor can only answer with the online tutor.");
+    expect(within(notice).queryByRole("button", { name: "Keep it on this computer" })).toBeNull();
+    expect(within(notice).getByRole("button", { name: "OK" })).toBeDefined();
+  });
+
   test("a reply that is still being worked on shows its phase, `recalling` included", () => {
     const companion = new FakeCompanion();
     shown(companion);
@@ -267,4 +301,12 @@ describe("W8 the plan's due Study cards", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open the cards" }));
     expect(onStudyCards).toHaveBeenCalledWith(deck);
   });
+});
+
+test("restored same-day history remains visible when its runtime snapshot is empty", () => {
+  const companion = new FakeCompanion({ ...OPENED, can_reply: false, history: [
+    { id: "msg_restored", session_id: SESSION, role: "user", text: "Continue our momentum agreement", created_at: 1 },
+  ] });
+  shown(companion);
+  expect(screen.getByText("Continue our momentum agreement")).toBeDefined();
 });

@@ -478,8 +478,13 @@ def session_history(conn: sqlite3.Connection, session_id: str) -> list[Transcrip
     """The current session's stored transcript: student text, tutor text and board LaTeX (MEM-18), in order. A board
     step belongs to the turn of the part that drew it, or else to the last turn started before it."""
     sid = session_id.removeprefix("ses_")
+    from agent_core.memory.visibility import cutoff
+
+    after = cutoff(conn)
     turns = conn.execute(
-        "SELECT turn_id, idx, speaker, student_text, started_at FROM turns WHERE session_id = ? ORDER BY idx", (sid,)
+        "SELECT turn_id, idx, speaker, student_text, started_at FROM turns"
+        " WHERE session_id = ? AND started_at > ? ORDER BY idx",
+        (sid, after),
     ).fetchall()
     ref_of = {turn_id: idx + 1 for turn_id, idx, *_ in turns}
     out: list[tuple[int, int, TranscriptLine]] = []
@@ -499,8 +504,8 @@ def session_history(conn: sqlite3.Connection, session_id: str) -> list[Transcrip
     starts = [(started, idx + 1) for _, idx, _, _, started in turns]
     steps = conn.execute(
         "SELECT s.latex, p.turn_id, s.created_at, s.idx FROM board_steps s LEFT JOIN parts p ON p.part_id = s.part_id"
-        " WHERE s.session_id = ? ORDER BY s.created_at, s.idx, s.step_id",
-        (sid,),
+        " WHERE s.session_id = ? AND s.created_at > ? ORDER BY s.created_at, s.idx, s.step_id",
+        (sid, after),
     )
     for latex, turn_id, created_at, step_idx in steps:
         ref = ref_of.get(turn_id) if turn_id is not None else None
@@ -539,8 +544,36 @@ def recent_study_activity(conn: sqlite3.Connection, content: ContentLabels, n: i
             "aid_kind": payload.get("aid_kind"),
             "count": payload.get("count"),
             "day": datetime.fromtimestamp(int(at) / 1000, UTC).date().isoformat(),
+            "from_pack": from_research_pack(conn, str(payload.get("ref") or "")),
         })  # fmt: skip
     return out
+
+
+def from_research_pack(conn: sqlite3.Connection, ref: str) -> bool:
+    """The activity's material came from a study pack the research agent made (§19 fix, 2026-10-29): its aid's
+    source is a research pack's. A ref is `att:<attempt>:<item>`, `card:<card>` or `aid:<aid>`."""
+    kind, _, rest = ref.partition(":")
+    try:
+        if kind == "att":
+            row = conn.execute("SELECT q.aid_id FROM study_attempts a JOIN study_quizzes q ON q.quiz_id = a.quiz_id"
+                               " WHERE a.attempt_id = ?", (rest.rsplit(":", 1)[0],)).fetchone()  # fmt: skip
+        elif kind == "card":
+            row = conn.execute("SELECT d.aid_id FROM study_flashcards f JOIN study_decks d ON d.deck_id = f.deck_id"
+                               " WHERE f.card_id = ?", (rest,)).fetchone()  # fmt: skip
+        elif kind == "aid":
+            row = (rest,)
+        else:
+            return False
+        if row is None:
+            return False
+        found = conn.execute(
+            "SELECT 1 FROM study_aid_sources s JOIN study_research r ON json_extract(r.body, '$.source_id') ="
+            " s.source_id WHERE s.aid_id = ? LIMIT 1",
+            (row[0],),
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return False
+    return found is not None
 
 
 def study_activity_counts(conn: sqlite3.Connection, since_ms: int) -> dict[str, int]:

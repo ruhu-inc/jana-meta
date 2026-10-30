@@ -676,6 +676,14 @@ CREATE TABLE companion_summary (
   updated_at   INTEGER NOT NULL,
   body_json    TEXT    NOT NULL CHECK (json_valid(body_json))
 ) STRICT;
+
+CREATE TABLE companion_turn_context (
+  turn_id TEXT PRIMARY KEY REFERENCES turns(turn_id) ON DELETE CASCADE,
+  memory_revision TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('companion','memory_command')),
+  egress_json TEXT NOT NULL CHECK (json_valid(egress_json))
+) STRICT;
+
 CREATE TABLE commitments (
   commitment_id TEXT   PRIMARY KEY CHECK (commitment_id GLOB 'cmt_*' AND length(commitment_id) = 30),
   kind         TEXT    NOT NULL CHECK (kind IN ('event_checkin','deadline_check','open_loop','due_reviews',

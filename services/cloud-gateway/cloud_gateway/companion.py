@@ -1,30 +1,19 @@
-"""The personal learning agent's admission on the chat route (W8, SPEC §19.4, §19.7, JM-D21).
+"""Durable daily admission for companion turns and Reflector jobs.
 
-The device names a call's engine role in `X-Jana-Role`, as it does for every role; the gateway admits the Study
-companion (`companion`) and the Reflector's tutor-memory job on Spark (`reflector`) here, before any provider sees
-the call:
+An authenticated account shares the configured allowance across its profiles, sessions and devices. The gateway
+cannot authenticate a learner identity, so it never treats a client-selected pseudonym as an independent budget.
+Day-keyed HMACs keep raw account identifiers out of this ledger; previous days are purged.
 
-1. The call's upper bound (its input bound, `inference_budget.input_bound`, and its output cap, at the model's price)
-   is held in this daily ledger under its feature, `companion` or `reflector`, against `companion.per_day_usd`; the
-   forwarded body carries that output cap, so the bound is a true bound. The call keeps its feature as its role, so
-   the deployment's inference budget (when one is set) holds the same bound under it too, and its request row is
-   recorded under it. When the call ends, its hold is replaced by the cost recorded for it.
-2. A request that starts a turn or a job counts against the plan's `companion_turns_per_day` or
-   `tutor_memory_jobs_per_day` (`Limits`); a request whose last message is a tool result continues the turn already
-   counted (a tool round is two requests, SPEC §19.7), so it is held against the spend but not counted again.
-
-Both are kept per session pseudonym per UTC day. At a cap the call is refused 429 `plan_limit` until midnight UTC. The
-refusal never says "quota": that word makes the device pause the whole cloud tier (MDL-24), and only this feature has
-reached its limit. An unset limit is no limit. An aid made from the companion's thread is a Study job (`/v1/study`,
-role `study`), charged to Study's own feature, never here.
-
-Privacy (PRV-25, OBS-22): a row's key is an HMAC of the subscription and the pseudonym under the day's key
-(`GatewayStore.device_hash`), and that key is deleted at the day's rollover, so no pseudonym is stored and no row links
-to another day; a day's rows are deleted once it is over. No prompt or reply is stored."""
+X-Jana-Operation identifies one logical turn/job: tools, repairs and retries count once, but each provider attempt
+reserves its full spend bound. Reusing an operation is bounded to 12 attempts. Missing identifiers conservatively
+count every call. A tool-result message alone never proves a previous admission. Abandoned holds remain reserved
+until midnight; settlement is idempotent. An exhausted feature returns plan_limit without pausing other cloud roles.
+"""
 
 from __future__ import annotations
 
 import math
+import re
 import secrets
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -78,42 +67,62 @@ def bound_usd(config: GatewayConfig, model: ModelSpec, body: dict[str, Any]) -> 
     return cost_usd(config.prices.get(model.id), usage)
 
 
-def continues(body: dict[str, Any]) -> bool:
-    """The request carries a tool result last: the second request of a turn already counted."""
-    messages = body.get("messages") or []
-    return bool(messages) and isinstance(messages[-1], dict) and messages[-1].get("role") == "tool"
-
-
 class CompanionLedger:
     def __init__(self, config: GatewayConfig, store: GatewayStore, clock: Callable[[], float]) -> None:
         self.config, self.store, self.clock = config, store, clock
         self.per_day_micros = math.floor(config.companion.per_day_usd * MICROS)  # costs round up, the cap down
         store._db.executescript(SCHEMA)
+        from cloud_gateway.migration_companion_v2 import SQL
+
+        store._db.executescript(SQL)
 
     def holder(self, account: str, pseudonym: str, now: float) -> str:
-        """The day's key for one session pseudonym of one subscription: never the pseudonym itself."""
-        return self.store.device_hash(f"companion\x1f{account}\x1f{pseudonym}", now)
+        """Authenticated account, shared across profiles/devices; session rotation cannot mint a fresh allowance."""
+        return "a:" + self.store.device_hash(f"companion-account\x1f{account}", now)
 
     def admit(self, account: str, pseudonym: str, feature: str, model: ModelSpec, body: dict[str, Any],
-              now: float) -> tuple[str, dict[str, Any]] | DeviceError:  # fmt: skip
+              now: float, *, operation_id: str | None = None) -> tuple[str, dict[str, Any]] | DeviceError:  # fmt: skip
         """Hold the call's bound and count its turn or job, or say why not: (hold id, bounded body), else the
         `plan_limit` refusal."""
         sent = bounded(self.config, body)
         bound = micros(bound_usd(self.config, model, sent))
         holder, day = self.holder(account, pseudonym, now), day_of(now)
-        counts = not continues(sent)
+        if operation_id is not None and not re.fullmatch(r"[a-zA-Z0-9_-]{16,96}", operation_id):
+            return DeviceError(400, "invalid_request", "Invalid companion operation identifier.")
+        operation = (
+            self.store.device_hash(f"companion-operation\x1f{account}\x1f{operation_id}", now) if operation_id else None
+        )
         cap = daily_cap(self.config, feature)
         with self.store._tx() as db:
             db.execute("DELETE FROM companion_days WHERE day < ?", (day,))
             db.execute("DELETE FROM companion_holds WHERE day < ?", (day,))
+            db.execute("DELETE FROM companion_operations WHERE day < ?", (day,))
+            prior = (
+                db.execute(
+                    "SELECT attempts FROM companion_operations WHERE day=? AND holder=? AND feature=? AND operation=?",
+                    (day, holder, feature, operation),
+                ).fetchone()
+                if operation
+                else None
+            )
+            counts = prior is None
+            if prior is not None and prior[0] >= 12:
+                return refusal("this companion turn's model attempts", now)
             row = db.execute("SELECT counted FROM companion_days WHERE day=? AND holder=? AND feature=?",
                              (day, holder, feature)).fetchone()  # fmt: skip
             counted = row[0] if row else 0
+            # Old session hashes cannot be rebound to accounts. Until midnight, conservatively honour all old
+            # reservations/counts; migration must not grant a new budget in the middle of a day.
+            counted += db.execute(
+                "SELECT coalesce(sum(counted),0) FROM companion_days WHERE day=?"
+                " AND feature=? AND holder NOT LIKE 'a:%'",
+                (day, feature),
+            ).fetchone()[0]
             if counts and cap is not None and counted >= cap:
                 return refusal(WHAT[feature], now)
             spent, held = db.execute(
                 "SELECT coalesce(sum(spent_micros),0), coalesce(sum(held_micros),0) FROM companion_days "
-                "WHERE day=? AND holder=?",
+                "WHERE day=? AND (holder=? OR holder NOT LIKE 'a:%')",
                 (day, holder),
             ).fetchone()
             if spent + held + bound > self.per_day_micros:
@@ -125,6 +134,12 @@ class CompanionLedger:
                 (day, holder, feature, int(counts), bound),
             )
             db.execute("INSERT INTO companion_holds VALUES (?,?,?,?,?)", (key, day, holder, feature, bound))
+            if operation is not None:
+                db.execute(
+                    "INSERT INTO companion_operations VALUES (?,?,?,?,1) ON CONFLICT(day,holder,feature,operation)"
+                    " DO UPDATE SET attempts=attempts+1",
+                    (day, holder, feature, operation),
+                )
         return key, sent
 
     def settle(self, key: str, cost: float) -> None:
@@ -148,6 +163,7 @@ class CompanionLedger:
         with self.store._tx() as db:
             db.execute("DELETE FROM companion_days WHERE day < ?", (day,))
             db.execute("DELETE FROM companion_holds WHERE day < ?", (day,))
+            db.execute("DELETE FROM companion_operations WHERE day < ?", (day,))
 
 
 def refusal(what: str, now: float) -> DeviceError:

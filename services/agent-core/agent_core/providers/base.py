@@ -139,10 +139,14 @@ class ProviderError(Exception):
         retry_after_s: float | None = None,
         param: str | None = None,
         replacement: str | None = None,
+        code: str | None = None,
     ) -> None:
         super().__init__(f"{reason}: {detail}" if detail else reason)
         self.reason = reason
         self.detail = detail
+        # A diagnostic code from a fixed vocabulary (`egress_notice_pending`, `redaction:term`, `http_429:plan_limit`):
+        # what refused the call, safe for traces and API error details; never request or reply text.
+        self.code = code
         self.status = status
         self.retry_after_s = retry_after_s
         self.param = param

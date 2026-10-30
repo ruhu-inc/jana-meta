@@ -69,6 +69,8 @@ PROFILE_STORES: tuple[ProfileStore, ...] = (
     ProfileStore("study notes", "typed and dictated study notes", LEARNER, "profile_directory", "study notes"),
     ProfileStore("companion episodes", "the Study companion's daily episodes: their session, day and opener facts "
                  "(SPEC §19.4)", LEARNER, "profile_directory", "companion episodes"),
+    ProfileStore("companion turn provenance", "memory revision and egress policy for retained companion turns",
+                 LEARNER, "profile_directory", "companion turn provenance"),
     ProfileStore("companion summary", "the companion thread's rolling summary, folded by code: ids, bands and counts, "
                  "no free text (SPEC §19.5.3)", LEARNER, "profile_directory", "companion summary"),
     ProfileStore("check-ins", "the tutor's check-ins: kind, subject, Jana's question, due window and state (SPEC "

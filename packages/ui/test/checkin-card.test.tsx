@@ -163,6 +163,14 @@ describe("W8 check-in card", () => {
   });
 });
 
+describe("Online features copy", () => {
+  test("every what-leaves line starts with a capital, as the confirmation dialog shows it first", () => {
+    const lines = Object.entries(BASE).filter(([key]) => key.startsWith("settings.online.leaves."));
+    expect(lines.map(([key]) => key)).toContain("settings.online.leaves.tutor_memory_online");
+    for (const [key, text] of lines) expect([key, /^[A-Z]/.test(text)]).toEqual([key, true]);
+  });
+});
+
 describe("W8 check-in notifications (JM-D24)", () => {
   test("only with the setting on and the permission granted, with the kind's template body, never the check-in's words", async () => {
     const c = core();
@@ -211,7 +219,7 @@ describe("W8 check-in notifications (JM-D24)", () => {
       // The online tutor is off, so Personal tutor memory online cannot be turned on yet, and says why.
       expect((within(row).getByRole("checkbox", { name: "Personal tutor memory online" }) as HTMLInputElement).disabled).toBe(true);
       expect(row.querySelector("[data-needs-cloud]")?.textContent).toBe("This works with the online tutor. Turn on the online tutor first.");
-      expect(row.textContent).toContain("What leaves this computer: your tutor's short notes about how you learn, and one-line records of what you practised, so the online tutor can remember you. Never your documents, your conversations, your name or your exam dates. Meta does not store these requests or train on them.");
+      expect(row.textContent).toContain("What leaves this computer: Your tutor's short notes about how you learn, and one-line records of what you practised, so the online tutor can remember you. Never your documents, your conversations, your name or your exam dates. Meta does not store these requests or train on them.");
       const toggle = within(row).getByRole("checkbox", { name: "Check-in notifications" }) as HTMLInputElement;
       expect(toggle.checked).toBe(false);
       fireEvent.click(toggle);

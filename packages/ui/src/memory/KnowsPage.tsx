@@ -31,8 +31,10 @@ export const NOT_YET_AVAILABLE: ReadonlySet<KnowsSection> = new Set();
 /** The sharing lines for the consent state: private unless a consent is in effect, and then exactly what is shared. */
 export function sharingLines(sharing: Sharing | null): string[] {
   if (sharing === null) return ["unknown"];
-  const on = (["backup", "devices", "parent_view", "cloud_tutor"] as const).filter((flag) => sharing[flag]);
-  return [...(on.length === 0 ? ["private"] : on), "settings"];
+  const on: string[] = (["backup", "devices", "parent_view", "cloud_tutor"] as const).filter((flag) => sharing[flag]);
+  // Personal tutor memory online (SPEC §19.6): the online tutor then also gets the tutor's notes, so the line says so.
+  const lines = sharing.cloud_tutor && sharing.tutor_memory === true ? on.map((l) => (l === "cloud_tutor" ? "cloud_tutor_memory" : l)) : on;
+  return [...(lines.length === 0 ? ["private"] : lines), "settings"];
 }
 
 export interface KnowsActions {
@@ -50,7 +52,8 @@ function StudyActivity({ view }: { view: KnowsView }) {
   const t = useT();
   const items = view.activity ?? [];
   if (items.length === 0) return <EmptyState message={t("knows.study.empty")} />;
-  const topic = (statement: string | null) => statement ?? t("knows.study.no_topic");
+  // With no curriculum topic: a research pack's material is the pack's, never "your own material" (§19 fix).
+  const topic = (statement: string | null, fromPack = false) => statement ?? t(fromPack ? "knows.study.from_pack" : "knows.study.no_topic");
   const result = (word: string | null) => (word === null ? "" : ` · ${t(`knows.study.result.${word}`)}`);
   return (
     <div className="flex flex-col gap-2">
@@ -60,7 +63,7 @@ function StudyActivity({ view }: { view: KnowsView }) {
           <li key={`${a.day}:${i}`} data-study-activity={a.activity}>
             {a.activity === "aid_made"
               ? t(a.count !== null ? "knows.study.aid_made_count" : "knows.study.aid_made", { kind: a.aid_kind ?? "other", count: a.count ?? 0 })
-              : t(`knows.study.${a.activity}`, { topic: topic(a.statement) }) + result(a.result)}
+              : t(`knows.study.${a.activity}`, { topic: topic(a.statement, a.from_pack === true) }) + result(a.result)}
             <span className="text-meta text-faint"> · {a.day}</span>
           </li>
         ))}
@@ -195,6 +198,14 @@ function Note({ note, onForget }: { note: KnowsNote; onForget: KnowsActions["onF
     <li className="flex flex-col gap-1 border-b border-line py-2" data-note-id={note.note_id} data-flagged={note.flagged}
       data-confidence={life.confidence} data-fading={life.fading} data-withheld-online={life.withheld_online}>
       <p className="text-body text-ink">{note.text}</p>
+      {note.explanation && <details className="text-meta text-muted" data-memory-explanation="">
+        <summary>{t("knows.notes.why_saved")}</summary>
+        <p>{note.explanation.meaning}</p>
+        <ul>{note.explanation.sources.map((source) => <li key={source.event_id}>
+          {source.kind.replaceAll("_", " ")} · {new Date(source.at).toLocaleDateString()}
+        </li>)}</ul>
+        <p>{note.explanation.correction}</p>
+      </details>}
       <p className="flex flex-wrap gap-x-2 text-meta text-muted" data-note-life="">
         <span data-note-label={life.confidence}>{t(`knows.notes.${life.confidence}`)}</span>
         {life.fading && <span data-note-label="fading">· {t("knows.notes.fading")}</span>}
@@ -223,6 +234,28 @@ function Note({ note, onForget }: { note: KnowsNote; onForget: KnowsActions["onF
       </div>
     </li>
   );
+}
+
+function TeachingObservations({ view }: { view: KnowsView }) {
+  const t = useT();
+  const observations = view.teaching_observations ?? [];
+  if (observations.length === 0) return null;
+  return <section className="mt-4 flex flex-col gap-2" data-teaching-observations="">
+    <h3 className="text-ui font-semibold">{t("knows.teaching.title")}</h3>
+    <p className="text-meta text-muted">{t("knows.teaching.help")}</p>
+    <ul className="flex flex-col gap-3">{observations.map((observation) =>
+      <li key={`${observation.source_event_id}:${observation.intervention}:${observation.kc_id}`} className="text-body">
+        <p>{observation.topic} · {observation.intervention.replaceAll("-", " ")}</p>
+        <p className="text-meta text-muted">{new Date(observation.at).toLocaleDateString()} · {t("knows.teaching.tentative")}</p>
+        {(["immediate", "delayed"] as const).map((kind) => {
+          const result = observation[kind];
+          return <p key={kind} className="text-meta">{t(`knows.teaching.${kind}`)}: {result
+            ? `${t(`knows.study.result.${result.outcome}`)} · ${t("knows.teaching.hints", { count: result.hints_used })} · ${new Date(result.at).toLocaleDateString()}`
+            : t("knows.teaching.not_observed")}</p>;
+        })}
+        {observation.conflicting_outcomes && <p className="text-meta">{t("knows.teaching.conflict")}</p>}
+      </li>)}</ul>
+  </section>;
 }
 
 function Notes({ view, actions }: { view: KnowsView; actions: KnowsActions }) {
@@ -287,7 +320,8 @@ export function KnowsContent({ view, onRetry, onOpenSettings, onClose, ...action
       case "going_well":
         return <Kcs kcs={view.kcs.filter((k) => k.band === "secure")} empty={t("knows.going_well.empty")} />;
       case "working_on":
-        return <Kcs kcs={view.kcs.filter((k) => k.band === "learning")} empty={t("knows.working_on.empty")} />;
+        return <><Kcs kcs={view.kcs.filter((k) => k.band === "learning")} empty={t("knows.working_on.empty")} />
+          <TeachingObservations view={view} /></>;
       case "mistakes":
         return <Mistakes view={view} onDispute={actions.onDisputeMistake} />;
       case "preferences":

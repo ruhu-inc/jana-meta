@@ -52,6 +52,7 @@ from agent_core.memory import policy
 from agent_core.memory.capture import CaptureFilter, default_filter
 from agent_core.memory.policy import Candidate, Rejection, content_hash
 from agent_core.memory.queries import NoteRecord, ReviewItem, memory_saving, review_items, stored_notes
+from agent_core.memory.visibility import advance as invalidate_context
 from agent_core.store.events import COLUMNS, MERGE_ORDER, StoredEvent, iso_ms
 from agent_core.store.ids import new_ulid
 from agent_core.store.sqlite import transaction
@@ -85,7 +86,10 @@ def _erase_written(
     """Erase the payload of every `note_written` event of the notes except the events in `keep` (inside the caller's
     transaction)."""
     erased: list[str] = []
-    for note_id in note_ids:
+    ids = list(note_ids)
+    if ids:
+        invalidate_context(conn, when)
+    for note_id in ids:
         written = conn.execute(
             "SELECT event_id FROM events WHERE type = 'note_written' AND erased_at IS NULL"
             " AND json_extract(payload, '$.note_id') = ? ORDER BY seq",
@@ -251,7 +255,23 @@ def correct_preference(learner: Learner, key: str, value: Any, actor: Literal["s
         payload.update(action="override", value=value)
     else:
         return False
-    learner.record("correction", payload, source=SOURCE_OF[actor])
+    previous = learner.conn.execute("SELECT value FROM preferences WHERE key = ?", (key,)).fetchone()
+
+    def changed(conn: sqlite3.Connection, stored: list[StoredEvent]) -> None:
+        if previous is not None and (value is None or json.loads(previous[0]) != {"override": value}):
+            invalidate_context(conn, stored[0].recorded_at)
+            for (event_id,) in conn.execute(
+                "SELECT event_id FROM events WHERE type='correction' AND erased_at IS NULL"
+                " AND json_extract(payload,'$.target')='preference' AND json_extract(payload,'$.target_id')=?"
+                " AND event_id<>?",
+                (key, stored[0].event_id),
+            ).fetchall():
+                learner.log.erase(event_id, stored[0].recorded_at)
+
+    learner.record_batch(
+        [NewEvent("correction", payload, source=SOURCE_OF[actor])],
+        extra=changed,
+    )
     return True
 
 
@@ -483,6 +503,7 @@ def apply_reflection(
     forgotten_hashes: Collection[str] = (),
     now_ms: int | None = None,
     also: Callable[[sqlite3.Connection], object] | None = None,
+    explicit_correction: tuple[str, str] | None = None,
 ) -> Applied:
     """Apply a validated Reflection in one transaction (MEM-09, MEM-12, AGT-26): add, update, keep, drop and
     contradiction, bounds and consolidation fallback, and the session summary. A Reflector change to a student-owned
@@ -506,6 +527,28 @@ def apply_reflection(
         return Applied(refused="capture_filter_missing")
     sid = session_id.removeprefix("ses_")
     notes = {n.note_id: n for n in stored_notes(conn)}
+    if explicit_correction is not None:
+        target_id, seen_version = explicit_correction
+        target = notes.get(target_id)
+        if (
+            role != "student_request"
+            or target is None
+            or target.status != "active"
+            or target.last_event_id != seen_version
+        ):
+            return Applied(refused="correction_changed")
+        if len(actions) != 1 or actions[0].action != "update" or actions[0].target_note_id != target_id:
+            return Applied(refused="correction_invalid")
+        evidence = actions[0].evidence_event_ids
+        if not any(
+            conn.execute(
+                "SELECT 1 FROM events WHERE event_id = ? AND type = 'memory_requested'"
+                " AND session_id = ? AND erased_at IS NULL",
+                (e, sid),
+            ).fetchone()
+            for e in evidence
+        ):
+            return Applied(refused="correction_without_request")
     # One home per fact (MEM-07): active and pending notes alike.
     known = {content_hash(n.text): n.note_id for n in notes.values() if n.status in ("active", "pending_review")}
     forgotten = set(forgotten_hashes)
@@ -561,7 +604,7 @@ def apply_reflection(
             staged.blocked += 1  # counted by number only: the text goes nowhere (MEM-10)
             return
         hashes = set(known) - ({content_hash(target.text)} if target is not None and kind == "update" else set())
-        owned = target is not None and target.origin != "reflector"
+        owned = target is not None and target.origin != "reflector" and explicit_correction is None
         problems: list[Rejection]
         if kind == "drop" and consolidating and not owned and not action.evidence_event_ids:
             problems = []  # merging its own notes under the bound, the Reflector cites nothing new
@@ -601,7 +644,8 @@ def apply_reflection(
             known[content_hash(action.text)] = note_id
         elif target is not None and kind == "update":
             evidence = [*target.source_event_ids, *action.evidence_event_ids]
-            staged.events.append(event("note_written", written(target.note_id, action, evidence, "active", target)))
+            payload = written(target.note_id, action, evidence, "active", target)
+            staged.events.append(event("note_written", payload, source))
             staged.applied.append(target.note_id)
             staged.updated.append(target.note_id)
             known.pop(content_hash(target.text), None)

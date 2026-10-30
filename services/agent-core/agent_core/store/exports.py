@@ -151,6 +151,7 @@ class Archive:
     session_notes: list[dict[str, Any]] = field(default_factory=list)
     study_workspace: dict[str, Any] | None = None
     study_blobs: dict[str, bytes] = field(default_factory=dict)
+    companion: dict[str, Any] | None = None
 
 
 def build_profile_archive(
@@ -181,15 +182,21 @@ def build_profile_archive(
                         archive.writestr(f"attachments/{row['attachment_id']}", path.read_bytes())
                         attached.append(str(row["attachment_id"]))
         session_notes = _rows(conn, "SELECT * FROM session_notes")
+        from agent_core.store.companion_archive import snapshot as companion_snapshot
+
+        companion = companion_snapshot(conn, session_ids)
+        has_companion = bool(companion["revision"]["id"] or any(companion[k] for k in companion if k != "revision"))
         manifest = {
             "format": FORMAT,
-            "version": 3 if include_study_sources else 2 if session_notes else 1,
+            "version": 4 if has_companion else 3 if include_study_sources else 2 if session_notes else 1,
             "app_version": app_version,
             "created_at": created_at,
             "profile": profile,
             "transcript_sessions": sorted(sessions),
             "attachments": attached,
         }
+        if has_companion:
+            archive.writestr("companion.json", json.dumps(companion))
         if include_study_sources:
             from agent_core.store.study_archive import snapshot
 
@@ -227,13 +234,13 @@ def read_profile_archive(data: bytes, max_bytes: int | None = None, max_entries:
             if any(info.filename.startswith("/") or ".." in info.filename.split("/") for info in listed):
                 raise ExportError("archive_invalid", "the archive is damaged")
             manifest = json.loads(archive.read("manifest.json"))
-            if manifest.get("format") != FORMAT or manifest.get("version") not in (1, 2, 3):
+            if manifest.get("format") != FORMAT or manifest.get("version") not in (1, 2, 3, 4):
                 raise ExportError("archive_unsupported_version", "this archive comes from a different app version")
-            if manifest.get("version") in (2, 3) and "session_notes.json" not in archive.namelist():
+            if manifest.get("version") in (2, 3, 4) and "session_notes.json" not in archive.namelist():
                 raise ExportError("archive_invalid", "session notes are missing from this archive")
             workspace = None
             study_blobs = {}
-            if manifest["version"] == 3:
+            if manifest["version"] == 3 or (manifest["version"] == 4 and "study_workspace.json" in archive.namelist()):
                 from agent_core.store.study_archive import validate
 
                 workspace = json.loads(archive.read("study_workspace.json"))
@@ -252,6 +259,14 @@ def read_profile_archive(data: bytes, max_bytes: int | None = None, max_entries:
                         if name.startswith("sessions/")}  # fmt: skip
             attachments = {name[len("attachments/") :]: archive.read(name) for name in archive.namelist()
                            if name.startswith("attachments/")}  # fmt: skip
+            companion = None
+            if manifest["version"] == 4:
+                from agent_core.store.companion_archive import validate as validate_companion
+
+                companion = json.loads(archive.read("companion.json"))
+                validate_companion(companion, sessions)
+            elif "companion.json" in archive.namelist():
+                raise ExportError("archive_invalid", "unexpected companion state in legacy archive")
             return Archive(
                 manifest,
                 events,
@@ -264,6 +279,7 @@ def read_profile_archive(data: bytes, max_bytes: int | None = None, max_entries:
                 json.loads(archive.read("session_notes.json")) if "session_notes.json" in archive.namelist() else [],
                 workspace,
                 study_blobs,
+                companion,
             )
     except (KeyError, ValueError, zipfile.BadZipFile) as error:
         if isinstance(error, ExportError):

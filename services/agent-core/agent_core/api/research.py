@@ -15,6 +15,7 @@ is read (the app polls while it shows one), so a restart or an offline spell onl
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 from collections.abc import Awaitable, Callable
@@ -22,11 +23,11 @@ from typing import Any
 
 from fastapi import FastAPI, Request, Response
 
-from agent_core.api.core import CoreService
+from agent_core.api.core import CURRENT_PROFILE, CoreService
 from agent_core.api.errors import ApiError, cloud_refusal
 from agent_core.contracts import errors as contract_errors
 from agent_core.engine.events import new_id
-from agent_core.engine.research_chat import ChatError, Start, learner_profile, next_turn
+from agent_core.engine.research_chat import ChatError, Start, job_trace, learner_profile, next_turn, trace_record
 from agent_core.engine.research_links import checked_links
 from agent_core.engine.safety import redact_personal
 from agent_core.engine.study import StudyDesk, StudyError, checked
@@ -313,6 +314,29 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
         except StudyError as error:
             raise fail(error) from None
 
+    def first_use_notice(answer: Any) -> None:
+        """The online tutor's first-use notice (ARC-10) before the conversation's first cloud call. The conversation
+        goes to the cloud tier, and a profile that starts in Study has never been asked it (the tutoring card asks it
+        in a turn), so the router would drop the cloud candidate and nothing could ever ask. The learner's answer,
+        when the turn carries one, is recorded first; a missing or declined answer is refused with its reason, for
+        the app to show the notice and send the answer with the same turn."""
+        online, profile = getattr(core, "online", None), CURRENT_PROFILE.get()
+        if online is None or profile is None:
+            return
+        if answer in ("accepted", "declined"):
+            online.record_notice(profile, "cloud_tier", answer == "accepted")
+        given = online.notice_answer(profile, "cloud_tier")
+        if given != "accepted":
+            reason = "notice_declined" if given == "declined" else "notice_required"
+            raise ApiError("feature_disabled", details={"reason": reason, "feature": "cloud_tier"})
+
+    def _job_trace(core: Any, trace: Any) -> None:
+        """The research conversation's job trace, written where the runtime's traces go (none without a store)."""
+        sink, record = getattr(core, "job_trace_sink", None), trace_record(trace)
+        if sink is not None and record is not None:
+            with contextlib.suppress(Exception):
+                sink(record)
+
     @app.post("/v1/study/research/chat")
     async def chat(request: Request) -> Response:
         async def run(d: StudyDesk, body: dict[str, Any]) -> dict[str, Any]:
@@ -326,6 +350,7 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
                 subject = Start(photo_title=title, photo_parts=parts)
             else:
                 subject = Start(topic=start["topic"])
+            first_use_notice(body.get("cloud_notice"))
             router = core.research_router() if core.research_router is not None else None
             if router is None:
                 raise ApiError("model_unavailable")
@@ -336,11 +361,16 @@ def add_routes(app: FastAPI, core: CoreService, desk: Callable[[], StudyDesk],
                 profile = learner_profile(d.conn, content, core.settings, core._today())
             except Exception:
                 profile = None
+            trace = job_trace(core.records_profile, core.settings)
             try:
                 return await next_turn(router, subject, body["history"], body["answer"], body["skip"],
-                                       profile=profile)  # fmt: skip
+                                       profile=profile, trace=trace)  # fmt: skip
             except ChatError as error:
-                raise ApiError("model_unavailable", details={"reason": str(error)}) from None
+                # The reason by code (the router's and each provider refusal's), never prompt text: what failed is
+                # visible in the reply and the job trace (§19 status, W8 fix).
+                raise ApiError("model_unavailable", details={"reason": str(error), **error.details}) from None
+            finally:
+                _job_trace(core, trace)
 
         return await command(request, "study/research#/$defs/ChatRequest", run, atomic_command=False)
 

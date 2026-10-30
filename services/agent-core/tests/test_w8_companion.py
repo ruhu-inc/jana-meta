@@ -152,7 +152,7 @@ def test_recall_goes_in_the_user_message_and_the_prefix_is_byte_identical(tmp_pa
 
 def test_the_status_line_is_appended_only_when_its_key_changes(tmp_path: Path) -> None:
     async def go() -> None:
-        t = await thread(tmp_path, {"companion": [turn("Hello."), turn("Sure."), turn("Two to do.")]})
+        t = await thread(tmp_path, {"companion": [turn("Hello."), turn("Sure."), turn("Let’s review.")]})
         try:
             opened = await t.open()
             await t.say(opened["session_id"], "Where should I start today?")  # not small talk, which a template answers
@@ -373,8 +373,8 @@ def test_a_cloud_call_is_never_offered_past_scope_recall() -> None:
 
 def test_a_cloud_call_gets_study_search_only_under_study_materials() -> None:
     names = ["session_recall", "study_search", "progress_read"]
-    assert cloud_tools(names, share_materials=False) == ["session_recall", "progress_read"]
-    assert cloud_tools(names, share_materials=True) == names
+    assert cloud_tools(names, share_materials=False) == ["progress_read"]
+    assert cloud_tools(names, share_materials=True) == ["study_search", "progress_read"]
     _, off = _tools(cloud=True, share=False)
     with pytest.raises(InvalidArguments, match="Study online"):
         asyncio.run(off.search({"query": "acceleration"}, _Context()))  # type: ignore[arg-type]
@@ -420,7 +420,7 @@ def test_model_unavailable_is_raised_before_the_companion_branch(tmp_path: Path)
             assert sent.status_code in (409, 422, 503) and sent.json()["error"]["code"] == "model_unavailable"
             assert t.companion_requests() == []
             refused = await t.api.call("POST", "/v1/companion", {}, profile=t.token)
-            assert refused.json()["error"]["code"] == "model_unavailable"
+            assert refused.status_code == 200 and refused.json()["can_reply"] is False
         finally:
             await stop_core(t.r)
 

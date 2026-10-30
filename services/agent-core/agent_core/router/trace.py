@@ -121,6 +121,8 @@ class CallRecord:
     prompt_mode: str | None
     attempts: list[dict[str, Any]] = field(default_factory=list)
     events: list[dict[str, Any]] = field(default_factory=list)  # retries and fallbacks with reasons, in order
+    # Each provider error's diagnostic code (§19 W8 fix): what refused the call, never text; not a trace field.
+    refusals: list[dict[str, Any]] = field(default_factory=list)
     efforts: list[dict[str, Any]] = field(default_factory=list)  # per candidate tried: the effort mapping (MDL-12)
 
     def model_calls(self) -> list[dict[str, Any]]:

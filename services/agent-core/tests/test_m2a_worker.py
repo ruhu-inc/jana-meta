@@ -249,7 +249,10 @@ def tol26_circuit_opens():
         for _ in range(5):
             assert (await supervisor.call("crash", 1, {}, CHECK, 5000)).error == "worker_crashed"
             now[0] += 5
-        assert not supervisor.circuit_open and supervisor.compute_available()
+        assert not supervisor.circuit_open and not supervisor.compute_available()
+        # A crash is reported before replacement warms up; checks resume only after a new handshake.
+        assert (await supervisor.call("math_parse", 1, {"text": "x"}, CHECK, 5000)).ok
+        assert supervisor.compute_available()
         assert (await supervisor.call("crash", 1, {}, CHECK, 5000)).error == "worker_crashed"  # the sixth in 60 s
         assert supervisor.circuit_open and not supervisor.compute_available()
         assert (await supervisor.call("math_parse", 1, {"text": "x"}, CHECK, 5000)).error == "worker_unavailable"
