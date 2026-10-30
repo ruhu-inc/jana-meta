@@ -1,0 +1,596 @@
+services/agent-core/tests/test_w8_companion_boundaries.py
+  s_d5aed2df69fac2::t_68beca891d5356 1-16,18-22,24-28,34-61,65-76,78-90,92-119,121-127,168-176,196-197,202-203,205,433-434
+  s_d5aed2df69fac2::t_ba2f280127576e 228
+  s_d5aed2df69fac2::t_051aa5bf562567 416-418
+  s_d5aed2df69fac2::t_791a0720724cf0 77,91
+  s_d5aed2df69fac2::t_3a18207a172f07 31-32,177-195,218-220,244-253,291-313,385
+  s_d5aed2df69fac2::t_f7fb6bac10b052 17,23,323-384,386-415,419-432
+  s_d5aed2df69fac2::t_562da676aeb822 234-243,254-290,314-322
+  s_d5aed2df69fac2::t_fe44f3c8870cfa 435-443,449-453
+  s_d5aed2df69fac2::t_f8e431fa0ccb2d 444-448,454-455,458-462,468,476,479-483,490-495,499-502
+  s_d5aed2df69fac2::t_38d826141cae93 456-457,463-467,469-475,477-478,484-489,496-498
+  s_d5aed2df69fac2::t_50de73839ac45c 128-165
+  s_d5aed2df69fac2::t_8313b5d7170cdc 120
+  s_d5aed2df69fac2::t_3e4abdd716c940 29-30,33,62-64,166-167,198-201,204,206-217,221-227,229-233
+services/agent-core/agent_core/engine/memory_tools.py
+  s_cfafe874616b4f::t_838847cd0c86d5 297-300
+  s_d5aed2df69fac2::t_f63926d315ecb8 154-157
+  s_d5aed2df69fac2::t_3a18207a172f07 94-96
+  s_cfafe874616b4f::t_915877edfc4bcd 21,282,285,287-296,301-308,311-312,327-334,363-372
+  s_d5aed2df69fac2::t_dcddce099d8b93 82,88
+  s_cfafe874616b4f::t_1e7f0c8b74a03f 309-310
+  s_cfafe874616b4f::t_eebb00de2851fe 386,395-396
+  s_cfafe874616b4f::t_395890492032a4 313-326,387-394
+  s_d5aed2df69fac2::t_3380d4164f9f34 24,81,93,101-102
+packages/contracts-ts/src/generated/lan/lan_compute.ts
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 123-124,261-264,292-294,1011-1018
+services/agent-core/agent_core/api/exports.py
+  s_d5aed2df69fac2::t_073c364405c5b3 390-394
+  s_d5aed2df69fac2::t_3a18207a172f07 236-238,241-242
+  s_d5aed2df69fac2::t_ac1c1f50577f6a 233-235,243,265,267-269,383-389
+  s_d5aed2df69fac2::t_bbe53db641b111 239-240
+  s_d5aed2df69fac2::t_d8532b110aeec2 304-305,379-382
+services/agent-core/agent_core/store/profile_stores.py
+  s_d5aed2df69fac2::t_c2b9c2ee249700 72-73
+content/agent/templates/engine.en.yaml
+  s_cfafe874616b4f::t_395890492032a4 117-123
+  s_cfafe874616b4f::t_23276be03a59d1 80-81
+services/agent-core/agent_core/engine/research_chat.py
+  s_cfafe874616b4f::t_d2092d3bb05179 212-237,239-242,262-263
+  s_cfafe874616b4f::t_207879ca97c24d 31,243-244,253-261
+  s_d5aed2df69fac2::t_b91bf36adbfe23 284-317,321,324-339
+  s_cfafe874616b4f::t_54358bb32e4d28 38,245-252
+  s_49ba057c5af1a1::t_7c202eae5c11a8 238,264-270,275
+services/agent-core/agent_core/engine/checkins.py
+  s_d5aed2df69fac2::t_5912f41bf5e082 249-256
+  s_d5aed2df69fac2::t_2ebadac77844a7 44,180,238,269-272,292
+  s_d5aed2df69fac2::t_3a18207a172f07 248
+  s_d5aed2df69fac2::t_bd9611f5d2ac34 264
+  s_d5aed2df69fac2::t_4de52dcfa030fb 257-259,265
+evals/contracts/api/commands/TeachingOutcome/invalid/unknown_property.json
+  s_cfafe874616b4f::t_54ebf817f5478b 1-8
+packages/contracts-ts/src/generated/validators.d.ts
+  s_d5aed2df69fac2::t_17f8d693f86ef0 921
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 920
+  s_49ba057c5af1a1::t_2637654d850e7c 922-924
+services/agent-core/agent_core/memory/queries.py
+  s_cfafe874616b4f::t_e0eda54cae4c4d 547,552-576
+  s_d5aed2df69fac2::t_3a18207a172f07 486-487
+  s_d5aed2df69fac2::t_9f9543c4e4282d 481-483,485,507-508
+  s_49ba057c5af1a1::t_b8fa3e3530fbc0 577-578
+services/cloud-gateway/cloud_gateway/contracts/schemas/cloud/gateway.schema.json
+  s_d5aed2df69fac2::t_04b6f737a590b1 2,268-293
+  s_49ba057c5af1a1::t_16fef7487867a0 294-297
+services/agent-core/tests/test_m32_adapter.py
+  s_d5aed2df69fac2::t_6e8d9382b185b5 26-28
+  s_d5aed2df69fac2::t_9e06fb1c2bd3d1 51-54
+services/agent-core/agent_core/store/companion_archive.py
+  s_d5aed2df69fac2::t_3a18207a172f07 53-59
+  s_d5aed2df69fac2::t_99e624b59725e2 51-52
+  s_d5aed2df69fac2::t_c0f6efb83d34a6 1-8,10-16,18-36,39-50,60-112,119-121,123-133,136-138,143-144,146-148,150-153,155-159,161
+  s_d5aed2df69fac2::t_8dbca333a455f5 9,113-115,117-118
+  s_d5aed2df69fac2::t_073c364405c5b3 134-135,139-142
+  s_49ba057c5af1a1::t_a10f49a657c0e2 17,37-38,116,122,145,149,154,160
+evals/contracts/api/commands/MemoryExplanation/invalid/unknown_property.json
+  s_cfafe874616b4f::t_54ebf817f5478b 1-7
+services/agent-core/tests/test_research_chat.py
+  s_cfafe874616b4f::t_6f61856c28fe7e 127-141
+services/agent-core/tests/test_a1_input_routes.py
+  s_cfafe874616b4f::t_f2fd5a17bf1c1b 299
+services/agent-core/agent_core/learner/projections.py
+  s_d5aed2df69fac2::t_7202192017dc90 108-110,169-176,1249-1250,1260
+services/agent-core/agent_core/store/events.py
+  s_d5aed2df69fac2::t_7202192017dc90 17,76,78-79
+  s_d5aed2df69fac2::t_729d07a937455d 15,228
+services/agent-core/agent_core/router/core.py
+  s_cfafe874616b4f::t_d2092d3bb05179 618,620
+  s_d5aed2df69fac2::t_4de52dcfa030fb 415,421-423,476,523,579-584,598
+  s_49ba057c5af1a1::t_062303d1e78bae 619
+services/agent-core/tests/test_teaching_observations.py
+  s_d5aed2df69fac2::t_58903440b8c297 1-22,31,57,74
+  s_49ba057c5af1a1::t_a5d61d9916f407 23-30,32-56,58-73,75-77
+services/agent-core/agent_core/providers/base.py
+  s_cfafe874616b4f::t_7f0ff532e164c1 142,147-149
+packages/contracts-ts/src/generated/learning/learning_event.ts
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 2,33-34,152-155,183-185,556-559
+services/agent-core/agent_core/api/records.py
+  s_d5aed2df69fac2::t_8fbab3a4f9a8de 257,330-333
+  s_49ba057c5af1a1::t_c9597ef8c1562f 40
+services/agent-core/agent_core/store/exports.py
+  s_d5aed2df69fac2::t_d8532b110aeec2 154,185-188,191,198-199,237,239,243,262-269,282
+packages/contracts-ts/src/generated/personal_sync/personal_sync.ts
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 95-96,233-236,264-266,870-877
+services/agent-core/tests/test_companion_fact_binding.py
+  s_d5aed2df69fac2::t_dcd5b0643c5ea3 63-68
+  s_d5aed2df69fac2::t_3a67a05f259e63 32
+  s_49ba057c5af1a1::t_f32d0a66d3bc24 1-31,33-62,69-77
+services/agent-core/tests/test_w8_opener.py
+  s_cfafe874616b4f::t_4cd1e6407082f8 20,26-30,33,35-39,241-247,249-257
+  s_cfafe874616b4f::t_aaf4e85adf6246 248
+packages/ui/src/memory/KnowsPage.tsx
+  s_cfafe874616b4f::t_eb8cba5999d3c8 34-37,55-56,66
+  s_d5aed2df69fac2::t_ab1d346ecb580e 201-208,239-260,323-324
+services/agent-core/agent_core/memory/render.py
+  s_d5aed2df69fac2::t_b449be1f3560b0 59-60
+  s_d5aed2df69fac2::t_3a67a05f259e63 21,27,256
+  s_d5aed2df69fac2::t_3a18207a172f07 38-42,261-265
+  s_49ba057c5af1a1::t_9ccef9dc1c3d92 56
+contracts/policies/event_registry.json
+  s_d5aed2df69fac2::t_925fc0690e46f7 28-29
+evals/contracts/api/commands/CompanionHistory/invalid/unknown_property.json
+  s_cfafe874616b4f::t_54ebf817f5478b 1-5
+services/agent-core/tests/test_w8_companion_gateway.py
+  s_d5aed2df69fac2::t_938dc606fd7fa7 18,85-87
+  s_cfafe874616b4f::t_fd2e9947d63565 1-17,20-46,48-49,52-62,66-70,72-84,88-115,119-128
+  s_cfafe874616b4f::t_7ebdebbcd23d02 47,50-51,63-64
+  s_49ba057c5af1a1::t_4d19eef7af2d0e 19,65,71,116-118
+contract-additions-w8.json
+  s_d5aed2df69fac2::t_2bfe7586a57184 2147-2428,2485
+  s_cfafe874616b4f::t_13494b12f1050e 2429-2439
+  s_cfafe874616b4f::t_0c10f012d4ed29 2142-2143,2146,2440-2481,2483-2484,2486,2488,2492-2493
+  s_49ba057c5af1a1::t_0aa73285364f0f 2144-2145,2482,2487,2489-2491
+scripts/governance/data-inventory.toml
+  s_d5aed2df69fac2::t_f51182939c2c80 698-699
+  s_49ba057c5af1a1::t_49d9df38799aea 659,662-668,671-675,678-692,695-697,700-703
+services/agent-core/agent_core/store/retention.py
+  s_d5aed2df69fac2::t_d8532b110aeec2 285-287
+  s_d5aed2df69fac2::t_3a18207a172f07 343-345
+services/agent-core/agent_core/tools/registry.snapshot.json
+  s_cfafe874616b4f::t_825b4aa7fa318c 83,85,198,200
+services/agent-core/tests/test_m32_voice_turn_parity.py
+  s_d5aed2df69fac2::t_9d2e96c82a953a 178-182,184,186,188,192-194,202-204,218,220,224,229
+  s_d5aed2df69fac2::t_9e06fb1c2bd3d1 140,197
+packages/ui/src/learn/CompanionThread.tsx
+  s_d5aed2df69fac2::t_17f8d693f86ef0 7-8,17,91,99,104-107,118-130,132-135
+  s_d5aed2df69fac2::t_fa1b3c883500fc 86-88
+services/agent-core/agent_core/memory/write.py
+  s_d5aed2df69fac2::t_ac1c1f50577f6a 263-265,268-269
+  s_d5aed2df69fac2::t_3380d4164f9f34 506,530,532,539-542,551,607
+  s_d5aed2df69fac2::t_8fbab3a4f9a8de 89-92
+  s_d5aed2df69fac2::t_572100a37e5dcb 531
+  s_d5aed2df69fac2::t_1aea679f7fb3e2 258-262,270,273
+  s_d5aed2df69fac2::t_9f9543c4e4282d 55,271-272,274
+  s_d5aed2df69fac2::t_3a18207a172f07 266-267,533-538,543-550
+  s_49ba057c5af1a1::t_817bbeac06b098 647-648
+services/agent-core/tests/test_voc28_cloud_voice.py
+  s_d5aed2df69fac2::t_6ec45fbd6298fc 338-341
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_d5aed2df69fac2::t_17f8d693f86ef0 3422,3435-3448
+  s_49ba057c5af1a1::t_92fa8448b2a41f 2,3449-3450
+packages/ui/test/companion-thread.test.tsx
+  s_d5aed2df69fac2::t_17f8d693f86ef0 29,50-53,66-70,184-207
+  s_49ba057c5af1a1::t_816cdf2e2328a8 208,305-312
+contracts/cloud/gateway.schema.json
+  s_d5aed2df69fac2::t_66a69d99401a1a 268,271-273,276,281-289
+  s_d5aed2df69fac2::t_2bfe7586a57184 267,269-270,274-275,277-280,290-293
+services/agent-core/agent_core/api/core.py
+  s_d5aed2df69fac2::t_9f9543c4e4282d 479,485,505
+  s_d5aed2df69fac2::t_572100a37e5dcb 460
+  s_d5aed2df69fac2::t_39142fd169cd1a 455,458,477,480-484,487-488,654,657-658
+  s_d5aed2df69fac2::t_3380d4164f9f34 461-464,475,655-656
+  s_d5aed2df69fac2::t_9e06fb1c2bd3d1 494
+  s_d5aed2df69fac2::t_8fbab3a4f9a8de 476,478,486,495-496
+  s_d5aed2df69fac2::t_ffc5934c5e5bb6 665
+  s_d5aed2df69fac2::t_83578c0f4d5d6a 491-492
+  s_d5aed2df69fac2::t_6c2fd0bfa4610a 686-688,693-695,714,721-723
+  s_d5aed2df69fac2::t_e25b19945bba87 715-717
+  s_d5aed2df69fac2::t_8313b5d7170cdc 778-781,805-806,1401-1413
+  s_d5aed2df69fac2::t_2ebadac77844a7 330
+  s_d5aed2df69fac2::t_3a18207a172f07 465-474,689-692,696-713,718-720
+  s_d5aed2df69fac2::t_17f8d693f86ef0 1279-1282
+  s_49ba057c5af1a1::t_477ebc828da29e 230,459
+services/agent-core/agent_core/contracts/schemas/learning/learning-event.schema.json
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 2,466-482,519-520,1952-1964
+  s_49ba057c5af1a1::t_702b24e01ebed3 1965
+packages/client-core/src/companion.ts
+  s_d5aed2df69fac2::t_17f8d693f86ef0 65-69,72-74,83-88,91,146-151,218-219,230,294,298-314,324-325,335,337,339,341-342,344,348,359-390
+  s_d5aed2df69fac2::t_74cb5caf93f75b 345-346
+services/agent-core/tests/test_companion_archive.py
+  s_d5aed2df69fac2::t_572100a37e5dcb 1-4,7,9-20,22-23,34-36,38-52,100
+  s_d5aed2df69fac2::t_8dbca333a455f5 5,24-26,28-30,32-33
+  s_d5aed2df69fac2::t_a753879d0c5305 8,106-128
+  s_49ba057c5af1a1::t_0c43b743dd0fdf 6,21,27,31,37,53-99,101-105
+services/agent-core/agent_core/engine/auxiliary.py
+  s_d5aed2df69fac2::t_ba2f280127576e 82-84,95-99,103-104,190-192,197-200
+  s_49ba057c5af1a1::t_f27ce7e3fcde70 201-202
+services/agent-core/tests/test_w8_checkins.py
+  s_cfafe874616b4f::t_fe00f2bed44221 211-213
+services/agent-core/agent_core/providers/openai_compat.py
+  s_cfafe874616b4f::t_c5332b0f27dce2 128-132
+  s_cfafe874616b4f::t_967052a4785678 10,94-104
+services/agent-core/agent_core/tools/specs.py
+  s_cfafe874616b4f::t_1e7f0c8b74a03f 573-574
+  s_cfafe874616b4f::t_825b4aa7fa318c 359-363,379-382,498,505,565-566,572,749-750
+  s_d5aed2df69fac2::t_6ecd2ee850655a 564
+services/agent-core/agent_core/engine/knows.py
+  s_d5aed2df69fac2::t_b449be1f3560b0 24,100,159
+services/agent-core/agent_core/engine/companion.py
+  s_d5aed2df69fac2::t_3a18207a172f07 89-90,579-581,586-590,709-718,749-751,825,832-833,874-892,915-926,946-953,1019,1062-1064,1135-1144,1149-1152,1162-1170
+  s_cfafe874616b4f::t_395890492032a4 146-151,153,155,159,161-193,763,776-787,800,802-805,1105-1109,1112-1125
+  s_d5aed2df69fac2::t_9f9543c4e4282d 47,554,687,998,1002-1005,1028-1029,1148,1153-1154,1161
+  s_d5aed2df69fac2::t_3380d4164f9f34 549
+  s_cfafe874616b4f::t_c2dd43742473a3 682,1174-1184
+  s_d5aed2df69fac2::t_5912f41bf5e082 249-250,257-261,266,273,455
+  s_d5aed2df69fac2::t_90afa059e9814d 40,87,91-92,152,158,160,540,686,708,722,817,820-824,826-827,830-831,1061,1068
+  s_d5aed2df69fac2::t_4de52dcfa030fb 262-264,270,1025-1027,1030-1031
+  s_d5aed2df69fac2::t_99e624b59725e2 866-873
+  s_d5aed2df69fac2::t_ba2f280127576e 931-933
+  s_d5aed2df69fac2::t_6c0e1beefa68f4 934-942
+  s_cfafe874616b4f::t_6c339a37a6a1f3 547,683,764,766-769,796,1009,1033,1037-1038
+  s_cfafe874616b4f::t_92b793a1d4bb46 1077-1078
+  s_d5aed2df69fac2::t_04ceda4cdf53a0 216-224
+  s_d5aed2df69fac2::t_43c40d52003a2b 1110-1111
+  s_d5aed2df69fac2::t_2ebadac77844a7 44,321-331,387,389,424,442-443,456-457,459-462,552,555-560,577,678,725,731,734-735,740-746,771,837-839,857,863,1034-1035,1042-1043,1051,1075-1076,1079,1147
+  s_cfafe874616b4f::t_478323ad400357 452
+  s_d5aed2df69fac2::t_f63926d315ecb8 21,629-630,632
+  s_cfafe874616b4f::t_e6863384c2a133 130-145,548,684,705,1056-1057
+  s_d5aed2df69fac2::t_17f8d693f86ef0 41,912-914,1171
+  s_cfafe874616b4f::t_ead5e1e8b355d2 546
+  s_d5aed2df69fac2::t_8313b5d7170cdc 553,578,582-585,685,703,738-739,747-748,754,756-757,836,858-859,1020-1024,1032,1044-1045,1080-1081,1130-1131,1172
+  s_cfafe874616b4f::t_2cf8b3c0839eab 1040-1041,1089-1104
+  s_d5aed2df69fac2::t_39142fd169cd1a 550-551
+  s_d5aed2df69fac2::t_ffc5934c5e5bb6 562-576
+  s_49ba057c5af1a1::t_e0efe6b2c28c76 93-96,561,818-819,834-835,1126-1127
+packages/contracts-ts/src/generated/client.ts
+  s_d5aed2df69fac2::t_17f8d693f86ef0 141-202
+  s_49ba057c5af1a1::t_b1bebc05bfff87 4,203-573
+services/agent-core/agent_core/contracts/learning/learning_event.py
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 2,12,512-518,728-735,767,769,844-845
+services/agent-core/agent_core/engine/companion_history.py
+  s_d5aed2df69fac2::t_17f8d693f86ef0 106
+  s_d5aed2df69fac2::t_3a18207a172f07 2-84
+  s_49ba057c5af1a1::t_ff78563915d543 1,85-105,107-119
+services/cloud-gateway/cloud_gateway/contracts/schemas/study/research.schema.json
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 2,433-438
+services/agent-core/agent_core/contracts/agents/companion_turn.py
+  s_d5aed2df69fac2::t_d37fb620e91957 2,24-26,33
+services/agent-core/agent_core/store/generated/schema.py
+  s_d5aed2df69fac2::t_17f8d693f86ef0 2,6,8
+packages/client-core/src/memory.ts
+  s_d5aed2df69fac2::t_ed28ad0820fb1b 57,158,207-212,242,285
+  s_cfafe874616b4f::t_eb8cba5999d3c8 124-125,149-150
+evals/contracts/api/commands/CompanionHistory/valid/minimal.json
+  s_cfafe874616b4f::t_54ebf817f5478b 1-4
+contracts/learning/learning-event.schema.json
+  s_d5aed2df69fac2::t_925fc0690e46f7 466-481,518-519,1817,1932,1953-1966
+  s_49ba057c5af1a1::t_4e80b691546f3e 465,1967
+services/agent-core/tests/test_w8_demo_fixes.py
+  s_cfafe874616b4f::t_1ac4d325fa93f5 1-43,47-67
+  s_49ba057c5af1a1::t_23c6e625db3487 44-46,68
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_d5aed2df69fac2::t_17f8d693f86ef0 3414,3427-3440
+  s_49ba057c5af1a1::t_966c8471ae3251 2,3441-3442
+services/agent-core/tests/test_w8_research_live_path.py
+  s_cfafe874616b4f::t_42dbee29bedd67 1-35,37-133
+  s_cfafe874616b4f::t_1648172e756158 36
+packages/contracts-ts/src/generated/study/research.ts
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 2,145
+SPEC.md
+  s_d5aed2df69fac2::t_f51182939c2c80 1211-1220,1225-1228,1294
+  s_d5aed2df69fac2::t_9a2712903b58eb 1288-1289
+  s_d5aed2df69fac2::t_dea02a6071bf60 1250-1251
+  s_cfafe874616b4f::t_211932dbe3473b 1464-1475,1478
+  s_d5aed2df69fac2::t_4de52dcfa030fb 1182-1184
+  s_d5aed2df69fac2::t_83578c0f4d5d6a 1177-1178
+  s_d5aed2df69fac2::t_b2a354ddb877d4 1304-1310
+  s_d5aed2df69fac2::t_f79deaa80c7dfc 1246-1248
+  s_d5aed2df69fac2::t_66c1c85476d698 1295-1303
+  s_cfafe874616b4f::t_41bfb530cbdda7 1442-1463
+  s_d5aed2df69fac2::t_572100a37e5dcb 1199
+  s_d5aed2df69fac2::t_0818410f5a0f5e 1286-1287,1290
+  s_cfafe874616b4f::t_c4c27b6068f8d8 1397-1399
+  s_d5aed2df69fac2::t_aac557be4be4f4 1417-1420
+  s_d5aed2df69fac2::t_f63926d315ecb8 1806-1810
+  s_d5aed2df69fac2::t_396ad81679193f 1252
+  s_cfafe874616b4f::t_175ea9897539dd 1405-1416,1421-1441
+  s_d5aed2df69fac2::t_ffc5934c5e5bb6 1174-1175
+  s_cfafe874616b4f::t_2dd3b10c40e726 1476-1477
+  s_d5aed2df69fac2::t_ba2f280127576e 1221-1224
+  s_cfafe874616b4f::t_bae033cc76b104 1372-1396,1400-1404
+  s_d5aed2df69fac2::t_5912f41bf5e082 1170-1173,1176,1179-1181,1185-1191,1210
+  s_49ba057c5af1a1::t_b462356833830e 1192-1198,1200-1209,1229-1245,1249,1253-1285,1291-1293,1311-1312,1685
+services/agent-core/agent_core/tools/worker/supervisor.py
+  s_d5aed2df69fac2::t_01ad5dad288224 56-58,73-74,83,90-96,101,105-107,109-131,137,151,153-155,157-158,161,171-177,179-185,188-193,199,212-214,220,222,258
+services/agent-core/agent_core/engine/memory_session.py
+  s_d5aed2df69fac2::t_39142fd169cd1a 91-96
+  s_d5aed2df69fac2::t_8fbab3a4f9a8de 6,33,77-78,99-101,106-107,142-147
+evals/contracts/api/commands/TeachingObservation/invalid/unknown_property.json
+  s_cfafe874616b4f::t_54ebf817f5478b 1-27
+contracts/trace/turn-trace.schema.json
+  s_cfafe874616b4f::t_13494b12f1050e 147-148
+  s_cfafe874616b4f::t_0c10f012d4ed29 875-876
+  s_49ba057c5af1a1::t_586cc9c1c62867 997-1001
+services/agent-core/agent_core/memory/observations.py
+  s_d5aed2df69fac2::t_2b112a609e32b7 40
+  s_49ba057c5af1a1::t_1ba27debc3b282 1-39,41-126
+services/agent-core/tests/test_w8_companion_followups.py
+  s_cfafe874616b4f::t_2831af3f921918 99
+  s_d5aed2df69fac2::t_17c15f23c7d1ae 187-188
+  s_d5aed2df69fac2::t_21bd735af32470 212
+  s_cfafe874616b4f::t_be26b1f2588bb1 1-38,40-46,49-98,100-107,110-169
+  s_cfafe874616b4f::t_1e7f0c8b74a03f 47-48,108-109
+  s_d5aed2df69fac2::t_a7ef2fab64c71a 170-186,189-211,213-243
+  s_49ba057c5af1a1::t_ad090a2257a66c 39
+services/agent-core/agent_core/contracts/schemas/study/research.schema.json
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 2,433-438
+services/agent-core/agent_core/contracts/cloud/gateway.py
+  s_d5aed2df69fac2::t_04b6f737a590b1 2,81-98,102,128
+  s_49ba057c5af1a1::t_1dfbbd2bc24558 99-101,103-104,125-127
+services/agent-core/agent_core/engine/companion_opener.py
+  s_cfafe874616b4f::t_6e5de45a8b1376 155-156
+  s_d5aed2df69fac2::t_925fc0690e46f7 110
+  s_cfafe874616b4f::t_23276be03a59d1 150-153
+  s_cfafe874616b4f::t_cf3000d87b5ce3 28
+  s_cfafe874616b4f::t_2bdc916d1e9c45 15,108-109
+  s_d5aed2df69fac2::t_166d385bb2acef 51-55
+  s_cfafe874616b4f::t_227e66e3996b3d 104-105,107
+services/agent-core/tests/test_worker_replacement.py
+  s_d5aed2df69fac2::t_636c124b4382a8 1-102
+packages/client-core/test/companion.test.ts
+  s_d5aed2df69fac2::t_17f8d693f86ef0 102,104,108-109,111,172-209
+  s_49ba057c5af1a1::t_844f0846345363 210-211
+services/agent-core/tests/test_w8_memory_online.py
+  s_cfafe874616b4f::t_cee07c8d3c886f 182
+  s_49ba057c5af1a1::t_b4cd1db8708152 325-341
+evals/contracts/api/commands/TeachingObservation/valid/minimal.json
+  s_cfafe874616b4f::t_54ebf817f5478b 1-26
+services/agent-core/agent_core/store/generated/event_registry.py
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 5,34-35
+packages/contracts-ts/src/generated/api/commands.ts
+  s_d5aed2df69fac2::t_17f8d693f86ef0 2409,2411,2456-2458,2460,2465,2467,2469,2567-2568,2570,2573,2584-2586,2588,2595,4774-4776,4787-4788,4821-4838
+  s_49ba057c5af1a1::t_cbb02badfe9be4 2,2410,2412,2455,2459,2461-2464,2466,2468,2470-2474,2493,2529,2569,2571-2572,2574-2583,2587,2589-2594
+services/agent-core/agent_core/api/companion.py
+  s_d5aed2df69fac2::t_17f8d693f86ef0 35-43,45-54,64,69,88-94,96-100,120,130
+  s_d5aed2df69fac2::t_f51182939c2c80 44,95
+  s_d5aed2df69fac2::t_2ebadac77844a7 22,126-129
+  s_d5aed2df69fac2::t_3a18207a172f07 55-59
+services/agent-core/tests/w8_scenarios.py
+  s_cfafe874616b4f::t_4cd1e6407082f8 107-108,110,113,115-117
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_d5aed2df69fac2::t_17f8d693f86ef0 4861,4877,4879,4881,4960,9689-9696,9862-9871,10029-10266,10269,10271-10272,10276-10277
+  s_49ba057c5af1a1::t_16aacc7d28ca3e 2,4697-4699,4862-4863,4878,4880,4882-4883,4961-4962,10267-10268,10270,10273-10275
+services/agent-core/tests/test_m2b_sandbox.py
+  s_d5aed2df69fac2::t_397211cb3ca544 126-128
+services/agent-core/agent_core/api/research.py
+  s_cfafe874616b4f::t_54358bb32e4d28 26,317-332,353,364
+  s_cfafe874616b4f::t_d2092d3bb05179 369-371
+  s_cfafe874616b4f::t_b54b5634a73c2e 30
+  s_cfafe874616b4f::t_207879ca97c24d 333-336
+  s_49ba057c5af1a1::t_e0846dee30f615 18,337-339,367,372-373
+services/agent-core/tests/test_companion_memory_commands.py
+  s_d5aed2df69fac2::t_f9e97f18562611 152-180
+  s_d5aed2df69fac2::t_85b3a57b0eed48 9,41-55,57-71
+  s_d5aed2df69fac2::t_1bb0c5de7a0c31 1-4,6-8,10-28,31-40,111-151
+  s_d5aed2df69fac2::t_74cb5caf93f75b 189,229
+  s_d5aed2df69fac2::t_2edfc8c918b6d8 5,72-77,80-102,104-110
+  s_d5aed2df69fac2::t_925fc0690e46f7 78-79
+  s_d5aed2df69fac2::t_1fba7f53fdb122 29-30
+  s_49ba057c5af1a1::t_943cfa1f317904 56,103,181-188,190-228,230-250
+services/agent-core/agent_core/contracts/schemas/agents/companion-turn.schema.json
+  s_d5aed2df69fac2::t_d37fb620e91957 2,57-66
+evals/contracts/index.json
+  s_cfafe874616b4f::t_54ebf817f5478b 476-487,1220-1231,2192-2215
+services/agent-core/agent_core/contracts/schemas/cloud/gateway.schema.json
+  s_d5aed2df69fac2::t_04b6f737a590b1 2,268-293
+  s_49ba057c5af1a1::t_b62c19a0a9ed8a 294-297
+packages/contracts-ts/src/generated/index.ts
+  s_d5aed2df69fac2::t_17f8d693f86ef0 169-230
+  s_49ba057c5af1a1::t_0257e6c897d4c9 4,231-1039
+packages/client-core/src/index.ts
+  s_d5aed2df69fac2::t_f51182939c2c80 124
+services/agent-core/agent_core/contracts/lan/lan_compute.py
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 280,288-294,967-974,1006,1009-1010,1211-1212
+evals/contracts/api/commands/TeachingOutcome/valid/minimal.json
+  s_cfafe874616b4f::t_54ebf817f5478b 1-7
+services/cloud-gateway/cloud_gateway/contracts/cloud/gateway.py
+  s_d5aed2df69fac2::t_04b6f737a590b1 2,81-98,102,128
+  s_49ba057c5af1a1::t_538942052d0f14 99-101,103-104,125-127
+packages/contracts-ts/src/generated/cloud/gateway.ts
+  s_d5aed2df69fac2::t_04b6f737a590b1 2,284-294
+services/cloud-gateway/cloud_gateway/secret_scan.py
+  s_cfafe874616b4f::t_cee07c8d3c886f 47-50
+services/agent-core/agent_core/contracts/study/research.py
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 2,143
+services/agent-core/tests/test_m2a_worker.py
+  s_d5aed2df69fac2::t_33aaebea03cfc8 252-255
+packages/ui/test/knows-confidence.test.tsx
+  s_cfafe874616b4f::t_9fbadc7bba227d 84,91-92,104-127
+  s_49ba057c5af1a1::t_42b52288b6c861 128-152
+services/cloud-gateway/cloud_gateway/companion.py
+  s_d5aed2df69fac2::t_6ec9b74349b8e1 16,75-77,80-81,84,90-91,93-94,99,101,104-110,114-118,120,125,137-140,142,166
+  s_49ba057c5af1a1::t_512772fe8ae1dd 1-11,92,100,102-103,119,141
+services/agent-core/tests/test_learning_agent_journey.py
+  s_d5aed2df69fac2::t_3518f09c197594 72,77-82,102-103,109
+  s_d5aed2df69fac2::t_38e48cec788fdb 7,9,13,19,23-31,131,180-184,199-204
+  s_d5aed2df69fac2::t_c984f322a5bdc8 6,11,22,73,76,83-95,97-101,104-108,110-111,113-119
+  s_d5aed2df69fac2::t_d42fac02539623 1-5,8,10,12,14-18,20-21,32-57,59-71,74-75,120-130,132-145,147,149-157,159-166,168-179,185-198,205-208
+  s_49ba057c5af1a1::t_13e7cbe5d96da1 58,96,112,146,148,158,167
+contracts/agents/companion-turn.schema.json
+  s_d5aed2df69fac2::t_90afa059e9814d 5,57-67
+packages/contracts-ts/src/generated/agents/companion_turn.ts
+  s_d5aed2df69fac2::t_d37fb620e91957 2,8-11
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_d5aed2df69fac2::t_17f8d693f86ef0 255-259,269,386,455
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 268,385,454
+  s_49ba057c5af1a1::t_2c2739017d375c 260-262,270-272,387-389,456-458
+services/agent-core/tests/test_w8_companion.py
+  s_d5aed2df69fac2::t_f63926d315ecb8 376-377
+  s_d5aed2df69fac2::t_3a67a05f259e63 155
+  s_d5aed2df69fac2::t_17f8d693f86ef0 423
+services/agent-core/agent_core/memory/reflect_input.py
+  s_d5aed2df69fac2::t_2b112a609e32b7 179-180
+  s_d5aed2df69fac2::t_925fc0690e46f7 31,82-83
+  s_d5aed2df69fac2::t_3a18207a172f07 174-178
+  s_d5aed2df69fac2::t_8ee5b027ca2163 172-173
+services/agent-core/tests/test_m33a_history.py
+  s_d5aed2df69fac2::t_90b7c1655a485b 67,70,74
+  s_d5aed2df69fac2::t_36d9b6820ad6ca 71-73
+services/agent-core/agent_core/engine/reflection.py
+  s_d5aed2df69fac2::t_8fa34e99c0afdf 130,180-184,187-188,736,766,1063-1068,1076-1078,1081
+  s_d5aed2df69fac2::t_3a18207a172f07 179,879-893,906-912,1069-1075
+  s_d5aed2df69fac2::t_8ee5b027ca2163 620-621
+  s_d5aed2df69fac2::t_572100a37e5dcb 815
+  s_d5aed2df69fac2::t_3380d4164f9f34 579,862,1088
+  s_d5aed2df69fac2::t_925fc0690e46f7 877-878
+  s_d5aed2df69fac2::t_dcddce099d8b93 603-604,692
+  s_49ba057c5af1a1::t_fae83af63284f3 40
+services/agent-core/agent_core/engine/companion_facts.py
+  s_d5aed2df69fac2::t_bbe53db641b111 11-12
+  s_d5aed2df69fac2::t_3a18207a172f07 2,9-10,13-17,21-22,54-63,72-87,97-108,124-126
+  s_d5aed2df69fac2::t_d37fb620e91957 20,23
+  s_d5aed2df69fac2::t_90afa059e9814d 1,3-8,18-19,24-53,64-71,88-91,93-96,109-123
+  s_49ba057c5af1a1::t_b5637bc734fc29 92
+services/agent-core/agent_core/contracts/personal_sync/personal_sync.py
+  s_d5aed2df69fac2::t_c26adfbc8fe3e3 276,284-290,906-913,945,948-949,1119-1120
+services/agent-core/tests/test_m15g_knows_api.py
+  s_d5aed2df69fac2::t_96f7ed21ae52d5 470-471
+  s_cfafe874616b4f::t_93d842b24836a9 171-177
+  s_d5aed2df69fac2::t_5a9ca70e09d232 465-467,472-477
+evals/contracts/api/commands/MemoryExplanation/valid/minimal.json
+  s_cfafe874616b4f::t_54ebf817f5478b 1-6
+services/agent-core/agent_core/memory/visibility.py
+  s_d5aed2df69fac2::t_dea02a6071bf60 20-24,27
+  s_d5aed2df69fac2::t_9f9543c4e4282d 1-9,11-16,18-19,29-31,36-40
+  s_d5aed2df69fac2::t_3a18207a172f07 25-26,28,33-34
+  s_d5aed2df69fac2::t_1aea679f7fb3e2 10,17
+  s_d5aed2df69fac2::t_ca50576a150b19 32,35
+services/agent-core/agent_core/contracts/api/commands.py
+  s_d5aed2df69fac2::t_17f8d693f86ef0 2485,2542-2543,2577-2596,2603-2605,2613-2615,2626-2628,2637-2639,4635-4637
+  s_49ba057c5af1a1::t_c735950150e714 2,1323,1370,2597-2602,2606-2612,2616-2625,2629-2636,2640-2654,2668,4634,4638-4652,5226,5532
+services/agent-core/agent_core/tools/fixtures/study_search.yaml
+  s_cfafe874616b4f::t_825b4aa7fa318c 3,7
+services/agent-core/agent_core/providers/gateway.py
+  s_cfafe874616b4f::t_7f0ff532e164c1 105-106,135,148-149,155-156,160-164,170-171,176-178,215,258
+  s_d5aed2df69fac2::t_c97fe6fc9bdb87 13,15,37,125-130
+  s_49ba057c5af1a1::t_022706a76f630a 259-260
+services/agent-core/agent_core/engine/companion_memory.py
+  s_d5aed2df69fac2::t_572100a37e5dcb 11,158
+  s_d5aed2df69fac2::t_3380d4164f9f34 22,56-58,84,138,147,152,157,159-160
+  s_d5aed2df69fac2::t_3a18207a172f07 89-94,106-110,112-114,140-146,148-151
+  s_d5aed2df69fac2::t_39142fd169cd1a 1-10,12-21,23-55,59-83,85-88,95-99,101-105,111,115-137,139,153-156,161-163
+  s_d5aed2df69fac2::t_1fba7f53fdb122 100
+contracts/api/commands.schema.json
+  s_d5aed2df69fac2::t_17f8d693f86ef0 4699,4865-4866,9706,9709-9717,9885-9894,10054-10303,13712,13725-13727,13730
+  s_49ba057c5af1a1::t_19474a7223ceaf 4698,4700-4701,4864,4867,4881-4887,4964-4966,13728-13729,13731-13740
+services/agent-core/tests/test_companion_continuity.py
+  s_d5aed2df69fac2::t_ea60ccc14ec06b 138,140-141,144-146,148-162
+  s_d5aed2df69fac2::t_d6e4947075b0cf 137,163-180
+  s_d5aed2df69fac2::t_b98487b35509e0 78-81,83-95
+  s_d5aed2df69fac2::t_3a18207a172f07 2,30-32,35-37,57-59,61-65,82
+  s_d5aed2df69fac2::t_74cb5caf93f75b 56
+  s_d5aed2df69fac2::t_0d1d4912a84552 98-109,111-117
+  s_d5aed2df69fac2::t_f51182939c2c80 1,3-29,33-34,38-55,60,66-77
+  s_49ba057c5af1a1::t_00c8123bb969d4 96-97,110,118-136,139,142-143,147
+content/agent/roles/companion.md
+  s_cfafe874616b4f::t_d9982e0ae24955 42-47
+  s_49ba057c5af1a1::t_7981ad29185855 39-41,60
+services/agent-core/agent_core/tools/fixtures/make_aid.yaml
+  s_cfafe874616b4f::t_825b4aa7fa318c 3,10-11,15
+services/agent-core/agent_core/engine/turn.py
+  s_d5aed2df69fac2::t_2ebadac77844a7 626,632
+  s_d5aed2df69fac2::t_1fba7f53fdb122 622-623
+  s_cfafe874616b4f::t_2970e45253b187 647-650
+  s_d5aed2df69fac2::t_39142fd169cd1a 376,630-631,636-638,643
+  s_d5aed2df69fac2::t_8313b5d7170cdc 624-625,645-646
+services/cloud-gateway/cloud_gateway/app.py
+  s_d5aed2df69fac2::t_6ec9b74349b8e1 318-319
+services/agent-core/tests/test_m15e_reflector.py
+  s_d5aed2df69fac2::t_d37fb620e91957 172,201
+  s_d5aed2df69fac2::t_3a18207a172f07 151-158,195-200
+  s_49ba057c5af1a1::t_4adfd7f9f09d7e 183-184,203,567-568,573,589,591,601-602
+LEARNING_AGENT_REVIEW.md
+  s_d5aed2df69fac2::t_28800c1a72d807 26,65-67
+  s_d5aed2df69fac2::t_396ad81679193f 90
+  s_d5aed2df69fac2::t_f0eaa0b88ca0f9 48-49
+  s_d5aed2df69fac2::t_e2cac2b868d7db 74
+  s_d5aed2df69fac2::t_7e54174403b1f6 20-23,27,54-55,60-64,68-69,83
+  s_d5aed2df69fac2::t_e5c031366b2e36 58-59,70-73
+  s_d5aed2df69fac2::t_d8a78190bfd82e 77
+  s_d5aed2df69fac2::t_9feaa833c5a7f4 43-44
+  s_d5aed2df69fac2::t_e69bd3937efab6 56-57
+  s_d5aed2df69fac2::t_345bf469d2997c 75-76,78-82,84
+  s_d5aed2df69fac2::t_9ddd9ba47592b5 9-15,24,28-42,45-46
+  s_d5aed2df69fac2::t_1a93a12099bb3d 47,50-53
+  s_d5aed2df69fac2::t_dfdcd9b755236c 95-96
+  s_d5aed2df69fac2::t_fc007dd37e584f 25
+  s_d5aed2df69fac2::t_4a3e46a7b21d20 16-18
+  s_d5aed2df69fac2::t_57b6194c3ddfd1 97-98
+  s_49ba057c5af1a1::t_6cc5eac0b704b8 3-8,19,85-89,91-94,99-108
+packages/i18n/locales/en.json
+  s_d5aed2df69fac2::t_17f8d693f86ef0 778,2963-2965,3032-3037
+  s_cfafe874616b4f::t_eb8cba5999d3c8 2989
+  s_cfafe874616b4f::t_944431c6d2f899 442,486
+  s_49ba057c5af1a1::t_808ac566f3e0e1 3038-3047
+services/agent-core/agent_core/engine/profile_scope.py
+  s_d5aed2df69fac2::t_2ebadac77844a7 1-29
+services/cloud-gateway/cloud_gateway/migration_companion_v2.py
+  s_d5aed2df69fac2::t_6ec9b74349b8e1 1-8
+contracts/data/schema.sql
+  s_49ba057c5af1a1::t_c6d030545171ff 679-686
+contracts/study/research.schema.json
+  s_49ba057c5af1a1::t_b8670ecde7958d 440-446
+packages/contracts-ts/src/generated/client-validators.js
+  s_49ba057c5af1a1::t_9edb589b9bf8a0 10
+packages/contracts-ts/src/generated/trace/turn_trace.ts
+  s_49ba057c5af1a1::t_d836a7381e37b1 2,17-26,308,346
+packages/contracts-ts/src/generated/validators.js
+  s_49ba057c5af1a1::t_87f120c3988497 10
+packages/ui/src/learn/StudyResearch.tsx
+  s_49ba057c5af1a1::t_4af464387fd549 41-43,53-54,56,65-69,115-125
+packages/ui/test/checkin-card.test.tsx
+  s_49ba057c5af1a1::t_1824556558fe0a 166-173,222
+packages/ui/test/study-research.test.tsx
+  s_49ba057c5af1a1::t_8c8b5299378d97 6,78-96
+services/agent-core/agent_core/api/__main__.py
+  s_49ba057c5af1a1::t_4eda3111e9f167 183
+services/agent-core/agent_core/contracts/schemas/trace/turn-trace.schema.json
+  s_49ba057c5af1a1::t_12185f6a81fb95 2,148-149,876-877,998-1001
+services/agent-core/agent_core/contracts/trace/turn_trace.py
+  s_49ba057c5af1a1::t_1e282fc1b5a97e 2,123,555,632-642
+services/agent-core/agent_core/router/trace.py
+  s_49ba057c5af1a1::t_69fd366a6f0e3f 124-125
+services/agent-core/agent_core/store/migration_v22.py
+  s_49ba057c5af1a1::t_9bedb58c412804 1-10
+services/agent-core/agent_core/store/sqlite.py
+  s_49ba057c5af1a1::t_743464d92404da 39,106
+services/agent-core/tests/api_harness.py
+  s_49ba057c5af1a1::t_57582f8a60519f 132
+services/agent-core/tests/test_m19c_cloud.py
+  s_49ba057c5af1a1::t_c298ebf88467a3 645-667
+services/cloud-gateway/tests/test_companion_durable_budget.py
+  s_49ba057c5af1a1::t_42934aa2a75de2 1-59
+services/cloud-gateway/tests/test_w8_companion_limits.py
+  s_49ba057c5af1a1::t_50e5752e6262f9 54-55,57,59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "aed35cbfb18386bfcfd9c11679e3d659792d9b2a",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    },
+    "s_cfafe874616b4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "104af8e4-b66b-4e05-beeb-5929af76f1eb",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    },
+    "s_d5aed2df69fac2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a182ee-0034-74e3-b39d-a21d9d9af76c",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
