@@ -213,6 +213,22 @@ def _subject(subject: str) -> str | None:
     return subject if subject in ("mathematics", "physics", "chemistry", "biology", "accounting") else None
 
 
+def best_line(text: str, question: str) -> str:
+    """Of a timed excerpt's lines (each carrying its `[m:ss]` moment, SPEC §20.3), the one sharing most content words
+    with the question, so the excerpt and its moment are the line that answers, not the whole chunk."""
+    import re
+
+    lines = [line for line in text.splitlines() if line.strip()]
+    if len(lines) <= 1:
+        return text
+    wanted = {w for w in re.findall(r"[a-z0-9]{4,}", question.lower())}
+    if not wanted:
+        return lines[0]
+    return max(
+        lines, key=lambda line: (len(wanted & set(re.findall(r"[a-z0-9]{4,}", line.lower()))), -lines.index(line))
+    )
+
+
 # --- the companion's study toolset (SPEC §19.3.3, W8 phase 2) --------------------------------------------------
 
 
@@ -232,13 +248,14 @@ class StudyTools:
     clock: Callable[[], int] = lambda: 0
     refs: dict[int, tuple[str, str, int]] = field(default_factory=dict)  # this turn's study_search refs
     bands: dict[int, str] = field(default_factory=dict)  # this turn's progress_read refs -> KC ids
+    moments: dict[int, tuple[str, int]] = field(default_factory=dict)  # refs with a moment -> (source_id, at_ms)
 
     def bind(self, executors: dict[str, Any]) -> None:
         executors.update({"study_search": self.search, "progress_read": self.progress, "plan": self.plan,
                           "make_aid": self.make_aid, "start_research": self.start_research})  # fmt: skip
 
     def new_turn(self) -> None:
-        self.refs, self.bands = {}, {}
+        self.refs, self.bands, self.moments = {}, {}, {}
 
     def _conn(self) -> tuple[sqlite3.Connection, Any]:
         source = self.memory.source()
@@ -253,20 +270,94 @@ class StudyTools:
             key = f"{excerpt.kind}:{excerpt.record_id}:{excerpt.revision}"
             ref = len(self.refs) + table.ref_of(key)
             self.refs[ref] = (excerpt.kind, excerpt.record_id, excerpt.revision)
-            items.append({"ref": ref, "source_label": escape_note(excerpt.label), "text": escape_note(excerpt.text)})
+            item: dict[str, Any] = {"ref": ref, "source_label": escape_note(excerpt.label),
+                                    "text": escape_note(excerpt.text)}  # fmt: skip
+            locator = getattr(excerpt, "locator", None)
+            if isinstance(locator, dict):
+                # SPEC §20.3: a hit's place, and its moment as a labelled fact ("4:12") the reply may name and the
+                # engine can open (`open_moment`).
+                item["locator"] = dict(locator)
+                at_ms = locator.get("start_ms") if locator.get("kind") == "time" else locator.get("at_ms")
+                if type(at_ms) is int and excerpt.kind == "source":
+                    from agent_core.engine.study_links import moment_label
+
+                    item["moment"] = moment_label(at_ms)
+                    self.moments[ref] = (excerpt.record_id, at_ms)
+            items.append(item)
         return items
 
     def search_text(self, text: str) -> list[dict[str, Any]]:
         """Recall by code before the call (§19.5.1 step 3): the learner's own excerpts matching the message's words,
         with refs this turn's `make_aid` can name."""
         from agent_core.engine.ask_anything import own_evidence
+        from agent_core.memory.queries import StudyExcerpt, moment_locator
+
+        conn, _ = self._conn()
+        found = []
+        for e in own_evidence(conn, text, 3):
+            if e.get("kind") != "own_source":
+                continue
+            excerpt = (
+                best_line(str(e["text"]), text) if (e.get("locator") or {}).get("kind") == "time" else str(e["text"])
+            )
+            found.append(
+                StudyExcerpt(
+                    "source",
+                    str(e["source_id"]),
+                    self._revision(conn, str(e["source_id"])),
+                    str(e.get("title", "")),
+                    excerpt,
+                    moment_locator(e.get("locator"), excerpt),
+                )
+            )
+        return self._items(found)
+
+    def moment_lines(self, source_id: str, at_ms: int, window_ms: int = 30_000) -> tuple[str, list[dict[str, Any]]]:
+        """Ask about this moment (SPEC §20.5 step 4): the open material's title and the transcript lines within
+        `window_ms` of `at_ms`, as study_search items with refs this turn's open_moment can name. A private source
+        gives its title only (STU-15)."""
+        from agent_core.engine.study_links import line_moment, line_text
         from agent_core.memory.queries import StudyExcerpt
 
         conn, _ = self._conn()
-        found = [StudyExcerpt("source", str(e["source_id"]), self._revision(conn, str(e["source_id"])),
-                              str(e.get("title", "")), str(e["text"]))
-                 for e in own_evidence(conn, text, 3) if e.get("kind") == "own_source"]  # fmt: skip
-        return self._items(found)
+        row = conn.execute("SELECT current_revision, private, body FROM study_sources WHERE source_id = ?",
+                           (source_id,)).fetchone()  # fmt: skip
+        if row is None:
+            raise InvalidArguments("no such material")
+        revision, private, body = int(row[0]), bool(row[1]), json.loads(row[2])
+        title = str(body.get("title") or "")
+        if private:
+            return title, []
+        found: list[StudyExcerpt] = []
+        for (chunk_body,) in conn.execute(
+            "SELECT body FROM study_chunks WHERE source_id = ? AND revision = ? ORDER BY ordinal", (source_id, revision)
+        ):
+            chunk = json.loads(chunk_body)
+            locator = chunk.get("locator", {})
+            if locator.get("kind") != "time":
+                continue
+            if locator["end_ms"] < at_ms - window_ms or locator["start_ms"] > at_ms + window_ms:
+                continue
+            lines = str(chunk.get("text", "")).splitlines()
+            timed = [(line_moment(line), line) for line in lines]
+            if any(ms is not None for ms, _ in timed):
+                for ms, line in timed:
+                    if ms is not None and abs(ms - at_ms) <= window_ms:
+                        found.append(
+                            StudyExcerpt(
+                                "source",
+                                source_id,
+                                revision,
+                                title[:80],
+                                line_text(line)[:400],
+                                {"kind": "time", "start_ms": ms, "end_ms": int(locator["end_ms"])},
+                            )
+                        )
+            else:  # a recording's segment: the whole 60-second chunk, bounded
+                found.append(
+                    StudyExcerpt("source", source_id, revision, title[:80], " ".join(lines)[:600], dict(locator))
+                )
+        return title, self._items(found[:12])
 
     @staticmethod
     def _revision(conn: sqlite3.Connection, source_id: str) -> int:

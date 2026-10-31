@@ -8,6 +8,48 @@ import { readSessionNote } from "./session-notes.js";
 import { agreesForItself, readConsents, readProfile } from "./studies.js";
 
 export type { W as StudyContracts, R as ResearchContracts };
+/** SPEC §20.4 (W9, JM-D31): where a moment of a YouTube video opens. The app's external-link opener, the one the
+ * research pack's and Ask anything's sources use (an anchor with target _blank); a test or the app may supply its own. */
+export interface ExternalOpener { open(url: string): void; }
+export const BROWSER_OPENER: ExternalOpener = { open: (url) => { if (typeof window !== "undefined") window.open(url, "_blank", "noopener,noreferrer"); } };
+/** A video file's suffixes: kind `video` by suffix at create (SPEC §20.4); every other media suffix is a recording. */
+export const VIDEO_SUFFIXES = ["mp4", "webm", "mov", "mkv", "avi"] as const;
+const AUDIO_SUFFIXES = ["wav", "mp3", "m4a", "ogg", "flac", "aac"] as const;
+/** A moment's label as YouTube's panel writes it: `m:ss` under an hour, `h:mm:ss` from one hour. */
+export function momentLabel(ms: number): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000)), hours = Math.floor(seconds / 3600), minutes = Math.floor((seconds % 3600) / 60), rest = seconds % 60;
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}` : `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+const LINE_MOMENT = /^\[(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\]\s?/;
+/** The moment a transcript line carries as its `[m:ss]` prefix (SPEC §20.3), or null. */
+export function lineMoment(line: string): number | null {
+  const found = LINE_MOMENT.exec(line);
+  return found ? ((Number(found[1] ?? 0) * 3600 + Number(found[2]) * 60 + Number(found[3])) * 1000) : null;
+}
+/** A transcript line without its moment prefix. */
+export function lineText(line: string): string { return line.replace(LINE_MOMENT, ""); }
+/** A timed chunk as its lines, each with its own moment (a recording's segment is one line at the chunk's start). */
+export function chunkLines(chunk: W.Chunk): { ms: number; text: string }[] {
+  if (chunk.locator.kind !== "time") return [];
+  const lines = chunk.text.split("\n").filter((line) => line.trim() !== "");
+  if (!lines.some((line) => lineMoment(line) !== null)) return [{ ms: chunk.locator.start_ms, text: chunk.text }];
+  let last = chunk.locator.start_ms;
+  return lines.map((line) => { const ms = lineMoment(line); if (ms !== null) last = ms; return { ms: last, text: lineText(line) }; });
+}
+/** The moment a citation into a chunk names: its line's own moment, else the chunk's start (a frame's `at_ms`). */
+export function citationMoment(chunk: W.Chunk, citation: Pick<W.Citation, "start">): number | null {
+  if (chunk.locator.kind === "frame") return chunk.locator.at_ms;
+  if (chunk.locator.kind !== "time") return null;
+  const before = Array.from(chunk.text).slice(0, citation.start).join("");
+  const lineStart = before.lastIndexOf("\n") + 1;
+  const line = chunk.text.slice(lineStart).split("\n")[0] ?? "";
+  return lineMoment(line) ?? chunk.locator.start_ms;
+}
+/** youtube.com/watch?v=<id>&t=<seconds>: the link a moment opens in the learner's browser (SPEC §20.4). */
+export function momentUrl(link: NonNullable<W.Source["link"]>, ms = 0): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  return `https://www.youtube.com/watch?v=${link.video_id}${seconds > 0 ? `&t=${seconds}` : ""}`;
+}
 export interface PodcastAudio {
   available(): boolean;
   activate(): void;
@@ -85,7 +127,7 @@ export class StudyWorkspaceController {
   private resumeSpeech: (() => void) | null = null;
   private cardReturns = new Map<string, number>();
   private cardReturnTimer: ReturnType<typeof setTimeout> | null = null;
-  constructor(private readonly profiles: ProfileController, private readonly speech?: LocalSpeech, private readonly podcastAudio?: PodcastAudio) {
+  constructor(private readonly profiles: ProfileController, private readonly speech?: LocalSpeech, private readonly podcastAudio?: PodcastAudio, private readonly opener: ExternalOpener = BROWSER_OPENER) {
     profiles.onClear(() => { this.clearCardReturns(); this.pendingAid = null; this.stopReading(); this.sequence++; this.selection++; this.referenceGrants = []; this.grant = null; this.grantExpires = 0; this.set({ ...EMPTY_STUDY, canSpeak: speech?.available() ?? false }); });
     if (speech) { this.patch({ canSpeak: speech.available() }); speech.subscribe(() => this.patch({ canSpeak: this.view.podcastVoice?.enabled ? !!this.view.podcastVoice.configured && !!this.podcastAudio?.available() : speech.available() })); }
   }
@@ -278,10 +320,10 @@ export class StudyWorkspaceController {
         ...(this.view.journey?.quiz_aid_id === quiz.aid_id ? { journey: { ...this.view.journey, phase: "quiz", next_aid_id: quiz.aid_id, retry_quiz: false, questions_answered: saved.answers.length, questions_correct: 0, questions_to_review: 0 } } : {}) });
     } catch { /* A draft is a convenience: the answers on screen stay as they are. */ }
   }
-  /** STU-22: the open recording's own bytes for the player; they never leave the device. */
+  /** STU-22: the open recording's (or video file's, SPEC §20.4) own bytes for the player; they never leave the device. */
   async loadMedia(): Promise<Blob | null> {
     const source = this.view.source;
-    if (!source || source.kind !== "recording") return null;
+    if (!source || (source.kind !== "recording" && source.kind !== "video")) return null;
     let result: Blob | null = null;
     await this.action(async (current) => {
       const blob = await this.commands().request<Blob>("GET", `/v1/study/sources/${source.source_id}/media?revision=${source.revision}`, undefined, null, this.headers(), true);
@@ -291,6 +333,16 @@ export class StudyWorkspaceController {
   }
   /** STU-22: move the player to a moment of the open recording (a chapter, a transcript line, a citation). */
   seek(ms: number): void { this.patch({ playhead: { ms: Math.max(0, ms), seq: (this.view.playhead?.seq ?? 0) + 1 } }); }
+  /** SPEC §20.4 (W9): open a moment of the open material. A YouTube video (no player in this release, JM-D42) opens
+   * `youtube.com/watch?v=<id>&t=<s>` in the learner's browser through the app's external-link opener; a file seeks
+   * its player. Returns the link opened, or null when the player was moved instead. */
+  openMoment(ms: number): string | null {
+    const source = this.view.source;
+    if (!source) return null;
+    if (source.kind === "video_link" && source.link) { const url = momentUrl(source.link, ms); this.opener.open(url); this.seek(ms); return url; }
+    this.seek(ms);
+    return null;
+  }
   /** The Study screen opens (SPEC §19.3.2): the core opens or resumes the day's Study session, which every activity
    * here cites. A core without the route (an older one) records nothing and the screen works as before. */
   async enter(): Promise<void> {
@@ -327,13 +379,22 @@ export class StudyWorkspaceController {
       if (current()) this.patch({ source: opened.source, followCurrent: revision === undefined, selections: [{ source_id: id, revision: opened.source.revision }], availableRevisions: opened.available_revisions ?? [opened.source.revision], chunks, aids });
     });
   }
-  async addText(title: string, text: string): Promise<void> {
+  /** `POST /v1/study/sources` with any `SourceCreate` variant that needs no upload (pasted text, a YouTube link with its
+   * transcript, SPEC §20.3): the source is ready at once, the library reloads and the source opens. */
+  async addSource(body: W.SourceCreate): Promise<W.Source | null> {
     let source: W.Source | null = null;
     await this.action(async (current) => {
-      const result = valid<W.Source>("Source", await this.mutate("POST", "/v1/study/sources", { kind: "text", title, text }));
+      const result = valid<W.Source>("Source", await this.mutate("POST", "/v1/study/sources", body));
       if (current()) source = result;
     });
     if (source) { await this.load(); await this.open((source as W.Source).source_id); }
+    return source;
+  }
+  async addText(title: string, text: string): Promise<void> { await this.addSource({ kind: "text", title, text }); }
+  /** SPEC §20.1: a YouTube link and the transcript pasted from its panel; a title, or "YouTube video" prefilled. */
+  async addLink(url: string, transcript: string, title?: string): Promise<W.Source | null> {
+    const named = title?.trim();
+    return this.addSource({ kind: "video_link", url: url.trim(), transcript, ...(named ? { title: named.slice(0, 120) } : {}) });
   }
   async upload(file: File, existing?: W.Source, preferCloud = false, replacement = false): Promise<void> {
     let source: W.Source | null = null;
@@ -342,7 +403,9 @@ export class StudyWorkspaceController {
       if (!current()) return;
       if (file.size === 0 || file.size > 100 * 1024 * 1024) throw new CommandError(422, "source_too_large", false, undefined);
       const suffix = file.name.split(".").at(-1)?.toLowerCase();
-      const kind = suffix === "pdf" ? "pdf" : ["pptx", "odp"].includes(suffix ?? "") ? "slides" : ["txt", "md", "docx", "odt"].includes(suffix ?? "") ? "document" : ["jpg", "jpeg", "png", "webp"].includes(suffix ?? "") ? "photo" : ["wav", "mp3", "m4a", "mp4", "webm", "ogg", "flac", "aac", "mov", "mkv", "avi"].includes(suffix ?? "") ? "recording" : null;
+      // A video container is kind `video` by suffix at create (SPEC §20.4); the core downgrades it to a recording
+      // in the extracted revision when it holds no video stream.
+      const kind = suffix === "pdf" ? "pdf" : ["pptx", "odp"].includes(suffix ?? "") ? "slides" : ["txt", "md", "docx", "odt"].includes(suffix ?? "") ? "document" : ["jpg", "jpeg", "png", "webp"].includes(suffix ?? "") ? "photo" : (VIDEO_SUFFIXES as readonly string[]).includes(suffix ?? "") ? (existing && existing.kind === "recording" ? "recording" : "video") : (AUDIO_SUFFIXES as readonly string[]).includes(suffix ?? "") ? "recording" : null;
       if (!kind) throw new CommandError(422, "unsupported_format", false, undefined);
       this.patch({ uploadBytes: 0, uploadTotal: file.size });
       const data = new Uint8Array(await file.arrayBuffer()), hash = await sha(data);
@@ -835,8 +898,10 @@ export class StudyWorkspaceController {
       if (!cited) throw new CommandError(200, "invalid_reply", false, undefined);
       if (current()) {
         this.patch({ chunks }); ok = true;
-        // A citation to a recording opens the player at that moment (STU-22).
-        if (cited.locator.kind === "time" && citation.source_id === this.view.source?.source_id) this.seek(cited.locator.start_ms);
+        // A citation to a recording opens the player at that moment (STU-22): the cited line's own moment, or a
+        // frame's (SPEC §20.4); for a YouTube video the transcript pane marks the line (the browser opens on Open at).
+        const moment = citation.source_id === this.view.source?.source_id ? citationMoment(cited, citation) : null;
+        if (moment !== null) this.seek(moment);
       }
     });
     return ok;

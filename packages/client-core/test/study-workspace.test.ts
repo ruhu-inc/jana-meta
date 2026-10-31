@@ -574,3 +574,54 @@ test("concept_map: generated with no count or settings, edited, and a typed topi
   expect(fake.controller.getView().conceptTopic?.origin).toBe("model");
   expect(fake.controller.getView().conceptTopics?.map((m) => m.topic)).toEqual(["Refraction"]);
 });
+
+test("w9 a YouTube link and its transcript add a video_link source, and a moment opens through the external opener", async () => {
+  const link = { ...SOURCE, kind: "video_link", title: "Projectile motion", link: { provider: "youtube", video_id: "dQw4w9WgXcQ", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }, transcript_kind: "timed", duration_ms: 275000 };
+  const chunks = [{ chunk_id: `sck_${"0".repeat(26)}`, source_id: sid, revision: 1, ordinal: 0, locator: { kind: "time", start_ms: 230000, end_ms: 275000 }, text: "[3:50] now we derive\n[4:12] substituting gives the range equation", sha256: "0".repeat(64) }];
+  const opened: string[] = [];
+  const post = vi.fn(async (path: string) => path === "/v1/study/sources" ? link : { ...GRANT, source: link });
+  const fake = setup(async (path) => path.includes("/content") ? { items: chunks, next_cursor: null } : path === "/v1/study/workspace" ? { sources: { items: [link], next_cursor: null }, jobs: [] } : { items: [], next_cursor: null }, post as never);
+  const controller = new StudyWorkspaceController(fake.profiles as unknown as ProfileController, undefined, undefined, { open: (url) => { opened.push(url); } });
+  const added = await controller.addLink(" https://youtu.be/dQw4w9WgXcQ ", "0:00\nhello", "  Projectile motion  ");
+  expect(added?.kind).toBe("video_link");
+  expect(post.mock.calls.find(([path]) => path === "/v1/study/sources")?.[1]).toEqual({ kind: "video_link", url: "https://youtu.be/dQw4w9WgXcQ", transcript: "0:00\nhello", title: "Projectile motion" });
+  expect(controller.getView().source?.kind).toBe("video_link");
+  // No player in this release (JM-D42): a moment opens youtube.com/watch?v=<id>&t=<s> in the browser, by the opener.
+  expect(controller.openMoment(252900)).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=252");
+  expect(controller.openMoment(0)).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  expect(opened).toEqual(["https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=252", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"]);
+  // A citation into a line names that line's own moment, so the transcript pane marks it.
+  const ok = await controller.readCitation({ source_id: sid, revision: 1, chunk_id: chunks[0]!.chunk_id, start: 28, end: 40, quote: "substituting" });
+  expect(ok).toBe(true);
+  expect(controller.getView().playhead?.ms).toBe(252000);
+});
+
+test("w9 a dropped .mp4 is kind video by suffix; a file's moment seeks the player, never a browser", async () => {
+  const video = { ...SOURCE, kind: "video", title: "lecture.mp4", state: "uploading", readable_units: 0 };
+  const bodies: unknown[] = [];
+  const post = vi.fn(async (path: string, body: unknown) => { if (path === "/v1/study/sources") bodies.push(body); return path.includes("/chunks/") ? { received_bytes: 3, complete: true } : path === "/v1/study/jobs" ? { job_id: `stj_${"0".repeat(26)}`, kind: "extract", sources: [{ source_id: sid, revision: 1 }], state: "queued", completed_units: 0, total_units: null, result_ids: [], error: null, created_at: now, updated_at: now } : path === "/v1/study/sources" ? video : { ...GRANT, source: { ...video, state: "ready" } }; });
+  const opened: string[] = [];
+  const fake = setup(async () => ({ items: [], next_cursor: null, sources: { items: [], next_cursor: null }, jobs: [] }), post as never);
+  const controller = new StudyWorkspaceController(fake.profiles as unknown as ProfileController, undefined, undefined, { open: (url) => { opened.push(url); } });
+  await controller.upload(new File(["mp4"], "lecture.mp4", { type: "video/mp4" }), undefined, true);
+  expect(bodies).toEqual([expect.objectContaining({ kind: "video", file_name: "lecture.mp4" })]);
+  await controller.upload(new File(["wav"], "talk.wav", { type: "audio/wav" }), undefined, true);
+  expect(bodies[1]).toEqual(expect.objectContaining({ kind: "recording", file_name: "talk.wav" }));
+  expect(controller.openMoment(40000)).toBeNull();
+  expect(opened).toEqual([]);
+});
+
+test("w9 moment helpers: lines keep their moments, a frame cites its still, labels follow the panel's form", async () => {
+  const { chunkLines, citationMoment, lineMoment, lineText, momentLabel, momentUrl } = await import("../src/study-workspace.js");
+  expect(momentLabel(252000)).toBe("4:12");
+  expect(momentLabel(3852000)).toBe("1:04:12");
+  expect(lineMoment("[1:04:12] late")).toBe(3852000);
+  expect(lineMoment("no prefix")).toBeNull();
+  expect(lineText("[4:12] the range")).toBe("the range");
+  const timed = { chunk_id: `sck_${"1".repeat(26)}`, source_id: sid, revision: 1, ordinal: 0, locator: { kind: "time" as const, start_ms: 0, end_ms: 60000 }, text: "[0:00] a\n[0:05] b", sha256: "0".repeat(64) };
+  expect(chunkLines(timed)).toEqual([{ ms: 0, text: "a" }, { ms: 5000, text: "b" }]);
+  expect(chunkLines({ ...timed, text: "a recording segment" })).toEqual([{ ms: 0, text: "a recording segment" }]);
+  expect(citationMoment(timed, { start: 9 })).toBe(5000);
+  expect(citationMoment({ ...timed, locator: { kind: "frame", at_ms: 40000, frame_id: `frm_${"A".repeat(26)}` } }, { start: 0 })).toBe(40000);
+  expect(momentUrl({ provider: "youtube", video_id: "dQw4w9WgXcQ", url: "x" }, 61500)).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=61");
+});

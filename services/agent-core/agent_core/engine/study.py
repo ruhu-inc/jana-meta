@@ -22,9 +22,10 @@ from pathlib import Path
 from typing import Any, cast
 
 from agent_core.contracts import errors
-from agent_core.engine import pedagogy, study_concepts
+from agent_core.engine import pedagogy, study_concepts, study_outline
 from agent_core.engine.events import new_id
 from agent_core.engine.safety import LexiconClassifier, OutputCritic, redact_personal
+from agent_core.engine.study_links import TranscriptTooLong, parse_transcript, parse_youtube, youtube_url
 from agent_core.engine.study_topics import material_topics
 from agent_core.learner.fsrs import Card, scheduler_of
 from agent_core.learner.mastery import MasteryParams
@@ -76,6 +77,17 @@ def chaptered(output: Any) -> None:
         output["claims"] = [
             s for c in output["chapters"] if isinstance(c, dict) for s in c.get("summary", []) if isinstance(s, dict)
         ]
+
+
+def outlined(output: Any) -> None:
+    """A teaching outline's claims are its items in order (SPEC §20.3): objectives, examples, concepts, assumes, so
+    the support check and the aid's claims map to them one to one."""
+    if (
+        isinstance(output, dict)
+        and output.get("kind") == "teaching_outline"
+        and isinstance(output.get("outline"), dict)
+    ):
+        output["claims"] = study_outline.flatten(output["outline"])
 
 
 def chat_evidence(
@@ -425,6 +437,8 @@ class StudyDesk:
         sid, now = new_id("src"), stamp(self.clock())
         kind = body["kind"]
         private = False
+        extra: dict[str, Any] = {}
+        transcript = None
         if kind in ("session_note", "dictated_note", "board_note"):
             if kind == "session_note":
                 row = self.conn.execute(
@@ -448,11 +462,34 @@ class StudyDesk:
             private = bool(private)
         elif kind == "text":
             title, text = body["title"], body["text"]
+        elif kind == "video_link":
+            # SPEC §20.4: a YouTube link and the transcript the learner pasted (JM-D30); ready at once, no extraction.
+            video = parse_youtube(body["url"])
+            if video is None:
+                raise StudyError("unsupported_link")
+            try:
+                transcript = parse_transcript(body["transcript"])
+            except TranscriptTooLong:
+                raise StudyError("transcript_too_long") from None
+            title = body.get("title") or f"YouTube video {video}"
+            text = (
+                transcript.text
+                if transcript.kind == "plain"
+                else "\n\n".join(str(c["text"]) for c in transcript.chunks)
+            )
+            extra["link"] = {"provider": "youtube", "video_id": video, "url": youtube_url(video)}
+            extra["transcript_kind"] = transcript.kind
+            if transcript.chapters:
+                extra["chapters"] = [
+                    {k: c[k] for k in ("start_ms", "end_ms", "title")} for c in transcript.chapters[:60]
+                ]
         else:
             title, text = body["file_name"], None
             self.accept_file(kind, title)
             if body["byte_length"] > self.settings.study_source_max_mb * 1048576:
                 raise StudyError("source_too_large")
+            if kind == "video":
+                extra["frames_choice"] = body.get("frames", "auto")
         title = (self.file_title(title) if text is None else redact_personal(title)[0]).strip()[:200]
         if not title:
             raise StudyError("invalid_study_request")
@@ -472,6 +509,7 @@ class StudyDesk:
             "readable_units": 0,
             "unreadable_units": [],
             "sha256": sha,
+            **extra,
         }
         checked("Source", source)
         with atomic(self.conn):
@@ -484,18 +522,31 @@ class StudyDesk:
                 (sid, 1, sha, None, len(data) if data is not None else body["byte_length"], None),
             )
             if data is not None:
-                self.commit_units(
-                    source,
-                    [
-                        {
-                            "text": data.decode(),
-                            "locator": {"kind": "note", "note_id": body["note_id"], "paragraph": 1}
-                            if "note_id" in body
-                            else {"kind": "text", "paragraph": 1},
-                        }
-                    ],
-                )
+                self.commit_units(source, self.transcript_units(transcript, data.decode(), body))
+        # SPEC §19.3.2, §20.3: adding a source is a Study activity (its ref the source, its tags the title's topics).
+        if self.activity is not None:
+            with contextlib.suppress(Exception):
+                self.activity.source_added(sid, f"{title}\n{text or ''}")
         return self.source(sid)
+
+    @staticmethod
+    def transcript_units(transcript: Any, text: str, body: dict[str, Any]) -> list[dict[str, Any]]:
+        """The units a pasted source commits: a timed transcript's chunks with their time locators (each line keeps
+        its `[m:ss]` moment in the text), else one text or note unit."""
+        if transcript is not None and transcript.kind == "timed":
+            return [
+                {"text": str(c["text"]), "locator": {"kind": "time", "start_ms": int(c["start_ms"]),
+                                                      "end_ms": int(c["end_ms"])}}
+                for c in transcript.chunks
+            ]  # fmt: skip
+        return [
+            {
+                "text": text,
+                "locator": {"kind": "note", "note_id": body["note_id"], "paragraph": 1}
+                if "note_id" in body
+                else {"kind": "text", "paragraph": 1},
+            }
+        ]
 
     @staticmethod
     def file_title(name: str) -> str:
@@ -511,6 +562,8 @@ class StudyDesk:
             "slides": (".pptx", ".odp"),
             "photo": (".png", ".jpg", ".jpeg", ".webp"),
             "recording": (".wav", ".mp3", ".m4a", ".mp4", ".webm", ".ogg", ".flac", ".aac", ".mov", ".mkv", ".avi"),
+            # SPEC §20.4: a video file is kind `video` by suffix at create (an older client still sends `recording`).
+            "video": (".mp4", ".webm", ".mov", ".mkv", ".avi"),
         }
         if kind not in allowed or Path(name).suffix.lower() not in allowed[kind]:
             raise StudyError("unsupported_format")
@@ -588,7 +641,11 @@ class StudyDesk:
                     self.save_source(source)
         return checked("UploadReceipt", {"received_bytes": received, "complete": received == length})
 
-    def commit_units(self, source: dict[str, Any], units: list[dict[str, Any]]) -> None:
+    def commit_units(self, source: dict[str, Any], units: list[dict[str, Any]],
+                     frames: list[dict[str, Any]] | None = None) -> None:  # fmt: skip
+        """Freeze a revision's units as chunks. `frames` (SPEC §20.3, a video file) are the stills read as text: one
+        `study_frames` row each, a screened one counted with no text; a read frame's text is the unit whose frame
+        locator names it."""
         sid, revision = source["source_id"], source["revision"]
         current = self.source(sid)
         replacing = revision == current["revision"] + 1 and self.pending_source(sid)["revision"] == revision
@@ -596,8 +653,22 @@ class StudyDesk:
             raise StudyError("source_stale")
         unreadable, readable, ordinal = [], 0, 0
         needs_confirmation = any(u.get("ocr") for u in units)
-        if source["kind"] == "recording":
-            source["duration_ms"] = max(u["locator"]["end_ms"] for u in units)
+        if source["kind"] in ("recording", "video", "video_link"):
+            timed = [u["locator"]["end_ms"] for u in units if u["locator"]["kind"] == "time"]
+            if timed:
+                source["duration_ms"] = max(timed)
+        if frames is not None:
+            texts = {u["locator"]["frame_id"]: normalise(u["text"]) for u in units if u["locator"]["kind"] == "frame"}
+            self.conn.execute("DELETE FROM study_frames WHERE source_id=? AND revision=?", (sid, revision))
+            for frame in frames:
+                checked("Frame", {k: frame[k] for k in ("frame_id", "at_ms", "reason", "read_state")})
+                self.conn.execute(
+                    "INSERT INTO study_frames VALUES (?,?,?,?,?,?,?)",
+                    (frame["frame_id"], sid, revision, frame["at_ms"], frame["reason"], frame["read_state"],
+                     texts.get(frame["frame_id"], "") if frame["read_state"] == "read" else ""),
+                )  # fmt: skip
+            source["frames"] = len(frames)
+            source["screened_frames"] = sum(1 for f in frames if f["read_state"] == "screened")
         for index, unit in enumerate(units):
             text = normalise(unit["text"])
             if not text:
@@ -729,7 +800,20 @@ class StudyDesk:
                 (sid, revision, sha, None, len(data) if data is not None else body["byte_length"], None),
             )
             if data is not None:
-                self.commit_units(source, [{"text": data.decode(), "locator": {"kind": "text", "paragraph": 1}}])
+                units = [{"text": data.decode(), "locator": {"kind": "text", "paragraph": 1}}]
+                if source["kind"] == "video_link":  # a corrected transcript is parsed again: moments and chapters
+                    try:
+                        parsed = parse_transcript(body["text"])
+                    except TranscriptTooLong:
+                        raise StudyError("transcript_too_long") from None
+                    source["transcript_kind"] = parsed.kind
+                    source.pop("chapters", None)
+                    if parsed.chapters:
+                        source["chapters"] = [
+                            {k: c[k] for k in ("start_ms", "end_ms", "title")} for c in parsed.chapters[:60]
+                        ]
+                    units = self.transcript_units(parsed, data.decode(), body)
+                self.commit_units(source, units)
             self.stale(sid)
         return self.source(sid)
 
@@ -1063,7 +1147,11 @@ class StudyDesk:
             self.selected(syllabus)
         if kind == "chapters":
             chunks = self.selected(body["sources"], ready=not body.get("confirm_readable_only"))
-            if not chunks or any(c["locator"]["kind"] != "time" for c in chunks):
+            if not chunks or any(c["locator"]["kind"] not in ("time", "frame") for c in chunks):
+                raise StudyError("invalid_study_request")
+        if kind == "teaching_outline":  # SPEC §20.4: over a transcript's timed chunks
+            chunks = self.selected(body["sources"], ready=not body.get("confirm_readable_only"))
+            if not any(c["locator"]["kind"] == "time" for c in chunks):
                 raise StudyError("invalid_study_request")
 
     def topics(self, selections: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1113,6 +1201,8 @@ class StudyDesk:
             chunks = [c for c in chunks if c["chunk_id"] in ids]
             if not chunks:
                 raise StudyError("insufficient_evidence")
+        if request["kind"] == "teaching_outline":  # transcript chunks only (JM-D33): never a frame's text
+            chunks = [c for c in chunks if c["locator"]["kind"] == "time"]
         chosen = request.get("settings", {}).get("topics")
         if not chosen:
             return chunks
@@ -1149,7 +1239,9 @@ class StudyDesk:
             brief["settings"] = settings
         # SPEC §19.3.1: who is asking, as MDL-25's data (level, subjects, bands, watched misconceptions), when the
         # profile's learner database is open. The app never sends it; the engine renders it from the snapshot.
-        learner = self.activity.learner_block() if self.activity is not None else None
+        # The outline request carries transcript chunks and nothing else (SPEC §20.3, JM-D33, review B7).
+        learner = (self.activity.learner_block() if self.activity is not None and request["kind"] != "teaching_outline"
+                   else None)  # fmt: skip
         if learner is not None:
             brief["learner"] = learner
         if syllabus:
@@ -1160,10 +1252,12 @@ class StudyDesk:
     def local_possible(self, body: dict[str, Any]) -> bool:
         if not self.settings.study_offline_enabled:
             return False  # D133: study tools are made online only
+        if body["kind"] == "teaching_outline":
+            return False  # drafted and verified by Muse Spark only (JM-D33)
         pages = 0
         for selected in body["sources"]:
             source = self.source(selected["source_id"])
-            if source["kind"] == "recording" and body["kind"] != "chapters":
+            if source["kind"] in ("recording", "video") and body["kind"] != "chapters":
                 return False
             if source["kind"] in ("session_note", "dictated_note", "board_note"):
                 continue
@@ -1282,6 +1376,7 @@ class StudyDesk:
         quiz = output.get("quiz", {"items": [], "keys": []})
         chapters = output.get("chapters", [])
         drafted = output.get("concept_map")
+        outline = output.get("outline")
         all_claims = [
             *claims,
             *(v[k] for v in cards for k in ("front", "back")),
@@ -1289,6 +1384,7 @@ class StudyDesk:
             *(k["explanation"] for k in quiz["keys"]),
             *(s for c in chapters for s in c["summary"]),
             *(study_concepts.draft_claims(drafted) if drafted else []),
+            *(study_outline.flatten(outline) if outline else []),
         ]
         for claim in all_claims:
             if OutputCritic().check(claim["text"], "low") is not None:
@@ -1298,6 +1394,9 @@ class StudyDesk:
             if OutputCritic().check(chapter["title"], "low") is not None or redact_personal(chapter["title"])[1]:
                 raise StudyError("insufficient_evidence")
         for concept in (drafted or {}).get("concepts", []):
+            if OutputCritic().check(concept["name"], "low") is not None or redact_personal(concept["name"])[1]:
+                raise StudyError("insufficient_evidence")
+        for concept in (outline or {}).get("concepts", []):
             if OutputCritic().check(concept["name"], "low") is not None or redact_personal(concept["name"])[1]:
                 raise StudyError("insufficient_evidence")
         request = self.one("SELECT checkpoint FROM study_jobs WHERE job_id=?", (job["job_id"],))["request"]
@@ -1333,6 +1432,10 @@ class StudyDesk:
         if drafted:
             # Anchored to the curated backbone by the pack's own records; the wording stays the document's.
             aid["concept_map"] = study_concepts.document_map(drafted, content)
+        if outline:
+            # SPEC §20.4: moments, skills, skips and the learner's bands by code on the device, never by the model.
+            aid["outline"] = study_outline.fill(outline, self.selected(job["sources"], ready=False), content,
+                                                self.band_reader())  # fmt: skip
         if cards:
             aid["deck_id"] = new_id("dek")
         if quiz["items"]:
@@ -1425,6 +1528,20 @@ class StudyDesk:
             job.update(state="completed", result_ids=[aid["aid_id"]], completed_units=job["total_units"] or 1)
             self.save_job(job)
         return aid
+
+    def band_reader(self) -> Callable[[str], str | None] | None:
+        """A skill's band from the open learner database (`kc_views` at now), for the outline's `for_you`; None
+        when no learner database is open (every band then reads not started)."""
+        learner = self.activity.learner() if self.activity is not None else None
+        if learner is None:
+            return None
+        from agent_core.learner.model import kc_views
+
+        try:
+            views = kc_views(learner.conn, learner.projector.ctx.params, self.clock())
+        except Exception:
+            return None
+        return lambda kc: views[kc].band if kc in views else None
 
     def identity_check(self, kind: str, identity: str, body: dict[str, Any]) -> None:
         row = self.conn.execute(
@@ -1732,7 +1849,7 @@ class StudyDesk:
     def media(self, sid: str, revision: int) -> tuple[bytes, str]:
         """STU-22: an owned recording's own bytes for the player; it never leaves the device."""
         source = self.source(sid)
-        if source["kind"] != "recording":
+        if source["kind"] not in ("recording", "video"):
             raise StudyError("not_found")
         row = self.conn.execute(
             "SELECT blob_ref FROM study_revisions WHERE source_id=? AND revision=?", (sid, revision)
@@ -2081,8 +2198,8 @@ class StudyQueue:
         if not batches or len(batches) > 128:
             raise StudyError("source_too_large")
         jid = job["job_id"]
-        if request["kind"] == "concept_map" and request["execution"] != "prefer_cloud":
-            raise StudyError("model_unavailable")  # concept maps are drafted and verified by Muse Spark only
+        if request["kind"] in ("concept_map", "teaching_outline") and request["execution"] != "prefer_cloud":
+            raise StudyError("model_unavailable")  # drafted and verified by Muse Spark only
         checkpoint = desk.one("SELECT checkpoint FROM study_jobs WHERE job_id=?", (jid,))
         saved = checkpoint.get("batches", [])
         # Chat is one response to one learner question, not independent answers concatenated
@@ -2123,6 +2240,7 @@ class StudyQueue:
                         batch_index=index,
                     )
                     chaptered(output)
+                    outlined(output)
                     support = [True] * (
                         len(output["claims"])
                         + len(output.get("flashcards", []))
@@ -2159,7 +2277,13 @@ class StudyQueue:
                 # A chapter's summary is shown whole or not at all: every sentence must be supported (STU-22).
                 if request["kind"] == "chapters" and not all(support):
                     raise StudyError("insufficient_evidence")
-                if request["kind"] != "chapters":
+                if request["kind"] == "teaching_outline":
+                    kept = study_outline.rebuild(output["outline"], support[: len(output["claims"])])
+                    if kept is None:
+                        raise StudyError("insufficient_evidence")
+                    output["outline"] = kept
+                    outlined(output)
+                elif request["kind"] != "chapters":
                     output["claims"] = [c for i, c in enumerate(output["claims"]) if support[i]][
                         : 200 if synthesize else max(1, 200 // len(batches))
                     ]
@@ -2266,6 +2390,9 @@ class StudyQueue:
             # One map from every verified section: concepts by name, relations re-pointed (study_concepts).
             combined["concept_map"] = study_concepts.merge_drafts([o["concept_map"] for o in outputs])
             combined["claims"] = study_concepts.draft_claims(combined["concept_map"])[:200]
+        if request["kind"] == "teaching_outline":
+            combined["outline"] = study_outline.merge([o["outline"] for o in outputs])
+            combined["claims"] = study_outline.flatten(combined["outline"])[:200]
         if request["kind"] == "chapters":
             combined["chapters"] = [c for output in outputs for c in output["chapters"]]
             if len(combined["chapters"]) > 60:
@@ -2359,14 +2486,21 @@ class StudyQueue:
                         "WHERE job_id=?",
                         (jid,),
                     )
-                if s["kind"] == "recording" and not cloud:
+                if s["kind"] in ("recording", "video") and not cloud:
                     job.update(state="waiting_online", error=None)
                     desk.save_job(job)
                     return
+                frames: list[dict[str, Any]] | None = None
                 if cloud:
                     if self.cloud is None:
                         raise StudyError("consent_required")
                     units = await self.cloud.extract(desk.conn, jid, request, s, data)
+                    # SPEC §20.4: a video file's frames (read as text in the worker) and the downgrade when the
+                    # container had no video stream, both the gateway's to say.
+                    if s["kind"] == "video":
+                        frames = list(getattr(units, "frames", []) or [])
+                        if getattr(units, "has_video", None) is False:
+                            s["kind"], frames = "recording", None
                 else:
                     units = await extract(data, s["kind"], s["title"], self.settings)
                 for unit in units if not cloud else []:
@@ -2392,7 +2526,7 @@ class StudyQueue:
                 if self.connection() is not desk.conn or desk.job(jid)["state"] != "running":
                     return
                 with transaction(desk.conn):
-                    desk.commit_units(s, units)
+                    desk.commit_units(s, units, frames=frames)
                     unreadable = desk.source(s["source_id"])["state"] == "unreadable"
                     job.update(
                         state="failed" if unreadable else "completed",

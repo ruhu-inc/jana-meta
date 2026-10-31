@@ -13,7 +13,7 @@
 // syllabus points, "Partly covers" on a partial one.
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { syllabusCodes, topicLabel, type ConceptMapController, type ConceptMapView, type ConceptNode, type MapKc, type MapSyllabus, type MapTopic, type MapView, type SubjectMapController } from "@jana/client-core";
-import { ConceptMapContent, type ConceptActions } from "./ConceptMap.js";
+import { ConceptMapContent, type ConceptActions, type ConceptLens } from "./ConceptMap.js";
 import { useVoicePointer } from "../voice/SpeechTools.js";
 import { ScreenHeader } from "../frame/Frame.js";
 import { Icon } from "../icons.js";
@@ -260,6 +260,10 @@ export interface ConceptMapMode {
   pointed?: string | null;
   /** Start in "Map" mode (the gallery's map state, or a root-gap card's "See it on the map"). */
   initial?: boolean;
+  /** The learner's map lens: layers, the scrubber and each skill's links (SPEC §21). */
+  lens?: ConceptLens;
+  /** The skill sheet's links and actions into Study, the knows page and the tutor's thread (SPEC §21.1). */
+  sheet?: ConceptActions;
 }
 
 /** The subject map's actions for one KC of the concept map: through its topic tile (asking and practising are
@@ -271,7 +275,7 @@ function conceptActions(view: MapView, actions: MapActions, concept: ConceptMapM
   if (actions.onJourney !== undefined) out.onPractiseKc = (node) => { const tp = topicOf(node), kc = tp?.kcs.find((k) => k.kc_id === node.kc_id); if (tp !== undefined && kc !== undefined) actions.onJourney?.(tp, kc); };
   else if (actions.onPractise !== undefined) out.onPractiseKc = (node) => { const tp = topicOf(node); if (tp !== undefined) actions.onPractise?.(tp); };
   if (concept.onAskQuestion !== undefined) out.onAskQuestion = concept.onAskQuestion;
-  return out;
+  return { ...out, ...concept.sheet };
 }
 
 export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, onRetry, actions = {}, initialTopic, inProgress = null, onContinue, concept }: {
@@ -319,7 +323,7 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
       return (
         <ConceptMapContent view={concept.view} actions={conceptActions(view, actions, concept)} pointed={concept.pointed ?? null}
           {...(concept.onRetry !== undefined ? { onRetry: concept.onRetry } : {})} {...(concept.onShowGap !== undefined ? { onShowGap: concept.onShowGap } : {})}
-          {...(concept.onClearGap !== undefined ? { onClearGap: concept.onClearGap } : {})} />
+          {...(concept.onClearGap !== undefined ? { onClearGap: concept.onClearGap } : {})} {...(concept.lens !== undefined ? { lens: concept.lens } : {})} />
       );
     }
     if (view.status === "failed") {
@@ -393,10 +397,20 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
 }
 
 /** The map for the unlocked profile: reads on open and on a subject change, re-reads on a mastery change. */
-export function SubjectMap({ controller, subjectId, subjects, onSubject, actions, inProgress, onContinue, initialTopic, concept, onAskQuestion, pointed, conceptFirst }: {
+/** Today's local date, the scrubber's last stop. */
+function localToday(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+export function SubjectMap({ controller, subjectId, subjects, onSubject, actions, inProgress, onContinue, initialTopic, concept, onAskQuestion, pointed, conceptFirst, sheet, today }: {
   controller: SubjectMapController;
   /** The concept map's controller: with it the map has its "Map" mode. */
   concept?: ConceptMapController;
+  /** The skill sheet's actions into Study, the knows page and the thread (SPEC §21.1). */
+  sheet?: ConceptActions;
+  /** Today's local date (tests fix it); the clock's otherwise. */
+  today?: string;
   onAskQuestion?: (text: string) => void;
   pointed?: string | null;
   conceptFirst?: boolean;
@@ -413,6 +427,8 @@ export function SubjectMap({ controller, subjectId, subjects, onSubject, actions
   // The tutor's spoken pointer at a skill (`kc:` cue), when the map is on screen.
   const heard = useVoicePointer();
   const conceptView = useSyncExternalStore(concept?.subscribe ?? none, concept?.getView ?? (() => null), concept?.getView ?? (() => null));
+  const lensView = useSyncExternalStore(concept?.subscribe ?? none, concept?.getLens ?? (() => null), concept?.getLens ?? (() => null));
+  const onLinks = useMemo(() => (concept === undefined ? undefined : (kc: string) => void concept.links(kc)), [concept]);
   useEffect(() => {
     void controller.load(subjectId);
   }, [controller, subjectId]);
@@ -420,6 +436,8 @@ export function SubjectMap({ controller, subjectId, subjects, onSubject, actions
   const mode: ConceptMapMode | undefined = concept === undefined || conceptView === null || onOpen === undefined ? undefined : {
     view: conceptView, onOpen, onRetry: onOpen, onShowGap: (gap) => concept.showGap(gap), onClearGap: () => concept.clearGap(),
     ...(onAskQuestion !== undefined ? { onAskQuestion } : {}), pointed: pointed ?? (heard?.target.kind === "kc" ? heard.target.kc_id : null), initial: conceptFirst === true,
+    ...(lensView !== null && onLinks !== undefined ? { lens: { lens: lensView, onLayer: (layer) => concept.setLayer(layer), onScrub: (asOf) => void concept.scrub(asOf), onLinks, today: today ?? localToday() } } : {}),
+    ...(sheet !== undefined ? { sheet } : {}),
   };
   return (
     <SubjectMapContent

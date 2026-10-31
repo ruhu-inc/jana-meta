@@ -9,6 +9,10 @@ interface TauriInternals {
   invoke(cmd: string, args?: Record<string, unknown>): Promise<unknown>;
 }
 
+export function hasNativeFilePickers(): boolean {
+  return (globalThis as { __TAURI_INTERNALS__?: TauriInternals }).__TAURI_INTERNALS__ !== undefined;
+}
+
 export async function pickInstallSource(kind: "folder" | "pack" | "update"): Promise<string | null> {
   const tauri = (globalThis as { __TAURI_INTERNALS__?: TauriInternals }).__TAURI_INTERNALS__;
   if (tauri === undefined) return null;

@@ -2,8 +2,66 @@ import { expect, test, vi } from "vitest";
 import { SessionController, StoreHolder } from "../src/session.js";
 import { FakeCore } from "./fakecore.js";
 import { recordings } from "./recordings.js";
+import { hydrate } from "../src/hydrate.js";
+import { journalSnapshot } from "../src/journal.js";
+import { optimistic } from "../src/reducer.js";
+import { emptyStore } from "../src/store.js";
+import { clientId } from "../src/ids.js";
 
 const recording = recordings().find((r) => r.name === "s1_guided_solve")!;
+
+test("a failed command offers retry even when the event stream stays connected", async () => {
+  const core = new FakeCore(recording);
+  let fail = true;
+  const holder = new StoreHolder();
+  const session = new SessionController({ endpoint: async () => ({ baseUrl: "http://core.test", token: core.token }) }, holder, recording.session_id, { fetch: async (url, init) => {
+    if (String(url).endsWith("/turns") && fail) throw new TypeError("command connection failed");
+    return core.fetch(url, init);
+  } });
+  try {
+    await session.open();
+    await vi.waitFor(() => expect(holder.getState().connection[`session:${recording.session_id}`]?.state).toBe("live"));
+    const key = session.send([{ type: "text", text: "What did we agree to continue?" }], "ask");
+    await vi.waitFor(() => expect(holder.getState().messages[key]?.state).toBe("failed"));
+    fail = false; session.retry(key);
+    await vi.waitFor(() => expect(core.turnKeys.has(key)).toBe(true));
+    expect(core.turnStarts).toBe(1);
+  } finally { session.close(); core.stop(); }
+});
+
+test.each([false, true])("a companion send interrupted by restart reconciles acceptance (%s) before offering retry", async (accepted) => {
+  const core = new FakeCore(recording);
+  const fresh = { ...core.snapshot(), session: { ...core.snapshot().session, mode: "study_companion" as const } };
+  const key = clientId();
+  const content = [{ type: "text" as const, text: "Remember that I prefer diagrams." }];
+  const cached = { snapshot: journalSnapshot(optimistic(hydrate(emptyStore(), fresh), recording.session_id, key, content), recording.session_id), envelopes: [] };
+  if (accepted) fresh.messages.push({ role: "student", message_id: clientId(), client_message_id: key, turn_id: null, content, ts: Date.now() });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const sent: { key: string | undefined; body: unknown }[] = [];
+  const holder = new StoreHolder();
+  const session = new SessionController({ endpoint: async () => ({ baseUrl: "http://core.test", token: core.token }) }, holder, recording.session_id, { fetch: async (url, init) => {
+    const path = String(url);
+    if (path.endsWith("/journal")) return Response.json(cached);
+    if (path.endsWith("/snapshot")) { await gate; return Response.json(fresh); }
+    if (path.endsWith("/turns")) {
+      sent.push({ key: (init?.headers as Record<string, string>)["idempotency-key"], body: JSON.parse(String(init?.body)) });
+      return Response.json({}, { status: 202 });
+    }
+    return core.fetch(url, init);
+  } });
+  try {
+    const opening = session.open();
+    await vi.waitFor(() => expect(holder.getState().messages[key]?.content).toEqual(content));
+    release(); await opening;
+    expect(holder.getState().messages[key]?.state).toBe(accepted ? "accepted" : "failed");
+    expect(sent).toEqual([]);
+    session.retry(key);
+    if (accepted) { expect(sent).toEqual([]); return; }
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]).toEqual({ key, body: { client_message_id: key, intent: "ask", content } });
+  } finally { release(); session.close(); core.stop(); }
+});
 
 test("live session commits persist a throttled profile journal without browser storage", async () => {
   const core = new FakeCore(recording, 2); const bodies: { snapshot: unknown; envelopes: unknown[] }[] = [];

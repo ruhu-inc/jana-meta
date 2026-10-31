@@ -1336,3 +1336,77 @@ class Projector:
             )
         ]
         return int(statistics.median(times)) if times else None
+
+
+# --- the learner model as it stood at a moment (SPEC §21, JM-D37) -----------------------------------------------------
+
+# The non-projection tables a fold reads besides `events` (the projections' own tables are rebuilt from it).
+SNAPSHOT_COPIES = ("profile",)
+
+
+def snapshot_as_of(
+    conn: sqlite3.Connection,
+    params: MasteryParams,
+    content: ContentIndex | None,
+    ts: int,
+    projections: Sequence[Projection] | None = None,
+) -> sqlite3.Connection:
+    """The learner model as it stood at `ts`, replayed into memory and never written back (JM-D37): the generated
+    learner schema in a `:memory:` database, the `events` that occurred at or before `ts` and the `profile` row copied
+    in, then `Projector(mem, params, content).rebuild()`, which folds `self.conn`, so the memory connection is the
+    one rebuilt. The live connection is only read: its tables' checksums are the same before and after. Snapshotting
+    at the newest event gives the live projection tables (incremental and rebuilt tables are always equal)."""
+    from agent_core.store.generated.schema import LEARNER
+    from agent_core.store.sqlite import statements
+
+    mem = sqlite3.connect(":memory:", isolation_level=None, check_same_thread=False)
+    for statement in statements(LEARNER):
+        mem.execute(statement)
+    columns = [row[1] for row in conn.execute("PRAGMA table_info(events)")]
+    names = ", ".join(columns)
+    marks = ", ".join("?" for _ in columns)
+    with transaction(mem):
+        mem.executemany(
+            f"INSERT INTO events ({names}) VALUES ({marks})",  # noqa: S608 - the table's own column names
+            conn.execute(f"SELECT {names} FROM events WHERE occurred_at <= ? ORDER BY seq", (ts,)),  # noqa: S608
+        )
+        for table in SNAPSHOT_COPIES:
+            copied = [row[1] for row in conn.execute(f"PRAGMA table_info({table})")]
+            held = {row[1] for row in mem.execute(f"PRAGMA table_info({table})")}
+            shared = ", ".join(c for c in copied if c in held)
+            rows = conn.execute(f"SELECT {shared} FROM {table}").fetchall()  # noqa: S608 - fixed table names
+            if rows:
+                places = ", ".join("?" for _ in rows[0])
+                mem.executemany(f"INSERT INTO {table} ({shared}) VALUES ({places})", rows)  # noqa: S608
+    Projector(mem, params, content, projections).rebuild()
+    return mem
+
+
+@dataclass
+class Snapshots:
+    """`snapshot_as_of` cached per (profile, date) for the life of the core (the scrubber's session): a date redrawn
+    twice replays once. The key holds the log's newest `seq`, so an event that arrives later (sync, a late fold)
+    replays the date again instead of serving a stale model."""
+
+    held: dict[tuple[str, str, int], sqlite3.Connection] = field(default_factory=dict)
+    limit: int = 8
+    builds: int = 0
+
+    def get(
+        self,
+        profile_id: str,
+        day: str,
+        conn: sqlite3.Connection,
+        build: Callable[[], sqlite3.Connection],
+    ) -> sqlite3.Connection:
+        newest = int(conn.execute("SELECT coalesce(max(seq), 0) FROM events").fetchone()[0])
+        key = (profile_id, day, newest)
+        found = self.held.get(key)
+        if found is None:
+            for stale in [k for k in self.held if k[:2] == key[:2]]:
+                self.held.pop(stale).close()
+            while len(self.held) >= self.limit:
+                self.held.pop(next(iter(self.held))).close()
+            found = self.held[key] = build()
+            self.builds += 1
+        return found

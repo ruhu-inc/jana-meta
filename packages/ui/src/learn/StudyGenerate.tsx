@@ -1,16 +1,15 @@
-// The study area's Generate panel, its settings dialogs and My Sets (STU-21, D118), and a recording's player with its
-// chapters and the transcript that follows playback (STU-22).
-import { useEffect, useMemo, useRef, useState } from "react";
-import { citationKey, StudyCitations } from "./StudyCitation.js";
+// The study area's Generate panel, its settings dialogs and My Sets (STU-21, D118). The material pane's player,
+// chapters and transcript live in StudyPlayer.tsx (STU-22; SPEC §20.4 for a video or a YouTube link).
+import { useEffect, useState } from "react";
 import { GENERATE_TOOLS, type GenerateTool, type StudyContracts as W } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Icon, type IconName } from "../icons.js";
-import { Button, Dialog, FIELD_LOOK, IconButton, Notice, SegmentedControl, Switch } from "../primitives/index.js";
+import { Button, Dialog, FIELD_LOOK, IconButton, Notice, SegmentedControl } from "../primitives/index.js";
 
 const TOOL_ICON: Record<GenerateTool, IconName> = { summary: "notes", quiz: "question", flashcards: "flashcards", notes: "learn", audio_overview: "read-aloud", lesson_plan: "timer", concept_map: "share" };
 /** Small, decorative accents use Jana's existing palette; names and icons still identify every tool. */
 function StudyToolIcon({ kind, size = 20 }: { kind: W.AidKind; size?: 16 | 20 }) {
-  const colour = { summary: "blue", quiz: "pink", flashcards: "orange", notes: "amber", audio_overview: "purple", lesson_plan: "blue-green", chapters: "blue-green", chat: "blue", concept_map: "green" }[kind];
+  const colour = { summary: "blue", quiz: "pink", flashcards: "orange", notes: "amber", audio_overview: "purple", lesson_plan: "blue-green", chapters: "blue-green", chat: "blue", concept_map: "green", teaching_outline: "green" }[kind];
   return <span aria-hidden="true" className={`study-tool-icon study-tool-icon-${colour} inline-flex shrink-0 items-center justify-center rounded-control p-1`}><Icon name={kind === "chapters" ? "table" : TOOL_ICON[kind as GenerateTool] ?? "notes"} size={size} /></span>;
 }
 /** The question types a learner picks from (STU-21); a number and an expression are one choice. */
@@ -133,51 +132,5 @@ export function MySets({ sets, busy, onOpen, heading = true, contextual = false,
     {heading && <h2 id="study-sets" className="text-ui font-semibold text-ink">{t("study.sets.title")}</h2>}
     {sets.length === 0 && heading && <p className="text-meta text-muted">{t("study.sets.empty")}</p>}
     <ul className="flex flex-col divide-y divide-line">{families.map((items) => <li key={items[0].aid_id} className="py-1">{row(items[0])}{items.length > 1 && <details className="ms-6"><summary className="cursor-pointer py-2 text-meta text-muted">{t("study.set_previous", { tool: t(`study.tool.${items[0].kind}`), count: items.length - 1 })}</summary><div className="flex flex-col border-s border-line ps-2">{items.slice(1).map(row)}</div></details>}</li>)}</ul>
-  </section>;
-}
-
-const clock = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
-
-/** STU-22: an owned recording's player, its chapters and the transcript that follows playback. Selecting a chapter or
- * a line seeks the player; a citation elsewhere seeks through `playhead`. */
-export function RecordingPlayer({ sourceTitle, chunks, chapters, playhead, loadMedia, onSeek, onCite, canMakeChapters, onMakeChapters, busy }: {
-  sourceTitle?: string;
-  chunks: W.Chunk[]; chapters: W.Chapter[] | null; playhead: { ms: number; seq: number } | null; loadMedia: () => Promise<Blob | null>;
-  onSeek: (ms: number) => void; onCite: (citation: W.Citation) => void; canMakeChapters: boolean; onMakeChapters: () => void; busy: boolean;
-}) {
-  const t = useT();
-  const player = useRef<HTMLAudioElement>(null), transcript = useRef<HTMLOListElement>(null);
-  const [url, setUrl] = useState<string | null>(null), [now, setNow] = useState(0), [follow, setFollow] = useState(true);
-  const lines = useMemo(() => chunks.filter((c) => c.locator.kind === "time"), [chunks]);
-  useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
-  const at = (ms: number) => { setNow(ms); if (player.current) player.current.currentTime = ms / 1000; };
-  useEffect(() => { if (playhead) at(playhead.ms); }, [playhead?.seq]);
-  const current = lines.findIndex((c) => c.locator.kind === "time" && c.locator.start_ms <= now && now < c.locator.end_ms);
-  useEffect(() => {
-    if (!follow || current < 0) return;
-    transcript.current?.querySelector<HTMLElement>(`[data-line="${current}"]`)?.scrollIntoView?.({ block: "nearest" });
-  }, [current, follow]);
-  const seek = (ms: number) => { onSeek(ms); at(ms); };
-  return <section className="flex flex-col gap-4" aria-label={t("study.recording.title")}>
-    {url ? <audio ref={player} controls src={url} className="w-full" onTimeUpdate={(e) => setNow(Math.round(e.currentTarget.currentTime * 1000))} aria-label={t("study.recording.player")} />
-      : <span><Button size="sm" disabled={busy} onClick={() => { void loadMedia().then((blob) => { if (blob) setUrl(URL.createObjectURL(blob)); }); }}><Icon name="read-aloud" size={16} />{t("study.recording.load")}</Button></span>}
-    <section className="flex flex-col gap-2" aria-labelledby="study-chapters">
-      <h2 id="study-chapters" className="text-ui font-semibold text-ink">{t("study.recording.chapters")}</h2>
-      {chapters === null ? <div className="flex flex-col items-start gap-2"><p className="text-meta text-muted">{t("study.recording.no_chapters")}</p><Button size="sm" disabled={busy || !canMakeChapters} onClick={onMakeChapters}>{t("study.generate.chapters")}</Button></div>
-        : <ol className="flex flex-col gap-3">{chapters.map((chapter, i) => { const active = chapter.start_ms <= now && now < chapter.end_ms; return <li key={chapter.start_ms} className="flex flex-col gap-1">
-          <button type="button" aria-current={active || undefined} onClick={() => seek(chapter.start_ms)} className="jana-press flex min-h-9 w-full items-center rounded-control px-2 text-start text-ui font-medium text-ink hover:bg-wash aria-[current]:bg-wash">{clock(chapter.start_ms)} · {chapter.title}</button>
-          {chapter.summary.map((claim, j) => <div key={j} className="flex flex-wrap items-baseline gap-2 ps-2"><p className="text-meta text-ink">{claim.text}</p><StudyCitations citations={claim.citations} locate={(ref) => chunks.find((chunk) => citationKey(chunk) === citationKey(ref))?.locator} title={() => sourceTitle} disabled={busy} onOpen={onCite} /></div>)}
-          <span className="sr-only">{t("study.recording.chapter_number", { number: i + 1 })}</span>
-        </li>; })}</ol>}
-    </section>
-    <section className="flex flex-col gap-2" aria-labelledby="study-transcript">
-      <div className="flex items-center gap-3"><h2 id="study-transcript" className="text-ui font-semibold text-ink">{t("study.recording.transcript")}</h2><span className="flex-1" /><Switch label={t("study.recording.auto_scroll")} checked={follow} onChange={setFollow} /></div>
-      <ol ref={transcript} className="flex max-h-96 flex-col gap-1 overflow-y-auto">{lines.map((line, i) => line.locator.kind === "time" && <li key={line.chunk_id} data-line={i}>
-        <button type="button" aria-current={i === current || undefined} onClick={() => { if (line.locator.kind === "time") seek(line.locator.start_ms); }}
-          className="flex w-full gap-3 rounded-control px-2 py-1 text-start hover:bg-wash aria-[current]:bg-highlight-soft">
-          <span className="shrink-0 text-meta text-faint">{clock(line.locator.start_ms)}</span><span className="text-body text-ink">{line.text}</span>
-        </button>
-      </li>)}</ol>
-    </section>
   </section>;
 }

@@ -7443,9 +7443,10 @@
     "services/agent-core/tests/scenarios/w8/companion_recall_local.yaml": "1da0b6629ee8fbbca73bd7225e847d946ccbb9f863f697111a212d793a7a4120",
     "services/agent-core/tests/scenarios/w8/last_time_card.yaml": "871766684850d027318d8a873a2e9f5712ee3abea6bd87db61a64c8fd6826d5a",
     "services/agent-core/tests/scenarios/w8/research_level_known.yaml": "ebba1438c16ca4ad04ec91a8c3a814eac71013933d079ffc75a0ecd05a623726",
-    "services/agent-core/tests/scenarios/w8/study_quiz_activity.yaml": "8f7898f68d83be3bf0d8a2476a0d52b76844d516fc9c5fea3342f501caddf60a"
+    "services/agent-core/tests/scenarios/w8/study_quiz_activity.yaml": "8f7898f68d83be3bf0d8a2476a0d52b76844d516fc9c5fea3342f501caddf60a",
+    "services/agent-core/tests/scenarios/w9/youtube_lecture.yaml": "aaf161e504211ec8246cdf6f8776c4ce629043621d652c6ab5ae34c3fd7355f0"
    },
-   "version": "2026-10-29.3"
+   "version": "2026-10-31.2"
   },
   "content_packs": {
    "files": {
@@ -14868,6 +14869,12 @@
     "content/curriculum/ref/phy-o/conventions.yaml": "0f38a9f6987826853749658a7752064d2bdf832b98babaee00423374a7d7db4b"
    },
    "version": "2026-10-26.1"
+  },
+  "learner_map": {
+   "files": {
+    "services/agent-core/tests/scenarios/w10/map_month_later.yaml": "659866892dd3244a680879bd98341378a62a67233a3cfd3074dd58fffd3f8549"
+   },
+   "version": "2026-10-31.1"
   },
   "learning_gain": {
    "files": {},

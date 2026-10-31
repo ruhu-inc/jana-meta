@@ -25,6 +25,11 @@ PERSONAL_PROGRESS = re.compile(
     r"\b(?:you(?:'ve| have)?|your)\b[^.!?]{0,80}\b(?:mastered|mastery|improved|secure|stronger|weaker|struggle[ds]?)\b",
     re.I,
 )
+NEGATIVE_SCHEDULE = re.compile(
+    r"\b(?:no|not any|aren't any|isn't any|do not have any|don't have any)\s+"
+    r"(?:(?:study|practice|review|flash)\s*)?(?:plans?|cards?|reviews?)\b",
+    re.I,
+)
 
 
 def normalise_numbers(text: str) -> str:
@@ -34,7 +39,11 @@ def normalise_numbers(text: str) -> str:
 def model_claim_errors(text: str) -> list[str]:
     """Progress assertions must come from selected facts, not unconstrained generated prose."""
     normalized = normalise_numbers(text)
-    if PERSONAL_PROGRESS.search(text) or (METRIC.search(text) and re.search(r"\d", normalized)):
+    if (
+        PERSONAL_PROGRESS.search(text)
+        or NEGATIVE_SCHEDULE.search(text)
+        or (METRIC.search(text) and re.search(r"\d", normalized))
+    ):
         return ["select fact_refs for progress or schedule claims; do not rewrite the fact in text"]
     return []
 

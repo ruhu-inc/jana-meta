@@ -1814,7 +1814,7 @@
    }
   },
   "payload_study_activity": {
-   "description": "What the learner did in Study (SPEC \u00a719.3.2, JM-D22, JM-D26): activity, not mastery. `kc_tags` are topic-derived (engine/study_topics.py matches pack topic titles in the item's words; they say which topics an item names, never which skills it tests); the mastery, review and misconception projections ignore this event. `ref` is aid:<aid_id>, att:<attempt_id>:<item_index> or card:<card_id>: never a title, a source id or text.",
+   "description": "What the learner did in Study (SPEC §19.3.2, JM-D22, JM-D26): activity, not mastery. `kc_tags` are topic-derived (engine/study_topics.py matches pack topic titles in the item's words; they say which topics an item names, never which skills it tests); the mastery, review and misconception projections ignore this event. `ref` is aid:<aid_id>, att:<attempt_id>:<item_index> or card:<card_id>: never a title, a source id or text.",
    "type": "object",
    "additionalProperties": false,
    "required": [
@@ -1840,7 +1840,7 @@
     "ref": {
      "type": "string",
      "maxLength": 64,
-     "pattern": "^(aid|att|card|rsr|jny):[0-9A-Za-z_:]{1,59}$"
+     "pattern": "^(aid|att|card|rsr|jny|src):[0-9A-Za-z_:]{1,59}$"
     },
     "kc_tags": {
      "type": "array",
@@ -1906,7 +1906,8 @@
         "audio_overview",
         "lesson_plan",
         "chapters",
-        "concept_map"
+        "concept_map",
+        "teaching_outline"
        ]
       },
       {
@@ -1929,7 +1930,7 @@
    }
   },
   "study_cards": {
-   "description": "Due Study cards of a warm-up block (SPEC \u00a719.4).",
+   "description": "Due Study cards of a warm-up block (SPEC §19.4).",
    "type": "array",
    "maxItems": 10,
    "items": {

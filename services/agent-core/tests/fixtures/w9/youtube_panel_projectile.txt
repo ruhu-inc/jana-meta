@@ -1,0 +1,72 @@
+Introduction
+0:00
+in this lecture we look at projectile motion
+0:04
+a projectile is any object thrown into the air and left to move under gravity alone
+0:11
+we will ignore air resistance throughout
+0:15
+so the only force acting after launch is the weight of the object
+0:21
+by the end you should be able to resolve a launch velocity into its horizontal and vertical components
+0:29
+derive the range equation for a launch from level ground
+0:35
+find the time of flight from the vertical motion
+0:41
+and find the maximum height reached
+Resolving the velocity
+0:48
+start with a ball launched at speed u at an angle theta above the horizontal
+0:55
+I assume you already know how to resolve a vector into perpendicular components
+1:02
+the horizontal component of the velocity is u cos theta
+1:08
+and the vertical component is u sin theta
+1:14
+horizontally there is no force so the horizontal velocity stays constant for the whole flight
+1:22
+vertically the ball decelerates at g on the way up and accelerates at g on the way down
+The range equation
+3:50
+now let's derive how far the ball travels before it lands
+3:56
+the horizontal distance is the horizontal velocity multiplied by the time in the air
+4:03
+so the range R equals u cos theta multiplied by the time of flight T
+4:12
+substituting the time of flight gives the range equation R equals u squared sin two theta over g
+4:21
+notice the range depends on sin two theta so angles that add up to ninety degrees give the same range
+4:30
+and the range is greatest when two theta is ninety degrees that is at forty five degrees
+Time of flight
+6:40
+the time of flight comes from the vertical motion alone
+6:46
+the ball returns to launch height when its vertical displacement is zero
+6:53
+using s equals u t plus a half a t squared with s zero gives T equals two u sin theta over g
+7:02
+so a steeper launch stays in the air longer
+Maximum height
+8:15
+at the top of the flight the vertical velocity is zero
+8:21
+using v squared equals u squared plus two a s the maximum height H equals u squared sin squared theta over two g
+8:30
+the maximum height depends on the vertical component only
+Worked examples
+9:40
+first worked example a ball is kicked at twenty metres per second at thirty degrees
+9:47
+the range is twenty squared times sin sixty over nine point eight which is about thirty five metres
+9:56
+second worked example the same ball kicked at sixty degrees
+10:03
+sin one hundred and twenty equals sin sixty so the range is the same thirty five metres
+10:11
+but the time of flight is longer because sin sixty is larger than sin thirty
+10:20
+that is the end of the lecture on projectile motion

@@ -387,6 +387,14 @@ RULES: tuple[Rule, ...] = (
         ("study_concept_maps",),
         removed_by="DAT-09 profile deletion; the learner's own maps, no source material",
     ),
+    # SPEC §20.3 (W9, JM-D34): a video file's frames as text, one row per still, never an image; they go with the
+    # source revision they were read for.
+    Rule(
+        "video frames",
+        "learner",
+        ("study_frames",),
+        removed_by="DAT-22 source erasure (the revision's cascade) or DAT-09",
+    ),
     Rule(
         "study packs from the research agent",
         "learner",

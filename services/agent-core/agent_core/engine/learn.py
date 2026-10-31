@@ -37,6 +37,7 @@ from __future__ import annotations
 import hashlib
 import re
 import sqlite3
+import time
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -276,6 +277,15 @@ class LearnDesk:
     # Writes learning events to the open learner database (`Learner.record_batch`); without it a check records
     # nothing. A quick check records only the `misconception_evidence` of a matched misconception (ASM-13).
     record: Callable[[list[NewEvent]], Any] | None = None
+    # The learner's map (SPEC §21): the open learner's projector (its mastery parameters, pinned content and
+    # projections, for states at now and the dated replays), the clock, the device database (`app_settings`, where
+    # the last open is kept, JM-D45), the profile, and what the profile's map keeps for the life of the core. Without
+    # a projector the map shows the stored states and has no dated view.
+    projector: Any = None
+    clock: Callable[[], int] = field(default=lambda: int(time.time() * 1000))
+    device: sqlite3.Connection | None = None
+    profile_id: str = ""
+    map_state: Any = None
 
     # --- the subject map (UXS-22) ---------------------------------------------------------------------------------
 
@@ -297,7 +307,7 @@ class LearnDesk:
                           for p in self.listed())  # fmt: skip
             reply["status"] = "unverified" if damaged else "not_installed"
             return reply
-        states = kc_states(self.conn)
+        states = self.states_now(self.conn, self.clock())
         prefix = subject_id + "."
         kcs: dict[str, list[dict[str, Any]]] = {}
         for kc in self.content.table("kcs"):
@@ -317,18 +327,117 @@ class LearnDesk:
                                           "topics": tiles})  # fmt: skip
         return reply
 
-    def concept_map(self, subject_id: str) -> dict[str, Any] | None:
+    def concept_map(self, subject_id: str, as_of: str | None = None, *, opening: bool = True) -> dict[str, Any] | None:
         """The `ConceptMap` reply for a subject node id (the map view of UXS-22), or None when the id is not a
-        subject's: the pack's skill backbone with this learner's states, questions and mistakes on it."""
+        subject's: the pack's skill backbone with this learner's states, questions and mistakes on it, and the
+        learner's map layers (SPEC §21). With `as_of` (a local date) the map as the learner model stood at the end of
+        that day, replayed in memory and read-only (JM-D37); a date that is not one, in the future or more than 26
+        weeks back raises `learner_map.AsOfRefused`. A live read with `opening` records the open (JM-D45)."""
+        from agent_core.engine import learner_map
         from agent_core.engine.concept_map import backbone
 
-        reply = backbone(self.content, self.conn, subject_id)
+        now = self.clock()
+        params = self._params()
+        if as_of is not None:
+            day = learner_map.check_as_of(params, now, as_of)
+            if params is None:
+                raise learner_map.AsOfRefused("this map has no dated view")
+            mem, ts = learner_map.snapshot(self._map_state(), self.profile_id, day, self.conn, params,
+                                           self.projector.ctx.content, self.projector.projections)  # fmt: skip
+            reply = backbone(self.content, mem, subject_id, states=learner_map.states_now(mem, params, ts), live=False,
+                             questions_from=self.conn, until=ts)  # fmt: skip
+            layers = learner_map.Layers.read(mem, self.conn, self.content, params, ts, None)
+        else:
+            reply = backbone(self.content, self.conn, subject_id, states=self.states_now(self.conn, now))
+            layers = learner_map.Layers.read(self.conn, self.conn, self.content, params, now, self._baseline())
+            day = None
         if reply is not None and reply["status"] == "not_installed":
             code, lvl = subject_id.split(".")[1:]
             damaged = any(p.get("subject") == code and str(p.get("level")).lower() == lvl and not p.get("signature_ok")
                           for p in self.listed())  # fmt: skip
             reply["status"] = "unverified" if damaged else "not_installed"
+        if reply is None:
+            return None
+        reply["nodes"] = [layers.node(n) for n in reply["nodes"]]
+        reply["as_of"] = day
+        reply["first_day"] = learner_map.first_day(self.conn, params)
+        if day is None and opening:
+            self.mark_open(now)
         return reply
+
+    # --- the learner's map (SPEC §21) --------------------------------------------------------------------------
+
+    def _params(self) -> Any:
+        return self.projector.ctx.params if self.projector is not None else None
+
+    def _map_state(self) -> Any:
+        from agent_core.engine.learner_map import MapState
+
+        if self.map_state is None:
+            self.map_state = MapState()
+        return self.map_state
+
+    def states_now(self, conn: sqlite3.Connection, now: int) -> dict[str, str]:
+        """Each KC's TABLE LRN-09a state at `now` (`kc_views`), so the map's state and refresh due agree."""
+        from agent_core.engine.learner_map import states_now
+
+        return states_now(conn, self._params(), now)
+
+    def _baseline(self) -> dict[str, str] | None:
+        """The bands this visit compares against: those kept at the last open, read once per core (JM-D45)."""
+        from agent_core.engine.learner_map import opened
+
+        state = self._map_state()
+        if not state.loaded:
+            state.baseline, state.loaded = opened(self.device, self.profile_id), True
+        baseline: dict[str, str] | None = state.baseline
+        return baseline
+
+    def mark_open(self, now: int) -> None:
+        """Keep this open's bands in the device database's `app_settings` (never a learning event, JM-D45)."""
+        from agent_core.engine.learner_map import write_opened
+
+        self._baseline()
+        states = self.states_now(self.conn, now)
+        bands = {k: BANDS[s] for k, s in states.items()}
+        write_opened(self.device, self.profile_id, {k: b for k, b in bands.items() if b != "not_started"}, now)
+
+    def overview(self) -> dict[str, Any]:
+        """The `CurriculumOverview` reply: every installed subject as its subject map's tiles, each with TABLE
+        UXS-22a's rule, bands and the layers' summaries (SPEC §21.1). A read records the open (JM-D45)."""
+        from agent_core.engine import learner_map
+
+        now = self.clock()
+        layers = learner_map.Layers.read(self.conn, self.conn, self.content, self._params(), now, self._baseline())
+        watched = learner_map.watched(self.conn)
+        subjects = []
+        for subject_id in sorted(self.content.subject_packs):
+            shown = self.subject_map(subject_id) if SUBJECT_ID.match(subject_id) else None
+            if shown is None or shown["status"] != "ready":
+                continue
+            tiles = [tile for section in shown["sections"] for tile in section["topics"]]
+            nodes = {k["kc_id"]: layers.node({"kc_id": k["kc_id"], "state": k["state"], "band": k["band"]})
+                     for tile in tiles for k in tile["kcs"]}  # fmt: skip
+            subjects.append({"subject_id": subject_id, "subject": shown["subject"], "level": shown["level"],
+                             "topics": [learner_map.overview_topic(t, nodes, watched, learner_map.topic_rule)
+                                        for t in tiles]})  # fmt: skip
+        self.mark_open(now)
+        return {"subjects": subjects}
+
+    def kc_links(self, kc_id: str) -> dict[str, Any] | None:
+        """The `KcLinks` reply for an installed KC, or None: its Study materials, lecture moments, notes, whether the
+        tutor is tracking it, and its misconceptions. Device-only (JM-D39)."""
+        from agent_core.engine import learner_map
+        from agent_core.engine.concept_map import backbone
+
+        record = self.content.record("kcs", kc_id)
+        if record is None or not _active(record):
+            return None
+        now = self.clock()
+        mapped = backbone(self.content, self.conn, ".".join(["cur", *kc_id.split(".")[1:3]]),
+                          states=self.states_now(self.conn, now))  # fmt: skip
+        mistakes = mapped["mistakes"] if mapped is not None else []
+        return learner_map.links(self.conn, self.conn, self.content, kc_id, now, mistakes)
 
     def _tile(self, node: Mapping[str, Any], kcs: list[dict[str, Any]], states: Mapping[str, str],
               lessons: Sequence[Mapping[str, Any]]) -> dict[str, Any]:  # fmt: skip

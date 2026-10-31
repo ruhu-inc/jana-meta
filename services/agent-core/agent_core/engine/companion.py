@@ -66,8 +66,12 @@ ACTION_LABELS = {
     "open_plan": "study.companion.action.open_plan",
     "open_knows": "study.companion.action.open_knows",
     "open_study_deck": "study.companion.action.open_study_deck",
+    "open_moment": "study.companion.action.open_moment",  # SPEC §20.3 (W9): a study_search hit's moment
 }
+MOMENT_WINDOW_MS = 30_000  # Ask about this moment: the lines within ±30 s (SPEC §20.5 step 4)
 _NUMBER = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)(?![\w.]*\d)")
+# A moment, `h:mm:ss` or `m:ss`, is one number with the label `moment` (SPEC §20.4; review non-blocking 8).
+_MOMENT = re.compile(r"(?<![\w:.])(\d{1,2}:)?(\d{1,2}):(\d{2})(?![\w:])(?!\.\d)")
 _WORD = re.compile(r"[a-z]+")
 _NOTES_REGION = re.compile(re.escape(NOTES_OPEN) + r".*?" + re.escape(NOTES_CLOSE), re.S)
 _STUDY_REGION = re.compile(r"<own-materials>.*?</own-materials>", re.S)
@@ -80,11 +84,22 @@ def _singular(word: str) -> str:
     return word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
 
 
+def moment_key(hours: str | None, minutes: str, seconds: str) -> str:
+    """A moment's canonical form: no leading zero on its first part ("04:12" and "4:12" are one number)."""
+    if hours:
+        return f"{int(hours.rstrip(':'))}:{int(minutes):02d}:{seconds}"
+    return f"{int(minutes)}:{seconds}"
+
+
 def labelled_numbers(text: str) -> list[tuple[str, frozenset[str]]]:
     """Each number in `text` with the words beside it (two before, two after), lower-cased and singular: the label a
-    reader takes it with ("12 cards" is 12 with cards; "exam in 19 days" is 19 with exam, in, days)."""
+    reader takes it with ("12 cards" is 12 with cards; "exam in 19 days" is 19 with exam, in, days). A moment
+    (`04:12`, `1:04:12`) is one number labelled `moment` (SPEC §20.4)."""
     out = []
     lowered = companion_facts.normalise_numbers(text.lower())
+    for match in _MOMENT.finditer(lowered):
+        out.append((moment_key(*match.groups()), frozenset({"moment"})))
+    lowered = _MOMENT.sub(lambda m: " " * len(m.group(0)), lowered)
     for match in _NUMBER.finditer(lowered):
         before_text = re.split(r"[;.!?]", lowered[max(0, match.start() - 40) : match.start()])[-1]
         after_text = re.split(r"[;.!?]", lowered[match.end() : match.end() + 40])[0]
@@ -143,7 +158,7 @@ def search_claim_errors(text: str, searched: bool) -> list[str]:
     return []
 
 
-FACT_UNITS = frozenset({"card", "flashcard", "day", "question", "answer", "review", "percent", "pack"})
+FACT_UNITS = frozenset({"card", "flashcard", "day", "question", "answer", "review", "percent", "pack", "moment"})
 
 
 def fact_binding_findings(text: str, sources: Sequence[Any]) -> list[tuple[str, str]]:
@@ -319,10 +334,21 @@ class CompanionDesk:
     templates: OpenerTemplates = field(default_factory=load_templates)
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _generation: int = 0
+    # Ask about this moment (SPEC §20.3, review B8): the episode's pending turn context, held for the next accepted
+    # turn only and discarded after it; operational and device-local, gone with a profile switch.
+    pending_context: dict[str, Any] | None = None
+
+    def set_context(self, context: Mapping[str, Any] | None) -> None:
+        self.pending_context = dict(context) if context else None
+
+    def take_context(self) -> dict[str, Any] | None:
+        found, self.pending_context = self.pending_context, None
+        return found
 
     def invalidate(self, _profile_id: str) -> None:
         """End outstanding operations before a profile lock, switch or deletion closes its storage."""
         self._generation += 1
+        self.pending_context = None
 
     def scope(self) -> ProfileScope:
         return ProfileScope.capture(self.learner(), self._generation)
@@ -635,9 +661,11 @@ def cloud_tools(names: Sequence[str], share_materials: bool, memory_online: bool
     return out
 
 
-def resolve_action(action: Mapping[str, Any] | None, bands: Mapping[int, str]) -> dict[str, Any] | None:
+def resolve_action(action: Mapping[str, Any] | None, bands: Mapping[int, str],
+                   moments: Mapping[int, tuple[str, int]] | None = None) -> dict[str, Any] | None:  # fmt: skip
     """The model's chosen action with its integer ref resolved by the engine (a `progress_read` skill's number for
-    `open_practice`); a ref that is not in this turn's results drops the action."""
+    `open_practice`; a `study_search` hit's moment for `open_moment`, SPEC §20.4); a ref that is not in this turn's
+    results drops the action."""
     if not isinstance(action, Mapping):
         return None
     kind = action.get("kind")
@@ -650,6 +678,11 @@ def resolve_action(action: Mapping[str, Any] | None, bands: Mapping[int, str]) -
         if kc is None:
             return None
         payload["kc_ids"] = [kc]
+    if kind == "open_moment":
+        found = (moments or {}).get(ref) if type(ref) is int else None
+        if found is None:
+            return None
+        payload["source_id"], payload["at_ms"] = found[0], int(found[1])
     return {"action": kind, "payload": payload}
 
 
@@ -716,8 +749,26 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
             period=desk.day(now),
         ),
     )
+    # Ask about this moment (SPEC §20.5 step 4): the pending context's lines within ±30 s join the own-materials
+    # fence (cut for a cloud candidate without study_materials by `strip_for_cloud`); the moment itself is a labelled
+    # fact outside the fence, so a reply may say "04:12" wherever the call is served. Consumed here, then gone.
+    moment_line = ""
+    moment = desk.take_context()
+    if moment is not None:
+        label, title, lines = _moment_context(engine, moment)
+        if label is not None:
+            excerpts = [*lines, *excerpts]
+            context.searched = context.searched or bool(lines)
+            context.sources.append({"moment": label, "title": title})
+            companion_facts.add_facts(context.facts, [companion_facts.Fact(
+                "moment", "moment", label, "moment", title, desk.day(now), "the material's transcript",
+                f"About {label} in {title}.")])  # fmt: skip
+            moment_line = f"About {label} in {title}."
+    # What this video teaches that the learner has not got yet (SPEC §20.4, review B6): a code fact set from the
+    # outline's skills joined to the learner's bands, offered as labelled records the model selects by fact_refs.
+    companion_facts.add_facts(context.facts, _outline_facts(engine, desk, now))
     fence = records_fence(notes, excerpts)
-    parts = [p for p in (fence, f"Status: {line}" if key != context.status_key else "") if p]
+    parts = [p for p in (fence, moment_line, f"Status: {line}" if key != context.status_key else "") if p]
     context.status_key = key
     user = "\n\n".join([*parts, _fact_prompt(context), f"<student>{escape_note(text)}</student>"])
     system = _system(engine)
@@ -805,7 +856,8 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
         return _finish(engine, turn, made or canned(templates), context.actions, user=text, stop="degraded")
     actions = list(context.actions)
     tools = getattr(engine, "study_tools", None)
-    chosen_action = resolve_action(reply.get("action"), tools.bands if tools is not None else {})
+    chosen_action = resolve_action(reply.get("action"), tools.bands if tools is not None else {},
+                                   tools.moments if tools is not None else {})  # fmt: skip
     if chosen_action is not None and not any(a["action"] == chosen_action["action"] for a in actions):
         actions.append(action_event(chosen_action["action"], chosen_action["payload"]))
     if context.checkins is not None:  # §19.3.4, §19.5.5: an accepted turn answers its check-in; then the extractor
@@ -825,6 +877,63 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     words = reply["text"][: MAX_REPLY_CHARS - len(fact_text) - 2]
     words = "\n\n".join(p for p in (words, fact_text) if p)
     return _finish(engine, turn, words, actions, user=text, stop="completed")
+
+
+def _moment_context(engine: Any, moment: Mapping[str, Any]) -> tuple[str | None, str, list[str]]:
+    """(label, title, excerpt lines) for a pending moment: the lines within ±30 s as own-material records with refs
+    this turn's `open_moment` can name; (None, "", []) when the material is gone or Study is not available."""
+    from agent_core.engine.study_links import moment_label
+
+    tools = getattr(engine, "study_tools", None)
+    source_id, at_ms = moment.get("source_id"), moment.get("at_ms")
+    if tools is None or not isinstance(source_id, str) or type(at_ms) is not int:
+        return None, "", []
+    try:
+        title, items = tools.moment_lines(source_id, at_ms, MOMENT_WINDOW_MS)
+    except Exception:
+        return None, "", []
+    label = moment_label(at_ms)
+    lines = [f"[{i['ref']}] {escape_note(i['source_label'])} (at {i.get('moment', label)}): {escape_note(i['text'])}"
+             for i in items]  # fmt: skip
+    return label, escape_note(title)[:80], lines
+
+
+def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> list[companion_facts.Fact]:
+    """The newest ready teaching outline's skills with the learner's bands and the moment each is taught at, as
+    typed facts (SPEC §20.4): skills not yet secure first, at most twelve. Nothing is phrased here."""
+    from agent_core.engine.study_links import moment_label
+
+    memory = getattr(engine, "memory", None)
+    source = memory.source() if memory is not None else None
+    if source is None:
+        return []
+    try:
+        row = source.conn.execute(
+            "SELECT a.body, s.body FROM study_aids a JOIN study_aid_sources x ON x.aid_id = a.aid_id"
+            " JOIN study_sources s ON s.source_id = x.source_id"
+            " WHERE json_extract(a.body, '$.kind') = 'teaching_outline'"
+            " AND json_extract(a.body, '$.status') = 'ready' AND s.private = 0 ORDER BY a.created_at DESC LIMIT 1"
+        ).fetchone()
+    except sqlite3.Error:
+        return []
+    if row is None:
+        return []
+    aid, material = json.loads(row[0]), json.loads(row[1])
+    outline = aid.get("outline") or {}
+    title = escape_note(str(material.get("title") or ""))[:80]
+    taught_at = {kc: c.get("at_ms") for c in outline.get("concepts", []) for kc in c.get("kc_ids", [])}
+    content = source.content
+    facts = []
+    rows = sorted(outline.get("for_you", []), key=lambda f: 0 if f.get("band") != "secure" else 1)
+    for entry in rows[:12]:
+        kc, band = str(entry.get("kc_id")), str(entry.get("band"))
+        statement = (content.kc_statement(kc) if content is not None else None) or kc
+        when = taught_at.get(kc)
+        where = f" ({title} teaches it at {moment_label(when)})" if type(when) is int else f" ({title})"
+        facts.append(companion_facts.Fact(
+            "outline:" + kc, "skill_band", band, "band", statement[:100], desk.day(now), "teaching outline",
+            f"Recorded practice band for {statement[:100]}: {band}{where}."))  # fmt: skip
+    return facts
 
 
 def _fact_prompt(context: CompanionContext) -> str:

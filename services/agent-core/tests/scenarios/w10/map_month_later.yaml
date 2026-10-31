@@ -1,0 +1,33 @@
+# W10 learner's map case (SPEC §21.9, §21.10): written before any run; checked by code in tests/w10_scenarios.py
+# through tests/scenario_cases.py. The learner is synthetic.
+case: map_month_later
+rubric: >-
+  Ada secures the velocity-time gradient and practises distance-time graphs on her first day, and opens her map. A
+  month later she reviews motion in Study only, practises speed units and is diagnosed with a mistake on the
+  gradient, then opens the map again. The live map shows the gradient refresh due with the state Refresh due, distance
+  time touched only in Study as practised this week, speed units practised today, waves not practised yet; the
+  Mistakes layer rings the gradient with "Seen, not yet sure"; speed units are new since last time and nothing else is
+  marked; the scrubber at four weeks ago shows the bands the model had then (the gradient secure, distance-time
+  learning, speed units and waves not started); the overview's motion tile agrees with the map; and opening the map,
+  the overview and the dated map writes no learning event.
+steps:
+  - {day: 0, secure: kc.phy.o.motion.velocity_time_gradient}
+  - {day: 0, practise: kc.phy.o.motion.distance_time_gradient}
+  - {day: 0, open: true}
+  - {day: 33, study: kc.phy.o.motion.distance_time_gradient}
+  - {day: 36, practise: kc.phy.o.motion.speed_unit_conversion}
+  - {day: 36, misconception: [mc.phy.o.vt_gradient_from_one_point, kc.phy.o.motion.velocity_time_gradient, suspected]}
+expect:
+  freshness:
+    kc.phy.o.motion.speed_unit_conversion: today
+    kc.phy.o.motion.distance_time_gradient: week
+    kc.phy.o.sound.sound_waves: never
+  refresh_due: [kc.phy.o.motion.velocity_time_gradient]
+  rings: {kc.phy.o.motion.velocity_time_gradient: [suspected]}
+  changed: {kc.phy.o.motion.speed_unit_conversion: new}
+  weeks_back: 4
+  then:
+    kc.phy.o.motion.velocity_time_gradient: secure
+    kc.phy.o.motion.distance_time_gradient: learning
+    kc.phy.o.motion.speed_unit_conversion: not_started
+    kc.phy.o.sound.sound_waves: not_started

@@ -22,6 +22,7 @@ from agent_core.engine.learn import CheckRefused
 _CLIENT_ID = re.compile(r"^cli_[0-9A-HJKMNP-TV-Z]{26}$")
 _SEMVER = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
 _ITEM_ID = re.compile(r"^itm\.(mth|phy|chm|bio|acc)\.(o|a)\.[a-z0-9_]+\.[0-9]{4}$")
+_KC_ID = re.compile(r"^kc\.(mth|phy|chm|bio|acc)\.(o|a)\.[a-z0-9_]+\.[a-z0-9_]+$")
 
 
 def _check_body(body: Any) -> dict[str, Any]:
@@ -66,17 +67,49 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
     @app.get("/v1/curriculum/{subject_id}/map")
     async def subject_map(subject_id: str) -> dict[str, Any]:
         with desk() as opened:
+            if opened is not None:
+                opened.clock = core.clock_ms  # the states at now (SPEC §21.4)
             reply = opened.subject_map(subject_id) if opened is not None else None
         if reply is None:
             raise ApiError("not_found", "no such subject")
         return dict(reply)
 
-    @app.get("/v1/curriculum/{subject_id}/concept-map")
-    async def concept_map(subject_id: str) -> dict[str, Any]:
+    @app.get("/v1/curriculum/overview")
+    async def overview() -> dict[str, Any]:
+        """Every installed subject as topic tiles (SPEC §21.1); the read records the open on this device (JM-D45)."""
         with desk() as opened:
-            reply = opened.concept_map(subject_id) if opened is not None else None
+            if opened is None:
+                raise ApiError("not_found", "the overview needs the learner database")
+            opened.clock = core.clock_ms
+            return dict(opened.overview())
+
+    @app.get("/v1/curriculum/{subject_id}/concept-map")
+    async def concept_map(subject_id: str, as_of: str | None = None) -> dict[str, Any]:
+        """The subject's concept map; `?as_of=YYYY-MM-DD` replays it to that date, read-only (SPEC §21.3, JM-D37)."""
+        from agent_core.engine.learner_map import AsOfRefused
+
+        with desk() as opened:
+            if opened is not None:
+                opened.clock = core.clock_ms
+            try:
+                reply = opened.concept_map(subject_id, as_of) if opened is not None else None
+            except AsOfRefused as error:
+                raise ApiError("validation_failed", str(error)) from None
         if reply is None:
             raise ApiError("not_found", "no such subject")
+        return dict(reply)
+
+    @app.get("/v1/curriculum/kcs/{kc_id}/links")
+    async def kc_links(kc_id: str) -> dict[str, Any]:
+        """What is linked to one skill on this device (SPEC §21.3, JM-D38): read by the app, never a prompt."""
+        if not _KC_ID.match(kc_id):
+            raise ApiError("validation_failed", "kc_id is a knowledge component id")
+        with desk() as opened:
+            if opened is not None:
+                opened.clock = core.clock_ms
+            reply = opened.kc_links(kc_id) if opened is not None else None
+        if reply is None:
+            raise ApiError("not_found", "no such skill")
         return dict(reply)
 
     @app.get("/v1/lessons/{lesson_id}")

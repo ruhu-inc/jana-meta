@@ -26,18 +26,27 @@ def main() -> None:
         data = base64.b64decode(request["data"], validate=True)
         if len(data) > 104857600:
             raise DocumentError("source_too_large")
-        if request["kind"] in ("recording_info", "recording_segment"):
+        if request["kind"] in ("recording_info", "recording_segment", "video_keyframes", "video_frames"):
             from study_worker.media import decode as media_decode
+            from study_worker.media import frames_text, keyframe_times
 
             maximum = request.get("max_minutes", 120)
             if type(maximum) is not int or not 1 <= maximum <= 120:
                 raise DocumentError("source_too_large")
-            result = media_decode(
-                data,
-                request.get("start_ms") if request["kind"] == "recording_segment" else None,
-                maximum,
-                request.get("duration_ms"),
-            )
+            if request["kind"] == "video_keyframes":  # SPEC §20.3: scene changes between keyframes
+                result = {"keyframes": keyframe_times(data, maximum)}
+            elif request["kind"] == "video_frames":  # the stills read as text after the photo privacy pass
+                moments = request.get("at_ms")
+                if not isinstance(moments, list):
+                    raise DocumentError("invalid_request")
+                result = {"frames": frames_text(data, moments)}
+            else:
+                result = media_decode(
+                    data,
+                    request.get("start_ms") if request["kind"] == "recording_segment" else None,
+                    maximum,
+                    request.get("duration_ms"),
+                )
             sys.stdout.write(json.dumps(result) + "\n")
             return
         limit = request.get("max_units", 300)

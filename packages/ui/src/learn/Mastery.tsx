@@ -28,6 +28,11 @@ function look(state: KcState): { className: string; icon: IconName } {
   return { className: `${LOOK[state]} mastery-pattern-${entry.pattern}`, icon: entry.icon as IconName };
 }
 
+/** A state's fill, pattern and icon (tokens.json), for a tile drawn in its look (the learner's map, SPEC §21). */
+export const masteryLook = look;
+/** The pattern stroke's CSS variables, for an element drawn in a mastery look. */
+export const MASTERY_PATTERN_VARS = PATTERN_VARS;
+
 /** A state's word (TABLE LRN-09a): the catalogue key is tokens.json's `labelKey`, `mastery.<state>`. */
 export function useMasteryWord(): (state: KcState) => string {
   const t = useT();

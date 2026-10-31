@@ -1,0 +1,131 @@
+"""What this video teaches (SPEC §20.3, §20.4, JM-D33): the `teaching_outline` aid's device-side half.
+
+The model writes the cited part (objectives, worked examples, concepts, what the lecture assumes), each item citing
+a transcript line; the gateway's verifier keeps the supported items. On the device, by code and never by a model:
+`at_ms` from the cited line's moment, each concept's `kc_ids` through `study_topics.kc_tags` over its name and cited
+text (`outside_packs` when none), `skips` as the skills of the tagged topics that `kc_tags` over the whole transcript
+never tags, and `for_you` as the learner's bands joined from the learner database. Nothing here is sent anywhere."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
+
+from agent_core.engine.study_links import moment_at
+from agent_core.engine.study_topics import kc_tags, matching_topics
+
+SECTIONS = ("objectives", "examples", "concepts", "assumes")
+LIMITS = {"objectives": 12, "examples": 8, "concepts": 16, "assumes": 6}
+SKIPS_MAX = 6
+FOR_YOU_MAX = 48
+
+
+def flatten(outline: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """The outline's items as claims, in order (objectives, examples, concepts, assumes): the verifier's per-claim
+    support and the aid's `claims` map to them one to one."""
+    claims = []
+    for section in SECTIONS:
+        for item in outline.get(section, []):
+            claims.append({"text": item.get("text") or item.get("name") or "", "citations": item["citations"]})
+    return claims
+
+
+def rebuild(outline: Mapping[str, Any], keep: Sequence[bool]) -> dict[str, Any] | None:
+    """The outline with only the items `keep` marks (one flag per flattened item), or None when nothing is left."""
+    flags = iter(keep)
+    kept: dict[str, Any] = {section: [] for section in SECTIONS}
+    for section in SECTIONS:
+        for item in outline.get(section, []):
+            if next(flags, False):
+                kept[section].append(item)
+    return kept if any(kept[s] for s in SECTIONS) else None
+
+
+def merge(outlines: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """One outline from every batch's, in order, within each section's bound."""
+    merged: dict[str, Any] = {section: [] for section in SECTIONS}
+    for outline in outlines:
+        for section in SECTIONS:
+            for item in outline.get(section, []):
+                if len(merged[section]) < LIMITS[section]:
+                    merged[section].append(dict(item))
+    return merged
+
+
+def _moment(item: Mapping[str, Any], chunks: Mapping[str, Mapping[str, Any]]) -> int | None:
+    for citation in item.get("citations", []):
+        chunk = chunks.get(citation["chunk_id"])
+        if chunk is None:
+            continue
+        found = moment_at(str(chunk["text"]), int(citation["start"]))
+        if found is not None:
+            return found
+        locator = chunk["locator"]
+        if locator.get("kind") == "time":
+            return int(locator["start_ms"])
+        if locator.get("kind") == "frame":
+            return int(locator["at_ms"])
+    return None
+
+
+def fill(
+    outline: Mapping[str, Any],
+    chunks: Sequence[Mapping[str, Any]],
+    content: Any,
+    band_of: Callable[[str], str | None] | None = None,
+) -> dict[str, Any]:
+    """The outline with its code-written part filled (SPEC §20.4): `at_ms` from the cited line, `kc_ids` and
+    `outside_packs` per concept, `skips` and `for_you`. `content` is the installed packs' index (None: everything is
+    outside the packs); `band_of` reads a skill's band from the learner database (None: not started)."""
+    by_id = {str(c["chunk_id"]): c for c in chunks}
+    out: dict[str, Any] = {section: [dict(i) for i in outline.get(section, [])] for section in SECTIONS}
+    for section in ("objectives", "examples", "concepts"):
+        for item in out[section]:
+            moment = _moment(item, by_id)
+            if moment is not None:
+                item["at_ms"] = moment
+            elif "at_ms" in item and not isinstance(item["at_ms"], int):
+                del item["at_ms"]
+    for item in out["assumes"]:
+        item.pop("at_ms", None)
+    tagged: list[str] = []
+    whole = "\n".join(str(c["text"]) for c in chunks)
+    # The topics the whole transcript names (study_topics.matching_topics): a concept is scored within them by its
+    # name and cited text, keeping only skills whose statement shares a content word with it (review non-blocking 7).
+    named = matching_topics(content, whole)["items"] if content is not None else []
+    for concept in out["concepts"]:
+        quotes = " ".join(str(c.get("quote", "")) for c in concept.get("citations", []))
+        text = f"{concept.get('name', '')}\n{quotes}"
+        tags = kc_tags(content, text, within=named, require_overlap=True) if named else (
+            kc_tags(content, text) if content is not None else [])  # fmt: skip
+        concept["kc_ids"] = [t["kc_id"] for t in tags][:3]
+        concept["outside_packs"] = not concept["kc_ids"]
+        tagged += [k for k in concept["kc_ids"] if k not in tagged]
+    out["skips"] = _skips(tagged, chunks, content) if content is not None and tagged else []
+    out["for_you"] = [
+        {"kc_id": kc, "band": (band_of(kc) if band_of is not None else None) or "not_started"}
+        for kc in tagged[:FOR_YOU_MAX]
+    ]
+    return out
+
+
+def _skips(tagged: Sequence[str], chunks: Sequence[Mapping[str, Any]], content: Any) -> list[dict[str, str]]:
+    """The skills of the tagged topics the whole transcript never reaches: the topic's KCs minus those `kc_tags`
+    over the whole transcript tags and those a concept is tagged with (review non-blocking 7's rule)."""
+    whole = "\n".join(str(c["text"]) for c in chunks)
+    reached = {t["kc_id"] for t in kc_tags(content, whole)} | set(tagged)
+    topics: list[str] = []
+    for kc in tagged:
+        info = content.kcs.get(kc)
+        if info is not None and info.node_id not in topics:
+            topics.append(info.node_id)
+    skips: list[dict[str, str]] = []
+    for node in topics:
+        members = sorted(k.kc_id for k in content.kcs.values() if k.node_id == node)
+        for kc in members:
+            if kc in reached or any(s["kc_id"] == kc for s in skips):
+                continue
+            skips.append({"kc_id": kc, "statement": str(content.kc_statement(kc) or kc)[:200]})
+            if len(skips) == SKIPS_MAX:
+                return skips
+    return skips

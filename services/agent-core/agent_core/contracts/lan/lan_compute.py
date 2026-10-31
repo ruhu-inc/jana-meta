@@ -1026,14 +1026,23 @@ class LearningLearningEventPayloadStudyActivity(BaseModel):
     activity: Literal["quiz_item", "card_review", "aid_made", "source_added", "pack_ready", "journey_step"]
     ref: Annotated[
         str,
-        Field(max_length=64, pattern="^(aid|att|card|rsr|jny):[0-9A-Za-z_:]{1,59}$"),
+        Field(max_length=64, pattern="^(aid|att|card|rsr|jny|src):[0-9A-Za-z_:]{1,59}$"),
     ]
     kc_tags: Annotated[list[LearningLearningEventPayloadStudyActivityKcTagsItem], Field(max_length=3)]
     outcome: Literal["correct", "incorrect", "skipped", "unverifiable"] | None
     rating: Literal["again", "hard", "good", "easy"] | None
     aid_kind: (
         Literal[
-            "notes", "summary", "chat", "flashcards", "quiz", "audio_overview", "lesson_plan", "chapters", "concept_map"
+            "notes",
+            "summary",
+            "chat",
+            "flashcards",
+            "quiz",
+            "audio_overview",
+            "lesson_plan",
+            "chapters",
+            "concept_map",
+            "teaching_outline",
         ]
         | None
     )

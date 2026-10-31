@@ -18,7 +18,17 @@
    "exam_weight": 0.414,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.atom.isotopes",
@@ -30,7 +40,17 @@
    "exam_weight": 0.31,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.atom.nuclear_model_evidence",
@@ -42,7 +62,17 @@
    "exam_weight": 0.276,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.circuits.circuit_components",
@@ -54,7 +84,17 @@
    "exam_weight": 0.16,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.circuits.mixed_circuits",
@@ -66,7 +106,17 @@
    "exam_weight": 0.18,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.circuits.parallel_circuits",
@@ -78,7 +128,17 @@
    "exam_weight": 0.24,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.circuits.potential_dividers",
@@ -90,7 +150,17 @@
    "exam_weight": 0.18,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.circuits.series_circuits",
@@ -102,7 +172,17 @@
    "exam_weight": 0.24,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.density.density_calculation",
@@ -114,7 +194,17 @@
    "exam_weight": 0.4,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.density.floating_and_sinking",
@@ -126,7 +216,17 @@
    "exam_weight": 0.3,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.density.measuring_density",
@@ -138,7 +238,17 @@
    "exam_weight": 0.3,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electrical_quantities.current_and_charge",
@@ -150,7 +260,17 @@
    "exam_weight": 0.197,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electrical_quantities.current_voltage_graphs",
@@ -162,7 +282,17 @@
    "exam_weight": 0.148,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electrical_quantities.electric_charge",
@@ -174,7 +304,17 @@
    "exam_weight": 0.148,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electrical_quantities.potential_difference",
@@ -186,7 +326,17 @@
    "exam_weight": 0.164,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electrical_quantities.resistance",
@@ -198,7 +348,17 @@
    "exam_weight": 0.213,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electrical_quantities.resistance_of_wires",
@@ -210,7 +370,17 @@
    "exam_weight": 0.131,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electromagnetism.electromagnetic_induction",
@@ -222,7 +392,17 @@
    "exam_weight": 0.196,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electromagnetism.fields_of_currents",
@@ -234,7 +414,17 @@
    "exam_weight": 0.176,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electromagnetism.motor_effect",
@@ -246,7 +436,17 @@
    "exam_weight": 0.196,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electromagnetism.power_transmission",
@@ -258,7 +458,17 @@
    "exam_weight": 0.196,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.electromagnetism.transformers",
@@ -270,7 +480,17 @@
    "exam_weight": 0.235,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.em_spectrum.em_wave_calculations",
@@ -282,7 +502,17 @@
    "exam_weight": 0.345,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.em_spectrum.order_and_properties",
@@ -294,7 +524,17 @@
    "exam_weight": 0.345,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.em_spectrum.uses_and_hazards",
@@ -306,7 +546,17 @@
    "exam_weight": 0.31,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.energy.efficiency",
@@ -318,7 +568,17 @@
    "exam_weight": 0.12,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.energy.energy_conversion",
@@ -330,7 +590,17 @@
    "exam_weight": 0.133,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.energy.energy_resources",
@@ -342,7 +612,17 @@
    "exam_weight": 0.084,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.energy.kinetic_energy",
@@ -354,7 +634,17 @@
    "exam_weight": 0.145,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.energy.potential_energy",
@@ -366,7 +656,17 @@
    "exam_weight": 0.133,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.energy.power",
@@ -378,7 +678,17 @@
    "exam_weight": 0.133,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.energy.stores_and_transfers",
@@ -390,7 +700,17 @@
    "exam_weight": 0.12,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.energy.work_done",
@@ -402,7 +722,17 @@
    "exam_weight": 0.133,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.forces.centre_of_gravity",
@@ -414,7 +744,17 @@
    "exam_weight": 0.097,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.forces.circular_motion",
@@ -426,7 +766,17 @@
    "exam_weight": 0.083,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.forces.force_mass_acceleration",
@@ -438,7 +788,17 @@
    "exam_weight": 0.194,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.forces.friction_and_terminal_velocity",
@@ -450,7 +810,17 @@
    "exam_weight": 0.139,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.forces.moments",
@@ -462,7 +832,17 @@
    "exam_weight": 0.181,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.forces.resultant_force",
@@ -474,7 +854,17 @@
    "exam_weight": 0.167,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.forces.springs",
@@ -486,7 +876,17 @@
    "exam_weight": 0.139,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.heat_transfer.conduction",
@@ -498,7 +898,17 @@
    "exam_weight": 0.333,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.heat_transfer.convection",
@@ -510,7 +920,17 @@
    "exam_weight": 0.333,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.heat_transfer.radiation",
@@ -522,7 +942,17 @@
    "exam_weight": 0.333,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.light.converging_lens",
@@ -534,7 +964,17 @@
    "exam_weight": 0.22,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.light.plane_mirrors",
@@ -546,7 +986,17 @@
    "exam_weight": 0.18,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.light.refraction",
@@ -558,7 +1008,17 @@
    "exam_weight": 0.24,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.light.speed_in_medium",
@@ -570,7 +1030,17 @@
    "exam_weight": 0.16,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.light.total_internal_reflection",
@@ -582,7 +1052,17 @@
    "exam_weight": 0.2,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.magnetism.magnetic_fields",
@@ -594,7 +1074,17 @@
    "exam_weight": 0.5,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.magnetism.magnets_and_materials",
@@ -606,7 +1096,17 @@
    "exam_weight": 0.5,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.mass_weight.mass_or_weight",
@@ -618,7 +1118,17 @@
    "exam_weight": 0.4,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.mass_weight.weight_from_mass",
@@ -630,7 +1140,17 @@
    "exam_weight": 0.6,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.measurement.measuring_techniques",
@@ -642,7 +1162,17 @@
    "exam_weight": 0.25,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.measurement.resultant_vectors",
@@ -654,7 +1184,17 @@
    "exam_weight": 0.25,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.measurement.scalars_and_vectors",
@@ -666,7 +1206,17 @@
    "exam_weight": 0.2,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.measurement.si_prefixes",
@@ -678,7 +1228,17 @@
    "exam_weight": 0.3,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.momentum.conservation_of_momentum",
@@ -690,7 +1250,17 @@
    "exam_weight": 0.394,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.momentum.impulse",
@@ -702,7 +1272,17 @@
    "exam_weight": 0.303,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.momentum.momentum_calculation",
@@ -714,7 +1294,17 @@
    "exam_weight": 0.303,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.acceleration_from_change",
@@ -726,7 +1316,17 @@
    "exam_weight": 0.14,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.average_speed",
@@ -738,7 +1338,17 @@
    "exam_weight": 0.12,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.choose_equation",
@@ -750,7 +1360,17 @@
    "exam_weight": 0.1,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.distance_or_displacement",
@@ -762,7 +1382,17 @@
    "exam_weight": 0.08,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.distance_time_gradient",
@@ -774,7 +1404,17 @@
    "exam_weight": 0.1,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.free_fall",
@@ -786,7 +1426,17 @@
    "exam_weight": 0.08,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.solve_with_equation",
@@ -798,7 +1448,17 @@
    "exam_weight": 0.12,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.speed_unit_conversion",
@@ -810,7 +1470,17 @@
    "exam_weight": 0.06,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.velocity_time_area",
@@ -822,7 +1492,17 @@
    "exam_weight": 0.1,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.motion.velocity_time_gradient",
@@ -834,7 +1514,17 @@
    "exam_weight": 0.1,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.oscilloscope.time_base",
@@ -846,7 +1536,17 @@
    "exam_weight": 0.5,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.oscilloscope.y_gain",
@@ -858,7 +1558,17 @@
    "exam_weight": 0.5,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.particles.gas_pressure_particles",
@@ -870,7 +1580,17 @@
    "exam_weight": 0.237,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.particles.pressure_and_volume",
@@ -882,7 +1602,17 @@
    "exam_weight": 0.263,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.particles.states_of_matter",
@@ -894,7 +1624,17 @@
    "exam_weight": 0.263,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.particles.temperature_scales",
@@ -906,7 +1646,17 @@
    "exam_weight": 0.237,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.practical_electricity.electrical_power",
@@ -918,7 +1668,17 @@
    "exam_weight": 0.364,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.practical_electricity.energy_cost",
@@ -930,7 +1690,17 @@
    "exam_weight": 0.333,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.practical_electricity.fuses_and_safety",
@@ -942,7 +1712,17 @@
    "exam_weight": 0.303,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.pressure.gas_and_atmospheric_pressure",
@@ -954,7 +1734,17 @@
    "exam_weight": 0.258,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.pressure.liquid_pressure",
@@ -966,7 +1756,17 @@
    "exam_weight": 0.355,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.pressure.pressure_on_surfaces",
@@ -978,7 +1778,17 @@
    "exam_weight": 0.387,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.radioactivity.background_radiation",
@@ -990,7 +1800,17 @@
    "exam_weight": 0.151,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.radioactivity.decay_equations",
@@ -1002,7 +1822,17 @@
    "exam_weight": 0.208,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.radioactivity.half_life",
@@ -1014,7 +1844,17 @@
    "exam_weight": 0.245,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.radioactivity.types_of_radiation",
@@ -1026,7 +1866,17 @@
    "exam_weight": 0.226,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.radioactivity.uses_and_safety",
@@ -1038,7 +1888,17 @@
    "exam_weight": 0.17,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.solar_system.earth_and_moon",
@@ -1050,7 +1910,17 @@
    "exam_weight": 0.357,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.solar_system.orbital_speed",
@@ -1062,7 +1932,17 @@
    "exam_weight": 0.357,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.solar_system.planets_and_gravity",
@@ -1074,7 +1954,17 @@
    "exam_weight": 0.286,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.sound.pitch_and_loudness",
@@ -1086,7 +1976,17 @@
    "exam_weight": 0.237,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.sound.sound_waves",
@@ -1098,7 +1998,17 @@
    "exam_weight": 0.237,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.sound.speed_and_echoes",
@@ -1110,7 +2020,17 @@
    "exam_weight": 0.316,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.sound.ultrasound",
@@ -1122,7 +2042,17 @@
    "exam_weight": 0.211,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.stars.expanding_universe",
@@ -1134,7 +2064,17 @@
    "exam_weight": 0.286,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.stars.life_cycle_of_stars",
@@ -1146,7 +2086,17 @@
    "exam_weight": 0.357,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.stars.light_years",
@@ -1158,7 +2108,17 @@
    "exam_weight": 0.357,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.thermal_properties.changes_of_state",
@@ -1170,7 +2130,17 @@
    "exam_weight": 0.22,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.thermal_properties.latent_heat",
@@ -1182,7 +2152,17 @@
    "exam_weight": 0.268,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.thermal_properties.specific_heat_capacity",
@@ -1194,7 +2174,17 @@
    "exam_weight": 0.317,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.thermal_properties.thermal_expansion",
@@ -1206,7 +2196,17 @@
    "exam_weight": 0.195,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.wave_properties.describing_waves",
@@ -1218,7 +2218,17 @@
    "exam_weight": 0.25,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.wave_properties.transverse_and_longitudinal",
@@ -1230,7 +2240,17 @@
    "exam_weight": 0.2,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.wave_properties.wave_behaviour",
@@ -1242,7 +2262,17 @@
    "exam_weight": 0.225,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.phy.o.wave_properties.wave_equation",
@@ -1254,7 +2284,17 @@
    "exam_weight": 0.325,
    "state": "not_started",
    "band": "not_started",
-   "linked": false
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.mth.o.algebra_and_graphs.change_subject",
@@ -1266,7 +2306,17 @@
    "exam_weight": 0.052,
    "state": "not_started",
    "band": "not_started",
-   "linked": true
+   "linked": true,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.mth.o.coordinate_geometry.gradient",
@@ -1278,7 +2328,17 @@
    "exam_weight": 0.154,
    "state": "not_started",
    "band": "not_started",
-   "linked": true
+   "linked": true,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   },
   {
    "kc_id": "kc.mth.o.number.rates",
@@ -1290,7 +2350,17 @@
    "exam_weight": 0.041,
    "state": "not_started",
    "band": "not_started",
-   "linked": true
+   "linked": true,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
   }
  ],
  "edges": [
@@ -2285,6 +3355,21 @@
    ]
   },
   {
+   "misconception_id": "mc.phy.o.gradient_axes_swapped",
+   "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+   "name": "Time over distance for the gradient",
+   "status": "disputed",
+   "times": 1,
+   "last_seen_at": 20,
+   "root_kc_id": "kc.mth.o.coordinate_geometry.gradient",
+   "idea": "the gradient of a straight line",
+   "reviewed": false,
+   "gap_path": [
+    "kc.mth.o.coordinate_geometry.gradient",
+    "kc.phy.o.motion.velocity_time_gradient"
+   ]
+  },
+  {
    "misconception_id": "mc.phy.o.speed_from_distance_only",
    "kc_id": "kc.phy.o.motion.average_speed",
    "name": "",
@@ -2296,5 +3381,7 @@
    "reviewed": null,
    "gap_path": []
   }
- ]
+ ],
+ "as_of": null,
+ "first_day": "1970-01-01"
 }

@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import type { Launch } from "@jana/client-core";
 import "./app.css";
 import { LaunchScreen } from "@jana/ui/launch";
-import { desktopCheckinNotifier, launchInfo, pickInstallSource, pickProfileArchive, rollbackUpdate, updateRecovery } from "./launch.js";
+import { desktopCheckinNotifier, hasNativeFilePickers, launchInfo, pickInstallSource, pickProfileArchive, rollbackUpdate, updateRecovery } from "./launch.js";
 
 let info: Promise<{ base_url: string; token: string }> | null = null;
 const launch: Launch = {
@@ -26,8 +26,10 @@ root.render(launching(false));
 void import("./App.js").then(({ App, createRuntime }) => {
   // Check-in notifications go through the shell (SPEC §19.5.5); a browser build has none.
   const runtime = createRuntime(launch, undefined, desktopCheckinNotifier() ?? undefined);
-  runtime.chooseSource = pickInstallSource;
-  runtime.chooseArchive = pickProfileArchive;
+  if (hasNativeFilePickers()) {
+    runtime.chooseSource = pickInstallSource;
+    runtime.chooseArchive = pickProfileArchive;
+  }
   runtime.updateRecovery = updateRecovery;
   runtime.rollbackUpdate = rollbackUpdate;
   root.render(<StrictMode><App runtime={runtime} /></StrictMode>);

@@ -15,6 +15,15 @@ def test_mastery_claim_requires_a_typed_source() -> None:
     assert fact_binding_errors("You have mastered motion.", [])
 
 
+def test_negative_schedule_claims_cannot_bypass_typed_facts() -> None:
+    from agent_core.engine.companion_facts import model_claim_errors
+
+    assert model_claim_errors("No plan is set for today and you have no cards due right now.")
+    assert model_claim_errors("You have no reviews due.")
+    assert model_claim_errors("There aren't any cards due today.")
+    assert not model_claim_errors("Would you like to make a plan or review cards?")
+
+
 def test_selected_fact_preserves_metric_period_and_source() -> None:
     import pytest
     from agent_core.engine.companion_facts import from_progress, selected_text

@@ -610,6 +610,23 @@ class StudyExcerpt:
     revision: int
     label: str
     text: str
+    # SPEC §20.3 (W9): where in the material the excerpt is (the chunk's locator; a time locator narrowed to the
+    # cited line's moment), so the companion can offer to open the moment. None for a note.
+    locator: dict[str, Any] | None = None
+
+
+def moment_locator(locator: Any, text: str) -> dict[str, Any] | None:
+    """A chunk's locator for an excerpt of it: a time locator starts at the excerpt's own line when the line carries
+    its `[m:ss]` moment (SPEC §20.3), else the chunk's own span."""
+    from agent_core.engine.study_links import first_moment
+
+    if not isinstance(locator, dict):
+        return None
+    if locator.get("kind") == "time":
+        moment = first_moment(text)
+        if moment is not None and int(locator.get("start_ms", 0)) <= moment < int(locator.get("end_ms", 0)):
+            return {"kind": "time", "start_ms": moment, "end_ms": int(locator["end_ms"])}
+    return dict(locator)
 
 
 def study_excerpts(
@@ -639,7 +656,8 @@ def study_excerpts(
                 continue
             label = str(source.get("title", ""))[:STUDY_LABEL_CHARS]
             excerpt = _window(flat, hit[0], hit[1], STUDY_EXCERPT_CHARS)
-            out.append(StudyExcerpt("source", str(source_id), int(revision), label, excerpt))
+            out.append(StudyExcerpt("source", str(source_id), int(revision), label, excerpt,
+                                    moment_locator(chunk.get("locator"), flat)))  # fmt: skip
             if len(out) >= n:
                 return out
     try:

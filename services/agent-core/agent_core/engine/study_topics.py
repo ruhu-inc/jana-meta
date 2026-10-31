@@ -54,13 +54,19 @@ def matching_topics(content: Any, text: str) -> dict[str, Any]:
 KC_TAGS_MAX = 3
 
 
-def kc_tags(content: Any, text: str) -> list[dict[str, Any]]:
+def kc_tags(
+    content: Any, text: str, *, within: list[dict[str, Any]] | None = None, require_overlap: bool = False
+) -> list[dict[str, Any]]:
     """At most three `{kc_id, weight}` for a Study activity, the weights summing to 1 (none when no topic matches):
     the topics `matching_topics` finds in the text share the weight equally, and each topic's share goes to its KCs,
-    more to a KC whose statement shares more words with the text. Topic-derived, never mastery evidence (JM-D26)."""
+    more to a KC whose statement shares more words with the text. Topic-derived, never mastery evidence (JM-D26).
+
+    `within` names the topics to score instead of finding them in `text` (SPEC §20.4: a lecture's concept is scored
+    within the topics the whole transcript names); `require_overlap` keeps only KCs whose statement shares a content
+    word with the text, so a concept that names no skill tags none."""
     if content is None or not text.strip():
         return []
-    found = matching_topics(content, text)["items"]
+    found = within if within is not None else matching_topics(content, text)["items"]
     if not found:
         return []
     words = set(re.findall(r"[a-z0-9]+", text.lower()))
@@ -68,10 +74,14 @@ def kc_tags(content: Any, text: str) -> list[dict[str, Any]]:
     scores: dict[str, float] = {}
     for topic in found:
         overlap = {kc: len(_terms(str(content.kc_statement(kc) or "")) & words) for kc in topic["kc_ids"]}
+        if require_overlap:
+            overlap = {kc: n for kc, n in overlap.items() if n > 0}
         total = sum(1 + n for n in overlap.values())
         for kc, n in overlap.items():
             scores[kc] = scores.get(kc, 0.0) + share * (1 + n) / total
     top = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))[:KC_TAGS_MAX]
+    if not top:
+        return []
     whole = sum(w for _, w in top)
     weights = [round(w / whole, 4) for _, w in top]
     weights[-1] = round(1 - sum(weights[:-1]), 4)  # the rounding never moves the sum

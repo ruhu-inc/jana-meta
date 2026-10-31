@@ -66,3 +66,49 @@ describe("concept map drawing", () => {
     expect(wrap("Short", 172)).toEqual(["Short"]);
   });
 });
+
+// The learner's map layers (SPEC §21, W10): every mark with its words in the box's head, badge line and name.
+describe("concept map layers", () => {
+  const draw = (layered: DrawNode[], reducedMotion: boolean) =>
+    renderToStaticMarkup(<ConceptMapSvg nodes={layered} edges={edges} label="Physics map" t={t} active={null} reducedMotion={reducedMotion} onActivate={() => undefined} onFocusNode={() => undefined} />);
+
+  it("freshness as a look and its pattern token with the word in the head; refresh due dashed", () => {
+    const layered = nodes.map((n) => n.id === VT
+      ? { ...n, layer: { look: "ready_to_check", pattern: "dots-dense" as const, word: "Practised this week", dashed: true, words: ["Refresh due"] } }
+      : { ...n, layer: { look: "not_started", pattern: "none" as const, word: "Not practised yet" } });
+    const html = draw(layered, true);
+    expect(html).toContain('<pattern id="cm-');
+    const vt = html.slice(html.indexOf(`data-kc-node="${VT}"`));
+    const box = vt.slice(0, vt.indexOf('data-kc-node=', 20));
+    expect(box).toContain('data-pattern="dots-dense"');
+    expect(box).toContain("data-dashed");
+    expect(box).toContain("Practised this week</text>");
+    expect(box).toContain("Refresh due</text>");
+    expect(box).toMatch(/aria-label="[^"]*Practised this week, Refresh due/);
+  });
+
+  it("rings, dots with a count, a pin, and words for each", () => {
+    const layered = nodes.map((n) => n.id === VT ? { ...n, layer: { rings: 2, dots: 4, pin: true, words: ["2 mistakes: Being watched, You said this isn't right", "4 in Study", "1 note"] } } : n);
+    const html = draw(layered, true);
+    const vt = html.slice(html.indexOf(`data-kc-node="${VT}"`));
+    const box = vt.slice(0, vt.indexOf('data-kc-node=', 20));
+    expect((box.match(/data-ring=/g) ?? []).length).toBe(2);
+    expect(box).toContain('data-dots="4"');
+    expect((box.match(/<circle/g) ?? []).length).toBe(3);
+    expect(box).toContain(">4</text>");
+    expect(box).toContain("data-pin");
+    expect(box).toContain("You said this isn&#x27;t right · 4 in Study · 1 note</text>");
+  });
+
+  it("a skill that moved since last time pulses once, never with reduced motion", () => {
+    const layered = nodes.map((n) => n.id === VT ? { ...n, changed: "Up since last time" } : n);
+    const moving = draw(layered, false);
+    expect(moving).toContain("data-changed");
+    expect((moving.match(/<animate /g) ?? []).length).toBe(1);
+    expect(moving).toContain('repeatCount="1"');
+    const still = draw(layered, true);
+    expect(still).toContain("data-changed");
+    expect(still).not.toContain("<animate");
+    expect(still).toMatch(/aria-label="[^"]*Up since last time/);
+  });
+});

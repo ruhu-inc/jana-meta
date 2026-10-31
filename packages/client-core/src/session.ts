@@ -138,6 +138,7 @@ export class SessionController {
   private readonly queue: DeltaQueue;
   private readonly stream: StreamClient;
   private readonly pending = new Map<string, PendingSend>();
+  private readonly delivering = new Set<string>();
   private bannerTimer: unknown = null;
   /** Set by `close`: a snapshot or batch that lands afterwards belongs to a profile that may have gone (SEC-19). */
   private closed = false;
@@ -217,7 +218,27 @@ export class SessionController {
       if (cached !== null && !fresh && !this.closed) this.holder.update(() => cached);
     });
     try { await this.loadSnapshot(() => { fresh = true; }); } finally { fresh = true; }
-    if (!this.closed) this.stream.start();
+    if (!this.closed) {
+      this.recoverCompanionSends();
+      this.stream.start();
+    }
+  }
+
+  /** A journal preserves an interrupted message, but not the controller's retry map. Only companion text has
+   * an unambiguous command to reconstruct. Reconcile with the core first, then let the learner explicitly retry
+   * with the original idempotency key; never automatically resend an old memory command on opening Study. */
+  private recoverCompanionSends(): void {
+    const store = this.holder.getState();
+    const session = store.sessions[this.sessionId];
+    if (session?.mode !== "study_companion") return;
+    for (const key of session.pending_ids) {
+      const message = store.messages[key];
+      if (message === undefined || message.message_id !== null || message.state === "accepted"
+        || message.client_message_id !== key || message.content.length === 0
+        || !message.content.every((block) => block.type === "text") || this.pending.has(key)) continue;
+      this.pending.set(key, { key, body: { client_message_id: key, intent: "ask", content: message.content } });
+      this.holder.update((s) => markFailed(s, key, "interrupted"));
+    }
   }
 
   close(): void {
@@ -398,6 +419,8 @@ export class SessionController {
   }
 
   private async deliver(send: PendingSend): Promise<void> {
+    if (this.closed || this.delivering.has(send.key)) return;
+    this.delivering.add(send.key);
     this.pending.set(send.key, send);
     try {
       await this.commands.post<TurnAccepted>(`/v1/sessions/${this.sessionId}/turns`, send.body, send.key);
@@ -405,10 +428,16 @@ export class SessionController {
     } catch (error) {
       if (this.closed) return;
       if (error instanceof Unreachable) {
-        return; // kept: sent again with the same key when the stream is back
+        const state = this.holder.getState().connection[connectionKey(this.sessionId)]?.state;
+        // A command can fail while the independently opened event stream remains healthy. In that case no
+        // reconnect event will arrive to retry it, so expose the existing retry instead of spinning forever.
+        if (state === "live" || state === "replaying") this.holder.update((s) => markFailed(s, send.key, "send_unconfirmed"));
+        return; // retained for explicit retry, or reconnection when the stream is also unavailable
       }
       this.holder.update((s) => markFailed(s, send.key, error instanceof CommandError ? error.code : "internal_error",
         error instanceof CommandError ? error.details : undefined));
+    } finally {
+      this.delivering.delete(send.key);
     }
   }
 

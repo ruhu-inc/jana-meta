@@ -21,6 +21,13 @@ MAX_EXPONENT = 400
 _EXPONENT = re.compile(r"[eE]([-+]?\d+)$")
 
 
+def expression_key(value: str) -> str:
+    """Conservative spelling equivalence, never algebra or removal of grouping."""
+    value = " ".join(value.replace("\u2212", "-").replace("**", "^").split())
+    value = re.sub(r"\^\{(-?\d+)\}", r"^\1", value)
+    return re.sub(r"\s*([+*/^=()-])\s*", r"\1", value)
+
+
 def exponent_ok(token: str) -> bool:
     """A written number's power of ten is within MAX_EXPONENT (a number without one always is)."""
     found = _EXPONENT.search(token)
@@ -130,6 +137,8 @@ class SessionState:
     deflected: set[int] = field(default_factory=set)  # steps that had their one entry question (PED-05)
     board: Board = field(default_factory=Board)
     check_values: dict[str, list[Fraction]] = field(default_factory=dict)  # check_id -> values in its result
+    # Whole expressions proved by the worker; their digits are never independent numeric evidence.
+    check_expressions: dict[str, list[str]] = field(default_factory=dict)
     # check_id -> the worker's `implausible` warnings (VER-26): outside the teaching skill's plausibility band, a
     # probable input error. Such a value traces to no check until the Checker has reviewed it (`reviewed`).
     implausible: dict[str, list[str]] = field(default_factory=dict)

@@ -45,6 +45,14 @@ const homework = { type: "companion.action", action_id: LATER, action: "open_tut
 const data = (store: Store) => { const { connection: _c, ...rest } = store; return rest; };
 
 describe("SPEC §19.3.3 companion.action in the store", () => {
+  test("repeated suggestions render once without merging different destinations", () => {
+    const again = { ...makeAid, action_id: LATER };
+    const different = { ...makeAid, action_id: `act_${"0".repeat(25)}3`, payload: { job_id: `stj_${"2".repeat(26)}` } };
+    const store = hydrate(emptyStore(), snapshot({ [ACTION]: makeAid, [LATER]: again, [different.action_id]: different }));
+    expect(companionActions(store, SESSION).map((a) => a.action_id)).toEqual([ACTION, different.action_id]);
+    expect(Object.keys(store.actions)).toHaveLength(3);
+  });
+
   test("the event is in the contract, read by the tolerant reader and known to the session", () => {
     expect(KNOWN_EVENTS.has("companion.action")).toBe(true);
     const read = readEnvelope(envelope(makeAid));
@@ -228,5 +236,24 @@ describe("SPEC §19.3.3 elsewhere on the client", () => {
     ] as unknown as SessionList["sessions"];
     expect(recentSessions({ sessions: listed, next_before: null } as unknown as SessionList).map((s) => s.session_id)).toEqual(["ses_a"]);
     expect(lastWorked(listed)?.session_id).toBe("ses_a");
+  });
+});
+
+describe("SPEC §20.5 step 4: Ask about this moment on the client (W9)", () => {
+  test("the open carries the moment as context, nothing is sent, the line shows until the next message goes", async () => {
+    const fake = companionCore(() => ok(OPENED));
+    const profiles = new ProfileController(fake.core.launch, new StoreHolder(), { fetch: fake.fetch });
+    await profiles.load(); await profiles.unlock(PROFILES[0]!.profile_id);
+    const companion = new CompanionController(profiles, { fetch: fake.fetch });
+    await companion.openWithContext({ source_id: `src_${"5".repeat(26)}`, at_ms: 252000 }, "Projectile motion");
+    expect(fake.opened).toHaveLength(1);
+    expect(fake.opened[0]!.body).toEqual({ context: { source_id: `src_${"5".repeat(26)}`, at_ms: 252000 } });
+    expect(fake.core.log.filter((l) => l.method === "POST" && l.path.endsWith("/turns"))).toEqual([]); // nothing sent
+    expect(companion.getThread()).toMatchObject({ status: "ready", context: { source_id: `src_${"5".repeat(26)}`, at_ms: 252000, title: "Projectile motion" } });
+    // The learner's message takes the moment with it: the core discards the context after the turn, the view now.
+    const key = companion.send("why sin 2θ?");
+    expect(key).toMatch(/^cli_/);
+    expect(companion.getThread().context).toBeNull();
+    companion.close();
   });
 });

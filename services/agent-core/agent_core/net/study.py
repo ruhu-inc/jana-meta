@@ -16,6 +16,17 @@ from agent_core.store import consents, subscription
 from agent_core.store.egress import DeviceSpend
 
 
+class Extracted(list):  # type: ignore[type-arg]
+    """A video file's extraction (SPEC §20.4): the units, plus the frames read as text (screened ones counted with
+    no text) and whether the container had a video stream (False downgrades the source to a recording)."""
+
+    def __init__(self, units: Any = (), *, frames: list[dict[str, Any]] | None = None,
+                 has_video: bool | None = None) -> None:  # fmt: skip
+        super().__init__(units)
+        self.frames: list[dict[str, Any]] = list(frames or [])
+        self.has_video: bool | None = has_video
+
+
 class StudyCloudError(ValueError):
     def __init__(self, reason: str):
         super().__init__(reason)
@@ -259,6 +270,8 @@ class StudyCloud:
     async def extract(
         self, conn: Any, jid: str, request: dict[str, Any], source: dict[str, Any], data: bytes
     ) -> list[dict[str, Any]]:
+        """The gateway's extraction as units; for a video file (SPEC §20.4) the list is an `Extracted` carrying the
+        frames read as text and whether the container had a video stream."""
         self.guard(conn)
         self.owe(conn, jid, request["sources"])
         attempt = conn.execute("SELECT attempt FROM study_jobs WHERE job_id=?", (jid,)).fetchone()[0]
@@ -301,11 +314,13 @@ class StudyCloud:
                 "source_id": source["source_id"],
                 "revision": source["revision"],
                 "locale": "en",
+                **({"frames": source["frames_choice"]} if source.get("frames_choice") else {}),
             },
             attempt=attempt,
         )
         chunks, unreadable = [], []
         duration_ms = page.get("duration_ms")
+        frames, has_video = page.get("frames", []), page.get("has_video")
         seen = set()
         while True:
             if (
@@ -333,7 +348,8 @@ class StudyCloud:
             key = json.dumps(chunk["locator"], sort_keys=True)
             unit = units.setdefault(key, {"locator": chunk["locator"], "text": "", "ocr": True})
             unit["text"] += chunk["text"]
-        result = list(units.values())
+        result = Extracted(units.values())
+        result.frames, result.has_video = [dict(f) for f in frames], has_video
         for page_number in unreadable:
             result.insert(
                 min(page_number - 1, len(result)),

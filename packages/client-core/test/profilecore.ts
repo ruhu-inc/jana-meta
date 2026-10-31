@@ -207,6 +207,10 @@ export class FakeProfileCore {
   readonly maps = new Map<string, unknown>();
   /** The concept maps (UXS-22 map view) by subject id. */
   readonly conceptMaps = new Map<string, unknown>();
+  /** The learner's map (SPEC §21): dated maps by `<subject>@<date>`, the overview and each skill's links. */
+  readonly datedMaps = new Map<string, unknown>();
+  overview: unknown = undefined;
+  readonly kcLinks = new Map<string, unknown>();
   mapFor: ((profileId: string, subjectId: string) => unknown) | null = null;
   readonly lessons = new Map<string, Record<string, unknown>>();
   readonly journeys = new Map<string, LearningJourneyView>();
@@ -754,7 +758,15 @@ export class FakeProfileCore {
     if (path.startsWith("/v1/curriculum/") || path.startsWith("/v1/lessons/")) {
       if (profile === null) return error(401, "profile_token_expired");
       if (method === "GET" && (m = /^\/v1\/curriculum\/([^/]+)\/concept-map$/.exec(path))) {
-        const found = this.conceptMaps.get(decodeURIComponent(m[1]!));
+        const asOf = url.searchParams.get("as_of");
+        const found = asOf === null ? this.conceptMaps.get(decodeURIComponent(m[1]!)) : this.datedMaps.get(`${decodeURIComponent(m[1]!)}@${asOf}`);
+        return found === undefined ? error(asOf === null ? 404 : 422, asOf === null ? "not_found" : "validation_failed") : json(200, found);
+      }
+      if (method === "GET" && path === "/v1/curriculum/overview") {
+        return this.overview === undefined ? error(404, "not_found") : json(200, this.overview);
+      }
+      if (method === "GET" && (m = /^\/v1\/curriculum\/kcs\/([^/]+)\/links$/.exec(path))) {
+        const found = this.kcLinks.get(decodeURIComponent(m[1]!));
         return found === undefined ? error(404, "not_found") : json(200, found);
       }
       if (method === "GET" && (m = /^\/v1\/curriculum\/([^/]+)\/map$/.exec(path))) {

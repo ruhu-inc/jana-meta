@@ -310,3 +310,52 @@ test("restored same-day history remains visible when its runtime snapshot is emp
   shown(companion);
   expect(screen.getByText("Continue our momentum agreement")).toBeDefined();
 });
+
+// SPEC §21.9 (W10): "Ask your tutor about this" on the learner's map is a client deep link to the thread with a
+// draft (§21.3): the words wait in the composer for the learner, nothing is sent and no action is taken.
+describe("W10 the learner's map hands the thread a draft", () => {
+  test("the deep link's draft is in the composer, offered once, and nothing is sent", () => {
+    const companion = new FakeCompanion();
+    const onAction = vi.fn(), onDraftShown = vi.fn();
+    const draft = "About Find acceleration from the gradient of a velocity-time graph: ";
+    const { container } = render(<LocaleProvider locale="en"><CompanionThread companion={companion} onAction={onAction} draft={draft} onDraftShown={onDraftShown} /></LocaleProvider>);
+    const box = screen.getByRole("textbox", { name: "Message to your tutor" }) as HTMLTextAreaElement;
+    expect(box.value).toBe(draft);
+    expect(box.hasAttribute("data-companion-draft")).toBe(true);
+    expect(document.activeElement).toBe(box);
+    expect(onDraftShown).toHaveBeenCalledTimes(1);
+    expect(companion.sent).toEqual([]);
+    expect(onAction).not.toHaveBeenCalled();
+    expect(bubbles(container).map((b) => b.getAttribute("data-said"))).toEqual(["tutor"]); // the opener only
+    // The learner finishes the question and sends it themselves.
+    fireEvent.change(box, { target: { value: `${draft}why the gradient?` } });
+    fireEvent.click(screen.getByRole("button", { name: "Send to your tutor" }));
+    expect(companion.sent).toEqual([`${draft}why the gradient?`]);
+  });
+});
+
+describe("W9 moments in Your tutor (SPEC §20.4)", () => {
+  const MOMENT = `act_${"0".repeat(25)}3`;
+  const openMoment = { type: "companion.action", action_id: MOMENT, action: "open_moment", payload: { source_id: `src_${"5".repeat(26)}`, at_ms: 252000 }, label_key: "study.companion.action.open_moment" } as const;
+
+  test("the open_moment button names the moment the engine resolved and hands the app its source and time", () => {
+    const companion = new FakeCompanion();
+    const onAction = vi.fn();
+    shown(companion, onAction);
+    companion.emit(openMoment);
+    const button = screen.getByRole("button", { name: "Open the moment, 4:12" });
+    expect(button.getAttribute("data-companion-action")).toBe("open_moment");
+    fireEvent.click(button);
+    expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ action: "open_moment", payload: { source_id: `src_${"5".repeat(26)}`, at_ms: 252000 } }));
+  });
+
+  test("a pending moment shows as 'About m:ss in <title>' above the composer until the next message consumes it", () => {
+    const companion = new FakeCompanion({ ...OPENED, context: { source_id: `src_${"5".repeat(26)}`, at_ms: 252000, title: "Projectile motion" } });
+    const { container } = shown(companion);
+    const line = container.querySelector("[data-companion-context]") as HTMLElement;
+    expect(line.textContent).toBe("About 4:12 in Projectile motion");
+    expect(companion.sent).toEqual([]); // opening with a moment sends nothing
+    companion.setThread({ ...companion.getThread(), context: null }); // the controller clears it when the message goes
+    expect(container.querySelector("[data-companion-context]")).toBeNull();
+  });
+});

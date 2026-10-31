@@ -35,6 +35,7 @@ function ProfileArchive({ profiles, chooseSource }: { profiles: ProfileControlle
     <form data-profile-archive="" className="flex flex-col gap-3" onSubmit={(event) => { event.preventDefault(); if (ready) void save(); }}>
       <h3 className="text-ui font-semibold text-ink">{t("settings.export.archive_title")}</h3>
       <p className="text-ui text-muted">{t("settings.export.archive_help")}</p>
+      {chooseSource === undefined && <Notice message={t("settings.export.desktop_required")} />}
       <div className="flex flex-col gap-1">
         <label htmlFor={id} className="text-ui text-ink">{t("settings.export.passphrase")}</label>
         <input id={id} type="password" autoComplete="new-password" minLength={ARCHIVE_PASSPHRASE_MIN} maxLength={256} value={passphrase}

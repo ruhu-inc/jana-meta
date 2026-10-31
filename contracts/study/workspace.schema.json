@@ -155,6 +155,29 @@
       "kind",
       "paragraph"
      ]
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "at_ms",
+      "frame_id"
+     ],
+     "properties": {
+      "kind": {
+       "const": "frame"
+      },
+      "at_ms": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 7200000
+      },
+      "frame_id": {
+       "type": "string",
+       "pattern": "^frm_[0-9A-HJKMNP-TV-Z]{26}$"
+      }
+     }
     }
    ]
   },
@@ -229,7 +252,9 @@
     "recording",
     "session_note",
     "dictated_note",
-    "board_note"
+    "board_note",
+    "video_link",
+    "video"
    ]
   },
   "SourceState": {
@@ -295,6 +320,93 @@
      "type": "integer",
      "minimum": 1,
      "maximum": 7200000
+    },
+    "link": {
+     "description": "The video the source stands for; every moment opens youtube.com/watch?v=<video_id>&t=<s> in the learner's browser (JM-D31, JM-D42). Null for every other kind.",
+     "anyOf": [
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "provider",
+        "video_id",
+        "url"
+       ],
+       "properties": {
+        "provider": {
+         "const": "youtube"
+        },
+        "video_id": {
+         "type": "string",
+         "pattern": "^[A-Za-z0-9_-]{11}$"
+        },
+        "url": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 2048
+        }
+       }
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "transcript_kind": {
+     "description": "timed: the paste carried timestamps, so lines are moments; plain: no timestamps, one text unit, no moments. Null for every other kind.",
+     "anyOf": [
+      {
+       "enum": [
+        "timed",
+        "plain"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "frames": {
+     "description": "A video file's frames read as text (chapter and scene moments), or null.",
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 60
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "screened_frames": {
+     "description": "Frames the photo privacy pass refused in the worker: counted, never read by a model, never returned (JM-D34, review B4).",
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 60
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "chapters": {
+     "description": "A video_link's chapters by code (SPEC §20.5 step 1), in time order; absent otherwise.",
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 60,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/SourceChapter"
+     }
+    },
+    "frames_choice": {
+     "description": "A video file's frames choice at create (SourceCreate.frames): auto reads the picture's writing as text at extraction, none skips frames. Absent for every other kind.",
+     "enum": [
+      "auto",
+      "none"
+     ]
     }
    },
    "required": [
@@ -387,7 +499,8 @@
         "slides",
         "document",
         "photo",
-        "recording"
+        "recording",
+        "video"
        ]
       },
       "file_name": {
@@ -408,6 +521,13 @@
       },
       "sha256": {
        "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Digest"
+      },
+      "frames": {
+       "description": "Whether the extraction reads the picture's writing as text (auto) or skips frames (none): an extraction-time choice on the source, not a per-aid setting (review non-blocking 3).",
+       "enum": [
+        "auto",
+        "none"
+       ]
       }
      },
      "required": [
@@ -466,6 +586,35 @@
       "kind",
       "note_id"
      ]
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "url",
+      "transcript"
+     ],
+     "properties": {
+      "kind": {
+       "const": "video_link"
+      },
+      "url": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      "transcript": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 400000
+      },
+      "title": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 120
+      }
+     }
     }
    ]
   },
@@ -691,7 +840,8 @@
     "audio_overview",
     "lesson_plan",
     "chapters",
-    "concept_map"
+    "concept_map",
+    "teaching_outline"
    ]
   },
   "JobKind": {
@@ -705,7 +855,8 @@
     "audio_overview",
     "lesson_plan",
     "chapters",
-    "concept_map"
+    "concept_map",
+    "teaching_outline"
    ]
   },
   "JobState": {
@@ -738,7 +889,9 @@
     "confirm_needed",
     "grant_expired",
     "queue_full",
-    "graded_work"
+    "graded_work",
+    "unsupported_link",
+    "transcript_too_long"
    ]
   },
   "JobCreate": {
@@ -828,7 +981,8 @@
          "quiz",
          "audio_overview",
          "chapters",
-         "concept_map"
+         "concept_map",
+         "teaching_outline"
         ]
        }
       }
@@ -852,7 +1006,8 @@
          "audio_overview",
          "lesson_plan",
          "chapters",
-         "concept_map"
+         "concept_map",
+         "teaching_outline"
         ]
        }
       }
@@ -917,7 +1072,8 @@
          "extract",
          "chat",
          "chapters",
-         "concept_map"
+         "concept_map",
+         "teaching_outline"
         ]
        }
       }
@@ -1125,6 +1281,9 @@
     },
     "concept_map": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/StudyConceptMap"
+    },
+    "outline": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/TeachingOutline"
     }
    },
    "required": [
@@ -1317,6 +1476,47 @@
         {
          "required": [
           "chapters"
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "kind": {
+        "const": "teaching_outline"
+       }
+      },
+      "required": [
+       "kind"
+      ]
+     },
+     "then": {
+      "required": [
+       "outline"
+      ],
+      "not": {
+       "anyOf": [
+        {
+         "required": [
+          "deck_id"
+         ]
+        },
+        {
+         "required": [
+          "quiz_id"
+         ]
+        },
+        {
+         "required": [
+          "chapters"
+         ]
+        },
+        {
+         "required": [
+          "concept_map"
          ]
         }
        ]
@@ -2092,6 +2292,9 @@
     },
     "concept_map": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/DraftConceptMap"
+    },
+    "outline": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/TeachingOutline"
     }
    },
    "required": [
@@ -2279,6 +2482,47 @@
         {
          "required": [
           "chapters"
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "kind": {
+        "const": "teaching_outline"
+       }
+      },
+      "required": [
+       "kind"
+      ]
+     },
+     "then": {
+      "required": [
+       "outline"
+      ],
+      "not": {
+       "anyOf": [
+        {
+         "required": [
+          "flashcards"
+         ]
+        },
+        {
+         "required": [
+          "quiz"
+         ]
+        },
+        {
+         "required": [
+          "chapters"
+         ]
+        },
+        {
+         "required": [
+          "concept_map"
          ]
         }
        ]
@@ -2581,7 +2825,8 @@
       "slides",
       "document",
       "photo",
-      "recording"
+      "recording",
+      "video"
      ]
     },
     "mime_type": {
@@ -2648,6 +2893,13 @@
      "type": "string",
      "minLength": 1,
      "maxLength": 20
+    },
+    "frames": {
+     "description": "The source's frames choice (SourceCreate.frames), so the gateway can skip frames.",
+     "enum": [
+      "auto",
+      "none"
+     ]
     }
    }
   },
@@ -2705,6 +2957,18 @@
     },
     "usage": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/UsageReceipt"
+    },
+    "has_video": {
+     "description": "A video file's container had a video stream (worker recording_info). False downgrades the source to recording in the extracted revision (review non-blocking 1).",
+     "type": "boolean"
+    },
+    "frames": {
+     "description": "The frames read for a video file, screened ones counted with no text (their chunk is absent): what the device stores in study_frames and counts in Source.frames and Source.screened_frames.",
+     "type": "array",
+     "maxItems": 60,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Frame"
+     }
     }
    }
   },
@@ -4106,6 +4370,264 @@
       "pattern": "^mc\\.[a-z0-9_.]+$",
       "maxLength": 96
      }
+    }
+   }
+  },
+  "SourceChapter": {
+   "description": "A chapter of a pasted transcript, by code (SPEC §20.5: a heading line, or a gap over 20 s): its span and title, no summary (the chapters aid carries model-written, cited summaries).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "start_ms",
+    "end_ms",
+    "title"
+   ],
+   "properties": {
+    "start_ms": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7200000
+    },
+    "end_ms": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 7200000
+    },
+    "title": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    }
+   }
+  },
+  "TeachingOutline": {
+   "description": "What a lecture teaches (SPEC §20.3, JM-D33): the model-written, cited part is objectives, examples, concepts and assumes, each citing a transcript line; the engine fills at_ms from the cited line, concepts[].kc_ids (engine/study_topics.py kc_tags over the concept's name and cited text, at most three), outside_packs when none, skips (skills of the tagged topics kc_tags over the whole transcript never tags) and for_you (the learner's bands, joined on the device). The gateway's structured output is the model part only; the request carries transcript chunks and nothing else.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "objectives",
+    "examples",
+    "concepts",
+    "assumes"
+   ],
+   "properties": {
+    "objectives": {
+     "type": "array",
+     "maxItems": 12,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "text",
+       "citations"
+      ],
+      "properties": {
+       "citations": {
+        "type": "array",
+        "items": {
+         "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Citation"
+        },
+        "minItems": 1,
+        "maxItems": 12
+       },
+       "text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
+       },
+       "at_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 7200000
+       }
+      }
+     }
+    },
+    "examples": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "text",
+       "citations"
+      ],
+      "properties": {
+       "citations": {
+        "type": "array",
+        "items": {
+         "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Citation"
+        },
+        "minItems": 1,
+        "maxItems": 12
+       },
+       "text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
+       },
+       "at_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 7200000
+       }
+      }
+     }
+    },
+    "concepts": {
+     "type": "array",
+     "maxItems": 16,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "citations"
+      ],
+      "properties": {
+       "citations": {
+        "type": "array",
+        "items": {
+         "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Citation"
+        },
+        "minItems": 1,
+        "maxItems": 12
+       },
+       "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 60
+       },
+       "kc_ids": {
+        "type": "array",
+        "maxItems": 3,
+        "uniqueItems": true,
+        "items": {
+         "type": "string",
+         "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+        }
+       },
+       "outside_packs": {
+        "type": "boolean"
+       },
+       "at_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 7200000
+       }
+      }
+     }
+    },
+    "assumes": {
+     "type": "array",
+     "maxItems": 6,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "text",
+       "citations"
+      ],
+      "properties": {
+       "citations": {
+        "type": "array",
+        "items": {
+         "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Citation"
+        },
+        "minItems": 1,
+        "maxItems": 12
+       },
+       "text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+       }
+      }
+     }
+    },
+    "skips": {
+     "type": "array",
+     "maxItems": 6,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "statement"
+      ],
+      "properties": {
+       "kc_id": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       },
+       "statement": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+       }
+      }
+     }
+    },
+    "for_you": {
+     "type": "array",
+     "maxItems": 48,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "band"
+      ],
+      "properties": {
+       "kc_id": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       },
+       "band": {
+        "enum": [
+         "not_started",
+         "learning",
+         "secure"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "Frame": {
+   "description": "One still of a video file read as text in the sandboxed worker (SPEC §20.3, JM-D34): the row of study_frames (storage), never an image. reason says why the moment was chosen (a chapter boundary or a scene change between keyframes); read_state says whether the photo privacy pass let it be read (screened: refused, no text, counted only). The device holds the file; a thumbnail is drawn from the local <video> element at at_ms.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "frame_id",
+    "at_ms",
+    "reason",
+    "read_state"
+   ],
+   "properties": {
+    "frame_id": {
+     "type": "string",
+     "pattern": "^frm_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "at_ms": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7200000
+    },
+    "reason": {
+     "enum": [
+      "chapter",
+      "scene"
+     ]
+    },
+    "read_state": {
+     "enum": [
+      "read",
+      "unreadable",
+      "screened"
+     ]
     }
    }
   }

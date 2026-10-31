@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/events.schema.json sha256 c786712f03f74ad7536c757fce00c3f6fd9ba87bd4b93a5c50241248eb611d5f; do not edit",
+ "$comment": "GENERATED from contracts/api/events.schema.json sha256 330952b6be58b82e014fa93e86a4a33076ca54a7f9c50844142e793e1d4c7e7e; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/events",
  "title": "Event envelope",
@@ -3338,7 +3338,8 @@
       "open_research",
       "open_plan",
       "open_knows",
-      "open_study_deck"
+      "open_study_deck",
+      "open_moment"
      ]
     },
     "payload": {
@@ -3368,6 +3369,14 @@
         "type": "string",
         "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
        }
+      },
+      "source_id": {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/SourceId"
+      },
+      "at_ms": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 7200000
       }
      }
     },

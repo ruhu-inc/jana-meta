@@ -194,6 +194,16 @@ type StudyResearchOutput = Annotated[
 type UnreadableUnit = Annotated[int, Field(ge=1, le=10000)]
 
 
+class StudyWorkspaceFrame(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    frame_id: Annotated[str, Field(pattern="^frm_[0-9A-HJKMNP-TV-Z]{26}$")]
+    at_ms: Annotated[int, Field(ge=0, le=7200000)]
+    reason: Literal["chapter", "scene"]
+    read_state: Literal["read", "unreadable", "screened"]
+
+
 class StudyWorkspaceLocatorOneOf1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -236,12 +246,22 @@ class StudyWorkspaceLocatorOneOf5(BaseModel):
     paragraph: Annotated[int, Field(ge=1, le=10000)]
 
 
+class StudyWorkspaceLocatorOneOf6(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["frame"]
+    at_ms: Annotated[int, Field(ge=0, le=7200000)]
+    frame_id: Annotated[str, Field(pattern="^frm_[0-9A-HJKMNP-TV-Z]{26}$")]
+
+
 type StudyWorkspaceLocator = Annotated[
     StudyWorkspaceLocatorOneOf1
     | StudyWorkspaceLocatorOneOf2
     | StudyWorkspaceLocatorOneOf3
     | StudyWorkspaceLocatorOneOf4
-    | StudyWorkspaceLocatorOneOf5,
+    | StudyWorkspaceLocatorOneOf5
+    | StudyWorkspaceLocatorOneOf6,
     Field(title="StudyWorkspaceLocator"),
 ]
 
@@ -274,6 +294,7 @@ class StudyWorkspaceExtractionRequest(BaseModel):
     source_id: StudyWorkspaceSourceId
     revision: StudyWorkspaceRevision
     locale: Annotated[str, Field(max_length=20, min_length=1)]
+    frames: Literal["auto", "none"] | None = None
 
 
 class StudyWorkspaceUploadReceipt(BaseModel):
@@ -301,10 +322,47 @@ class StudyWorkspaceCloudUploadCreate(BaseModel):
         extra="forbid",
     )
     request_id: StudyWorkspaceJobId
-    kind: Literal["pdf", "slides", "document", "photo", "recording"]
+    kind: Literal["pdf", "slides", "document", "photo", "recording", "video"]
     mime_type: Annotated[str, Field(max_length=100, min_length=1)]
     byte_length: Annotated[int, Field(ge=1, le=104857600)]
     sha256: StudyWorkspaceDigest
+
+
+type KcId = Annotated[str, Field(pattern="^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$")]
+
+
+class StudyWorkspaceTeachingOutlineSkipsItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kc_id: Annotated[
+        str,
+        Field(pattern="^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"),
+    ]
+    statement: Annotated[str, Field(max_length=200, min_length=1)]
+
+
+class StudyWorkspaceTeachingOutlineForYouItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kc_id: Annotated[
+        str,
+        Field(pattern="^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"),
+    ]
+    band: Literal["not_started", "learning", "secure"]
+
+
+class StudyWorkspaceCitation(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    source_id: StudyWorkspaceSourceId
+    revision: StudyWorkspaceRevision
+    chunk_id: StudyWorkspaceChunkId
+    start: Annotated[int, Field(ge=0, le=16000)]
+    end: Annotated[int, Field(ge=1, le=16000)]
+    quote: Annotated[str, Field(max_length=500, min_length=1)]
 
 
 type StudyWorkspaceConceptRelationType = Annotated[
@@ -315,7 +373,16 @@ type StudyWorkspaceConceptRelationType = Annotated[
 
 type StudyWorkspaceAidKind = Annotated[
     Literal[
-        "notes", "summary", "chat", "flashcards", "quiz", "audio_overview", "lesson_plan", "chapters", "concept_map"
+        "notes",
+        "summary",
+        "chat",
+        "flashcards",
+        "quiz",
+        "audio_overview",
+        "lesson_plan",
+        "chapters",
+        "concept_map",
+        "teaching_outline",
     ],
     Field(title="StudyWorkspaceAidKind"),
 ]
@@ -340,16 +407,12 @@ type StudyWorkspaceQuizType = Annotated[
 ]
 
 
-class StudyWorkspaceCitation(BaseModel):
+class StudyWorkspaceClaim(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    source_id: StudyWorkspaceSourceId
-    revision: StudyWorkspaceRevision
-    chunk_id: StudyWorkspaceChunkId
-    start: Annotated[int, Field(ge=0, le=16000)]
-    end: Annotated[int, Field(ge=1, le=16000)]
-    quote: Annotated[str, Field(max_length=500, min_length=1)]
+    text: Annotated[str, Field(max_length=3000, min_length=1)]
+    citations: Annotated[list[StudyWorkspaceCitation], Field(max_length=12, min_length=1)]
 
 
 class StudyWorkspaceLearnerBlockKcsItem(BaseModel):
@@ -519,12 +582,117 @@ class StudyWorkspaceCloudUploadGrant(BaseModel):
     max_chunk_bytes: Literal[1048576]
 
 
-class StudyWorkspaceClaim(BaseModel):
+class StudyWorkspaceTeachingOutlineObjectivesItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    text: Annotated[str, Field(max_length=3000, min_length=1)]
     citations: Annotated[list[StudyWorkspaceCitation], Field(max_length=12, min_length=1)]
+    text: Annotated[str, Field(max_length=160, min_length=1)]
+    at_ms: Annotated[int | None, Field(ge=0, le=7200000)] = None
+
+
+class StudyWorkspaceTeachingOutlineExamplesItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    citations: Annotated[list[StudyWorkspaceCitation], Field(max_length=12, min_length=1)]
+    text: Annotated[str, Field(max_length=160, min_length=1)]
+    at_ms: Annotated[int | None, Field(ge=0, le=7200000)] = None
+
+
+class StudyWorkspaceTeachingOutlineConceptsItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    citations: Annotated[list[StudyWorkspaceCitation], Field(max_length=12, min_length=1)]
+    name: Annotated[str, Field(max_length=60, min_length=1)]
+    kc_ids: Annotated[list[KcId] | None, Field(max_length=3)] = None
+    outside_packs: bool | None = None
+    at_ms: Annotated[int | None, Field(ge=0, le=7200000)] = None
+
+
+class StudyWorkspaceTeachingOutlineAssumesItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    citations: Annotated[list[StudyWorkspaceCitation], Field(max_length=12, min_length=1)]
+    text: Annotated[str, Field(max_length=120, min_length=1)]
+
+
+class StudyWorkspaceTeachingOutline(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    objectives: Annotated[list[StudyWorkspaceTeachingOutlineObjectivesItem], Field(max_length=12)]
+    examples: Annotated[list[StudyWorkspaceTeachingOutlineExamplesItem], Field(max_length=8)]
+    concepts: Annotated[list[StudyWorkspaceTeachingOutlineConceptsItem], Field(max_length=16)]
+    assumes: Annotated[list[StudyWorkspaceTeachingOutlineAssumesItem], Field(max_length=6)]
+    skips: Annotated[list[StudyWorkspaceTeachingOutlineSkipsItem] | None, Field(max_length=6)] = None
+    for_you: Annotated[list[StudyWorkspaceTeachingOutlineForYouItem] | None, Field(max_length=48)] = None
+
+
+class StudyWorkspaceDraftRelation(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    from_: Annotated[str, Field(alias="from", pattern="^c[0-9]{1,2}$")]
+    to: Annotated[str, Field(pattern="^c[0-9]{1,2}$")]
+    type: StudyWorkspaceConceptRelationType
+    claim: StudyWorkspaceClaim
+
+
+class StudyWorkspaceDraftConcept(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    concept_id: Annotated[str, Field(pattern="^c[0-9]{1,2}$")]
+    name: Annotated[str, Field(max_length=80, min_length=1)]
+    summary: StudyWorkspaceClaim
+
+
+class StudyWorkspaceChapter(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    start_ms: Annotated[int, Field(ge=0, le=7200000)]
+    end_ms: Annotated[int, Field(ge=1, le=7200000)]
+    title: Annotated[str, Field(max_length=120, min_length=1)]
+    summary: Annotated[list[StudyWorkspaceClaim], Field(max_length=3, min_length=1)]
+
+
+class StudyWorkspaceQuizKey(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    item_id: Annotated[str, Field(max_length=64, min_length=1)]
+    answer: Annotated[str, Field(max_length=2000, min_length=1)]
+    explanation: StudyWorkspaceClaim
+    marking: Literal["checked", "judged"]
+    tool: Annotated[str | None, Field(max_length=80, min_length=1)] = None
+    check_ids: Annotated[list[StudyWorkspaceCheckId] | None, Field(max_length=16, min_length=1)] = None
+    calculation: Annotated[str | None, Field(max_length=512, min_length=1)] = None
+
+
+class StudyWorkspaceQuizItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    item_id: Annotated[str, Field(max_length=64, min_length=1)]
+    type: StudyWorkspaceQuizType
+    stem: StudyWorkspaceClaim
+    options: Annotated[
+        list[StudyWorkspaceQuizItemOptionsItem] | None,
+        Field(max_length=8, min_length=2),
+    ] = None
+    unit_prompt: Annotated[str | None, Field(max_length=80, min_length=1)] = None
+
+
+class StudyWorkspaceDraftCard(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    front: StudyWorkspaceClaim
+    back: StudyWorkspaceClaim
 
 
 class StudyWorkspaceGenerateSettings(BaseModel):
@@ -602,70 +770,24 @@ class StudyWorkspaceExtractionResponse(BaseModel):
     next_cursor: Annotated[str | None, Field(max_length=256)]
     duration_ms: Annotated[int | None, Field(ge=1, le=7200000)] = None
     usage: StudyWorkspaceUsageReceipt | None = None
+    has_video: bool | None = None
+    frames: Annotated[list[StudyWorkspaceFrame] | None, Field(max_length=60)] = None
 
 
-class StudyWorkspaceDraftRelation(BaseModel):
+class StudyWorkspaceDraftConceptMap(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    from_: Annotated[str, Field(alias="from", pattern="^c[0-9]{1,2}$")]
-    to: Annotated[str, Field(pattern="^c[0-9]{1,2}$")]
-    type: StudyWorkspaceConceptRelationType
-    claim: StudyWorkspaceClaim
+    concepts: Annotated[list[StudyWorkspaceDraftConcept], Field(max_length=24, min_length=1)]
+    relations: Annotated[list[StudyWorkspaceDraftRelation], Field(max_length=48, min_length=0)]
 
 
-class StudyWorkspaceDraftConcept(BaseModel):
+class StudyWorkspaceDraftQuiz(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    concept_id: Annotated[str, Field(pattern="^c[0-9]{1,2}$")]
-    name: Annotated[str, Field(max_length=80, min_length=1)]
-    summary: StudyWorkspaceClaim
-
-
-class StudyWorkspaceChapter(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    start_ms: Annotated[int, Field(ge=0, le=7200000)]
-    end_ms: Annotated[int, Field(ge=1, le=7200000)]
-    title: Annotated[str, Field(max_length=120, min_length=1)]
-    summary: Annotated[list[StudyWorkspaceClaim], Field(max_length=3, min_length=1)]
-
-
-class StudyWorkspaceQuizKey(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    item_id: Annotated[str, Field(max_length=64, min_length=1)]
-    answer: Annotated[str, Field(max_length=2000, min_length=1)]
-    explanation: StudyWorkspaceClaim
-    marking: Literal["checked", "judged"]
-    tool: Annotated[str | None, Field(max_length=80, min_length=1)] = None
-    check_ids: Annotated[list[StudyWorkspaceCheckId] | None, Field(max_length=16, min_length=1)] = None
-    calculation: Annotated[str | None, Field(max_length=512, min_length=1)] = None
-
-
-class StudyWorkspaceQuizItem(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    item_id: Annotated[str, Field(max_length=64, min_length=1)]
-    type: StudyWorkspaceQuizType
-    stem: StudyWorkspaceClaim
-    options: Annotated[
-        list[StudyWorkspaceQuizItemOptionsItem] | None,
-        Field(max_length=8, min_length=2),
-    ] = None
-    unit_prompt: Annotated[str | None, Field(max_length=80, min_length=1)] = None
-
-
-class StudyWorkspaceDraftCard(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    front: StudyWorkspaceClaim
-    back: StudyWorkspaceClaim
+    items: Annotated[list[StudyWorkspaceQuizItem], Field(max_length=40, min_length=1)]
+    keys: Annotated[list[StudyWorkspaceQuizKey], Field(max_length=40, min_length=1)]
 
 
 class StudyWorkspaceProcessingRequest(BaseModel):
@@ -693,22 +815,6 @@ type StudyExtractionResponse = Annotated[StudyWorkspaceExtractionResponse, Field
 type ResearchRequest = Annotated[StudyResearchJobRequest, Field(title="ResearchRequest")]
 
 
-class StudyWorkspaceDraftConceptMap(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    concepts: Annotated[list[StudyWorkspaceDraftConcept], Field(max_length=24, min_length=1)]
-    relations: Annotated[list[StudyWorkspaceDraftRelation], Field(max_length=48, min_length=0)]
-
-
-class StudyWorkspaceDraftQuiz(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    items: Annotated[list[StudyWorkspaceQuizItem], Field(max_length=40, min_length=1)]
-    keys: Annotated[list[StudyWorkspaceQuizKey], Field(max_length=40, min_length=1)]
-
-
 class StudyWorkspaceProcessingResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -721,6 +827,7 @@ class StudyWorkspaceProcessingResponse(BaseModel):
     usage: StudyWorkspaceUsageReceipt | None = None
     chapters: Annotated[list[StudyWorkspaceChapter] | None, Field(max_length=60, min_length=1)] = None
     concept_map: StudyWorkspaceDraftConceptMap | None = None
+    outline: StudyWorkspaceTeachingOutline | None = None
 
 
 type StudyProcessingResponse = Annotated[StudyWorkspaceProcessingResponse, Field(title="StudyProcessingResponse")]

@@ -476,11 +476,21 @@ def generation_schema(
     response.pop("allOf")
     response["properties"]["request_id"] = {"type": "string", "enum": [request_id]}
     response["properties"]["kind"] = {"type": "string", "enum": [kind]}
-    for field_name in ("flashcards", "quiz", "chapters", "concept_map"):
-        if kind == field_name:
+    for field_name in ("flashcards", "quiz", "chapters", "concept_map", "outline"):
+        if kind == field_name or (kind == "teaching_outline" and field_name == "outline"):
             response["required"].append(field_name)
         else:
             response["properties"].pop(field_name)
+    if kind == "teaching_outline":
+        # The model writes the cited part only (SPEC §20.3): moments, skills, skips and bands are the device's.
+        outline = definitions["TeachingOutline"]
+        outline.pop("description", None)
+        for section in ("skips", "for_you"):
+            outline["properties"].pop(section, None)
+        for section in ("objectives", "examples", "concepts", "assumes"):
+            item = outline["properties"][section]["items"]
+            for code_written in ("at_ms", "kc_ids", "outside_packs"):
+                item["properties"].pop(code_written, None)
     if kind == "flashcards":
         response["properties"]["flashcards"]["maxItems"] = count
     if kind == "quiz":
@@ -651,7 +661,28 @@ def support_material(
     return {"sources": model_passages(chunks, evidence), "draft": draft}
 
 
-GRANULAR_KINDS = ("summary", "notes", "audio_overview", "flashcards", "quiz", "concept_map")
+GRANULAR_KINDS = ("summary", "notes", "audio_overview", "flashcards", "quiz", "concept_map", "teaching_outline")
+OUTLINE_SECTIONS = ("objectives", "examples", "concepts", "assumes")
+
+
+def outline_claims(outline: dict[str, Any]) -> list[dict[str, Any]]:
+    """A teaching outline's items as claims in order (SPEC §20.3): the verifier's claim_support maps to them."""
+    return [
+        {"text": item.get("text") or item.get("name") or "", "citations": item["citations"]}
+        for section in OUTLINE_SECTIONS
+        for item in outline.get(section, [])
+    ]
+
+
+def outline_kept(outline: dict[str, Any], flags: list[bool]) -> dict[str, Any] | None:
+    """The outline with only the items the verifier supported, or None when nothing is left."""
+    marks = iter(flags)
+    kept: dict[str, Any] = {section: [] for section in OUTLINE_SECTIONS}
+    for section in OUTLINE_SECTIONS:
+        for item in outline.get(section, []):
+            if next(marks, False):
+                kept[section].append(item)
+    return kept if any(kept[s] for s in OUTLINE_SECTIONS) else None
 
 
 def support_groups(result: dict[str, Any]) -> dict[str, int]:
@@ -697,6 +728,8 @@ def granular_support_instruction(groups: dict[str, int]) -> str:
         "that state it, establishes that relation of that type between those two concepts in that direction "
         "(builds_on: the second builds on the first; part_of, causes, example_of: the first is part of, causes or "
         "is an example of the second). A relation inferred from proximity or general knowledge is unsupported. "
+        "For a teaching outline, claim_support has one boolean per item in order (objectives, worked examples, "
+        "concepts, then what the lecture assumes): true only when the transcript line it cites says it. "
         "Set safe=true only if every draft item passes safety and identifying-detail checks. Safe academic "
         "material at any level is allowed. Author and affiliation headers in SOURCES are not unsafe; do not "
         "reproduce personal details as learning content. Set safe=false for unsafe or identifying draft content. "
@@ -721,7 +754,13 @@ def retain_supported(result: dict[str, Any], verdict: dict[str, Any]) -> dict[st
     if not verdict["safe"] or verdict.get("answerable") is not True:
         raise Refused("insufficient_evidence")
     kept = {**result, "claims": [c for c, yes in zip(result["claims"], verdict["claim_support"], strict=True) if yes]}
-    if result["kind"] == "flashcards":
+    if result["kind"] == "teaching_outline":
+        outline = outline_kept(result["outline"], list(verdict["claim_support"]))
+        if outline is None:
+            return None
+        kept["outline"] = outline
+        kept["claims"] = outline_claims(outline)
+    elif result["kind"] == "flashcards":
         cards = [c for c, yes in zip(result["flashcards"], verdict["card_support"], strict=True) if yes]
         if not cards:
             return None
@@ -774,6 +813,8 @@ class Buffer:
     duration_ms: int | None = None
     usage: dict[str, Any] | None = None
     asr_usage: Usage = field(default_factory=Usage)
+    frames: list[dict[str, Any]] = field(default_factory=list)  # a video file's frames as text (SPEC §20.3)
+    has_video: bool | None = None
 
 
 class StudyService:
@@ -1165,6 +1206,16 @@ class StudyService:
                     "start_ms and end_ms, never overlapping, each with a short title and one to three summary "
                     "sentences citing passages inside that chapter; claims repeat those sentences."
                 )
+            if body["kind"] == "teaching_outline":
+                system += (
+                    " Say what this lecture teaches, in its order: objectives, worked examples, concepts, what it "
+                    "assumes. Cite the transcript line for each. Never add what the lecture does not say. "
+                    "objectives are the learning objectives the lecture states or works towards (at most 12, in "
+                    "order), examples its worked examples (at most 8), concepts the ideas it introduces as a short "
+                    "name the lecture itself uses (at most 16), assumes what it says or shows the learner is expected "
+                    "to know already (at most 6). claims repeat the items in that same order. Lines begin with "
+                    "their moment in brackets; never copy a moment into text."
+                )
             if body["kind"] == "concept_map":
                 system += (
                     " For a concept map, return the main learning concepts of these passages (at most 12), each "
@@ -1385,6 +1436,12 @@ class StudyService:
                         )
                         prose_retry = True
                         continue
+                if (
+                    body["kind"] == "teaching_outline"
+                    and isinstance(result, dict)
+                    and isinstance(result.get("outline"), dict)
+                ):
+                    result["claims"] = outline_claims(result["outline"])  # the claims are the items, by code
                 phase = "citation_reference"
                 bind_passages(result, passages)
                 phase = "draft_contract"
@@ -1917,25 +1974,38 @@ class StudyService:
         if len(b.data) != b.request["byte_length"] or sha(b.data) != b.request["sha256"]:
             raise Refused("corrupt_source")
         b.binding = asked
-        if b.request["kind"] == "recording":
-            from cloud_gateway.study_recording import RecordingError, transcribe
+        if b.request["kind"] in ("recording", "video"):
+            from cloud_gateway.study_recording import RecordingError, read_frames, transcribe, worker
 
             b.task = asyncio.current_task()
             try:
-                units, minutes = await transcribe(self, key, b, session)
-                b.duration_ms = max(u["locator"]["end_ms"] for u in units)
-                row = self.gw.store._db.execute(
-                    "SELECT coalesce(sum(actual_usd),0) FROM study_receipts WHERE identity IN ("  # noqa: S608
-                    + ",".join("?" for _ in units)
-                    + ")",  # Fixed placeholders only; identities are bound parameters.
-                    [sha(f"{key}:transcribe:{u['locator']['start_ms']}".encode()) for u in units],
-                ).fetchone()
+                info = await worker(self, b.data, "recording_info")
+                units, minutes = await transcribe(self, key, b, session, info)
+                frames: list[dict[str, Any]] = []
+                has_video = bool(info.get("has_video"))
+                if b.request["kind"] == "video" and has_video and asked.get("frames", "auto") != "none":
+                    # SPEC §20.4: frame times, the stills read as text in the worker, screened ones counted only.
+                    frames, frame_units = await read_frames(self, key, b, self.gw.config.study_recording_max_minutes)
+                    units = [*units, *frame_units]
+                b.duration_ms = int(info["duration_ms"])
+                transcribed = [u for u in units if u["locator"]["kind"] == "time"]
+                spent = 0.0
+                if transcribed:
+                    row = self.gw.store._db.execute(
+                        "SELECT coalesce(sum(actual_usd),0) FROM study_receipts WHERE identity IN ("  # noqa: S608
+                        + ",".join("?" for _ in transcribed)
+                        + ")",  # Fixed placeholders only; identities are bound parameters.
+                        [sha(f"{key}:transcribe:{u['locator']['start_ms']}".encode()) for u in transcribed],
+                    ).fetchone()
+                    spent = float(row[0])
                 b.usage = {
                     "receipt_id": key,
-                    "cost_usd": row[0] + minutes * self.gw.config.study_extract_minute_usd,
+                    "cost_usd": spent + minutes * self.gw.config.study_extract_minute_usd,
                     "input_tokens": b.asr_usage.input_tokens,
                     "output_tokens": b.asr_usage.output_tokens,
                 }
+                if b.request["kind"] == "video":
+                    b.frames, b.has_video = frames, has_video
                 page = self.publish(key, b, asked, units)
                 self.settle(
                     key,
@@ -2069,6 +2139,7 @@ class StudyService:
             "next_cursor": str(end) if end < len(b.chunks) else None,
             **({"duration_ms": b.duration_ms} if b.duration_ms else {}),
             **({"usage": b.usage} if b.usage else {}),
+            **({"frames": b.frames, "has_video": b.has_video} if b.has_video is not None else {}),
         }
         while len(json.dumps(result).encode()) > 4_000_000:
             if end <= offset + 1:
@@ -2131,7 +2202,7 @@ def add_routes(app: FastAPI, gw: Any) -> StudyService:
                     body,
                     (
                         gw.config.study_recording_max_minutes * gw.config.study_extract_minute_usd
-                        if body["kind"] == "recording"
+                        if body["kind"] in ("recording", "video")
                         else gw.config.study_source_max_pages * gw.config.study_extract_page_usd
                     ),
                     "extract",

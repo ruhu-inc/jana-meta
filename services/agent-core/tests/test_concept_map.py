@@ -256,8 +256,14 @@ def test_questions_and_mistakes_attach_to_the_engines_kcs(tmp_path: Path) -> Non
             assert [q["asked_at"] for q in asked] == sorted((q["asked_at"] for q in asked), reverse=True)
 
             mistakes = reply["mistakes"]
-            # Most seen first, a resolved one last, a disputed one never.
-            assert [m["misconception_id"] for m in mistakes] == [SINGLE_POINT, "mc.phy.o.speed_from_distance_only"]
+            # Most seen first, then the one the learner disputed (SPEC §21.3: it returns as "you said this isn't
+            # right"), a resolved one last.
+            assert [m["misconception_id"] for m in mistakes] == [
+                SINGLE_POINT,
+                "mc.phy.o.gradient_axes_swapped",
+                "mc.phy.o.speed_from_distance_only",
+            ]
+            assert mistakes[1]["status"] == "disputed"
             single = mistakes[0]
             assert (single["name"], single["times"], single["status"]) == (
                 "Acceleration from a single point",

@@ -1,0 +1,27 @@
+# W9 Study case (SPEC §20.9, §20.10): written before any run; checked by code in tests/w9_scenarios.py.
+case: youtube_lecture
+rubric: >-
+  Ada pastes a YouTube lecture on projectile motion with its panel transcript: the source is ready at once with six
+  chapters and timed lines, nothing uploaded. What this video teaches lists four cited objectives with moments, two
+  worked examples, four concepts mapped to the seeded projectile skills (the range at 4:12), "assumes you know"
+  resolving vectors, "not covered here" drag, and for Ada the range secure and the rest not started; the outline's
+  cloud request carries transcript chunks and nothing else. "Where did she derive the range equation?" yields
+  open_moment at 4:12 from a study_search hit, and "04:12" binds as a moment.
+video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+title: "Projectile motion"
+transcript_fixture: fixtures/w9/youtube_panel_projectile.txt
+learner_secure: kc.phy.o.projectiles.range
+expect:
+  chapters: ["Introduction", "Resolving the velocity", "The range equation", "Time of flight", "Maximum height", "Worked examples"]
+  uploads: 0
+  objectives: 4
+  examples: 2
+  concepts: ["Range", "Time of flight", "Maximum height", "Resolving the velocity"]
+  range_kc: kc.phy.o.projectiles.range
+  range_at_ms: 252000
+  assumes: "Resolving a vector into perpendicular components"
+  skips: ["kc.phy.o.projectiles.drag"]
+  bands: { "kc.phy.o.projectiles.range": secure, "kc.phy.o.projectiles.time_of_flight": not_started, "kc.phy.o.projectiles.max_height": not_started, "kc.phy.o.projectiles.resolve": not_started }
+  request_keys: ["kind", "sources", "execution"]
+  moment_question: "where did she derive the range equation"
+  moment: "4:12"

@@ -1433,7 +1433,8 @@
       "A"
      ],
      "usesNetwork": false,
-     "activityLabel": "Looked in your materials"
+     "activityLabel": "Looked in your materials",
+     "note": "Result items gain `locator` (the chunk's locator, a time locator narrowed to the cited line's moment) and, for a moment, `moment` ('4:12'), so the companion can offer open_moment and bind the timestamp (SPEC §20.3, engine/memory_tools.py, memory/queries.py StudyExcerpt.locator)."
     },
     {
      "name": "progress_read",

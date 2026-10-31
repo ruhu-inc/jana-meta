@@ -5,9 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from w8_scenarios import cases, run
+from scenario_cases import cases, run
 
-CASES = cases()
+CASES = cases("w8")
 
 
 def test_every_case_built_so_far_is_present() -> None:

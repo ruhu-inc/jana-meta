@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/agents/companion-turn.schema.json sha256 3adc4d0f42c8e554402eddf1a8a2629c8a207cc4c2b63a4eebb6213f38e4089b; do not edit",
+ "$comment": "GENERATED from contracts/agents/companion-turn.schema.json sha256 83b2c66c4e44ca354ea1b8453529976089b5bfece446402ec1955617646894e6; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/agents/companion-turn",
  "title": "Companion turn",
@@ -33,7 +33,8 @@
         "open_add_source",
         "open_research",
         "open_plan",
-        "open_knows"
+        "open_knows",
+        "open_moment"
        ]
       },
       "ref": {

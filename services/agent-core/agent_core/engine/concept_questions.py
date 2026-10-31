@@ -10,9 +10,10 @@ the learner database.
 - The words are the transcript's (`turns.student_text`, already redacted, PRV-20), so they follow its retention:
   once a session's transcript is purged its questions are gone with it, and a session whose transcript was purged
   but whose events name a KC still counts as one question on that KC, with no words (`kept` false).
-- A mistake is a misconception in the learner's projection (`learner_misconceptions`), any status but `disputed`,
-  with its student name from the pack, how often its evidence was seen and, when the pack links it to an earlier
-  skill, that root gap with the gap path on the map."""
+- A mistake is a misconception in the learner's projection (`learner_misconceptions`), in any of its five statuses
+  (a `disputed` one is the learner's "This isn't right", LRN-37, and shows as such, SPEC §21), with its student name
+  from the pack, how often its evidence was seen and, when the pack links it to an earlier skill, that root gap with
+  the gap path on the map."""
 
 from __future__ import annotations
 
@@ -70,10 +71,13 @@ def _photo_sessions(conn: sqlite3.Connection) -> set[str]:
     return out
 
 
-def questions(conn: sqlite3.Connection, subject_id: str, on_map: set[str]) -> list[dict[str, Any]]:
+def questions(
+    conn: sqlite3.Connection, subject_id: str, on_map: set[str], *, until: int | None = None
+) -> list[dict[str, Any]]:
     """The learner's questions in this subject, newest first: each with the KC it hangs from (`kc_id`, null for an
     open question), its words while the transcript keeps them, how it was asked and when. A question belongs to the
-    subject when its KC is on the subject's map, or, for an open question, when its session was in the subject."""
+    subject when its KC is on the subject's map, or, for an open question, when its session was in the subject.
+    With `until` (a dated map, SPEC §21), only the questions asked by then."""
     subject = SUBJECT_NAMES.get(subject_id.split(".")[1], "")
     sessions = {
         str(s): (subj, purged)
@@ -156,6 +160,8 @@ def questions(conn: sqlite3.Connection, subject_id: str, on_map: set[str]) -> li
                     "kept": False,
                 }
             )
+    if until is not None:
+        out = [q for q in out if q["asked_at"] <= until]
     out.sort(key=lambda q: (-q["asked_at"], q["question_id"]))
     return out[:QUESTIONS_MAX]
 
@@ -169,8 +175,7 @@ def mistakes(
     out: list[dict[str, Any]] = []
     rows = _rows(
         conn,
-        "SELECT misconception_id, kc_id, status, evidence_count, last_seen_at"
-        " FROM learner_misconceptions WHERE status != 'disputed'",
+        "SELECT misconception_id, kc_id, status, evidence_count, last_seen_at FROM learner_misconceptions",
     )
     for mc_id, kc_id, status, count, last_seen in rows:
         if str(kc_id) not in on_map:
@@ -196,5 +201,7 @@ def mistakes(
                 "gap_path": path,
             }
         )
-    out.sort(key=lambda m: (m["status"] == "resolved", -m["times"], -m["last_seen_at"], m["misconception_id"]))
+    # Watched ones first (most seen first), then the ones the learner disputed, then the resolved ones.
+    later = {"disputed": 1, "resolved": 2}
+    out.sort(key=lambda m: (later.get(m["status"], 0), -m["times"], -m["last_seen_at"], m["misconception_id"]))
     return out

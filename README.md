@@ -10,6 +10,15 @@ worker), and anything it could not check is labelled as such. It reads photos of
 the exact line that went wrong, listens and speaks, researches a topic into a cited study pack, and keeps teaching
 when the internet goes away.
 
+## Hackathon contribution
+
+Jana existed before this event. Its tutoring engine, curriculum packs, desktop shell and deterministic checking
+foundation are prior work. The October 26–November 4, 2026 entry continues the Meta model integration and adds
+the personal Study companion: durable conversations, explicit remember/correct/forget commands,
+profile isolation, inspectable learning evidence and source-backed progress claims. The companion work is recorded
+in commits `7a92235d` and `aed35cbf` (October 29–30). These are implementation claims, not measured learning gains.
+The demo should distinguish this new work from the existing product and identify every human contributor.
+
 ## The Meta models and what each does
 
 | Model | Where it runs | What it does in Jana |
@@ -94,6 +103,18 @@ uv run python -m jana_tools.hackathon_dev
 Open **http://127.0.0.1:5187/**. The first launch builds and verifies the Mathematics, Physics and Chemistry packs from
 `content/curriculum` and signs them with the published development key (a few minutes; later launches reuse them).
 Create a profile, then in Settings → Online features give your consent to the cloud tutor.
+
+For a rehearsal without development reloads, use a stable build and a separate synthetic profile directory:
+
+```bash
+uv run python -m jana_tools.hackathon_dev --stable --port 5197 --data-dir /tmp/jana-demo
+```
+
+Open **http://127.0.0.1:5197/**. Keep the same directory when restarting to verify continuity. With cloud tutoring
+off and no local model, saved history, explicit memory commands and authored practice remain available; ordinary
+AI conversation requires a configured model. Exported profiles include saved learning state by default; raw
+conversation inclusion requires separate authorization.
+The browser preview has no native folder picker: use the desktop app for profile archive export and restoration.
 
 To keep tutoring offline on a machine with 32 GB or more, download Muse Glimmer 30B's GGUF files from
 [meta-models/Muse-Glimmer-30B-GGUF](https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF)

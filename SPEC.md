@@ -27,6 +27,8 @@ Work landed on `main` today, from this session and from parallel sessions merged
 | Glimmer-free check | `phys_circuit`'s recursive schema unrolled for Spark (§16) | — |
 | Meta-only entry (JM-D12, JM-D14, JM-D19) | **Done 2026-10-28**: NVIDIA's trial voice removed (Study Podcasts are read by the gateway's Kokoro through the podcast route), the Google/Gemini stack and the old production release material deleted, only Muse Glimmer recommended offline, key references renamed `jana-meta.` | — |
 | W8 Learning agent | **Specified 2026-10-29, reworked after review** (§19, `LEARNING_AGENT_REVIEW.md`): phases 1–3, decisions JM-D21–JM-D29 proposed for the owner; phase 1 built 2026-10-29; phases 2 and 3 follow at once (owner) | phases 2–3 |
+| W9 Video source | **Specified 2026-10-31, reworked after review; JM-D42 spike answered** (§20, `SPEC_W9_W10_REVIEW.md`, `SPIKE_JMD42.md`): a YouTube lecture as a Study source (link plus pasted transcript), Watch on YouTube at the moment (the embedded player does not play in the packaged app), a "What this video teaches" aid mapped to skills by code, moments from the thread, Ask about this moment; video files with board writing read as text; JM-D30–D34 agreed, JM-D40, D43, D44 proposed | all |
+| W10 Learner's map | **Specified 2026-10-31, reworked after review** (§21): Progress opens on the learner's map with freshness, mistakes, Study and notes layers and a read-only time scrubber replayed from the event log; JM-D35–D39, D45 proposed | all |
 
 ## 1. What we are building
 
@@ -618,6 +620,9 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
 | W5 | Adult product and copy | 8.2 |
 | W6 | Demo bugs | 10 |
 | W7 | Research agent: a long-running agent that builds study packs (Learn from a picture, Research a topic) | 18 |
+| W8 | The personal learning agent (Study companion) | 19 |
+| W9 | Video as a Study source: a YouTube lecture understood (link, transcript, embedded player, teaching outline, moments); video files with frames | 20 |
+| W10 | The learner's map: graph-first Progress with freshness, mistakes, Study and notes layers and a time scrubber | 21 |
 
 | Day | Work |
 |---|---|
@@ -1609,6 +1614,32 @@ are a separate branch at line 449; `$defs/envelope` requires `session_id` throug
 - **MEM-05 amendment (jana-meta only):** `study_search`'s query is model-written, as `session_recall`'s is under MEM-18;
   both go through the literal matcher only. No other query text is ever written by a model.
 
+**Restart delivery decision (2026-10-30):** After the authoritative snapshot reconciles a restored companion
+journal, an unconfirmed text-only student message remains visible with an interrupted-send explanation and
+explicit retry. Reconstruct only the companion's `ask` command, preserving its original idempotency key. Opening
+Study must not automatically replay an old memory command, and an already accepted message must not be retried.
+Concurrent reconnect and manual retry share one in-flight delivery. This changes client recovery only; the existing
+snapshot, journal and turn contracts are sufficient, with no storage migration.
+A command that exhausts its connection retry while the event stream is still live/replaying also becomes an
+explicit unconfirmed-send retry. It must not wait forever for a stream reconnection that may never occur. When
+the stream is disconnected, existing automatic reconnect recovery remains in place.
+
+**Live-review clarifications (2026-10-30):** Negative schedule assertions such as “no cards due” and “no plan” are
+personalized factual claims too. They must not bypass the typed-fact gate merely because they contain no numeral;
+unsupported negative assertions are corrected or fall back through the existing reply gate. This is a bounded
+language guard, not proof that all possible paraphrases are detectable. Browser previews do not expose native
+file-picker capabilities. Archive export explains that the desktop app is required; restoration is offered only
+where a native picker exists. Export/restore API contracts and existing authorization requirements are unchanged.
+
+**Symbolic tutoring verification (2026-10-31):** A symbolic final answer needs a whole-expression worker proof;
+matching its exponent or coefficient to a numeric check is insufficient. The session checkpoint retains proved
+ordinary `math_simplify` results and the expressions from proved, unconditional `math_check_equivalence` results.
+Sampled, unknown, conditional-domain and custom-assumption results do not establish this answer evidence.
+Only conservative spelling normalization is allowed in the core; algebra stays in the sandboxed worker. Numeric
+fallback cannot replace an unverified symbolic answer with a scalar step. This extends the internal checkpoint
+with a default-empty `check_expressions` map, preserving old checkpoints without a table or forward migration;
+public solution-plan and stream contracts are unchanged. Regression: `test_symbolic_plan_evidence.py`.
+
 #### 19.3.4 Commitments (check-ins) (phase 3)
 
 `contracts/api/commands.schema.json`, new `$defs/Commitment`:
@@ -1997,3 +2028,516 @@ and the Study-memory scenarios have two weeks of nightly runs.
 | B13 TOML keys fail strict config; no admission | Typed `Limits` and `CompanionConfig`; ledger reservation by feature (§19.4) |
 | B14 actions and openers not durable | Durable `actions` in the projection and snapshot; opener in the HTTP reply with `opener_id` (§19.3.3) |
 | N1 scope; N2 band claim; N5 level seam; N6 totals; N7 evals; N8 UI entry; N9 serializer, gates, fact binding; N10 device-local and retention | JM-D25 (phase 1 only); no band claim, physics demo; `research_chat` by code (JM-D29); budget recomputed; pytest scenarios; library entry; `learner_block_data`, the gate set and fact binding; JM-D27 and the retention rows |
+
+## 20. Video as a Study source: a YouTube lecture, understood (W9)
+
+Status: **specified 2026-10-31, reworked the same day after review** (`SPEC_W9_W10_REVIEW.md`: eleven blocking
+findings on the first draft, all confirmed in the code; §20.11 maps them). The owner's goal (2026-10-31): paste a
+YouTube video and have Jana understand what it teaches. **Owner, 2026-10-31: JM-D30 to JM-D34 agreed in their first
+form**; JM-D34 is narrowed below (frames are read as text, not as pictures); **JM-D42 was answered on 2026-10-31 by the
+spike** (`SPIKE_JMD42.md` on branch `claude/fervent-jang-355d03`): the official embedded player does not play in the
+packaged macOS app (YouTube refuses the `tauri://localhost` origin with error 153, and `useHttpsScheme` is a Windows
+and Android option), so this release ships **Watch on YouTube** at the moment and no embedded player; JM-D40, JM-D43
+and JM-D44 are **proposed, owner to confirm**. Paths are relative to this repository; line numbers were read on 2026-10-31.
+
+**W9 built 2026-10-31** (JM-D30 to JM-D34 as agreed; JM-D40, JM-D43 and JM-D44 at their recommended answers;
+JM-D42 as the spike answered it: no embedded player, no CSP change, Watch on YouTube at the moment). Every §20.8
+bullet passes a named test: `test_w9_links.py`, `test_w9_video_link_source.py`, `test_w9_teaching_outline.py`,
+`test_w9_video_file.py`, `test_w9_companion_moment.py`, `test_w9_scenarios.py` (`scenarios/w9/youtube_lecture.yaml`
+through the generalised loader, suite `companion`), the gateway's `test_w9_teaching_outline_gateway.py` and
+`test_w9_video_file_gateway.py` (the first video test runs the real sandboxed worker on a synthetic clip), the worker's
+`services/study-worker/tests/test_video_frames.py`, the UI's `study-link-add.test.tsx`, `study-player.test.tsx`,
+`study-outline.test.tsx`, `study-citation.test.tsx` and `companion-thread.test.tsx`, and the client core's
+`study-workspace.test.ts` and `companion.test.ts`. The parser is `engine/study_links.py`; the outline's device half is
+`engine/study_outline.py`; the frames are `study_worker/media.py` and `cloud_gateway/study_recording.py`; the panes
+are `learn/StudyPlayer.tsx`, `StudyOutline.tsx` and `StudyLinkAdd.tsx`. `contract-additions-w9.json` records the
+additions, applied to `contracts/` with codegen; the learner migration is v23 (W10 needed none). Where the build
+departs from the text above, and why:
+
+- **Pieces §20.3 does not list, needed by the build** (each marked "Needed by the build" in the additions file):
+  `Source.chapters` (a pasted transcript's chapters by code need a home; the chapters aid is model-made and cited),
+  `Source.frames_choice` (the file variant's `frames` choice has to survive from create to the extraction request),
+  `ExtractionRequest.frames`, `ExtractionResponse.has_video` and `ExtractionResponse.frames` (the downgrade decision
+  and each frame's reason and read state are the gateway's; the device counts `screened_frames` from them),
+  `CloudUploadCreate.kind` gains `video`, `StudyError` gains `unsupported_link` and `transcript_too_long`, and the
+  `payload_study_activity.ref` pattern gains `src:` (`source_added` was in the enum since W8 but never written; the
+  Study desk now records it, while a Study session is open, as an aid is).
+- **Lines keep their moments.** A timed chunk is at most 4,000 code points, as specified, but every line inside it
+  keeps its own `[m:ss]` prefix, so "Open at" is per line, a citation names its line's moment (not the chunk's
+  start), the companion's excerpts carry the line's moment and the outline's `at_ms` comes from the cited line by
+  code. The model sees the prefixes; the prompt tells it never to copy a moment into text.
+- **The two-hour bound** refuses a last timestamp at or past 2:00:00 (a line at exactly 2:00:00 has no room for a
+  locator inside `Locator.time`'s bound); the last chunk ends 5 s after its last line, capped at two hours.
+- **`at_ms` is code-written.** The gateway's structured output omits `at_ms`, `kc_ids`, `outside_packs`, `skips` and
+  `for_you`; a model cannot be trusted to turn "4:12" into milliseconds. `TeachingOutline` keeps `at_ms` optional for
+  that reason. The gateway sets the response's `claims` to the outline's items in order by code, so the verifier's
+  per-item support maps one to one and a dropped item leaves the outline.
+- **Skill mapping.** `kc_tags` as it stands maps text to a topic only when the topic's title phrase appears in it, so a
+  concept's cited text alone almost never names a topic. A concept is scored within the topics the whole transcript
+  names (`matching_topics` over the transcript), keeping only skills whose statement shares a content word with the
+  concept's name and cited text (`kc_tags(..., within=, require_overlap=True)`); `skips` are the tagged topics' skills
+  that neither `kc_tags` over the whole transcript nor any concept tags. **The shipped O-level physics pack has no
+  projectile-motion skill and no statement with the word "range"**, so on the installed pack the demo's concepts are
+  "outside the packs"; `test_w9_teaching_outline.py` seeds a projectile subtopic (range, time of flight, maximum
+  height, resolving, drag) and checks the range concept maps to its skill there, and records the installed-pack
+  result. A projectile KC in the pack is the curriculum lead's.
+- **The pending turn context** lives in memory on the companion desk (`CompanionDesk.pending_context`), not in
+  `companion_turn_context`: that table's key is a turn id, and the context exists before its turn. It is consumed by
+  the next accepted turn, discarded with a profile switch, and never written to disk. The ±30 s lines join the
+  own-materials fence (cut by `strip_for_cloud` without `study_materials`); "About 4:12 in <title>" stands outside
+  the fence as a labelled fact.
+- **"What haven't I got yet"** is offered on every turn, not matched by phrase: when a ready `teaching_outline` exists
+  on a non-private source, its `for_you` skills (not yet secure first, at most twelve) join the typed facts with the
+  moment each is taught at, and the role prompt tells the model to select them by `fact_refs`.
+- **Frame times.** PyAV exposes no container chapter markers, so "chapter boundaries first" has nothing to read at
+  extraction time; the worker scans keyframes only (the CPU limit) and reports scene changes as colour-thumbnail
+  differences; the gateway keeps chapter-tagged candidates first, one per 30 s, 60 per file, ten per worker call. A
+  frame with no OCR reader is `unreadable`, never a failed extraction (the transcript is the material).
+- **The external-link opener.** The shell has no opener command or plugin; the one path the app has is Ask anything's
+  `<a target="_blank" rel="noopener noreferrer">`, and `BROWSER_OPENER` (client core) takes the same path through
+  `window.open`. Whether the packaged WKWebView opens that in the system browser is unverified: Tauri sets no
+  `on_new_window` handler, so wry's delegate may drop the request. The spike did not test it. If it is dead, Ask
+  anything's sources are dead the same way; a shell command behind the opener seam is the fix, a decision of its own.
+- **Limits.** `video_minutes_per_month` is a gateway-held limit (`GATEWAY_HELD_LIMITS`), derived as 60 times
+  `recording_hours_per_month` when unset, never signed into entitlements (as W8's caps); the gateway enforces neither
+  pool today, a pre-existing gap. `upload_max_mb` is 100 in `plans.toml`, the worker's cap, and
+  `test_m45_regional_plans.py` says so.
+- **Existing tests whose assertions changed:** `test_companion_continuity.py` expects the forward migration to apply
+  v22 and v23 (the transcript still survives); `test_m45_regional_plans.py` reads 100 MB.
+- **Not built:** nothing of §20.8. Gates on 2026-10-31: codegen check, data inventory, retention coverage, erasure
+  registry, tool snapshot, eval lock, `pnpm lint`, mypy and ruff all pass; the W9 suites pass; `ruff format --check`
+  flags `engine/toolround.py` and the generated `contracts/api/endpoints.py`, and `prompt-snapshots` (and
+  `prm22_snapshot_diff_fails`) flag sixteen solver and checker prompts, all from another session's uncommitted solver
+  work, which also failed `uxs18_solution_on_request` in one full run (`math_solve` not offered) and not the next.
+  `uv run pytest services` otherwise: 4,407 passed; `test_w8_companion_followups.py`'s ready-materials order failed
+  once under full-suite load (two sources created in one millisecond tie on `updated_at`; it passes alone and in the
+  companion suites, and W9 does not touch that order). `pnpm test` passes but for `dsn25_brand_placements`, which flags
+  `settings.export.desktop_required`, another session's uncommitted export copy. The browser preview was not run: the
+  app needs a running core and profile, which the pane does not have.
+
+**What exists.** A recording is already a Study source (STU-22): the file goes to the gateway whole under
+`study_materials` (`engine/study.py` line 2362: a recording waits for the cloud), the sandboxed worker decodes the
+audio in memory (`services/study-worker/study_worker/media.py`), Muse Spark transcribes 60-second `input_audio`
+segments (`cloud_gateway/study_recording.py` `transcribe`, line 61), chunks carry `time` locators
+(`contracts/study/workspace.schema.json` `Locator`, ≤ 7,200,000 ms), citations print timestamps
+(`StudyCitation.tsx` line 25), and the material pane plays the file with chapters and a transcript that seek
+(`StudyGenerate.tsx` `RecordingPlayer`, line 143–190, the `<audio>` element at 162; `study-workspace.ts` `loadMedia`
+line 282–290 and the citation seek at 838). Pasted text is a source (`StudyDesk.create`, `engine/study.py` line
+449). Study links text to syllabus skills by word overlap with KC statements (`engine/study_topics.py` `kc_tags`,
+line 57–80, ≤ 3 skills). Photos in Study are **OCR text** from the worker (`study_worker/__main__.py` line 45–61);
+no Study path shows an image to a model. What does not exist: a link as a source, a player for a video Jana does not
+hold, a statement of what a video teaches, and any reading of a video file's picture.
+
+**The constraint that shapes this section.** YouTube's terms let an app embed and play a video with the official
+player, including seeking to a time, and nothing else: no downloading of video or audio, so Jana's own transcription
+cannot run on it, and caption tracks come from the official API only to the video's owner. So the picture is
+YouTube's, and the words come from the transcript YouTube itself shows the learner, copied from the transcript
+panel with its timestamps and pasted into Jana once. That paste is the whole of what the learner does beyond the
+link, and it works for any site that publishes a transcript.
+
+### 20.1 What the learner gets
+
+| Part | What it is |
+|---|---|
+| **Paste a YouTube link** | A new source kind, `video_link`: the link, then the video's transcript pasted from YouTube's panel (a three-step hint), then a title (prefilled "YouTube video"). Ready in seconds; nothing downloaded. |
+| **Watch on YouTube, at the moment** | The material pane shows the transcript with its chapters; every line, chapter and citation carries **Open at 04:12**, which opens `youtube.com/watch?v=<id>&t=<seconds>` in the learner's browser, as a research pack's sources open their pages today. No video plays inside Jana in this release (JM-D42). |
+| **What this video teaches** | A new aid, `teaching_outline`: the video's learning objectives in order with their moments, the worked examples it shows, the concepts it introduces, and what it assumes you already know, each citing a transcript line and checked by Study's verifier. Around it, by code on the device: which syllabus skills each concept serves (or "outside the packs"), which skills of those topics the video never reaches, and for this learner which of its skills are secure, learning or not started. |
+| **Everything Study already makes** | Notes, summary, flashcards, quiz, podcast, concept map and lesson plan from the transcript, each claim citing a moment that seeks the player. |
+| **Ask about this moment** | On a transcript line (a YouTube video) or the player's playhead (a file): Your tutor opens with the transcript lines around that moment as cited context, and the learner types the question. Pausing to ask, without streaming anything. |
+| **Your tutor** | "Where did she derive the range equation?" finds the moment and offers **Open the moment**; "what does this video teach that I haven't got yet?" is answered by code from the outline's skills and the learner's bands, then phrased. |
+| **A video file you have** | A lecture you recorded or a screen recording: Jana's own transcription (the existing pipeline), a `<video>` player with a filmstrip, and the **writing on the board or slides read as text** at chapter and scene changes, cited "04:12 · on screen". Diagrams in a frame are not read in W9 (JM-D34). |
+| **Seeing the picture** | Jana's models read still images, not video; in Study, images are read as text. For YouTube the picture is in the learner's browser: a screenshot or phone photo of the board, added as a photo, is read through the photo pipeline. |
+
+### 20.2 Decisions
+
+| # | Decision | Status and working assumption |
+|---|---|---|
+| JM-D30 | How does a YouTube video's text reach Jana? | **Agreed.** The learner pastes the video's transcript. No download, no caption scraping, no third-party transcript service. A paste without timestamps is plain text (no moments). |
+| JM-D31 | How is it played? | **Agreed, then overtaken by JM-D42's answer:** no embedded player in this release. Every moment opens `youtube.com/watch?v=<id>&t=<s>` in the learner's browser. YouTube links only in this release. |
+| JM-D32 | What does the device send to Google? | **Moot after JM-D42:** Jana opens no connection to YouTube. Opening a link in the learner's own browser is what a research pack's sources do today; no new feature, consent or CSP change. |
+| JM-D33 | Does "what it teaches" need a new model path? | **Agreed, narrowed:** one Study aid kind, one structured call over the **transcript chunks only**: no syllabus, no learner block (the mapping, the skips and the learner's bands are code on the device). |
+| JM-D34 | Files: frames? | **Agreed, narrowed:** frames are extracted and **read as text (OCR) in the sandboxed worker**, as photos are today; no model sees a frame in W9. Board and slide writing is cited; diagrams are not read. A vision read of frames is a later decision with its own budget. |
+| JM-D40 | May the app capture a frame of an embedded YouTube video? | **Proposed: not in this release.** The player's pixels are unreachable, and an automated capture is the terms question JM-D30 avoids. A learner's screenshot as a photo is the path. |
+| JM-D41 | Where does the player's CSP exception live? | **Dropped:** no player, no exception; `frame-src 'none'` stays. |
+| JM-D42 | Origin spike before the week is committed | **Answered 2026-10-31 (`SPIKE_JMD42.md`): no.** From the packaged app's `tauri://localhost` origin YouTube answers error 153 for every variant (plain, `origin` and `widget_referrer`, `referrerpolicy unsafe-url`); `useHttpsScheme: true` leaves the macOS origin unchanged (a Windows and Android option). The `postMessage` channel itself works and reports the refusal, and the embed is accepted from an `http://localhost` origin, so a future player means serving the page from a loopback HTTP server or a Jana-hosted player page: a security and hosting decision of its own, not W9's. This release: Watch on YouTube at the moment. |
+| JM-D43 | A pasted transcript of someone else's video | **Proposed: yes.** It is the learner's own copy for private study, in their profile, never in packs or a research export, never fetched by Jana (STU-22's D64 note is unchanged: Jana fetches nothing). |
+| JM-D44 | Video minutes: per week or per month? | **Proposed:** `video_minutes_per_month`, drawn from the recording pool `recording_hours_per_month` in `plans.toml`, one clock for one kind of thing. |
+
+### 20.3 Contracts
+
+Every addition goes first into `contract-additions-w9.json` in the form of `contract-additions-m45d.json`;
+**(storage)** items need the next learner migration (`migration_v23.py` if W9 lands before W10, else v24; v22 is the
+latest, `store/sqlite.py` line 39) registered in `store/sqlite.py`, a `store/retention.py` rule, a
+`store/profile_stores.py` row and a `scripts/governance/data-inventory.toml` entry (PRV-03).
+
+- `contracts/study/workspace.schema.json`: `SourceKind` gains `"video_link"` and `"video"`. `SourceCreate`'s `oneOf`
+  gains the variant `{kind: "video_link", url, transcript ≤ 400,000, title ≤ 120}` beside the inline `text` variant
+  (no new route: `POST /v1/study/sources`, the client's `addSource`, redaction and `source_added` apply). `Source`
+  gains `link: {provider: "youtube", video_id (11 chars), url} | null`, `transcript_kind: "timed" | "plain" | null`,
+  `frames: integer | null`, `screened_frames: integer | null`. `Locator` gains `{kind: "frame", at_ms (≤ 7,200,000),
+  frame_id}`. `AidKind` **and** `JobKind` gain `"teaching_outline"`; `Aid` gains `outline: TeachingOutline | null`
+  under the kind→field `allOf` rule. The file variant of `SourceCreate` gains `frames: "auto" | "none"` (an
+  extraction-time choice on the source, not a per-aid setting).
+- New `$defs/TeachingOutline`: model-written and cited: `objectives: [{text ≤ 160, at_ms, citations}] ≤ 12`,
+  `examples: [{text ≤ 160, at_ms, citations}] ≤ 8`, `concepts: [{name ≤ 60, at_ms, citations}] ≤ 16`,
+  `assumes: [{text ≤ 120, citations}] ≤ 6`; code-written, uncited: `concepts[].kc_ids ≤ 3`,
+  `concepts[].outside_packs`, `skips: [{kc_id, statement}] ≤ 6`, `for_you: [{kc_id, band}]`. The gateway's structured
+  output is the model part only; the engine adds the rest.
+- Transcript parsing (`engine/study_links.py`): two forms, **alternating lines** (a timestamp line, then the text
+  line: YouTube's panel) and **same line** (`[m:ss] text` or `m:ss text`); timestamps `m:ss`, `mm:ss` or `h:mm:ss`;
+  a line with no timestamp between two timestamped blocks is a **chapter heading**, kept as a chapter, not a chunk;
+  lines merge into chunks of ≤ 4,000 code points, the locator the first line's start and the next chunk's start as
+  end; a paste whose last timestamp exceeds 2:00:00 is refused with the limit named (the `Locator.time` bound);
+  no timestamps at all → one `plain` text source. A verbatim panel paste is a fixture in `test_w9_links.py`.
+- New `$defs/Frame` **(storage** `study_frames(frame_id PK, source_id, revision, at_ms, reason: "chapter" | "scene",
+  read_state: "read" | "unreadable" | "screened", text)**)**; **no image is stored**: the device holds the file, and
+  the filmstrip draws each thumbnail from the local `<video>` element at `at_ms`. Rows go with the source revision.
+- Tools: `contracts/registers/toolsets.json` and `engine/memory_tools.py` (line 256): `study_search` items gain
+  `locator` (`memory/queries.py` `StudyExcerpt`, line 649, gains it). `contracts/agents/companion-turn.schema.json`
+  `action.kind` (line 31–39) gains `"open_moment"`; `contracts/api/events.schema.json` `ev_companion_action.action`
+  gains `"open_moment"` with `payload: {source_id, at_ms}`.
+- `contracts/api/commands.schema.json`: `CompanionOpen` gains optional `context: {source_id, at_ms}` (Ask about this
+  moment). The core keeps it as the episode's **pending turn context** (`companion_turn_context`, operational,
+  device-local), consumed by the next accepted turn and discarded after it.
+- Study worker protocol (files): `recording_info` gains `has_video`, `has_audio`, `width`, `height`; the worker
+  accepts a container with no audio stream (`media.py` line 25–26 refuses one today); new request `video_frames
+  {at_ms: [..]}` → `{frames: [{at_ms, text | null}]}`: the worker decodes the **keyframe** nearest each time, runs
+  `perception_worker.image.preprocess` (the photo privacy pass, already imported at `__main__.py` line 47) and OCR,
+  returns text only; a frame the pass refuses returns `screened`. Frame times are chosen by the gateway: chapter
+  boundaries first, then scene changes from keyframe differences, at most one per 30 s and 60 per file, within the
+  worker's CPU limit (240 s, `__main__.py` line 17) by batching ≤ 10 frames per call.
+- `plans.toml`, `cloud_gateway/config.py` `Limits`: `video_minutes_per_month` drawn from `recording_hours_per_month`;
+  the file limit stated truthfully: the worker's 100 MB source cap (`__main__.py` line 24–28) is the limit until
+  it is raised, and `upload_max_mb` 200 is reconciled to it.
+
+### 20.4 Changes
+
+| Where | Change |
+|---|---|
+| `agent_core/engine/study_links.py` (new) | `parse_youtube(url) -> video_id | None` (watch, youtu.be, shorts, embed; else `unsupported_link`); `parse_transcript(text)` as §20.3; chapters from headings and from gaps over 20 s. |
+| `agent_core/engine/study.py` | `StudyDesk.create` takes the `video_link` variant beside inline text (line 449): the source is created `ready` with its chunks and chapters, no extraction. A dropped `.mp4/.webm/.mov/.mkv/.avi` is kind `video` **by suffix at create** (`study-workspace.ts` line 344–345 and the core's suffix check at line 507–515), downgraded to `recording` in the `extracted` revision when `recording_info` says `has_video` is false (a body rewrite the revision allows). `teaching_outline` jobs send transcript chunks only; on the reply the engine fills `concepts[].kc_ids` with `kc_tags` over each concept's cited text, `outside_packs` when none, `skips` as the skills of the tagged topics that `kc_tags` over the **whole transcript** never tags, and `for_you` from `kc_views` bands. `frames: "none"` skips frames. |
+| `services/cloud-gateway/cloud_gateway/study.py` | `teaching_outline` in `GRANULAR_KINDS` (line 654) with per-claim support; its prompt paragraph: "Say what this lecture teaches, in its order: objectives, worked examples, concepts, what it assumes. Cite the transcript line for each. Never add what the lecture does not say." A `video` file takes the recording path for audio (line 1920–1925); after transcription the gateway picks frame times and calls `video_frames` in batches; frame text becomes chunks with `frame` locators, prefixed "On screen at mm:ss:"; `screened` frames are counted and never returned. |
+| `services/study-worker/study_worker/media.py`, `__main__.py` | Stream info; containers without audio; keyframe decode at a time; `video_frames` with the privacy pass and OCR; dispatch (line 29 region). No network, bytes in memory. |
+| `agent_core/engine/companion.py`, `api/companion.py`, `content/agent/roles/companion.md` | `resolve_action` (line 638–653) handles `open_moment` from a `study_search` hit's locator; `CompanionOpen.context` is stored as the episode's pending turn context and rendered into the **next turn's** user-message fence (§19.5.1 step 3) as the chunks within ±30 s, **subject to `strip_for_cloud` (line 618)**: on a cloud candidate without `study_materials` effective the fence carries the moment as a labelled fact only ("about 04:12 in <title>"). "What haven't I got yet" is a code fact set: the outline's `concepts[].kc_ids` joined to `kc_views`, offered to the model as labelled records (`companion_facts`), phrased with `fact_refs`. Timestamps are labelled facts: `labelled_numbers` (the `_NUMBER` regex, line 15) treats `h:mm:ss` and `mm:ss` tokens as one number with label `moment`. The role prompt names the moment action and the outline. |
+| `agent_core/engine/memory_tools.py`, `memory/queries.py` | `StudyExcerpt.locator`; `study_search` items carry it. |
+| `packages/client-core/src/study-workspace.ts` | `addSource` with the `video_link` variant; `loadMedia` serves `video` files; for a `video_link`, `seek` becomes `openMoment(at_ms)`, the browser link `youtube.com/watch?v=<id>&t=<s>` through the app's existing external-link opener (the one research-pack sources use); for a file, `currentTime`; frame locators seek to `at_ms`. |
+| `packages/ui/src/learn/StudyLinkAdd.tsx` (new), `StudyWorkspace.tsx` | "Add a YouTube video": link, transcript with the hint ("Under the video, open the description, choose Show transcript, select all, copy"), title; validation messages (unsupported link, over two hours, no timestamps → "saved as text"). |
+| `packages/ui/src/learn/StudyPlayer.tsx` (new), `StudyGenerate.tsx` | For a `video_link`: no player; the transcript pane with chapters, a **Watch on YouTube** button (the video's start) and **Open at mm:ss** on every line, chapter and citation, each opening the browser at the moment; for a `video` file: `<video>` in place of the `<audio>` element (line 162) with the filmstrip drawn from the element at each frame's `at_ms`; chapters and transcript shared. **Ask about this moment** on a transcript line (link) or the playhead (file) calls the companion open with `context`. |
+| `packages/ui/src/learn/StudyCitation.tsx` | The label chain (line 24–33) and grouping (line 49–57) handle `frame` locators ("04:12 · on screen"). |
+| `packages/ui/src/learn/StudyOutline.tsx` (new) | The outline: objectives with moments, examples, concepts with skill chips (tap → the learner's map, §21), "Assumes you know", "Not covered here" (the skips, worded without blame), "For you" as band words. |
+| `packages/ui/src/learn/CompanionThread.tsx` | The `open_moment` button ("Open the moment, 04:12") and the "About 04:12 in <title>" line above the composer when a context is pending. |
+| `services/agent-core/tests/w8_scenarios.py` → `tests/scenario_cases.py` | The loader generalised from `scenarios/w8/` to every `scenarios/*/` folder with a `CASES` registry; `evals/suites.toml` (line 120–126) lists suite `companion` as covering W8 to W10. |
+| `packages/i18n/locales/en.json` | `study.link.*`, `study.outline.*`, `study.video.*`, `study.video.open_at`, `study.video.watch_on_youtube`, `study.companion.action.open_moment`, `study.companion.about_moment`. |
+
+### 20.5 Behaviour
+
+1. **Adding a link.** URL → video id or refusal → transcript paste → title (prefilled) → parsed; the source is
+   `ready` at once. Headings become chapters; a 20-second gap starts a chapter too.
+2. **Watching.** No video plays inside Jana (JM-D42): **Watch on YouTube** and every **Open at mm:ss** open the
+   learner's browser at the moment; the transcript pane is the material, with chapters and citations.
+3. **What this video teaches.** One structured call over the transcript chunks; the verifier drops uncited
+   statements; the engine maps, computes skips and the learner's bands; the outline opens with skill chips into the
+   learner's map and moments into the player.
+4. **Ask about this moment.** From a transcript line (link) or the playhead (file), the button opens (or reuses)
+   today's episode with `context`; the thread shows "About 04:12 in <title>"; the learner's next message carries the
+   ±30 s lines in its fence under the Study rule (§19.6); the context is then discarded. Nothing is sent until the
+   learner sends.
+5. **Your tutor.** A `study_search` hit with a moment → `open_moment`. "What haven't I got yet?" → the engine's fact
+   set (outline skills × bands) → the companion phrases it; every skill and band is a labelled record.
+6. **Files.** `video` by suffix; whole file to the gateway under `study_materials` as today; audio transcribed; frame
+   times chosen; frames OCR'd in the worker after the privacy pass; `screened` counted; text chunks with `frame`
+   locators; the `<video>` player and a filmstrip drawn locally; "Drill this frame" is **not** in W9 (a frame's
+   picture is never read). No audio stream: frames only, said in the pane. No video stream: a `recording`.
+7. **Refusals.** Non-YouTube link; a transcript past two hours; a file over the worker's limit; the monthly minutes;
+   each named before anything is sent.
+
+### 20.6 Privacy and consent
+
+To Jana's gateway, under `study_materials` as pasted text is today: the transcript as `document`-class text in
+processing requests and the video id in the title; for files, the whole file (`audio` and, for its frames, `image`
+read in the worker and never returned as pixels). Frames the privacy pass refuses are never read by a model and never
+leave the worker. To YouTube: nothing from Jana. **Watch on YouTube** and **Open at mm:ss** open the learner's own browser, as a
+research pack's sources do; what the browser then sends is the learner's, outside Jana (JM-D42). The Ask-about-this-moment lines reach a cloud
+candidate only under `study_materials` (§19.6). A pasted third-party transcript is the learner's private copy
+(JM-D43). The outline request carries no learner data; bands are joined on the device. Nothing in §20 reaches the
+Reflector or the cloud learner block (§19.3.2).
+
+### 20.7 Budget (estimate)
+
+A YouTube video costs no transcription. The outline is one `strong-model` call plus the verifier over ≈ 12,000
+tokens of transcript: ≈ 30,000 input and 3,000 output tokens, **$0.05**. A file: the ledger reserves 8,704 input
+and 2,048 output tokens per 60-second segment (`study_recording.py` line 84), **$1.18 an hour reserved** at §4.2's
+prices (settled lower); frames cost nothing beyond the worker's CPU. Caps: `video_minutes_per_month` from the
+recording pool.
+
+### 20.8 Done when
+
+Each accepted YouTube link form yields the id and any other link is refused with the message; the verbatim panel
+fixture parses to timed chunks and chapters, a same-line transcript too, a no-timestamp paste to text, a paste past
+two hours is refused; a tapped citation or transcript line opens `youtube.com/watch?v=<id>&t=<s>` through the app's
+external-link opener and the aids work without any player; a `teaching_outline` on the seeded projectile-motion transcript
+lists cited objectives, examples and concepts, maps the range concept to its skill by `kc_tags` (fixture checked),
+lists one skipped skill of the matched topic and shows the learner's bands; the outline's cloud request carries
+transcript chunks and nothing else; "where did she derive the range equation" yields `open_moment` with the hit's
+time and fact binding accepts "04:12"; "what haven't I got yet" answers from the code fact set; Ask about this moment
+puts the ±30 s lines in the next turn's fence only under `study_materials` and discards the context after it; a
+dropped `.mp4` becomes a `video` source, frames are OCR'd after the privacy pass with a screened frame counted, and a
+quiz cites "mm:ss · on screen"; `frame-src 'none'` is unchanged; the PRV-03 inventory test passes; every gate green.
+
+### 20.9 Tests
+
+- `test_w9_links.py`: the id parser; the transcript parser over the verbatim panel fixture, the same-line form,
+  headings, merged lines, the two-hour bound and the no-timestamp case.
+- `test_w9_video_link_source.py`: the `SourceCreate` variant, chunks and chapters, `source_added`, redaction, limits.
+- `test_w9_teaching_outline.py`: `JobKind`/`AidKind`/`GRANULAR_KINDS`; the request carries transcript chunks only
+  (extends `test_dat18_egress.py`); the verifier drops an uncited statement; `kc_ids`, `skips` and `for_you` by code
+  on the seeded fixture; `test_the_outline_request_carries_no_learner_block`.
+- `test_w9_video_file.py`, `services/study-worker/tests/test_video_frames.py`: kind by suffix and the downgrade;
+  containers without audio; frame times (chapters, scene changes, gap, cap); the privacy pass refusing a frame;
+  OCR text; locators; `test_a_quiz_item_cites_a_frame_locator`; retention and inventory.
+- `test_w9_companion_moment.py`: `open_moment` from a timed hit; `labelled_numbers` on "04:12"; the context fence
+  under `strip_for_cloud` with and without `study_materials`; discarded after one turn; "what haven't I got yet" by
+  code.
+- UI: `study-link-add.test.tsx`, `study-player.test.tsx` (the link's Open-at buttons and external opener, `<video>` and the filmstrip for a
+  file), `study-outline.test.tsx`, `study-citation.test.tsx` (frame label), `companion-thread.test.tsx`.
+- Scenario `scenarios/w9/youtube_lecture.yaml` through the generalised loader.
+
+### 20.10 Demo
+
+Ada pastes a YouTube lecture on projectile motion and its transcript; Study shows its chapters and lines, each with
+**Open at**. **What this video
+teaches** lists four objectives with moments, two worked examples, six concepts tagged to physics skills, "assumes
+you know: resolving vectors", "not covered here: air resistance", and for Ada: range secure, maximum height
+learning, time of flight not started. She taps **Ask about this moment** on the 04:12 line: "why does the range
+depend on sin 2θ?" Your tutor answers from those lines. "What does this video teach that I haven't got yet?" gets
+"Time of flight and maximum height, at 06:40 and 08:15. Want five minutes on time of flight?"
+
+### 20.11 What the review changed
+
+| Finding | Answer |
+|---|---|
+| B1 null-service feature crashes policy | `service: null` branch (§20.3) |
+| B2 incomplete registration | every site listed, DAT-18a row (§20.3) |
+| B3 `study_frames` inventory; no image store | inventory and profile-store rows; no stored image, thumbnails drawn locally |
+| B4 frames cannot be screened before leaving | the file leaves whole as today; the pass runs in the worker; no MDL-23 claim (JM-D34, §20.6) |
+| B5 no image-reading path | frames are OCR text; no vision read in W9 (JM-D34) |
+| B6 `study_search` cannot read an aid | "what haven't I got yet" by code fact set (§20.4) |
+| B7 the "syllabus outline" is a learner file | the outline request carries transcript chunks only (JM-D33) |
+| B8 moment fence without a cloud rule or a home | pending turn context, `strip_for_cloud`, schema and `resolve_action` named (§20.3, §20.4) |
+| B9 transcript format, title, two-hour bound | both forms, headings, title asked, bound enforced (§20.3) |
+| B10 CSP per setting, player script, origin | the spike ran: no embedded player in this release; Watch on YouTube at the moment; no CSP change, no feature (JM-D42, JM-D31, JM-D32, JM-D41) |
+| B11 budget | $1.18 an hour reserved; frames ≈ $0 (§20.7) |
+| Non-blocking 1–9, 17–23 | kind by suffix with downgrade; worker limits stated; frames on `SourceCreate`; the `SourceCreate` variant not a route; `StudyCitation.tsx`; `JobKind` and `GRANULAR_KINDS`; the `kc_tags` fixture and the skips rule; timestamps as labelled facts; locators in `toolsets.json`; the loader; tests per bullet; notice wording; the D64 sentence; `document` class |
+
+## 21. The learner's map: a graph-first view of knowledge and mistakes (W10)
+
+Status: **specified 2026-10-31, reworked the same day after review** (`SPEC_W9_W10_REVIEW.md`: four blocking
+findings, all confirmed; §21.11 maps them). From the UpRabbit comparison (its "dynamic heatmap" of hypothesis,
+validated and misconception nodes). Decisions in §21.2 are **proposed, owner to confirm**. Device-only, no model
+call, no new consent, no new learner migration.
+
+**W10 built 2026-10-31** (the owner approved the reviewer's answers to JM-D35 to JM-D39 and JM-D45 as working
+assumptions). Every §21.8 bullet passes a named test: `test_w10_map_layers.py`, `test_w10_snapshot_as_of.py`,
+`test_w10_overview.py`, `test_w10_kc_links.py`, `test_w10_scenarios.py` (`scenarios/w10/map_month_later.yaml`, suite
+`learner_map`), the UI's `map-overview.test.tsx`, `concept-map-layers.test.tsx`, `concept-map-scrubber.test.tsx`,
+`concept-map-sheet.test.tsx` and `companion-thread.test.tsx`, the renderer's `conceptmap-view.test.tsx` and the client
+core's `learner-map.test.ts`. The engine is `engine/learner_map.py`; the replay is `snapshot_as_of` and `Snapshots` in
+`learner/projections.py`; the hero is `progress/MapOverview.tsx`. A replay of 10,002 events took 0.41 s on the
+development machine. Where the build departs from the text above, and why:
+
+- **Contracts.** `contract-additions-w10.json` records the additions, applied to `contracts/` in the same change. The
+  `ConceptNode` fields are optional properties, so a reply from a core before W10 (and the existing fixtures) still
+  validates; a W10 core sends every one. Three pieces §21.3 does not list were needed: `ConceptMap.first_day` (the
+  local date of the first learning event, since the scrubber starts there, §21.5, and the client cannot know it),
+  `KcLinks.kc_id` (the reply names its skill), and `validation_failed` on the concept-map and links endpoints. The
+  contract fixture corpus (`evals/contracts/`) was regenerated by `jana_tools fixtures --write` for the two new
+  definitions.
+- **States at now.** A skill with evidence takes its state from `kc_views` at now; a `kc_mastery` row with no
+  attempts keeps its stored state. No fold writes such a row with any state but Not started, so for real learners
+  this is `kc_views` exactly; hand-made test rows keep their meaning. The subject map (`/map`) reads the same states,
+  though §21.4 lists only the skill map, so a tile's rule, the overview and the skill map agree (Progress already read
+  `kc_views`).
+- **Freshness buckets.** Today is the same local day; this week the six days before; this month up to 29 days back;
+  longer ago beyond. `last_seen_at` also moves on a practised skill's neighbours through implied evidence (LRN-10);
+  that counts as a touch, as the column says.
+- **Since last time.** The `app_settings` value under `map_opened_at:<profile_id>` holds the time and the bands then
+  (only bands above Not started), so no replay is needed to compare. A live read writes it; the first live read in a
+  core's life takes the stored bands as its baseline for the visit, so the overview and the subject map opened from
+  it compare against the same open. A literal compare-to-previous-read would clear the marks between the overview and
+  the map. `new` means no band above Not started at the last open; `up` means the band rose. A dated map never marks or
+  records. Deleting a profile removes the key.
+- **The dated map.** `snapshot_as_of` takes the learner's own projections as an optional argument (the assessment
+  build replaces the mastery projection). The cache is keyed by profile, date and the log's newest `seq`, so a late
+  or synced event replays the date again; eight dates are held per profile. Questions come from the live transcript,
+  asked by then; Study counts use the live Study tables filtered by time (due cards from each card's latest review by
+  then); tracked topics are those whose `last_at` is by then; no mastery check is shown as waiting.
+- **Study and notes links.** Materials are the aids a tagged Study activity names through its `ref` (an aid, a quiz
+  attempt, a card review), plus aids and sources whose title `study_topics.kc_tags` tags at read time. Moments are the
+  timed transcript chunks of a recording, or of §20's video files and video links, tagged the same way; frames are not
+  tagged. `KcLinks` material kinds are Study's aid and source kinds together, widened for §20's `teaching_outline`,
+  `video` and `video_link`.
+  Notes count through the KCs of the events they cite only (not `notes.kc_ids`), active or awaiting review.
+- **Mistakes.** `ConceptMap.mistakes` now carries disputed rows. That changed one assertion in `test_concept_map.py`
+  ("a disputed one never"), as §21.3 requires, and the UI fixture was regenerated by its writer. A disputed
+  misconception is ringed with "You said this isn't right". It is not counted in the Mastery layer's mistake badge or
+  in the overview's watched mistakes, and its sheet line offers no root gap. Order: watched, disputed, resolved.
+- **The hero.** The overview's layer switch offers Mastery, Freshness and Mistakes, the layers its tiles carry. A tap
+  opens Learn's map mode on the chosen layer (one lens, in memory). The ideas that moved today are outlined at tile
+  granularity, through the subject maps the app already holds.
+- **Freshness looks.** Today uses the Secure look, this week Nearly secure, this month Learning, longer ago Coming back
+  to this, not yet Not started, each with its tokens.json pattern drawn as an SVG pattern and its word on the box.
+- **Sheet actions.** Make flashcards opens the first linked source in Study with the flashcard tool's dialog. The
+  learner starts the job, so Study's own consent and budget rules apply. With only an aid linked it opens the aid. This
+  needed two `StudyRequest` kinds (`source`, `flashcards`). Ask your tutor opens Study's thread with "About
+  <statement>: " in the composer. The knows page opened from Learn returns to Learn (`knows-from-learn`).
+- **Scenario loader.** `tests/scenario_cases.py` finds every week's cases and dispatches to `w8_scenarios.RUNNERS` and
+  `w10_scenarios.RUNNERS`. `test_w8_scenarios.py` loads through it with the same cases and assertions. The W10 case's
+  rubric was corrected once before it passed: its first draft said the map four weeks ago would be all Not started,
+  which its own dates contradict, so it now checks the bands the model had then (§21.8's wording).
+- **Not done.** No in-browser check: the browser pane could not open a local file, and the app needs a running core
+  and profile. The map was checked through the component and renderer tests only.
+
+**What exists.** Learn's subject map has a "Map" mode (UXS-22): one subject's curated skills as a layered graph,
+foundations left, each skill right of what it builds on, with the learner's own layer: state and band per skill,
+prerequisite edges, root-gap edges from diagnosed misconceptions with their gap path, the questions asked, "What
+next" ranked by exam weight and unmet prerequisites, a sheet per skill, and a table for screen readers
+(`packages/ui/src/learn/ConceptMap.tsx`, rendered by `packages/renderers/src/conceptmap/ConceptMapSvg.tsx`; data from
+`GET /v1/curriculum/{subject_id}/concept-map`, `api/learn.py` line 74, built in `engine/learn.py`; contract
+`ConceptMap` with `nodes`, `edges`, `next`, `questions`, `mistakes`; re-read on every mastery change, `App.tsx` line
+215). The learner model holds what the layers need: `kc_mastery` (state, `last_seen_at` from closed opportunities,
+`projections.py` line 305 and 409), `review_cards` (FSRS retrievability, `learner/model.py` line 77), `kc_views`
+(state at now, including `needs_review`), `learner_misconceptions` (five statuses, `schema.sql` line 323), Study
+activity with KC tags (§19.3.2, a non-evidence event the mastery fold skips, `projections.py` line 217), notes with
+cited events, and the companion summary's topics (≤ 6). Progress's "What moved today" is `MovedToday` in
+`packages/ui/src/progress/Progress.tsx` (line 66–90). What is missing: the map is three taps away behind Progress's
+lists; it shows mastery but not freshness; mistakes are edges and a sheet; Study materials, notes and the thread are
+not on it; one subject at a time; no way to see the map as it was a month ago, although the learner model is an
+event log.
+
+### 21.1 What the learner gets
+
+| Part | What it is |
+|---|---|
+| **My map** first | Progress opens on an overview of every installed subject as topic tiles (TABLE UXS-22a's first matching rule per tile: fill, pattern, icon and word), then a tap into a subject's skill map (the existing one, with layers). "What moved today" stays first under the overview and outlines the moved skills on the map. The lists stay below. |
+| Layers | Switches over the same drawing: **Mastery** (the bands and words as today), **Freshness** (practised today, this week, this month, longer ago, not yet; and **refresh due**: a secure skill whose review is due), **Mistakes** (each watched misconception as a ring on its skill with its status word: being watched, active, resolving, resolved, "you said this isn't right"), **Study** (a dot per material or aid tagged to the skill; cards reviewed at least once that are due; lecture moments), **Notes** (a pin where a tutor's note cites the skill), **Topics your tutor is tracking** (the summary's topics, at most six). Every layer has its words in the box label and the table, and a legend; never colour alone (DSN-04). |
+| Since last time | Skills whose band rose or appeared since the map was last opened pulse once (respecting Reduce motion) and keep an outline: up or new. |
+| The scrubber | "4 weeks ago → today": the map as the learner model stood on that date, replayed from the event log by code, read-only; weekly dates, at most 26 weeks. |
+| The sheet | Today's sheet plus the Study materials and lecture moments on this skill, the tutor's notes about it (open the knows page), and three actions that exist elsewhere: **Make flashcards**, **Research this**, **Ask your tutor about this** (the thread opens with "About <skill statement>:" as a draft, nothing sent). |
+
+No heat means blame (LRN-35): a skill with no evidence is "not yet", never a warning; the words are the learner's
+own state words (G99).
+
+### 21.2 Decisions (proposed, owner to confirm)
+
+| # | Decision | Working assumption |
+|---|---|---|
+| JM-D35 | Does Progress become map-first? | **Yes**: the overview is the hero; `MovedToday` first under it; the lists, the Study activity line and the record below. Learn's own map mode stays. |
+| JM-D36 | What may the heat encode? | **Bands, buckets and words, by code, never a probability** (LRN-36, G99). Freshness from the newest learning touch of a skill (opportunities **and** Study activity); refresh due from `kc_views` (`needs_review`, the FSRS card below the bar); mistakes from status; no `p_mastery` anywhere, in any of the three contracts. |
+| JM-D37 | How is "as of a date" computed? | **Replay into memory, read-only:** the learner schema in a `:memory:` database, `events` with `occurred_at ≤ date` and the tables a fold reads (`profile`) copied in, `Projector(mem, params, content).rebuild()`; the map read from it. No new stored history. Budget evidence: the rebuild budget is 100,000 events in 10 s (`config/keys.py` line 720–721; `test_m6b_events.py` line 419–431), so 10,000 in 2 s. |
+| JM-D38 | How are materials, moments and notes linked to skills? | `study_activity.kc_tags`, aid KC links (`engine/study_topics.py`), frame and transcript chunks tagged the same way at read time, notes through the KCs of the events they cite. Untagged items are not on the map. |
+| JM-D39 | Does the map leave the device or reach a model? | **Never.** It is the knows view's data (LRN-36, MEM-14, UXS-28), read by the app; the cloud learner block is unchanged. |
+| JM-D45 | Where is "last opened" kept? | In the device-local `app_settings` table (`schema.sql` line 803–807), key `map_opened_at:<profile_id>`: **not** a `Settings` key, which would append a synced `setting_change` learning event on every open (`store/settings.py` line 100–107) and pollute the log the scrubber replays. |
+
+### 21.3 Contracts
+
+`contract-additions-w10.json` first, then the contracts. No storage change.
+
+- `contracts/api/commands.schema.json`: `ConceptNode` gains `freshness: "today" | "week" | "month" | "older" | "never"`,
+  `refresh_due: boolean`, `changed_since: "up" | "new" | null`, `study: {materials, moments, cards_due}` (integers),
+  `notes: integer`, `tracked: boolean` (a summary topic). `ConceptMap` gains `as_of: date | null`. `ConceptMistake.status`
+  gains `"disputed"` (the engine drops disputed rows today; they return as "you said this isn't right").
+- New `$defs/CurriculumOverview` (`GET /v1/curriculum/overview`): `{subjects: [{subject_id, subject, level, topics:
+  [{topic_id, title, kcs, bands: {not_started, learning, secure}, rule (TABLE UXS-22a's first matching), freshness,
+  refresh_due, mistakes, changed}]}]}`, from the subject map's data (`learn.ts` `MapTopic`, `MapKc`) plus freshness.
+- `GET /v1/curriculum/{subject_id}/concept-map?as_of=YYYY-MM-DD`: the same `ConceptMap` from the replayed snapshot,
+  `as_of` set, `changed_since` null, counts as of the date; a date over 26 weeks back or in the future is
+  `validation_failed`.
+- New `$defs/KcLinks` (`GET /v1/curriculum/kcs/{kc_id}/links`): `{materials: [{aid_id | source_id, kind, title}] ≤ 12,
+  moments: [{source_id, at_ms, title}] ≤ 12, notes: [{note_id, text, confidence}] ≤ 6, tracked: boolean,
+  misconceptions: ConceptMistake[]}`.
+- "Ask your tutor about this" is a **client deep link** to the companion thread with a draft, no event and no
+  contract change (`open_tutor` stays PED-01's hand-off to the guided tutor, §19.3.3).
+
+### 21.4 Changes
+
+| Where | Change |
+|---|---|
+| `agent_core/engine/learn.py` (the desk's `concept_map`) | Reads states from `kc_views` at now (today line 148–150 reads `kc_mastery.status`, so `refresh_due` and `state` agree); `freshness` as the newest of `kc_mastery.last_seen_at` and the newest `study_activity` event whose `kc_tags` holds the skill (a scan of `events WHERE type='study_activity'` within 26 weeks, JSON tags, no index), bucketed against the profile's local day; skills with no mastery row included as "never"; `changed_since` against `app_settings` `map_opened_at:<profile>`; `study`, `notes`, `tracked` per skill; `as_of` through `snapshot_as_of`; new `overview()` and `kc_links()`. |
+| `agent_core/learner/projections.py` | `snapshot_as_of(conn, params, content, ts) -> sqlite3.Connection`: the generated learner schema in `:memory:` (`store/generated/schema.py`), `events` with `occurred_at ≤ ts` and `profile` copied, `Projector(mem, params, content).rebuild()` (line 1242–1265 folds `self.conn`, so the memory connection is its `conn`); cached per (profile, date) for the session; `table_checksum` (line 1147) of the live tables unchanged before and after. |
+| `agent_core/api/learn.py` | `?as_of=` validated; `GET /v1/curriculum/overview`; `GET /v1/curriculum/kcs/{kc_id}/links`; `map_opened_at:<profile>` written to `app_settings` on an overview or map read without `as_of`. |
+| `packages/client-core/src/concept-map.ts`, `learn.ts` | Layer, `asOf`, `links(kcId)`, the overview read; the layer and scrubber position kept in memory only. |
+| `packages/renderers/src/conceptmap/ConceptMapSvg.tsx` | Layer paints on the existing boxes: Freshness as five steps using `tokens.json`'s `mastery` pattern tokens, one per bucket, with the word in the box label; refresh due as a dashed outline with "refresh due"; Mistakes as rings with the status word in the label and table; Study as dots with a count; Notes as a pin; `changed_since` as an outline that pulses once unless Reduce motion. A legend per layer; a table column per layer. |
+| `packages/ui/src/learn/ConceptMap.tsx` | Layer switch (`SegmentedControl`), the scrubber (`<input type="range">` over weekly dates, the date read aloud, "Today"), the sheet's sections and the three actions (Make flashcards → a Study job on the skill's materials; Research this → the research conversation with the skill's statement; Ask your tutor → the deep link with the draft). |
+| `packages/ui/src/progress/Progress.tsx`, new `progress/MapOverview.tsx` | The overview as the hero with UXS-22a tiles; `MovedToday` (line 66–90) first under it and outlining moved skills on the map; the rest unchanged. |
+| `apps/desktop/src/App.tsx` | The deep link to the companion thread with a draft, routed like other screens (no event). |
+| `packages/i18n/locales/en.json` | `map.layer.*`, `map.freshness.{today, week, month, older, never}`, `map.refresh_due`, `map.changed.{up, new}`, `map.scrubber.*`, `map.sheet.*`, `map.mistake.disputed`, `progress.map.title`. |
+
+### 21.5 Behaviour
+
+- **Freshness** is the newest learning touch: an attempt, hint or check (through `last_seen_at`) or a Study activity
+  tagged to the skill: today, this week, this month, longer ago, not yet. **Refresh due** is `kc_views`'
+  `needs_review`. Study `cards_due` counts cards reviewed at least once (an unreviewed card has no skill tag).
+- **Since last time**: `map_opened_at:<profile>` in `app_settings` is written on a live overview or map read; a
+  skill whose band rose or appeared since then is `up` or `new`; the first open marks nothing. ("Down" is dropped: a
+  band falls only by correction or migration, and the word would blame.)
+- **The scrubber** offers weekly dates from the profile's first learning event (≤ 26 weeks) to today; a date
+  replays the model and redraws; counts are as of the date; the table says "as of 3 October 2026"; a replay of 10,000
+  events completes within 2 s on TABLE MDL-16a's mid class and is cached per date for the session. Scrubbing writes
+  nothing (`table_checksum` proves it).
+- **Accessibility**: every layer's meaning is in each box's label and the table; the scrubber is a labelled range
+  input; words never on hover only; pulses respect Reduce motion.
+
+### 21.6 Privacy
+
+Nothing leaves the device: the overview, the map, the links and the snapshots are read by the app from the learner
+database and the device database; none enters a prompt. Material titles and note text are the knows view's data
+(LRN-36, MEM-14, UXS-28). The cloud learner block is unchanged.
+
+### 21.7 Budget
+
+$0: code only. Replays are CPU on the device.
+
+### 21.8 Done when
+
+Progress opens on the overview with every installed subject and each tile's rule, bands and freshness equal the
+subject map's; a tap opens the subject map with the chosen layer; Freshness shows the buckets from a seeded learner
+including a skill touched only in Study; refresh due on a decayed card agrees with the state shown; the Mistakes
+layer rings an active and a disputed misconception with their words in the table; a tagged Study material appears
+as a dot and opens; a note citing a skill's events appears as a pin and opens the knows page; `changed_since` marks a
+skill that moved since the previous open and nothing on the first open, and no learning event is written by opening
+the map; the scrubber at four weeks ago shows the bands the model had then, `snapshot_as_of(now)` equals the live
+tables, and the live tables' checksums are unchanged; `as_of` beyond 26 weeks is refused; "Ask your tutor about
+this" opens the thread with the draft and nothing sent; no probability appears in `ConceptMap`, `CurriculumOverview`
+or `KcLinks`; every gate green.
+
+### 21.9 Tests
+
+- `test_w10_map_layers.py`: freshness from opportunities and from Study activity alone; `refresh_due` equals
+  `needs_review`; `changed_since` from `app_settings` with no event written; `disputed` returned; counts per skill;
+  `test_no_probability_in_any_map_contract` over all three.
+- `test_w10_snapshot_as_of.py`: a dated event log replays to the bands the projections had then; `snapshot_as_of(now)`
+  equals the live tables; checksums unchanged; the 26-week bound; the cache; 10,000 events within the budget.
+- `test_w10_overview.py`: tile rules, bands and freshness equal the subject map's.
+- `test_w10_kc_links.py`: materials, moments, notes, tracked, bounded, device-only.
+- UI: `map-overview.test.tsx`, `concept-map-layers.test.tsx` (legend, table columns, words in labels, reduce
+  motion), `concept-map-scrubber.test.tsx`, `concept-map-sheet.test.tsx` (a material opens, a note pin opens the
+  knows page), `companion-thread.test.tsx` (the deep link's draft, nothing sent).
+- Scenario `scenarios/w10/map_month_later.yaml` through the generalised loader.
+
+### 21.10 Demo
+
+Ada opens Progress: three subjects, physics the largest; "Motion" is mostly learning, one skill refresh due, one
+ring. She taps physics: the two skills her projectile quiz touched are outlined "since last time"; Freshness shows
+motion touched today and waves not yet; Mistakes rings "range vs maximum height" as being watched. She drags the
+scrubber to four weeks ago: everything not yet. Back to today, the refresh-due skill's sheet shows the lecture moment
+at 04:12, two cards due, the tutor's note, and **Ask your tutor about this**.
+
+### 21.11 What the review changed
+
+| Finding | Answer |
+|---|---|
+| B12 `map_opened_at` as a setting writes learning events | `app_settings`, device-local (JM-D45) |
+| B13 `open_tutor` is the guided-tutor hand-off | client deep link with a draft, no event (§21.3) |
+| B14 freshness misses Study activity and skills without a mastery row | computed in `engine/learn.py` over both sources (§21.4) |
+| B15 `snapshot_as_of` needs a schema and copies | the `:memory:` schema, event and `profile` copies, `rebuild()`, checksum proofs (JM-D37) |
+| Non-blocking 10–16, 19 | `disputed`; "down" dropped; "topics your tutor is tracking"; cards reviewed at least once; states from `kc_views`; UXS-22a tiles; no hover-only words; a test per bullet |

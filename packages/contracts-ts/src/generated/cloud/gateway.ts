@@ -36,7 +36,16 @@ export type StudyWorkspaceJobId = string;
  * via the `definition` "study_workspace__AidKind".
  */
 export type StudyWorkspaceAidKind =
-  "notes" | "summary" | "chat" | "flashcards" | "quiz" | "audio_overview" | "lesson_plan" | "chapters" | "concept_map";
+  | "notes"
+  | "summary"
+  | "chat"
+  | "flashcards"
+  | "quiz"
+  | "audio_overview"
+  | "lesson_plan"
+  | "chapters"
+  | "concept_map"
+  | "teaching_outline";
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
  * via the `definition` "study_workspace__ChunkId".
@@ -61,7 +70,8 @@ export type StudyWorkspaceLocator =
   | StudyWorkspaceLocatorOneOf2
   | StudyWorkspaceLocatorOneOf3
   | StudyWorkspaceLocatorOneOf4
-  | StudyWorkspaceLocatorOneOf5;
+  | StudyWorkspaceLocatorOneOf5
+  | StudyWorkspaceLocatorOneOf6;
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
  * via the `definition` "study_workspace__Digest".
@@ -367,6 +377,11 @@ export interface StudyWorkspaceLocatorOneOf5 {
   kind: "text";
   paragraph: number;
 }
+export interface StudyWorkspaceLocatorOneOf6 {
+  kind: "frame";
+  at_ms: number;
+  frame_id: string;
+}
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
  * via the `definition` "study_workspace__GenerateSettings".
@@ -446,6 +461,7 @@ export interface StudyProcessingResponse1 {
    */
   chapters?: StudyWorkspaceChapter[];
   concept_map?: StudyWorkspaceDraftConceptMap;
+  outline?: StudyWorkspaceTeachingOutline;
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -584,11 +600,89 @@ export interface StudyWorkspaceDraftRelation {
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
+ * via the `definition` "study_workspace__TeachingOutline".
+ */
+export interface StudyWorkspaceTeachingOutline {
+  /**
+   * @maxItems 12
+   */
+  objectives: StudyWorkspaceTeachingOutlineObjectivesItem[];
+  /**
+   * @maxItems 8
+   */
+  examples: StudyWorkspaceTeachingOutlineExamplesItem[];
+  /**
+   * @maxItems 16
+   */
+  concepts: StudyWorkspaceTeachingOutlineConceptsItem[];
+  /**
+   * @maxItems 6
+   */
+  assumes: StudyWorkspaceTeachingOutlineAssumesItem[];
+  /**
+   * @maxItems 6
+   */
+  skips?: StudyWorkspaceTeachingOutlineSkipsItem[];
+  /**
+   * @maxItems 48
+   */
+  for_you?: StudyWorkspaceTeachingOutlineForYouItem[];
+}
+export interface StudyWorkspaceTeachingOutlineObjectivesItem {
+  /**
+   * @minItems 1
+   * @maxItems 12
+   */
+  citations: StudyWorkspaceCitation[];
+  text: string;
+  at_ms?: number;
+}
+export interface StudyWorkspaceTeachingOutlineExamplesItem {
+  /**
+   * @minItems 1
+   * @maxItems 12
+   */
+  citations: StudyWorkspaceCitation[];
+  text: string;
+  at_ms?: number;
+}
+export interface StudyWorkspaceTeachingOutlineConceptsItem {
+  /**
+   * @minItems 1
+   * @maxItems 12
+   */
+  citations: StudyWorkspaceCitation[];
+  name: string;
+  /**
+   * @maxItems 3
+   */
+  kc_ids?: string[];
+  outside_packs?: boolean;
+  at_ms?: number;
+}
+export interface StudyWorkspaceTeachingOutlineAssumesItem {
+  /**
+   * @minItems 1
+   * @maxItems 12
+   */
+  citations: StudyWorkspaceCitation[];
+  text: string;
+}
+export interface StudyWorkspaceTeachingOutlineSkipsItem {
+  kc_id: string;
+  statement: string;
+}
+export interface StudyWorkspaceTeachingOutlineForYouItem {
+  kc_id: string;
+  band: "not_started" | "learning" | "secure";
+}
+/**
+ * This interface was referenced by `CloudGateway`'s JSON-Schema
  * via the `definition` "StudyUploadCreate".
  */
 export interface StudyUploadCreate {
   request_id: StudyWorkspaceJobId;
-  kind: "pdf" | "slides" | "document" | "photo" | "recording";
+  kind: "pdf" | "slides" | "document" | "photo" | "recording" | "video";
   mime_type: string;
   byte_length: number;
   sha256: StudyWorkspaceDigest;
@@ -629,6 +723,7 @@ export interface StudyExtractionRequest {
   source_id: StudyWorkspaceSourceId;
   revision: StudyWorkspaceRevision;
   locale: string;
+  frames?: "auto" | "none";
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -650,6 +745,21 @@ export interface StudyExtractionResponse {
   next_cursor: string | null;
   duration_ms?: number;
   usage?: StudyWorkspaceUsageReceipt;
+  has_video?: boolean;
+  /**
+   * @maxItems 60
+   */
+  frames?: StudyWorkspaceFrame[];
+}
+/**
+ * This interface was referenced by `CloudGateway`'s JSON-Schema
+ * via the `definition` "study_workspace__Frame".
+ */
+export interface StudyWorkspaceFrame {
+  frame_id: string;
+  at_ms: number;
+  reason: "chapter" | "scene";
+  read_state: "read" | "unreadable" | "screened";
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -769,6 +879,11 @@ export interface StudyWorkspaceExtractionResponse {
   next_cursor: string | null;
   duration_ms?: number;
   usage?: StudyWorkspaceUsageReceipt;
+  has_video?: boolean;
+  /**
+   * @maxItems 60
+   */
+  frames?: StudyWorkspaceFrame[];
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -780,6 +895,7 @@ export interface StudyWorkspaceExtractionRequest {
   source_id: StudyWorkspaceSourceId;
   revision: StudyWorkspaceRevision;
   locale: string;
+  frames?: "auto" | "none";
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -813,7 +929,7 @@ export interface StudyWorkspaceCloudUploadGrant {
  */
 export interface StudyWorkspaceCloudUploadCreate {
   request_id: StudyWorkspaceJobId;
-  kind: "pdf" | "slides" | "document" | "photo" | "recording";
+  kind: "pdf" | "slides" | "document" | "photo" | "recording" | "video";
   mime_type: string;
   byte_length: number;
   sha256: StudyWorkspaceDigest;
@@ -839,6 +955,7 @@ export interface StudyWorkspace__ProcessingResponse {
    */
   chapters?: StudyWorkspaceChapter[];
   concept_map?: StudyWorkspaceDraftConceptMap;
+  outline?: StudyWorkspaceTeachingOutline;
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema

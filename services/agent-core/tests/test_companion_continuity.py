@@ -123,7 +123,7 @@ def test_forward_migration_preserves_old_transcripts_and_adds_provenance(tmp_pat
     old.execute("INSERT INTO sessions(session_id,mode,started_at) VALUES ('old','study_companion',1)")
     old.close()
     upgraded, applied = open_database(path, "learner")
-    assert [step.version for step in applied] == [22]
+    assert [step.version for step in applied] == [22, 23]  # v23 (W9, SPEC §20.3) follows; the transcript stays
     assert upgraded.execute("SELECT session_id FROM sessions").fetchall() == [("old",)]
     fresh, _ = open_database(tmp_path / "fresh.db", "learner")
     query = "SELECT sql FROM sqlite_schema WHERE name='companion_turn_context'"

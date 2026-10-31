@@ -658,6 +658,15 @@ updated_at = { purpose = "Order and display study packs", retention = "study_res
 
 # W8 (SPEC §19.3.3 to §19.3.5, §19.6 PRV-03): the Study companion's operational rows, profile-local; included in an explicitly requested encrypted profile archive.
 
+[learner.study_frames]
+frame_id = { purpose = "Random identity of one frame of a video file read as text (SPEC §20.3)", retention = "study_frames", egress = ["Profile archive and support file"] }
+source_id = { purpose = "Opaque identity of the video source the frame belongs to; never a profile or account identity", retention = "study_frames", egress = ["Profile archive and support file"] }
+revision = { purpose = "The source revision the frame was read for; rows cascade with it", retention = "study_frames", egress = ["Profile archive and support file"] }
+at_ms = { purpose = "The moment of the still in the file, so the filmstrip draws it locally and a citation seeks to it", retention = "study_frames", egress = ["Profile archive and support file"] }
+reason = { purpose = "Why the moment was chosen: a chapter boundary or a scene change between keyframes", retention = "study_frames", egress = ["Profile archive and support file"] }
+read_state = { purpose = "Whether the photo privacy pass let the frame be read (screened: refused, counted only, no text)", retention = "study_frames", egress = ["Profile archive and support file"] }
+text = { purpose = "The board or slide writing read from the frame by OCR in the sandboxed worker; never an image", retention = "study_frames", egress = ["Profile archive and support file", "Study material"] }
+
 [learner.companion_episodes]
 session_id = { purpose = "The companion session that is this day's episode of the thread", retention = "companion_episodes", egress = ["Profile archive and support file"] }
 thread_id = { purpose = "The profile's one companion thread", retention = "companion_episodes", egress = ["Profile archive and support file"] }

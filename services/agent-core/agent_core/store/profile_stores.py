@@ -81,6 +81,8 @@ PROFILE_STORES: tuple[ProfileStore, ...] = (
                  "profile_directory", "source study workspace"),
     ProfileStore("study concept maps of typed topics", "concept maps of typed topics and the learner's edits to them",
                  LEARNER, "profile_directory", "study concept maps of typed topics"),
+    ProfileStore("video frames", "the writing on a video file's frames read as text in the worker (SPEC §20.3), "
+                 "never an image; a screened frame is a count", LEARNER, "profile_directory", "video frames"),
     ProfileStore("study packs from the research agent", "approved research briefs, progress and the parts made",
                  LEARNER, "profile_directory", "study packs from the research agent"),
     ProfileStore("source material files", "hashed original blobs and incomplete uploads", "profiles/{profile}/study",
