@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 132aad3c38e1838a44b0d42481259f766660c959f2483abc7cab4083eb9a80a5; do not edit",
+ "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 85aa9591d2ac036d2c1704f35c6d9da479ef4ae30580de31e6c5328caeac58e0; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/study/workspace",
  "$defs": {
@@ -156,6 +156,29 @@
       "kind",
       "paragraph"
      ]
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "at_ms",
+      "frame_id"
+     ],
+     "properties": {
+      "kind": {
+       "const": "frame"
+      },
+      "at_ms": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 7200000
+      },
+      "frame_id": {
+       "type": "string",
+       "pattern": "^frm_[0-9A-HJKMNP-TV-Z]{26}$"
+      }
+     }
     }
    ]
   },
@@ -230,7 +253,9 @@
     "recording",
     "session_note",
     "dictated_note",
-    "board_note"
+    "board_note",
+    "video_link",
+    "video"
    ]
   },
   "SourceState": {
@@ -296,6 +321,87 @@
      "type": "integer",
      "minimum": 1,
      "maximum": 7200000
+    },
+    "link": {
+     "anyOf": [
+      {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "provider",
+        "video_id",
+        "url"
+       ],
+       "properties": {
+        "provider": {
+         "const": "youtube"
+        },
+        "video_id": {
+         "type": "string",
+         "pattern": "^[A-Za-z0-9_-]{11}$"
+        },
+        "url": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 2048
+        }
+       }
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "transcript_kind": {
+     "anyOf": [
+      {
+       "enum": [
+        "timed",
+        "plain"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "frames": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 60
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "screened_frames": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 60
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "chapters": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 60,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/SourceChapter"
+     }
+    },
+    "frames_choice": {
+     "enum": [
+      "auto",
+      "none"
+     ]
     }
    },
    "required": [
@@ -388,7 +494,8 @@
         "slides",
         "document",
         "photo",
-        "recording"
+        "recording",
+        "video"
        ]
       },
       "file_name": {
@@ -409,6 +516,12 @@
       },
       "sha256": {
        "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Digest"
+      },
+      "frames": {
+       "enum": [
+        "auto",
+        "none"
+       ]
       }
      },
      "required": [
@@ -467,6 +580,35 @@
       "kind",
       "note_id"
      ]
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "url",
+      "transcript"
+     ],
+     "properties": {
+      "kind": {
+       "const": "video_link"
+      },
+      "url": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      "transcript": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 400000
+      },
+      "title": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 120
+      }
+     }
     }
    ]
   },
@@ -692,7 +834,8 @@
     "audio_overview",
     "lesson_plan",
     "chapters",
-    "concept_map"
+    "concept_map",
+    "teaching_outline"
    ]
   },
   "JobKind": {
@@ -706,7 +849,8 @@
     "audio_overview",
     "lesson_plan",
     "chapters",
-    "concept_map"
+    "concept_map",
+    "teaching_outline"
    ]
   },
   "JobState": {
@@ -739,7 +883,9 @@
     "confirm_needed",
     "grant_expired",
     "queue_full",
-    "graded_work"
+    "graded_work",
+    "unsupported_link",
+    "transcript_too_long"
    ]
   },
   "JobCreate": {
@@ -828,7 +974,8 @@
          "quiz",
          "audio_overview",
          "chapters",
-         "concept_map"
+         "concept_map",
+         "teaching_outline"
         ]
        }
       }
@@ -852,7 +999,8 @@
          "audio_overview",
          "lesson_plan",
          "chapters",
-         "concept_map"
+         "concept_map",
+         "teaching_outline"
         ]
        }
       }
@@ -917,7 +1065,8 @@
          "extract",
          "chat",
          "chapters",
-         "concept_map"
+         "concept_map",
+         "teaching_outline"
         ]
        }
       }
@@ -1125,6 +1274,9 @@
     },
     "concept_map": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/StudyConceptMap"
+    },
+    "outline": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/TeachingOutline"
     }
    },
    "required": [
@@ -1317,6 +1469,47 @@
         {
          "required": [
           "chapters"
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "kind": {
+        "const": "teaching_outline"
+       }
+      },
+      "required": [
+       "kind"
+      ]
+     },
+     "then": {
+      "required": [
+       "outline"
+      ],
+      "not": {
+       "anyOf": [
+        {
+         "required": [
+          "deck_id"
+         ]
+        },
+        {
+         "required": [
+          "quiz_id"
+         ]
+        },
+        {
+         "required": [
+          "chapters"
+         ]
+        },
+        {
+         "required": [
+          "concept_map"
          ]
         }
        ]
@@ -2090,6 +2283,9 @@
     },
     "concept_map": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/DraftConceptMap"
+    },
+    "outline": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/TeachingOutline"
     }
    },
    "required": [
@@ -2277,6 +2473,47 @@
         {
          "required": [
           "chapters"
+         ]
+        }
+       ]
+      }
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "kind": {
+        "const": "teaching_outline"
+       }
+      },
+      "required": [
+       "kind"
+      ]
+     },
+     "then": {
+      "required": [
+       "outline"
+      ],
+      "not": {
+       "anyOf": [
+        {
+         "required": [
+          "flashcards"
+         ]
+        },
+        {
+         "required": [
+          "quiz"
+         ]
+        },
+        {
+         "required": [
+          "chapters"
+         ]
+        },
+        {
+         "required": [
+          "concept_map"
          ]
         }
        ]
@@ -2579,7 +2816,8 @@
       "slides",
       "document",
       "photo",
-      "recording"
+      "recording",
+      "video"
      ]
     },
     "mime_type": {
@@ -2646,6 +2884,12 @@
      "type": "string",
      "minLength": 1,
      "maxLength": 20
+    },
+    "frames": {
+     "enum": [
+      "auto",
+      "none"
+     ]
     }
    }
   },
@@ -2703,6 +2947,16 @@
     },
     "usage": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/UsageReceipt"
+    },
+    "has_video": {
+     "type": "boolean"
+    },
+    "frames": {
+     "type": "array",
+     "maxItems": 60,
+     "items": {
+      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Frame"
+     }
     }
    }
   },
@@ -4094,6 +4348,261 @@
       "pattern": "^mc\\.[a-z0-9_.]+$",
       "maxLength": 96
      }
+    }
+   }
+  },
+  "SourceChapter": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "start_ms",
+    "end_ms",
+    "title"
+   ],
+   "properties": {
+    "start_ms": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7200000
+    },
+    "end_ms": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 7200000
+    },
+    "title": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    }
+   }
+  },
+  "TeachingOutline": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "objectives",
+    "examples",
+    "concepts",
+    "assumes"
+   ],
+   "properties": {
+    "objectives": {
+     "type": "array",
+     "maxItems": 12,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "text",
+       "citations"
+      ],
+      "properties": {
+       "citations": {
+        "type": "array",
+        "items": {
+         "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Citation"
+        },
+        "minItems": 1,
+        "maxItems": 12
+       },
+       "text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
+       },
+       "at_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 7200000
+       }
+      }
+     }
+    },
+    "examples": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "text",
+       "citations"
+      ],
+      "properties": {
+       "citations": {
+        "type": "array",
+        "items": {
+         "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Citation"
+        },
+        "minItems": 1,
+        "maxItems": 12
+       },
+       "text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
+       },
+       "at_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 7200000
+       }
+      }
+     }
+    },
+    "concepts": {
+     "type": "array",
+     "maxItems": 16,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "name",
+       "citations"
+      ],
+      "properties": {
+       "citations": {
+        "type": "array",
+        "items": {
+         "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Citation"
+        },
+        "minItems": 1,
+        "maxItems": 12
+       },
+       "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 60
+       },
+       "kc_ids": {
+        "type": "array",
+        "maxItems": 3,
+        "uniqueItems": true,
+        "items": {
+         "type": "string",
+         "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+        }
+       },
+       "outside_packs": {
+        "type": "boolean"
+       },
+       "at_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 7200000
+       }
+      }
+     }
+    },
+    "assumes": {
+     "type": "array",
+     "maxItems": 6,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "text",
+       "citations"
+      ],
+      "properties": {
+       "citations": {
+        "type": "array",
+        "items": {
+         "$ref": "https://jana.dev/contracts/study/workspace#/$defs/Citation"
+        },
+        "minItems": 1,
+        "maxItems": 12
+       },
+       "text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+       }
+      }
+     }
+    },
+    "skips": {
+     "type": "array",
+     "maxItems": 6,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "statement"
+      ],
+      "properties": {
+       "kc_id": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       },
+       "statement": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+       }
+      }
+     }
+    },
+    "for_you": {
+     "type": "array",
+     "maxItems": 48,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "kc_id",
+       "band"
+      ],
+      "properties": {
+       "kc_id": {
+        "type": "string",
+        "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+       },
+       "band": {
+        "enum": [
+         "not_started",
+         "learning",
+         "secure"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "Frame": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "frame_id",
+    "at_ms",
+    "reason",
+    "read_state"
+   ],
+   "properties": {
+    "frame_id": {
+     "type": "string",
+     "pattern": "^frm_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "at_ms": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7200000
+    },
+    "reason": {
+     "enum": [
+      "chapter",
+      "scene"
+     ]
+    },
+    "read_state": {
+     "enum": [
+      "read",
+      "unreadable",
+      "screened"
+     ]
     }
    }
   }

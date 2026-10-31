@@ -859,6 +859,7 @@ export interface LearningLearningEventPayloadStudyActivity {
         | "lesson_plan"
         | "chapters"
         | "concept_map"
+        | "teaching_outline"
       )
     | null;
   count: number | null;

@@ -658,6 +658,20 @@ CREATE TABLE study_research (
   updated_at INTEGER NOT NULL
 ) STRICT;
 
+-- W9 (SPEC §20.3, JM-D34): a video file's stills read as text in the sandboxed worker, one row per frame, never an
+-- image (the device holds the file; a thumbnail is drawn from the local <video> element). A screened frame (the photo
+-- privacy pass refused it) has no text and is counted only. Rows go with the source revision (DAT-22).
+CREATE TABLE study_frames (
+  frame_id TEXT PRIMARY KEY CHECK (frame_id GLOB 'frm_[0-9A-Z]*' AND length(frame_id) = 30),
+  source_id TEXT NOT NULL,
+  revision INTEGER NOT NULL,
+  at_ms INTEGER NOT NULL CHECK (at_ms >= 0 AND at_ms <= 7200000),
+  reason TEXT NOT NULL CHECK (reason IN ('chapter','scene')),
+  read_state TEXT NOT NULL CHECK (read_state IN ('read','unreadable','screened')),
+  text TEXT NOT NULL,
+  FOREIGN KEY(source_id, revision) REFERENCES study_revisions(source_id, revision) ON DELETE CASCADE
+) STRICT;
+
 -- W8 (SPEC §19.3.3): the companion thread's daily episodes (one per profile day: UNIQUE profile_day returns one row to
 -- concurrent opens) and its rolling summary, written by code only. Device-local (JM-D27).
 CREATE TABLE companion_episodes (

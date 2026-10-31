@@ -11,7 +11,10 @@ import { FollowUpChips, HelpChips } from "../chips/NextStepChips.js";
 import { ComposerShell } from "../primitives/ComposerShell.js";
 import { StudyInline as PackInline, StudyText as PackText, StudySourceText } from "./StudyText.js";
 import { useOpenLesson, useOpenTopic } from "./link.js";
-import { defaultRequest, GenerateDialog, GenerateTools, MySets, RecordingPlayer, type GenerateRequest } from "./StudyGenerate.js";
+import { defaultRequest, GenerateDialog, GenerateTools, MySets, type GenerateRequest } from "./StudyGenerate.js";
+import { StudyPlayer } from "./StudyPlayer.js";
+import { StudyOutline } from "./StudyOutline.js";
+import { StudyLinkAdd } from "./StudyLinkAdd.js";
 import { StudyConceptMap } from "./StudyConceptMap.js";
 import { StudyResearch } from "./StudyResearch.js";
 import { StudyLibrary, materialGroups } from "./StudyLibrary.js";
@@ -27,7 +30,11 @@ const TABS_WITH_COMPANION: readonly Tab[] = [...TABS, "companion"];
 /** Somewhere the app asks Study to go (SPEC §19.3.3, a companion button or the plan's due Study cards): a job, aid or
  * deck opened in its material, the add panel, research with a topic filled in (never started for the learner), or
  * **Your tutor** (a check-in opened from Home, §19.5.5: the library's panel, or its tab inside an open material). */
-export type StudyRequest = { kind: "target"; job_id?: string; aid_id?: string; deck_id?: string } | { kind: "add" } | { kind: "research"; topic: string } | { kind: "companion" };
+export type StudyRequest = { kind: "target"; job_id?: string; aid_id?: string; deck_id?: string } | { kind: "add" } | { kind: "research"; topic: string } | { kind: "companion" }
+  // From the learner's map (SPEC §21.1): a material opens; "Make flashcards" opens it with the flashcard tool chosen.
+  | { kind: "source"; source_id: string } | { kind: "flashcards"; source_id: string }
+  // Open the moment (SPEC §20.4, a companion button): the material opens at a moment (the browser for a YouTube video).
+  | { kind: "moment"; source_id: string; at_ms: number };
 const STUDY_HELP = ["hint", "walk_through"] as const;
 /** The tab an aid of this kind lives under: a chat reply under Chat, every generated aid under Generate. */
 const tabOf = (kind: string): Tab => (kind === "chat" ? "chat" : "generate");
@@ -35,7 +42,9 @@ const tabOf = (kind: string): Tab => (kind === "chat" ? "chat" : "generate");
 const picked = (answer: string | undefined) => (answer ?? "").split(",").filter(Boolean);
 
 /** `onTab` hears which tab is open: the voice conversation lives in Chat (VOC-53, D130). */
-export function StudyWorkspace({ controller, lastTime, companion, request, onRequestDone, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened }: { controller: StudyWorkspaceController; /** The Last time card in the library (SPEC §19.5.2). */ lastTime?: ReactNode;
+export function StudyWorkspace({ controller, lastTime, companion, request, onRequestDone, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened, onAskMoment, onSkill, skillName }: { controller: StudyWorkspaceController; /** The Last time card in the library (SPEC §19.5.2). */ lastTime?: ReactNode;
+  /** Ask about this moment (SPEC §20.5 step 4): Your tutor opens with the moment as its pending context. */ onAskMoment?: (source: W.Source, at_ms: number) => void;
+  /** A skill chip in the outline: the learner's map at that skill (SPEC §21). */ onSkill?: (kcId: string) => void; skillName?: (kcId: string) => string | null;
   /** **Your tutor** (SPEC §19.4): the library's panel above the sources and a third tab inside a material, one thread. */ companion?: (place: "panel" | "tab") => ReactNode;
   /** A place to go, once (a companion button, the plan's due Study cards); `onRequestDone` hears it was handled. */ request?: StudyRequest | null; onRequestDone?: () => void; /** A practised diagram's capture: Study's research starts from it (SPEC §18). */ initialResearch?: string | null; onResearchOpened?: () => void; onPractice?: (subject: string, kcIds: string[]) => void; onTab?: (tab: Tab) => void; onReviewAccess?: () => void; initialAdd?: "paste" | null; onJourneyStarted?: (node: string, subject: string) => void; initialJourney?: "next" | "lesson" | "quiz" | null; onJourneyOpened?: () => void; initialSource?: Pick<W.Source, "source_id" | "revision"> | null; onSourceOpened?: () => void }) {
   const openLesson = useOpenLesson(), openTopic = useOpenTopic();
@@ -54,6 +63,7 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   }, [controller, studyReady, view.source?.source_id]);
   useEffect(() => setTopicsSearched(false), [view.source?.source_id, view.source?.revision]);
   const [adding, setAdding] = useState(false), [activityOpen, setActivityOpen] = useState(false), [allSetsOpen, setAllSetsOpen] = useState(false), [activityLimit, setActivityLimit] = useState(8);
+  const [linking, setLinking] = useState(false);
   const [title, setTitle] = useState(""), [text, setText] = useState(""), [confirm, setConfirm] = useState<string | null>(null);
   const [pageImage, setPageImage] = useState<{ url: string; page: number } | null>(null);
   const pageUrl = useRef<string | null>(null), pageRequest = useRef(0), pageFigure = useRef<HTMLElement>(null);
@@ -127,6 +137,14 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
       if (!live) return;
       if (request.kind === "target") await controller.openTarget(request);
       else if (request.kind === "companion") { if (controller.getView().source) setTab("companion"); }
+      else if (request.kind === "source" || request.kind === "flashcards") {
+        await controller.open(request.source_id);
+        if (live && request.kind === "flashcards" && controller.getView().source) { setTab("generate"); setTool("flashcards"); }
+      }
+      else if (request.kind === "moment") {
+        await controller.open(request.source_id);
+        if (live && controller.getView().source) controller.openMoment(request.at_ms);
+      }
       else {
         if (controller.getView().source) controller.close();
         if (request.kind === "add") { setAdding(true); setPasting(false); requestAnimationFrame(() => addPanel.current?.scrollIntoView?.({ block: "start" })); }
@@ -295,7 +313,8 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
         <input type="file" accept={ACCEPT} disabled={view.busy} onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void controller.upload(file, undefined, preferCloud); }} className="sr-only" />
       </label>
       <p className="text-meta text-muted">{t("study.file_help")}</p>
-      <span className="flex flex-wrap gap-2"><Button size="sm" tone="ghost" aria-expanded={pasting} onClick={() => setPasting((open) => !open)}><Icon name="notes" size={16} />{t("study.paste")}</Button></span>
+      <span className="flex flex-wrap gap-2"><Button size="sm" tone="ghost" aria-expanded={pasting} onClick={() => setPasting((open) => !open)}><Icon name="notes" size={16} />{t("study.paste")}</Button><Button size="sm" tone="ghost" aria-expanded={linking} onClick={() => setLinking((open) => !open)}><Icon name="online" size={16} />{t("study.add_link")}</Button></span>
+      {linking && <StudyLinkAdd busy={view.busy} error={view.error} onAdd={async (url, transcript, title) => { const added = await controller.addLink(url, transcript, title); return added ? (added.transcript_kind ?? "plain") : null; }} />}
       {pasting && <form className="flex flex-col items-start gap-3" onSubmit={(e) => { e.preventDefault(); void controller.addText(title.trim(), text).then(() => { if (!controller.getView().error) { setTitle(""); setText(""); } }); }}>
           <label className="flex w-full flex-col gap-2 text-ui text-ink">{t("study.source_title")}<input required maxLength={200} value={title} disabled={view.busy} onChange={(e) => setTitle(e.target.value)} className={FIELD_LOOK} /></label>
           <label className="flex w-full flex-col gap-2 text-ui text-ink">{t("study.paste_label")}<textarea required maxLength={200000} rows={6} disabled={view.busy} value={text} onChange={(e) => setText(e.target.value)} className={FIELD_LOOK} /></label>
@@ -376,13 +395,13 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
       <div className="flex max-h-72 flex-col gap-4 overflow-y-auto px-6 pb-6 @4xl:max-h-none @4xl:min-h-0 @4xl:flex-1">
         {source.state !== "ready" && <Notice message={source.state === "queued" && accessBlocked ? t(view.access?.needsGuardian ? "study.saved_pending_guardian" : "study.saved_pending_access") : source.state === "partial" ? source.unreadable_units.length ? t("study.partial", { units: source.unreadable_units.join(", ") }) : t("study.review_extracted") : t(`study.source.${source.state}`)}
           {...(source.state === "queued" && accessBlocked && onReviewAccess ? { action: { label: t("study.access.review"), onClick: onReviewAccess } } : {})} />}
-        {source.kind === "recording" && <Notice message={t("study.recording_help")} />}
+        {(source.kind === "recording" || source.kind === "video") && <Notice message={t("study.recording_help")} />}
         {source.state === "queued" && <span><Button tone="primary" disabled={view.busy || !!accessBlocked} onClick={() => { void controller.startExtraction(preferCloud); }}>{t("study.start_extraction")}</Button></span>}
-        {source.kind === "recording" && source.state === "partial" && <label className="flex min-h-11 items-center gap-2 text-ui text-ink"><input type="checkbox" checked={readableConfirmed} onChange={(e) => review(e.target.checked)} />{t("study.confirm_readable")}</label>}
+        {(source.kind === "recording" || source.kind === "video") && source.state === "partial" && <label className="flex min-h-11 items-center gap-2 text-ui text-ink"><input type="checkbox" checked={readableConfirmed} onChange={(e) => review(e.target.checked)} />{t("study.confirm_readable")}</label>}
         {source.state === "uploading" && <label className="flex flex-col gap-2 text-ui text-ink">{t("study.resume_upload")}<input type="file" accept={ACCEPT} disabled={view.busy} onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void controller.upload(file, source, preferCloud); }} /></label>}
         <span><Button size="sm" tone="ghost" aria-expanded={managing} onClick={() => setManaging((open) => !open)}>{t("study.manage")}</Button></span>
         {managing && <div className="flex flex-col items-start gap-3 rounded-card bg-chrome p-4">
-            {["pdf", "document", "slides", "photo", "recording"].includes(source.kind) && <label className="flex flex-col gap-2 text-ui text-ink">{t("study.replace_file")}<input type="file" accept={ACCEPT} disabled={view.busy} onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void controller.upload(file, source, preferCloud, true); }} /></label>}
+            {["pdf", "document", "slides", "photo", "recording", "video"].includes(source.kind) && <label className="flex flex-col gap-2 text-ui text-ink">{t("study.replace_file")}<input type="file" accept={ACCEPT} disabled={view.busy} onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void controller.upload(file, source, preferCloud, true); }} /></label>}
             <div className="flex flex-wrap gap-2">
               <Button size="sm" disabled={view.busy} onClick={() => { setCorrectedText(view.chunks.map((c) => c.text).join("\n\n")); setCorrecting(true); }}>{t("study.correct_text")}</Button>
               <Button size="sm" disabled={view.busy} onClick={() => { void controller.markPrivate(); }}>{t(source.private ? "study.make_public" : "study.make_private")}</Button>
@@ -395,10 +414,13 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
         <div ref={passage} tabIndex={-1} className="mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-card border border-line bg-canvas px-8 py-7 outline-none" aria-label={t("study.source_passage")}>
           {citation && <span><Button size="sm" onClick={() => { setCitation(null); returnFocus.current?.focus(); }}>{t("study.back_to_aid")}</Button></span>}
           {pageImage && <figure ref={pageFigure} className="flex flex-col gap-2"><img className="h-auto w-full" src={pageImage.url} alt={t("study.page_image", { page: pageImage.page })} /><figcaption className="text-meta text-muted">{t("study.page_image", { page: pageImage.page })}</figcaption>{citation && <span><Button size="sm" tone="ghost" onClick={() => passage.current?.querySelector("mark")?.scrollIntoView?.({ block: "center" })}>{t("study.read_extracted_passage")}</Button></span>}</figure>}
-          {source.kind === "recording" && view.chunks.length > 0 && <RecordingPlayer sourceTitle={source.title} chunks={view.chunks} chapters={chapters} playhead={view.playhead} busy={view.busy}
-            loadMedia={() => controller.loadMedia()} onSeek={(ms) => controller.seek(ms)} onCite={cite}
-            canMakeChapters={ready} onMakeChapters={() => { void controller.generate("chapters", 10, readableConfirmed, preferCloud); }} />}
-          {source.kind !== "recording" && view.chunks.map((chunk) => <article key={chunk.chunk_id} className="flex flex-col gap-2">
+          {(source.kind === "recording" || source.kind === "video" || source.kind === "video_link") && view.chunks.length > 0 && <StudyPlayer source={source} chunks={view.chunks} chapters={chapters} playhead={view.playhead} busy={view.busy}
+            loadMedia={() => controller.loadMedia()} onSeek={(ms) => controller.seek(ms)} onOpenMoment={(ms) => { controller.openMoment(ms); }} onCite={cite}
+            onAskMoment={onAskMoment && companion ? (ms) => onAskMoment(source, ms) : undefined}
+            canMakeChapters={ready} onMakeChapters={() => { void controller.generate("chapters", 10, readableConfirmed, preferCloud); }}
+            canOutline={ready && view.chunks.some((c) => c.locator.kind === "time")} outlinePending={pendingKinds.includes("teaching_outline")}
+            onMakeOutline={source.kind === "video_link" || source.kind === "video" ? () => { void controller.generate("teaching_outline", 10, readableConfirmed, preferCloud); } : undefined} />}
+          {source.kind !== "recording" && source.kind !== "video" && source.kind !== "video_link" && view.chunks.map((chunk) => <article key={chunk.chunk_id} className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <p className="text-meta text-faint">{chunk.locator.kind === "time" ? t("study.timestamp", { start: `${Math.floor(chunk.locator.start_ms / 60000)}:${String(Math.floor(chunk.locator.start_ms / 1000) % 60).padStart(2, "0")}`, end: `${Math.floor(chunk.locator.end_ms / 60000)}:${String(Math.floor(chunk.locator.end_ms / 1000) % 60).padStart(2, "0")}` }) : t("study.location", { kind: "page" in chunk.locator ? "page" : "slide" in chunk.locator ? "slide" : "part", number: "page" in chunk.locator ? chunk.locator.page : "slide" in chunk.locator ? chunk.locator.slide : chunk.ordinal + 1 })}{revisionTag(chunk.revision)}</p>
               {"page" in chunk.locator && <Button size="sm" tone="ghost" disabled={view.busy} onClick={() => { if ("page" in chunk.locator) showPage(chunk.locator.page, chunk.revision, chunk.source_id); }}>{t("study.show_page", { page: chunk.locator.page })}</Button>}
@@ -449,9 +471,10 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
             <p className="text-meta text-muted">{t(view.podcastVoice?.enabled ? "study.audio_online" : "study.audio_local")}</p>
           </>}
           {shown.status === "stale" && <Notice message={t("study.stale_help")} />}
+          {shown.kind === "teaching_outline" && shown.outline && <StudyOutline outline={shown.outline} sourceTitle={shown.title} chunks={view.chunks} busy={view.busy} onOpenMoment={(ms) => { controller.openMoment(ms); }} onCite={cite} onSkill={onSkill} skillName={skillName} />}
           {shown.kind === "concept_map" && shown.concept_map && <StudyConceptMap map={shown.concept_map} fromWeb={shown.sources.some((x) => webSources.has(x.source_id))} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editConceptMap(ops); }}
             actions={ready ? { onAsk: (name) => { setTab("chat"); void controller.conceptAction(name, "ask", preferCloud); }, onFlashcards: (name) => { void controller.conceptAction(name, "flashcards", preferCloud); }, onQuiz: (name) => { void controller.conceptAction(name, "quiz", preferCloud); } } : {}} />}
-          {summaryGroups ? summaryGroups.map((group, i) => <section key={i} className="flex flex-col gap-3"><h3 className="text-ui font-semibold text-ink">{group.label}</h3>{shown.settings?.focus?.startsWith("Format as concise revision bullet points.") ? <ul className="flex list-disc flex-col gap-3 ps-5">{group.claims.map((c, j) => <li key={j}>{claim(c)}</li>)}</ul> : group.claims.map((c, j) => claim(c, String(j)))}</section>) : !view.deck && !view.quiz && shown.kind !== "concept_map" && shown.claims.map((c, i) => claim(c, String(i)))}
+          {summaryGroups ? summaryGroups.map((group, i) => <section key={i} className="flex flex-col gap-3"><h3 className="text-ui font-semibold text-ink">{group.label}</h3>{shown.settings?.focus?.startsWith("Format as concise revision bullet points.") ? <ul className="flex list-disc flex-col gap-3 ps-5">{group.claims.map((c, j) => <li key={j}>{claim(c)}</li>)}</ul> : group.claims.map((c, j) => claim(c, String(j)))}</section>) : !view.deck && !view.quiz && shown.kind !== "concept_map" && shown.kind !== "teaching_outline" && shown.claims.map((c, i) => claim(c, String(i)))}
           {shown.kind === "chat" && shown.status === "ready" && savedJourney?.lesson_aid_id === shown.aid_id && savedJourney.phase === "review" && <span><Button tone="primary" disabled={view.busy} onClick={() => { void controller.saveJourney("lesson_reviewed"); }}>{t("study.journey.reviewed_lesson")}</Button></span>}
           {/* After a chat answer, at most two next steps (UXS-68): cards from it, or a step explained again. */}
           {shown.kind === "chat" && shown.status === "ready" && <FollowUpChips disabled={view.busy || !ready}

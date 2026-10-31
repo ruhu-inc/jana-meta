@@ -85,9 +85,22 @@ def _node(content: PackIndex, kc: Mapping[str, Any], state: str, *, linked: bool
     }
 
 
-def backbone(content: PackIndex, conn: sqlite3.Connection, subject_id: str) -> dict[str, Any] | None:
+def backbone(
+    content: PackIndex,
+    conn: sqlite3.Connection,
+    subject_id: str,
+    *,
+    states: Mapping[str, str] | None = None,
+    live: bool = True,
+    questions_from: sqlite3.Connection | None = None,
+    until: int | None = None,
+) -> dict[str, Any] | None:
     """The `ConceptMap` reply's backbone for a subject node id (nodes, edges, next), or None when the id is not a
-    subject's. A subject with no installed pack has an empty map and says so (`not_installed`)."""
+    subject's. A subject with no installed pack has an empty map and says so (`not_installed`).
+
+    `states` are the KCs' states (the learner model's at now, SPEC §21.4), else the mastery projection's stored ones.
+    A dated map (§21, `live` false) is read from a replayed learner model: no mastery check is waiting in it, and the
+    questions are the live database's (`questions_from`) asked by `until`."""
     parts = subject_parts(subject_id)
     if parts is None or not SUBJECT_ID.match(subject_id):
         return None
@@ -107,8 +120,8 @@ def backbone(content: PackIndex, conn: sqlite3.Connection, subject_id: str) -> d
     }
     if pack is None:
         return reply
-    states = kc_states(conn)
-    explaining = explaining_kcs(conn)
+    states = kc_states(conn) if states is None else states
+    explaining = explaining_kcs(conn) if live else set()
 
     def state_of(kc_id: str) -> str:
         return "explaining" if kc_id in explaining else states.get(kc_id, "not_started")
@@ -160,7 +173,7 @@ def backbone(content: PackIndex, conn: sqlite3.Connection, subject_id: str) -> d
     from agent_core.engine import concept_questions  # it reads this module's gap path
 
     on_map = {n["kc_id"] for n in nodes}
-    reply["questions"] = concept_questions.questions(conn, subject_id, on_map)
+    reply["questions"] = concept_questions.questions(questions_from or conn, subject_id, on_map, until=until)
     reply["mistakes"] = concept_questions.mistakes(conn, content, on_map, reply["edges"])
     return reply
 

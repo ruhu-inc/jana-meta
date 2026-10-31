@@ -344,6 +344,13 @@ class StudyVisits:
                            count=count if count and count > 0 else None)  # fmt: skip
         return self.record([payload], occurred_at=made_at, open_session=open_session)
 
+    def source_added(self, source_id: str, text: str, *, open_session: bool = False) -> int:
+        """A source the learner added (SPEC §19.3.2, §20.3): one `source_added`, ref `src:<source_id>`, tagged
+        from the title's topics; never the title or text. As an aid is, it is recorded while a Study session is
+        open (the Study screen's `enter` opens one before any source is added there)."""
+        payload = _payload("source_added", f"src:{source_id}", self._tags(text))
+        return self.record([payload], open_session=open_session)
+
     def sweep(self, now: int | None = None) -> int:
         """Aids finished since the profile's first Study session while no Study session was open: recorded now,
         each at the time it was made (§19.3.2). Older aids are never back-filled."""

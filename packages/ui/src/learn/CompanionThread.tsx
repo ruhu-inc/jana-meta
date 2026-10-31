@@ -6,8 +6,10 @@
 // The same thread is the library's panel and a tab beside Generate and Chat inside a material.
 // Where the online tutor serves the profile and it has never answered its first-use notice (ARC-10), the open asks it
 // here before the thread's first cloud turn, and the answer goes with the same open (W8 fix 2026-10-29).
+// The learner's map opens the thread with a draft (SPEC §21.3, "Ask your tutor about this"): the words wait in the
+// composer for the learner to finish and send; nothing is sent and no event is written by opening it.
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { COMPANION_MESSAGE_MAX, companionActions, companionThread, type CompanionAction, type CompanionController, type CompanionEntry } from "@jana/client-core";
+import { COMPANION_MESSAGE_MAX, companionActions, companionThread, momentLabel, type CompanionAction, type CompanionController, type CompanionEntry } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
 import { Button, ErrorState, IconButton, Loader } from "../primitives/index.js";
@@ -25,8 +27,10 @@ const NO_ACTIONS: CompanionAction[] = [];
 function useActionLabel(): (action: CompanionAction) => string {
   const t = useT();
   return (action) => {
+    // Open the moment (SPEC §20.4): the button names the moment the engine put in the payload, never model text.
+    const args = action.action === "open_moment" && typeof action.payload.at_ms === "number" ? { time: momentLabel(action.payload.at_ms) } : undefined;
     if (action.label_key.startsWith(ACTION_KEY)) {
-      const label = t(action.label_key);
+      const label = t(action.label_key, args);
       if (label !== action.label_key) return label;
     }
     const own = `${ACTION_KEY}${action.action}`;
@@ -58,24 +62,29 @@ function TutorBubble({ entry }: { entry: Extract<CompanionEntry, { kind: "tutor"
   );
 }
 
-function StudentBubble({ entry, onRetry }: { entry: Extract<CompanionEntry, { kind: "student" }>; onRetry: () => void }) {
+function StudentBubble({ entry, errorCode, onRetry }: { entry: Extract<CompanionEntry, { kind: "student" }>; errorCode: string | undefined; onRetry: () => void }) {
   const t = useT();
+  const failureKey = errorCode === "interrupted" || errorCode === "send_unconfirmed" ? `error.${errorCode}` : "study.companion.not_sent";
   return (
     <li data-said="student" data-message-state={entry.state} className="flex max-w-[85%] flex-col items-end gap-1 self-end">
       <span className="text-meta text-faint">{t("study.companion.you")}</span>
       <p className="whitespace-pre-wrap break-words rounded-card border border-line px-3 py-2 text-body text-ink">{entry.text}</p>
       {entry.state === "sending" && <span className="text-meta text-muted">{t("study.companion.sending")}</span>}
-      {entry.state === "failed" && <span className="flex items-center gap-2 text-meta text-muted">{t("study.companion.not_sent")}<Button size="xs" tone="ghost" onClick={onRetry}>{t("action.try_again")}</Button></span>}
+      {entry.state === "failed" && <span className="flex items-center gap-2 text-meta text-muted">{t(failureKey)}<Button size="xs" tone="ghost" onClick={onRetry}>{t("action.try_again")}</Button></span>}
     </li>
   );
 }
 
-export function CompanionThread({ companion, onAction, place = "panel" }: {
+export function CompanionThread({ companion, onAction, place = "panel", draft: given = null, onDraftShown }: {
   companion: CompanionThreadSource;
   /** A button was pressed: the app opens the place it names (the tutor, practice, a Study job, …). */
   onAction: (action: CompanionAction) => void;
   /** `panel` above the library's sources, `tab` beside Generate and Chat inside a material. */
   place?: "panel" | "tab";
+  /** Words to start the message with (a deep link from the map): put in the composer, never sent. */
+  draft?: string | null;
+  /** The draft is in the composer: the app forgets it, so it is offered once. */
+  onDraftShown?: () => void;
 }) {
   const t = useT();
   const label = useActionLabel();
@@ -87,9 +96,19 @@ export function CompanionThread({ companion, onAction, place = "panel" }: {
     ? [entry.turn_id] : [entry.key, store.messages[entry.key]?.message_id ?? ""]));
   const earlier = (thread.history ?? []).filter((item) => !visibleIds.has(item.id));
   const actions = useMemo(() => (sessionId === null ? NO_ACTIONS : companionActions(store, sessionId)), [store, sessionId]);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(given ?? "");
   const [answering, setAnswering] = useState(false);
   const list = useRef<HTMLOListElement>(null);
+  const composer = useRef<HTMLTextAreaElement>(null);
+  const draftShown = useRef(onDraftShown);
+  draftShown.current = onDraftShown;
+  useEffect(() => {
+    if (given === null || given === "") return;
+    setDraft(given.slice(0, COMPANION_MESSAGE_MAX));
+    composer.current?.focus({ preventScroll: true });
+    composer.current?.setSelectionRange?.(given.length, given.length);
+    draftShown.current?.();
+  }, [given]);
   const last = entries[entries.length - 1];
   const lastText = last === undefined ? "" : `${last.key}:${last.kind === "tutor" ? `${last.text.length}:${last.status}` : last.state}`;
   useEffect(() => {
@@ -141,7 +160,7 @@ export function CompanionThread({ companion, onAction, place = "panel" }: {
           )}
           {entries.map((entry) => entry.kind === "tutor"
             ? <TutorBubble key={entry.key} entry={entry} />
-            : <StudentBubble key={entry.key} entry={entry} onRetry={() => companion.retry(entry.key)} />)}
+            : <StudentBubble key={entry.key} entry={entry} errorCode={store.messages[entry.key]?.error_code} onRetry={() => companion.retry(entry.key)} />)}
         </ol>
       )}
       {actions.length > 0 && (
@@ -150,10 +169,11 @@ export function CompanionThread({ companion, onAction, place = "panel" }: {
         </div>
       )}
       {thread.status === "ready" && entries.length === 0 && <p className="text-meta text-muted">{t("study.companion.intro")}</p>}
+      {thread.context && <p data-companion-context={thread.context.at_ms} className="flex items-center gap-2 text-meta text-muted"><Icon name="look-here" size={16} />{t("study.companion.about_moment", { time: momentLabel(thread.context.at_ms), title: thread.context.title })}</p>}
       <form onSubmit={(e) => { e.preventDefault(); send(); }}>
         <ComposerShell send={<IconButton type="submit" tone="action" icon="send" tip="above" label={t("study.companion.send")} disabled={!ready || draft.trim() === ""} />}>
           <label htmlFor={`${heading}-message`} className="sr-only">{t("study.companion.message_label")}</label>
-          <textarea id={`${heading}-message`} rows={2} maxLength={COMPANION_MESSAGE_MAX} disabled={!ready} placeholder={t("study.companion.placeholder")} value={draft}
+          <textarea ref={composer} id={`${heading}-message`} data-companion-draft={draft !== "" ? "" : undefined} rows={2} maxLength={COMPANION_MESSAGE_MAX} disabled={!ready} placeholder={t("study.companion.placeholder")} value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
             className="w-full resize-none bg-transparent px-1 text-body text-ink outline-none placeholder:text-placeholder" />

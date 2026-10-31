@@ -9209,6 +9209,67 @@
     "linked": {
      "type": "boolean",
      "description": "A KC of another subject that a root-gap link reaches."
+    },
+    "freshness": {
+     "description": "The newest learning touch of the skill (an attempt, hint or check, or a Study activity tagged to it) against the profile's local day: today, within the last 7 days, within the last 30, longer ago, or not yet. A bucket by code, never a probability (JM-D36).",
+     "enum": [
+      "today",
+      "week",
+      "month",
+      "older",
+      "never"
+     ]
+    },
+    "refresh_due": {
+     "description": "The skill's FSRS card is below the review bar (`kc_views` state `needs_review` at now).",
+     "type": "boolean"
+    },
+    "changed_since": {
+     "description": "Since the map was last opened on this device: `up` when the band rose, `new` when the skill had no evidence then and has now; null otherwise, on the first open and on a dated (`as_of`) map.",
+     "anyOf": [
+      {
+       "enum": [
+        "up",
+        "new"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "study": {
+     "description": "Study on this skill: tagged materials, tagged lecture moments and due flashcards reviewed at least once.",
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "materials",
+      "moments",
+      "cards_due"
+     ],
+     "properties": {
+      "materials": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "moments": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "cards_due": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "notes": {
+     "description": "The tutor's notes whose cited events name this skill.",
+     "type": "integer",
+     "minimum": 0
+    },
+    "tracked": {
+     "description": "One of the companion summary's topics (at most six): a topic your tutor is tracking.",
+     "type": "boolean"
     }
    },
    "required": [
@@ -9394,7 +9455,8 @@
       "suspected",
       "active",
       "resolving",
-      "resolved"
+      "resolved",
+      "disputed"
      ]
     },
     "times": {
@@ -9549,6 +9611,30 @@
      "items": {
       "$ref": "#/$defs/ConceptMistake"
      }
+    },
+    "as_of": {
+     "description": "The local date the map stands at (replayed from the event log, read-only), or null for today's live map.",
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "first_day": {
+     "description": "The local date of the profile's first learning event (the scrubber's first week), or null when there is none.",
+     "anyOf": [
+      {
+       "type": "string",
+       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+      },
+      {
+       "type": "null"
+      }
+     ]
     }
    },
    "required": [
@@ -9713,6 +9799,25 @@
       "accepted",
       "declined"
      ]
+    },
+    "context": {
+     "description": "Ask about this moment (SPEC §20.1, §20.5 step 4): the core keeps it as the episode's pending turn context, rendered into the next accepted turn's user-message fence as the chunks within ±30 s (subject to strip_for_cloud: a cloud candidate without study_materials gets the moment as a labelled fact only), then discarded.",
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "source_id",
+      "at_ms"
+     ],
+     "properties": {
+      "source_id": {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/SourceId"
+      },
+      "at_ms": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 7200000
+      }
+     }
     }
    }
   },
@@ -10299,6 +10404,328 @@
     "interpretation": {
      "type": "string",
      "maxLength": 240
+    }
+   }
+  },
+  "CurriculumOverview": {
+   "description": "Every installed subject as topic tiles (SPEC §21, the learner's map): the subject map's tiles, each with TABLE UXS-22a's first matching rule, its skills by band, its freshest touch, whether one is refresh due, its watched mistakes and its skills changed since last time. Bands, buckets and words by code; never a probability (JM-D36).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "subjects"
+   ],
+   "properties": {
+    "subjects": {
+     "type": "array",
+     "maxItems": 10,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "subject_id",
+       "subject",
+       "level",
+       "topics"
+      ],
+      "properties": {
+       "subject_id": {
+        "type": "string",
+        "pattern": "^cur\\.(mth|phy|chm|bio|acc)\\.(o|a)$"
+       },
+       "subject": {
+        "enum": [
+         "mathematics",
+         "physics",
+         "chemistry",
+         "biology",
+         "accounting"
+        ]
+       },
+       "level": {
+        "enum": [
+         "O",
+         "A"
+        ]
+       },
+       "topics": {
+        "type": "array",
+        "maxItems": 200,
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "topic_id",
+          "title",
+          "kcs",
+          "bands",
+          "rule",
+          "freshness",
+          "refresh_due",
+          "mistakes",
+          "changed"
+         ],
+         "properties": {
+          "topic_id": {
+           "type": "string",
+           "maxLength": 96
+          },
+          "title": {
+           "type": "string",
+           "maxLength": 120
+          },
+          "kcs": {
+           "description": "How many skills the tile holds.",
+           "type": "integer",
+           "minimum": 0
+          },
+          "bands": {
+           "type": "object",
+           "additionalProperties": false,
+           "required": [
+            "not_started",
+            "learning",
+            "secure"
+           ],
+           "properties": {
+            "not_started": {
+             "type": "integer",
+             "minimum": 0
+            },
+            "learning": {
+             "type": "integer",
+             "minimum": 0
+            },
+            "secure": {
+             "type": "integer",
+             "minimum": 0
+            }
+           }
+          },
+          "rule": {
+           "description": "TABLE UXS-22a's first matching row over the tile's skill states: the state whose word, icon, pattern and fill the tile shows.",
+           "enum": [
+            "not_started",
+            "learning",
+            "ready_to_check",
+            "mastered",
+            "needs_review",
+            "moved_on"
+           ]
+          },
+          "freshness": {
+           "description": "The freshest of the tile's skills.",
+           "enum": [
+            "today",
+            "week",
+            "month",
+            "older",
+            "never"
+           ]
+          },
+          "refresh_due": {
+           "description": "At least one of the tile's skills is refresh due.",
+           "type": "boolean"
+          },
+          "mistakes": {
+           "description": "Watched misconceptions on the tile's skills (any status but resolved).",
+           "type": "integer",
+           "minimum": 0
+          },
+          "changed": {
+           "description": "The tile's skills marked up or new since the map was last opened.",
+           "type": "integer",
+           "minimum": 0
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "KcLinks": {
+   "description": "What is linked to one skill on this device (SPEC §21, JM-D38): the Study materials tagged to it (aids by their activity's tags or title, sources by title), the lecture moments whose transcript chunk names it (tagged at read time), the tutor's notes citing events on it, whether the tutor is tracking it, and its misconceptions. Device-only: the knows view's data, never sent to a model (JM-D39).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "kc_id",
+    "materials",
+    "moments",
+    "notes",
+    "tracked",
+    "misconceptions"
+   ],
+   "properties": {
+    "kc_id": {
+     "type": "string",
+     "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "materials": {
+     "type": "array",
+     "maxItems": 12,
+     "items": {
+      "oneOf": [
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "aid_id",
+         "kind",
+         "title"
+        ],
+        "properties": {
+         "aid_id": {
+          "type": "string",
+          "pattern": "^aid_[0-9A-HJKMNP-TV-Z]{26}$"
+         },
+         "kind": {
+          "enum": [
+           "notes",
+           "summary",
+           "chat",
+           "flashcards",
+           "quiz",
+           "audio_overview",
+           "lesson_plan",
+           "chapters",
+           "concept_map",
+           "teaching_outline",
+           "pdf",
+           "slides",
+           "document",
+           "text",
+           "photo",
+           "recording",
+           "session_note",
+           "dictated_note",
+           "board_note",
+           "video_link",
+           "video"
+          ]
+         },
+         "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+         }
+        }
+       },
+       {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "source_id",
+         "kind",
+         "title"
+        ],
+        "properties": {
+         "source_id": {
+          "type": "string",
+          "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$"
+         },
+         "kind": {
+          "enum": [
+           "notes",
+           "summary",
+           "chat",
+           "flashcards",
+           "quiz",
+           "audio_overview",
+           "lesson_plan",
+           "chapters",
+           "concept_map",
+           "teaching_outline",
+           "pdf",
+           "slides",
+           "document",
+           "text",
+           "photo",
+           "recording",
+           "session_note",
+           "dictated_note",
+           "board_note",
+           "video_link",
+           "video"
+          ]
+         },
+         "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+         }
+        }
+       }
+      ]
+     }
+    },
+    "moments": {
+     "type": "array",
+     "maxItems": 12,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "source_id",
+       "at_ms",
+       "title"
+      ],
+      "properties": {
+       "source_id": {
+        "type": "string",
+        "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$"
+       },
+       "at_ms": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 7200000
+       },
+       "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+       }
+      }
+     }
+    },
+    "notes": {
+     "type": "array",
+     "maxItems": 6,
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "note_id",
+       "text",
+       "confidence"
+      ],
+      "properties": {
+       "note_id": {
+        "type": "string",
+        "pattern": "^mem_[0-9A-HJKMNP-TV-Z]{26}$"
+       },
+       "text": {
+        "type": "string",
+        "maxLength": 400
+       },
+       "confidence": {
+        "enum": [
+         "tentative",
+         "supported"
+        ]
+       }
+      }
+     }
+    },
+    "tracked": {
+     "type": "boolean"
+    },
+    "misconceptions": {
+     "type": "array",
+     "maxItems": 20,
+     "items": {
+      "$ref": "#/$defs/ConceptMistake"
+     }
     }
    }
   }
@@ -11609,10 +12036,44 @@
    ],
    "errors": [
     "not_found",
-    "profile_token_expired"
+    "profile_token_expired",
+    "validation_failed"
    ],
    "stage": "S2",
    "owner": "UXS-22"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/curriculum/kcs/{kc_id}/links",
+   "request": null,
+   "response": "#/$defs/KcLinks",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "validation_failed",
+    "profile_token_expired"
+   ],
+   "stage": "S2",
+   "owner": "W10"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/curriculum/overview",
+   "request": null,
+   "response": "#/$defs/CurriculumOverview",
+   "auth": [
+    "launch",
+    "profile"
+   ],
+   "errors": [
+    "not_found",
+    "profile_token_expired"
+   ],
+   "stage": "S2",
+   "owner": "W10"
   },
   {
    "method": "GET",

@@ -5,8 +5,13 @@
 // rest; the tutor's pointer rings one box. Keyboard: one box is in the tab order (roving tabindex); arrow keys move
 // up and down a column and left or right along links (to the nearest box in the next column when there is none);
 // Enter or Space opens it. Motion only when reduced motion is off.
+//
+// The learner's map (SPEC §21, W10) paints its layers on the same boxes, each with its words in the box's label (and
+// the UI's legend and table): a look and tokens.json's mastery pattern per Freshness bucket with the bucket's word in
+// the box's head; refresh due as a dashed outline; watched misconceptions as rings; Study as dots with a count; a
+// note as a pin; and a skill that moved since last time as an outline that pulses once, only without reduced motion.
 import { must } from "../must.js";
-import { useEffect, useMemo, useRef, type KeyboardEvent, type ReactElement } from "react";
+import { useEffect, useId, useMemo, useRef, type KeyboardEvent, type ReactElement } from "react";
 import type { Translate } from "../contract.js";
 import { INK, LINE, MUTED, PAPER, RING, RING_STROKE, SERIES, STROKE, STRONG, arrowHead } from "../kit.js";
 import { layout as place, type Layout, type PlacedNode } from "./layout.js";
@@ -28,6 +33,32 @@ export interface DrawNode {
   next: number;
   /** A badge line of its own (a Study concept's "Matches a syllabus skill"), in place of the learner's badges. */
   badge?: string;
+  /** The layer shown on the map (SPEC §21). */
+  layer?: DrawLayer;
+  /** The skill moved since the map was last opened: the words ("Up since last time"). */
+  changed?: string;
+}
+
+/** tokens.json's mastery patterns (DSN-23): drawn over a box's fill in its ink at 40%, 1 px every 6 px. */
+export type MasteryPattern = "none" | "dots-sparse" | "dots-dense" | "solid" | "hatch-diagonal" | "cross-hatch";
+
+/** What a layer paints on one box (SPEC §21). Every mark has its words in `words` or `word`, never colour alone. */
+export interface DrawLayer {
+  /** The look the box is filled with on this layer (a Freshness bucket's); the state's when absent. */
+  look?: string;
+  pattern?: MasteryPattern;
+  /** The layer's word for the box, drawn in its head in place of the state's word. */
+  word?: string;
+  /** A dashed outline: refresh due. */
+  dashed?: boolean;
+  /** Rings around the box, one per watched misconception. */
+  rings?: number;
+  /** Study dots: the count is drawn beside them. */
+  dots?: number;
+  /** A pin: a tutor's note cites this skill. */
+  pin?: boolean;
+  /** The layer's words for the box, on its badge line and in its accessible name. */
+  words?: string[];
 }
 
 export interface DrawEdge {
@@ -56,6 +87,24 @@ const LOOK: Record<string, [string, string]> = {
   model: [PAPER, "var(--color-ink)"],
 };
 const OUTLINE = "var(--color-mastery-tile-outline)";
+const PATTERNS: readonly MasteryPattern[] = ["dots-sparse", "dots-dense", "hatch-diagonal", "cross-hatch"];
+const GAP = 6; // tokens.json mastery.patternStroke.spacing
+const DOTS_MAX = 3;
+
+/** One SVG pattern per mastery pattern token (solid and none need none): the stroke takes the box's ink. */
+function PatternDefs({ id }: { id: string }): ReactElement {
+  return (
+    <defs>
+      {PATTERNS.map((name) => (
+        <pattern key={name} id={`${id}-${name}`} width={name === "dots-dense" ? GAP / 2 : GAP} height={name === "dots-dense" ? GAP / 2 : GAP} patternUnits="userSpaceOnUse">
+          {name.startsWith("dots") ? <circle cx={1.5} cy={1.5} r={1} fill="currentColor" /> : null}
+          {name === "hatch-diagonal" || name === "cross-hatch" ? <path d={`M0,${GAP} L${GAP},0`} stroke="currentColor" strokeWidth={1} /> : null}
+          {name === "cross-hatch" ? <path d={`M0,0 L${GAP},${GAP}`} stroke="currentColor" strokeWidth={1} /> : null}
+        </pattern>
+      ))}
+    </defs>
+  );
+}
 const CHAR = 6.3; // average glyph width at 12 px, for wrapping
 const DIM = 0.3;
 
@@ -174,9 +223,11 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
     }
   };
   const fade = reducedMotion ? undefined : { transition: "opacity 160ms ease-out" };
+  const patternId = `cm-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
     <svg ref={svg} viewBox={`0 0 ${layout.width} ${layout.height}`} width={Math.round(layout.width * zoom)} height={Math.round(layout.height * zoom)} role="group" aria-label={label}
       data-concept-map="" data-gap={lighting ? gap.join(" ") : undefined} style={{ maxWidth: "none" }}>
+      {nodes.some((n) => n.layer?.pattern !== undefined) && <PatternDefs id={patternId} />}
       <g aria-hidden="true" data-edges="">
         {layout.edges.map((routed) => {
           const key = `${routed.from}>${routed.to}`;
@@ -198,17 +249,20 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
       {layout.nodes.map((placed) => {
         const n = byId.get(placed.id);
         if (n === undefined) return null;
-        const [fill, ink] = LOOK[n.state] ?? must(LOOK.not_started);
+        const paint = n.layer ?? {};
+        const [fill, ink] = LOOK[paint.look ?? n.state] ?? must(LOOK.not_started);
         const on = lit.has(n.id);
         const ring = on || pointed === n.id;
         const inner = placed.width - 16;
         const title = wrap(n.title, inner);
-        const head = n.linked && n.subject !== undefined ? `${n.subject} · ${n.stateWord}` : n.code ? `${n.code} · ${n.stateWord}` : n.stateWord;
-        const badges = n.badge ?? [n.next > 0 ? t("concept.next_badge", { place: n.next }) : "", n.asked > 0 ? t("concept.badge.asked", { count: n.asked }) : "",
-          n.mistakes > 0 ? t("concept.badge.mistakes", { count: n.mistakes }) : ""].filter(Boolean).join(" · ");
+        const word = paint.word ?? n.stateWord;
+        const head = n.linked && n.subject !== undefined ? `${n.subject} · ${word}` : n.code ? `${n.code} · ${word}` : word;
+        const layered = [...(paint.words ?? []), ...(n.changed !== undefined ? [n.changed] : [])];
+        const badges = layered.length > 0 && n.layer !== undefined ? layered.join(" · ") : n.badge ?? [n.next > 0 ? t("concept.next_badge", { place: n.next }) : "", n.asked > 0 ? t("concept.badge.asked", { count: n.asked }) : "",
+          n.mistakes > 0 ? t("concept.badge.mistakes", { count: n.mistakes }) : "", ...layered].filter(Boolean).join(" · ");
         const into = edges.filter((e) => e.to === n.id && e.kind === "root_gap");
         const names = [
-          n.title, n.stateWord,
+          n.title, n.stateWord, ...(paint.word !== undefined && paint.word !== n.stateWord ? [paint.word] : []), ...layered,
           ...(n.linked && n.subject !== undefined ? [t("concept.linked_from", { subject: n.subject })] : []),
           ...(n.next > 0 ? [t("concept.next_place", { place: n.next })] : []),
           ...(n.asked > 0 ? [t("concept.badge.asked", { count: n.asked })] : []),
@@ -224,8 +278,30 @@ export function ConceptMapSvg({ nodes, edges, layout: given, label, t, active, g
             transform={`translate(${placed.x},${placed.y})`} opacity={lighting && !on ? DIM : 1} style={{ ...fade, cursor: "pointer", outline: "none" }}
             onClick={() => { onFocusNode(n.id); onActivate(n.id); }} onKeyDown={onKey(n.id)} onFocus={() => n.id !== focusable && onFocusNode(n.id)}>
             <title>{n.title}</title>
-            <rect width={placed.width} height={placed.height} rx={10} fill={n.linked ? PAPER : fill} stroke={ring ? RING : OUTLINE} strokeWidth={ring ? RING_STROKE : 1}
-              {...(n.linked ? { strokeDasharray: "5 3" } : {})} />
+            {Array.from({ length: Math.min(paint.rings ?? 0, 3) }, (_, i) => (
+              <rect key={`ring-${i}`} data-ring={i + 1} x={-5 - 4 * i} y={-5 - 4 * i} width={placed.width + 10 + 8 * i} height={placed.height + 10 + 8 * i} rx={14 + 4 * i}
+                fill="none" stroke={SERIES[2]} strokeWidth={2} />
+            ))}
+            {n.changed !== undefined && (
+              <rect data-changed="" x={-3} y={-3} width={placed.width + 6} height={placed.height + 6} rx={12} fill="none" stroke={RING} strokeWidth={RING_STROKE}>
+                {/* Pulses once (SPEC §21.1), never with reduced motion; the outline stays. */}
+                {!reducedMotion && <animate attributeName="stroke-opacity" values="1;0.15;1" dur="1.4s" repeatCount="1" />}
+              </rect>
+            )}
+            <rect width={placed.width} height={placed.height} rx={10} fill={n.linked ? PAPER : fill} stroke={ring ? RING : paint.dashed ? STRONG : OUTLINE}
+              strokeWidth={ring ? RING_STROKE : paint.dashed ? 2 : 1} {...(n.linked ? { strokeDasharray: "5 3" } : paint.dashed ? { strokeDasharray: "6 3", "data-dashed": "" } : {})} />
+            {paint.pattern !== undefined && PATTERNS.includes(paint.pattern) && !n.linked && (
+              <rect data-pattern={paint.pattern} width={placed.width} height={placed.height} rx={10} fill={`url(#${patternId}-${paint.pattern})`} style={{ color: ink }} opacity={0.4} pointerEvents="none" />
+            )}
+            {(paint.dots ?? 0) > 0 && (
+              <g data-dots={paint.dots} transform={`translate(${placed.width - 10},10)`}>
+                {Array.from({ length: Math.min(paint.dots ?? 0, DOTS_MAX) }, (_, i) => <circle key={i} cx={-i * 7} cy={0} r={2.5} fill={ink} />)}
+                <text x={-Math.min(paint.dots ?? 0, DOTS_MAX) * 7 - 2} y={4} fontSize={10} fontWeight={600} fill={ink} textAnchor="end">{paint.dots}</text>
+              </g>
+            )}
+            {paint.pin === true && (
+              <path data-pin="" d={`M${placed.width - 10},4 a4,4 0 1 1 0.01,0 Z M${placed.width - 10},12 L${placed.width - 10},18`} fill={ink} stroke={ink} strokeWidth={1.5} />
+            )}
             <rect className="concept-focus" x={-4} y={-4} width={placed.width + 8} height={placed.height + 8} rx={13} fill="none" stroke={INK} strokeWidth={2} opacity={0} />
             <text x={8} y={16} fontSize={11} fontWeight={600} fill={n.linked ? MUTED : ink}>{head}</text>
             {title.map((line, i) => <text key={i} x={8} y={33 + i * 15} fontSize={12} fill={n.linked ? INK : ink}>{line}</text>)}

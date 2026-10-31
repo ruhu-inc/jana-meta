@@ -1,0 +1,1428 @@
+{
+ "subjects": [
+  {
+   "subject_id": "cur.mth.o",
+   "subject": "mathematics",
+   "level": "O",
+   "topics": [
+    {
+     "topic_id": "cur.mth.o.number.types_of_number",
+     "title": "Factors, multiples and primes",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.sets",
+     "title": "Sets and Venn diagrams",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.powers_and_roots",
+     "title": "Squares, cubes and roots",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.fractions_decimals_and_percentages",
+     "title": "Fractions, decimals and percentages as one number",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.ordering",
+     "title": "Putting numbers in order",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.the_four_operations",
+     "title": "Calculating in the right order, with negatives",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.indices_i",
+     "title": "Powers with zero, negative and fractional indices",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.standard_form",
+     "title": "Very large and very small numbers in standard form",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.estimation",
+     "title": "Estimating answers",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.limits_of_accuracy",
+     "title": "Upper and lower bounds",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.ratio_and_proportion",
+     "title": "Ratio and proportion",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.rates",
+     "title": "Rates and compound measures",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.percentages",
+     "title": "Percentage change",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.using_a_calculator",
+     "title": "Calculator use and rounding",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.time",
+     "title": "Clocks and time intervals",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.money",
+     "title": "Money, exchange rates and simple interest",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.exponential_growth_and_decay",
+     "title": "Compound interest, growth and decay",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.number.surds",
+     "title": "Surds",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.introduction_to_algebra",
+     "title": "Letters for numbers: expressions and substitution",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.algebraic_manipulation",
+     "title": "Expanding and factorising",
+     "kcs": 4,
+     "bands": {
+      "not_started": 4,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.algebraic_fractions",
+     "title": "Algebraic fractions",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.indices_ii",
+     "title": "Index laws with letters",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.equations",
+     "title": "Equations: linear, simultaneous and quadratic",
+     "kcs": 4,
+     "bands": {
+      "not_started": 4,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.inequalities",
+     "title": "Inequalities",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.sequences",
+     "title": "Number sequences and the nth term",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.proportion",
+     "title": "Direct and inverse variation",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.graphs_in_practical_situations",
+     "title": "Travel graphs and other real-life graphs",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.graphs_of_functions",
+     "title": "Graphs of functions and graphical solutions",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.sketching_curves",
+     "title": "Shapes of curves",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.algebra_and_graphs.functions",
+     "title": "Functions, composites and inverses",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.coordinate_geometry.coordinates",
+     "title": "Points and lines on the grid",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.coordinate_geometry.drawing_linear_graphs",
+     "title": "Where lines cross the axes",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.coordinate_geometry.gradient_of_linear_graphs",
+     "title": "Gradient of a straight line",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.coordinate_geometry.length_and_midpoint",
+     "title": "Length and midpoint of a line segment",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.coordinate_geometry.equations_of_linear_graphs",
+     "title": "The equation of a straight line",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.coordinate_geometry.parallel_lines",
+     "title": "Parallel lines",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.coordinate_geometry.perpendicular_lines",
+     "title": "Perpendicular lines",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.geometry.geometrical_terms",
+     "title": "Naming and describing shapes",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.geometry.geometrical_constructions",
+     "title": "Ruler-and-compasses constructions",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.geometry.scale_drawings",
+     "title": "Scale drawings and bearings",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.geometry.similarity",
+     "title": "Similar shapes",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.geometry.symmetry",
+     "title": "Symmetry",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.geometry.angles",
+     "title": "Angle facts",
+     "kcs": 4,
+     "bands": {
+      "not_started": 4,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.geometry.circle_theorems_i",
+     "title": "Angles in circles: the first theorems",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.geometry.circle_theorems_ii",
+     "title": "Angles in circles: cyclic quadrilaterals and segments",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.mensuration.units_of_measure",
+     "title": "Metric units of measure",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.mensuration.area_and_perimeter",
+     "title": "Perimeter and area of flat shapes",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.mensuration.circles_arcs_and_sectors",
+     "title": "Circles, arcs and sectors",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.mensuration.surface_area_and_volume",
+     "title": "Surface area and volume of solids",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.mensuration.compound_shapes_and_parts_of_shapes",
+     "title": "Compound shapes and parts of shapes",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.trigonometry.pythagoras_theorem",
+     "title": "Pythagoras' theorem",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.trigonometry.right_angled_triangles",
+     "title": "Sine, cosine and tangent in right-angled triangles",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.trigonometry.non_right_angled_triangles",
+     "title": "Any triangle: sine rule, cosine rule and area",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.trigonometry.pythagoras_theorem_and_trigonometry",
+     "title": "Lengths and angles in three dimensions",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.transformations_and_vectors.transformations",
+     "title": "Translations, reflections, rotations and enlargements",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.transformations_and_vectors.vectors_in_two_dimensions",
+     "title": "Column vectors",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.transformations_and_vectors.magnitude_of_a_vector",
+     "title": "Length of a vector",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.probability.introduction_to_probability",
+     "title": "Probability of one event",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.probability.relative_and_expected_frequencies",
+     "title": "Relative and expected frequency",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.probability.probability_of_combined_events",
+     "title": "Combined events",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.statistics.classifying_statistical_data",
+     "title": "Kinds of data",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.statistics.interpreting_statistical_data",
+     "title": "Reading tables and charts",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.statistics.averages_and_measures_of_spread",
+     "title": "Averages and spread",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.statistics.statistical_charts_and_diagrams",
+     "title": "Pie charts and other diagrams",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.statistics.scatter_diagrams",
+     "title": "Scatter diagrams and correlation",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.statistics.cumulative_frequency_diagrams",
+     "title": "Cumulative frequency",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.statistics.histograms",
+     "title": "Histograms",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.calculus.differentiation",
+     "title": "Differentiation and its uses",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.mth.o.calculus.integration",
+     "title": "Definite integrals and areas",
+     "kcs": 1,
+     "bands": {
+      "not_started": 1,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    }
+   ]
+  },
+  {
+   "subject_id": "cur.phy.o",
+   "subject": "physics",
+   "level": "O",
+   "topics": [
+    {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.measurement",
+     "title": "Measuring and describing physical quantities",
+     "kcs": 4,
+     "bands": {
+      "not_started": 4,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.motion",
+     "title": "Motion in a straight line",
+     "kcs": 10,
+     "bands": {
+      "not_started": 7,
+      "learning": 2,
+      "secure": 1
+     },
+     "rule": "learning",
+     "freshness": "today",
+     "refresh_due": false,
+     "mistakes": 1,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.mass_and_weight",
+     "title": "How mass differs from weight",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.density",
+     "title": "How much matter fits in a space",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.forces",
+     "title": "Pushes, pulls and their effects",
+     "kcs": 7,
+     "bands": {
+      "not_started": 7,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.momentum",
+     "title": "Momentum and collisions",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.energy_work_and_power",
+     "title": "Energy stores, transfers and the rate of doing work",
+     "kcs": 8,
+     "bands": {
+      "not_started": 8,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.pressure",
+     "title": "Force spread over an area",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.thermal_physics.kinetic_particle_model_of_matter",
+     "title": "Particles in solids, liquids and gases",
+     "kcs": 4,
+     "bands": {
+      "not_started": 4,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.thermal_physics.thermal_properties_and_temperature",
+     "title": "Temperature and how materials respond to heating",
+     "kcs": 4,
+     "bands": {
+      "not_started": 4,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.thermal_physics.transfer_of_thermal_energy",
+     "title": "How heat moves: conduction, convection and radiation",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.waves.general_properties_of_waves",
+     "title": "What every wave has in common",
+     "kcs": 4,
+     "bands": {
+      "not_started": 4,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.waves.light",
+     "title": "Reflection, refraction and lenses",
+     "kcs": 5,
+     "bands": {
+      "not_started": 5,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.waves.electromagnetic_spectrum",
+     "title": "The family of electromagnetic waves",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.waves.sound",
+     "title": "How sound is made and travels",
+     "kcs": 4,
+     "bands": {
+      "not_started": 4,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.electricity_and_magnetism.simple_magnetism_and_magnetic_fields",
+     "title": "Magnets and the fields around them",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.electricity_and_magnetism.electrical_quantities",
+     "title": "Charge, current, voltage and resistance",
+     "kcs": 6,
+     "bands": {
+      "not_started": 6,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.electricity_and_magnetism.electric_circuits",
+     "title": "Series and parallel circuits",
+     "kcs": 5,
+     "bands": {
+      "not_started": 5,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.electricity_and_magnetism.practical_electricity",
+     "title": "Electricity at home: power, cost and safety",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.electricity_and_magnetism.electromagnetic_effects",
+     "title": "Currents and magnets acting together",
+     "kcs": 5,
+     "bands": {
+      "not_started": 5,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.electricity_and_magnetism.uses_of_an_oscilloscope",
+     "title": "Reading signals on an oscilloscope",
+     "kcs": 2,
+     "bands": {
+      "not_started": 2,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.nuclear_physics.the_nuclear_model_of_the_atom",
+     "title": "Inside the atom",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.nuclear_physics.radioactivity",
+     "title": "Unstable nuclei and their radiation",
+     "kcs": 5,
+     "bands": {
+      "not_started": 5,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.space_physics.earth_and_the_solar_system",
+     "title": "Our planet and its neighbours",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
+     "topic_id": "cur.phy.o.space_physics.stars_and_the_universe",
+     "title": "Stars, galaxies and the expanding Universe",
+     "kcs": 3,
+     "bands": {
+      "not_started": 3,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    }
+   ]
+  }
+ ]
+}

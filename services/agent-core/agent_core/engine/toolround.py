@@ -20,7 +20,7 @@ from agent_core.config import Settings
 from agent_core.engine.events import EventStream
 from agent_core.engine.memory_tools import items_read
 from agent_core.engine.receipts import Phase, Receipts, default_receipts
-from agent_core.engine.state import SessionState, exponent_ok
+from agent_core.engine.state import SessionState, exponent_ok, expression_key
 from agent_core.router import ToolCall
 from agent_core.tools.dedupe import NON_RETRYABLE, call_key
 from agent_core.tools.executor import ToolCall as ExecCall
@@ -32,6 +32,25 @@ from agent_core.tools.spec import SessionCtx
 from agent_core.trace.record import TraceBuilder, repair_classes, sha256_of
 
 RENDER_CLASS = "ephemeral"
+
+
+def _checked_expressions(name: str, args: dict[str, Any], data: Any) -> list[str]:
+    """Keep only whole, proved results; sampling, conditional domains and parsing are not proof."""
+    if not isinstance(data, dict) or data.get("check", {}).get("confidence") != "proved":
+        return []
+    value = data.get("value")
+    if not isinstance(value, dict) or args.get("assumptions"):
+        return []
+    found: list[Any] = []
+    if name == "math_check_equivalence" and value.get("verdict") == "equivalent":
+        found = [args.get("a"), args.get("b")]
+    elif name == "math_simplify" and value.get("status") == "ok" and args.get("form", "simplest") in {
+        "simplest", "expanded", "factored",
+    }:
+        result = value.get("result")
+        if isinstance(result, dict):
+            found = [result.get("text"), data.get("latex")]
+    return list(dict.fromkeys(expression_key(s) for s in found if isinstance(s, str) and 0 < len(s) <= 4096))
 
 
 def _checked_numbers(value: Any) -> list[Fraction]:
@@ -362,6 +381,7 @@ class ToolRound:
             if call.name == "math_parse":
                 produced = None
             self.state.check_values[check_id] = _checked_numbers(produced)
+            self.state.check_expressions[check_id] = _checked_expressions(call.name, dict(call.args), data)
             if flags:
                 self.state.implausible[check_id] = flags  # VER-26: a probable input error until the Checker reviews it
         signature = call.name + json.dumps(call.args, sort_keys=True, default=str)

@@ -49,7 +49,7 @@ export type CompanionAction = ActionRec;
 export type CompanionActionKind = ActionRec["action"];
 /** Every action the engine may send, in the contract's order; each has the copy key `study.companion.action.<action>`. */
 export const COMPANION_ACTIONS: readonly CompanionActionKind[] = [
-  "open_tutor", "open_practice", "open_study_job", "open_add_source", "open_research", "open_plan", "open_knows", "open_study_deck",
+  "open_tutor", "open_practice", "open_study_job", "open_add_source", "open_research", "open_plan", "open_knows", "open_study_deck", "open_moment",
 ];
 /** The longest message the thread sends (the Study ask box's bound). */
 export const COMPANION_MESSAGE_MAX = 4000;
@@ -86,6 +86,9 @@ export interface CompanionThreadView {
   history_cursor?: string | null;
   history_loading?: boolean;
   history_error?: boolean;
+  /** Ask about this moment (SPEC §20.5 step 4): the pending turn context the open carried, shown above the composer
+   * until the learner's next message consumes it. */
+  context?: { source_id: string; at_ms: number; title: string } | null;
 }
 
 export const EMPTY_THREAD: CompanionThreadView = { status: "idle", session_id: null, thread_id: null, resumed: false, opener: null, summary: null, error: null, notice: null };
@@ -205,9 +208,18 @@ export function companionThread(store: Store, sessionId: string): CompanionEntry
   return out;
 }
 
-/** The thread's durable buttons, oldest first (action ids are time-ordered). */
+/** Durable buttons, oldest first. Repeated turns may suggest the same destination: render it once while keeping
+ * every event in the store. Different jobs, questions or other payloads remain distinct. */
 export function companionActions(store: Store, sessionId: string): CompanionAction[] {
-  return Object.values(store.actions).filter((a) => a.session_id === sessionId).sort((a, b) => (a.action_id < b.action_id ? -1 : a.action_id > b.action_id ? 1 : 0));
+  const seen = new Set<string>();
+  return Object.values(store.actions).filter((a) => a.session_id === sessionId)
+    .sort((a, b) => (a.action_id < b.action_id ? -1 : a.action_id > b.action_id ? 1 : 0))
+    .filter((a) => {
+      const key = JSON.stringify([a.action, a.label_key, Object.entries(a.payload).sort(([x], [y]) => x.localeCompare(y))]);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 export class CompanionController {
@@ -293,6 +305,22 @@ export class CompanionController {
   open(): Promise<void> {
     this.opening ??= this.openOnce((cloudNotice) => this.profiles.commands.post<unknown>("/v1/companion", cloudNotice ? { cloud_notice: cloudNotice } : {}, clientId())).finally(() => { this.opening = null; });
     return this.opening;
+  }
+
+  /** Ask about this moment (SPEC §20.1, §20.5 step 4): open or resume today's episode with the moment as its pending
+   * turn context (`CompanionOpen.context`). The core keeps the ±30 s lines for the learner's next message; nothing is
+   * sent until they send. `title` is shown above the composer ("About 4:12 in <title>"). */
+  openWithContext(context: { source_id: string; at_ms: number }, title: string): Promise<void> {
+    const before = this.opening;
+    const generation = this.profiles.generation;
+    const settled: Promise<void> = (async () => {
+      await before?.catch(() => undefined);
+      if (generation !== this.profiles.generation) return;
+      await this.openOnce((cloudNotice) => this.profiles.commands.post<unknown>("/v1/companion", { context, ...(cloudNotice ? { cloud_notice: cloudNotice } : {}) }, clientId()));
+      if (generation === this.profiles.generation && this.thread.status === "ready") this.setThread({ ...this.thread, context: { ...context, title } });
+    })().finally(() => { if (this.opening === settled) this.opening = null; });
+    this.opening = settled;
+    return settled;
   }
 
   /** The learner's answer to the online tutor's first-use notice (ARC-10) the open asked: the same open again, with
@@ -459,7 +487,10 @@ export class CompanionController {
   send(text: string): string | null {
     const words = text.trim().slice(0, COMPANION_MESSAGE_MAX);
     if (this.session === null || words === "") return null;
-    return this.session.send([{ type: "text", text: words }], "ask");
+    const id = this.session.send([{ type: "text", text: words }], "ask");
+    // The pending moment goes with this message (the core discards it after the turn): the line above the composer leaves.
+    if (id !== null && this.thread.context) this.setThread({ ...this.thread, context: null });
+    return id;
   }
 
   /** "Try again" on a message the core refused or never took: the same id, so the turn never starts twice. */

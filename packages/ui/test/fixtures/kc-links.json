@@ -1,0 +1,52 @@
+{
+ "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+ "materials": [
+  {
+   "aid_id": "aid_00000000000000000000000001",
+   "kind": "quiz",
+   "title": "Practice questions"
+  },
+  {
+   "source_id": "src_00000000000000000000000002",
+   "kind": "slides",
+   "title": "Motion in a straight line: velocity-time graphs and acceleration"
+  }
+ ],
+ "moments": [
+  {
+   "source_id": "src_00000000000000000000000001",
+   "at_ms": 252000,
+   "title": "Kinematics lecture"
+  },
+  {
+   "source_id": "src_00000000000000000000000001",
+   "at_ms": 400000,
+   "title": "Kinematics lecture"
+  }
+ ],
+ "notes": [
+  {
+   "note_id": "mem_00000000000000000000000001",
+   "text": "Draws the graph before calculating",
+   "confidence": "tentative"
+  }
+ ],
+ "tracked": true,
+ "misconceptions": [
+  {
+   "misconception_id": "mc.phy.o.vt_gradient_from_one_point",
+   "kc_id": "kc.phy.o.motion.velocity_time_gradient",
+   "name": "Acceleration from a single point",
+   "status": "active",
+   "times": 3,
+   "last_seen_at": 1790000000000,
+   "root_kc_id": "kc.mth.o.coordinate_geometry.gradient",
+   "idea": "the gradient of a straight line",
+   "reviewed": false,
+   "gap_path": [
+    "kc.mth.o.coordinate_geometry.gradient",
+    "kc.phy.o.motion.velocity_time_gradient"
+   ]
+  }
+ ]
+}

@@ -35,16 +35,16 @@ import { objectiveForKc, objectiveForLesson, objectiveForTopic, type LearningObj
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   AskController, CHECKIN_REFRESH_MS, CompanionController, StudyWorkspaceController, SessionNotesController, SavedQuestionsController, AssessmentController, CLIENT_KEYS, ExamDateController, HistoryController, KnowsController, LessonController, LOCKED_STATES, MockController, PastPaperController, PlanController, PracticeController, ProfileController, ProgressController, SUBJECT_CODES, SUBJECT_NAMES,
-  SearchController, SessionController, StoreHolder, SubjectMapController, ConceptMapController, clientId, examLock, groupSessions, installedSubjects, finishSetup, kcSubjectCode, nextBlock,
+  SearchController, SessionController, StoreHolder, SubjectMapController, ConceptMapController, MapOverviewController, clientId, examLock, groupSessions, installedSubjects, finishSetup, kcSubjectCode, nextBlock,
   parseAssets, parseNotices, readDegraded, readLicence, readProfile, readSetup, readSubjectMap, subjectName, tutorAnswers, tutorReach, tutorSetup, typedCapture, helpTurn, type HelpKind, DailyGoal, goalProgress,
-  type CheckinNotifier, type CompanionAction, type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
+  type CheckinNotifier, type CompanionAction, type ConceptNode, type KcLinks, type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
 } from "@jana/client-core";
 import {
   AskAnswer, CompanionThread, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, LastTimeCard, CheckinCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
   ConceptMapRendererProvider, GapLinkProvider, ResearchLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
-  useProfiles, useRecentSessions, useT, type AskContext, type StudyRequest, type StudyTab, type FramePlace, type LessonInProgress, type LockedPlace, type ReportNames, type SidebarContent, type SubjectChoice,
+  useProfiles, useRecentSessions, useT, type AskContext, type ConceptActions, type StudyRequest, type StudyTab, type FramePlace, type LessonInProgress, type LockedPlace, type ReportNames, type SidebarContent, type SubjectChoice,
 } from "@jana/ui";
 import { ConceptMapSvg, RENDERERS } from "@jana/renderers";
 import { errors, type api_commands } from "@jana/contracts-ts/client";
@@ -66,6 +66,8 @@ export interface AppRuntime {
   /** The subject map and the lesson player for the open profile (UXS-22, UXS-23). */
   map: SubjectMapController;
   conceptMap: ConceptMapController;
+  /** My map, Progress's hero: every installed subject as topic tiles (SPEC §21). */
+  overview: MapOverviewController;
   lessons: LessonController;
   /** Practice sets for the open profile (UXS-24, API-27). */
   practice: PracticeController;
@@ -123,7 +125,7 @@ export function createRuntime(launch: Launch, fetchImpl?: typeof fetch, notifier
   profiles.onClear(clearRenderCaches);
   const knows = new KnowsController(profiles);
   const runtime: AppRuntime = {
-    holder, profiles, knows, map: new SubjectMapController(profiles), conceptMap: new ConceptMapController(profiles), lessons: new LessonController(profiles), practice: new PracticeController(profiles), mocks: new MockController(profiles), pastPapers: new PastPaperController(profiles), examDates: new ExamDateController(profiles),
+    holder, profiles, knows, map: new SubjectMapController(profiles), conceptMap: new ConceptMapController(profiles), overview: new MapOverviewController(profiles), lessons: new LessonController(profiles), practice: new PracticeController(profiles), mocks: new MockController(profiles), pastPapers: new PastPaperController(profiles), examDates: new ExamDateController(profiles),
     studyWorkspace: new StudyWorkspaceController(profiles, new BrowserLocalSpeech(), new BrowserPodcastAudio()), sessionNotes: new SessionNotesController(profiles), savedQuestions: new SavedQuestionsController(profiles), assessments: new AssessmentController(profiles), plans: new PlanController(profiles), progress: new ProgressController(profiles), history: new HistoryController(profiles), search: new SearchController(profiles), goal: new DailyGoal(profiles), ask: new AskController(profiles), companion: new CompanionController(profiles, { ...(fetchImpl === undefined ? {} : { fetch: fetchImpl }), ...(notifier === undefined ? {} : { notifier }) }), launch,
     ...(notifier === undefined ? {} : { notifier }),
   };
@@ -131,7 +133,7 @@ export function createRuntime(launch: Launch, fetchImpl?: typeof fetch, notifier
 }
 
 type TutorTarget = SessionTarget;
-type Screen = S2Screen | "study" | "notes" | "history" | "session-history" | "knows" | "knows-from-settings" | "knows-from-study";
+type Screen = S2Screen | "study" | "notes" | "history" | "session-history" | "knows" | "knows-from-settings" | "knows-from-study" | "knows-from-learn";
 type Opened = SessionController | "failed" | null;
 /** First run: "Who's learning?", then the hand-off for the student who was added (UXS-10). */
 type FirstRunStep = { step: "who"; resume?: boolean } | { step: "restore" } | { step: "handoff"; name: string } | { step: "tutor"; next: Screen } | { step: "interview"; next: Screen } | null;
@@ -361,6 +363,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   const [studyResearch, setStudyResearch] = useState<string | null>(null); // a practised diagram's capture (SPEC §18)
   // Somewhere Study is asked to go (SPEC §19.3.3): a companion button, or the plan's due Study cards.
   const [studyRequest, setStudyRequest] = useState<StudyRequest | null>(null);
+  // "Ask your tutor about this" on the learner's map (SPEC §21.3): the thread opens with this draft, nothing sent.
+  const [companionDraft, setCompanionDraft] = useState<string | null>(null);
   // A check-in opened from Home (SPEC §19.5.5): Study opens **Your tutor** with it instead of the day's plain opener.
   const studyCheckin = useRef<string | null>(null);
   // The student menu (D115): Settings at a section, the keyboard help, and what it says about the student.
@@ -441,7 +445,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   // first installed subject (every subject at O level when no pack is installed yet).
   const active = view.active;
   useEffect(() => { setStudyResume(null); setStudySource(null); setStudyResearch(null); setStudyRequest(null); }, [active]);
-  useEffect(() => { if (screen !== "study") { setStudyResume(null); setStudySource(null); setStudyRequest(null); } }, [screen]);
+  useEffect(() => { if (screen !== "study") { setStudyResume(null); setStudySource(null); setStudyRequest(null); setCompanionDraft(null); } }, [screen]);
   useEffect(() => { if (active && studyAvailable && screen === "home") void runtime.studyWorkspace.load(); }, [active, studyAvailable, screen, runtime.studyWorkspace]);
   // The Study screen's session of the day (SPEC §19.3.2): opened while the screen shows, ended when it closes; the
   // Last time card in Study's library is read with it, and **Your tutor**'s episode of the day is opened or resumed
@@ -610,6 +614,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   const progressView = useSyncExternalStore(runtime.progress.subscribe, runtime.progress.getView, runtime.progress.getView);
   const examDatesView = useSyncExternalStore(runtime.examDates.subscribe, runtime.examDates.getView, runtime.examDates.getView);
   const companionView = useSyncExternalStore(runtime.companion.subscribe, runtime.companion.getView, runtime.companion.getView);
+  // The learner's map lens (SPEC §21): the layer chosen on Progress opens the skill map on the same layer.
+  const mapLens = useSyncExternalStore(runtime.conceptMap.subscribe, runtime.conceptMap.getLens, runtime.conceptMap.getLens);
   // **Your tutor** (SPEC §19.3.3): left out of Study altogether on a core without the thread, as the Last time card is.
   const companionThread = useSyncExternalStore(runtime.companion.subscribe, runtime.companion.getThread, runtime.companion.getThread);
   const checkinView = useSyncExternalStore(runtime.companion.subscribe, runtime.companion.getCheckin, runtime.companion.getCheckin);
@@ -1013,6 +1019,24 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   };
   /** The deck of a warm-up's due Study cards (SPEC §19.4, `open_study_deck`): Study opens it in its material. */
   const openStudyDeck = (deckId: string) => { setStudyRequest({ kind: "target", deck_id: deckId }); setScreen("study"); };
+  /** The skill sheet's links and actions on the learner's map (SPEC §21.1): each opens a place that exists elsewhere.
+   * "Ask your tutor about this" is a client deep link to the thread with a draft: no event, nothing sent (§21.3). */
+  const toStudy = (request: StudyRequest) => { setStudyRequest(request); setScreen("study"); };
+  const mapSheet: ConceptActions = {
+    onOpenKnows: () => setScreen("knows-from-learn"),
+    ...(studyAvailable ? {
+      onOpenMaterial: (m: KcLinks["materials"][number]) => toStudy("aid_id" in m ? { kind: "target", aid_id: m.aid_id } : { kind: "source", source_id: m.source_id }),
+      onOpenMoment: (m: KcLinks["moments"][number]) => toStudy({ kind: "source", source_id: m.source_id }),
+      onMakeFlashcards: (_node: ConceptNode, links: KcLinks) => {
+        const source = links.materials.find((m) => "source_id" in m);
+        const aid = links.materials.find((m) => "aid_id" in m);
+        if (source !== undefined && "source_id" in source) toStudy({ kind: "flashcards", source_id: source.source_id });
+        else if (aid !== undefined && "aid_id" in aid) toStudy({ kind: "target", aid_id: aid.aid_id });
+      },
+      onResearch: (node: ConceptNode) => toStudy({ kind: "research", topic: node.statement }),
+      onAskTutor: (node: ConceptNode) => { setCompanionDraft(t("map.sheet.ask_draft", { statement: node.statement })); toStudy({ kind: "companion" }); },
+    } : {}),
+  };
   /** A button in **Your tutor** (SPEC §19.3.3): each opens the place it names, with what the engine put in its payload
    * (never anything the model wrote, except the learner's own question handed to the tutor). */
   const companionAction = (action: CompanionAction) => {
@@ -1037,6 +1061,9 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         return;
       case "open_study_deck":
         if (payload.deck_id !== undefined) openStudyDeck(payload.deck_id);
+        return;
+      case "open_moment":  // SPEC §20.4: the material at the moment the engine resolved from a study_search hit
+        if (payload.source_id !== undefined && payload.at_ms !== undefined) { setStudyRequest({ kind: "moment", source_id: payload.source_id, at_ms: payload.at_ms }); setScreen("study"); }
         return;
       case "open_add_source":
         setStudyRequest({ kind: "add" });
@@ -1261,6 +1288,9 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     if (screen === "progress") {
       return (
         <Progress controller={runtime.progress} version={progressVersion}
+          map={{ controller: runtime.overview, layer: mapLens.layer, onLayer: (layer) => runtime.conceptMap.setLayer(layer),
+            onOpen: (subjectId) => { setMapSubject(subjectId); setMapTopic(null); setMapFirst(true); setScreen("learn"); },
+            tileOf: (kc) => Object.values(maps).flatMap((m) => m.sections.flatMap((s) => s.topics)).find((tp) => tp.kcs.some((k) => k.kc_id === kc))?.node_id ?? null }}
           names={{ subject: subjectLabel, kc: (kc) => known.statements.get(kc) ?? null }}
           actions={{ onKnows: () => setScreen("knows-from-progress"), onNotes: () => setScreen("notes"), onHistory: () => setScreen("session-history"), onLearn: () => setScreen("learn"), onDiagnostic: () => openAssessment() }} />
       );
@@ -1284,13 +1314,16 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         setScreen("study");
       } else setScreen(tutorOffered ? "tutor" : "learn");
     }} onOpenKnows={() => setScreen("knows-from-settings")} />;
-    if (screen === "knows" || screen === "knows-from-settings" || screen === "knows-from-progress" || screen === "knows-from-study") {
-      const back = screen === "knows" ? "tutor" : screen === "knows-from-progress" ? "progress" : screen === "knows-from-study" ? "study" : "settings";
+    if (screen === "knows" || screen === "knows-from-settings" || screen === "knows-from-progress" || screen === "knows-from-study" || screen === "knows-from-learn") {
+      const back = screen === "knows" ? "tutor" : screen === "knows-from-progress" ? "progress" : screen === "knows-from-study" ? "study" : screen === "knows-from-learn" ? "learn" : "settings";
       return <KnowsPage knows={runtime.knows} onClose={() => setScreen(back)} onOpenSettings={() => setScreen("settings")} />;
     }
     if (screen === "study") {
       const workspace = <StudyWorkspace controller={runtime.studyWorkspace} lastTime={<LastTimeCard view={companionView} />}
-        {...(companionThread.status !== "unavailable" ? { companion: (place: "panel" | "tab") => <CompanionThread companion={runtime.companion} onAction={companionAction} place={place} /> } : {})} request={studyRequest} onRequestDone={() => setStudyRequest(null)} initialAdd={studyAdd} initialJourney={studyResume} onJourneyOpened={() => setStudyResume(null)} initialSource={studySource} onSourceOpened={() => setStudySource(null)} initialResearch={studyResearch} onResearchOpened={() => setStudyResearch(null)} onJourneyStarted={() => {
+        {...(companionThread.status !== "unavailable" ? { companion: (place: "panel" | "tab") => <CompanionThread companion={runtime.companion} onAction={companionAction} place={place} draft={companionDraft} onDraftShown={() => setCompanionDraft(null)} />,
+          // Ask about this moment (SPEC §20.5 step 4): the thread opens with the moment as its pending context; nothing is sent.
+          onAskMoment: (source: { source_id: string; title: string }, at_ms: number) => { void runtime.companion.openWithContext({ source_id: source.source_id, at_ms }, source.title); setStudyRequest({ kind: "companion" }); } } : {})}
+        onSkill={(kc) => { const subject = kcSubject(kc); if (subject) { setMapSubject(subject); setMapTopic(null); setMapFirst(true); setScreen("learn"); } }} skillName={(kc) => known.statements.get(kc) ?? null} request={studyRequest} onRequestDone={() => setStudyRequest(null)} initialAdd={studyAdd} initialJourney={studyResume} onJourneyOpened={() => setStudyResume(null)} initialSource={studySource} onSourceOpened={() => setStudySource(null)} initialResearch={studyResearch} onResearchOpened={() => setStudyResearch(null)} onJourneyStarted={() => {
         void journey.load().then((next) => { if (next) void journeyStep(nextJourneyAction(next)); });
       }} onTab={setStudyTab} onPractice={(subject, kcIds) => {
         const objective = kcIds[0] ? objectiveForKc(Object.values(maps), kcIds[0]) : null;
@@ -1338,6 +1371,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
           {...(mapTopic !== null ? { initialTopic: mapTopic } : {})}
           controller={runtime.map}
           concept={runtime.conceptMap}
+          sheet={mapSheet}
           {...(answers === true && protectedCheck === undefined ? { onAskQuestion: (text: string) => askOpenQuestion(shownSubject, text) } : {})}
           subjectId={shownSubject}
           subjects={subjects}

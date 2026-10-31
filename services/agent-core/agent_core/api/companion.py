@@ -58,10 +58,23 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
             "can_reply": notice is None and not (core.tutor_unavailable is not None and core.tutor_unavailable()),
         }
 
+    def moment(body: Any) -> None:
+        """Ask about this moment (SPEC §20.3): the open's `context` becomes the episode's pending turn context once
+        the material is this profile's; a material that is not is `not_found`."""
+        context = (body or {}).get("context")
+        if not context:
+            return
+        try:
+            core.study.desk().source(context["source_id"])
+        except Exception:
+            raise ApiError("not_found", "no such material") from None
+        core.companion.set_context({"source_id": context["source_id"], "at_ms": int(context["at_ms"])})
+
     @app.post("/v1/companion")
     async def open_thread(request: Request) -> Response:
         async def run(body: Any) -> tuple[int, Any]:
             notice = opened(body)
+            moment(body)
             try:
                 reply = await core.open_companion()
             except LookupError:

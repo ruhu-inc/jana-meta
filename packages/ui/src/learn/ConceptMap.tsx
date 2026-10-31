@@ -6,8 +6,17 @@
 // to, the learner's questions and mistakes, and a mistake's root gap (an earlier skill it really comes from), whose
 // gap path lights on the map; a root-gap link nobody reviewed says so, never shown as curated. The same map is a
 // table for screen readers and keyboard users who prefer one, and the box states are words as well as fills.
+//
+// The learner's map (SPEC §21, W10): a layer switch paints the same boxes (Mastery, Freshness, Mistakes, Study,
+// Notes, Topics your tutor is tracking), each layer with its legend, its column in the table and its words in every
+// box's label; skills that moved since the map was last opened are outlined (a pulse once, never with Reduce motion);
+// the scrubber shows the map as the learner model stood on a weekly date, read-only, with the date read aloud; and the
+// sheet adds the skill's Study materials and lecture moments, the tutor's notes about it (they open the knows page),
+// and three actions that exist elsewhere: Make flashcards, Research this, Ask your tutor about this (the thread opens
+// with a draft, nothing sent). Words never on hover only.
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ComponentType, type KeyboardEvent, type RefObject } from "react";
-import { nodeBadges, openQuestions, type ConceptMap as ConceptMapData, type ConceptMapView, type ConceptMistake, type ConceptNode, type ConceptQuestion } from "@jana/client-core";
+import { FRESHNESS, FRESHNESS_LOOK, MAP_LAYERS, layerFacts, nodeBadges, openQuestions, weeklyDates, type ConceptMap as ConceptMapData, type ConceptMapView, type ConceptMistake, type ConceptNode, type ConceptQuestion, type KcLinks, type LayerFacts, type MapLayer, type MapLens } from "@jana/client-core";
+import { TOKENS } from "../generated/tokens.js";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
 import { Button, EmptyState, ErrorState, IconButton, SegmentedControl, Skeleton, SuggestionChip } from "../primitives/index.js";
@@ -26,6 +35,22 @@ export interface ConceptDrawNode {
   mistakes: number;
   next: number;
   badge?: string;
+  /** What the layer shown paints on the box, every mark with its words (SPEC §21). */
+  layer?: ConceptDrawLayer;
+  /** Moved since the map was last opened: the words ("Up since last time"). */
+  changed?: string;
+}
+
+/** A layer's paint on one box, as the renderer draws it (`DrawLayer`). */
+export interface ConceptDrawLayer {
+  look?: string;
+  pattern?: "none" | "dots-sparse" | "dots-dense" | "solid" | "hatch-diagonal" | "cross-hatch";
+  word?: string;
+  dashed?: boolean;
+  rings?: number;
+  dots?: number;
+  pin?: boolean;
+  words?: string[];
 }
 
 export interface ConceptDrawEdge {
@@ -70,6 +95,29 @@ export interface ConceptActions {
   onAskQuestion?: (text: string) => void;
   /** Practise or learn a skill (the topic's journey on the subject map). */
   onPractiseKc?: (node: ConceptNode) => void;
+  /** A Study material on the skill's sheet opens in Study. */
+  onOpenMaterial?: (material: KcLinks["materials"][number]) => void;
+  /** A lecture moment opens its recording in Study. */
+  onOpenMoment?: (moment: KcLinks["moments"][number]) => void;
+  /** A tutor's note opens "What your tutor knows". */
+  onOpenKnows?: () => void;
+  /** Make flashcards: a Study job on the skill's materials. */
+  onMakeFlashcards?: (node: ConceptNode, links: KcLinks) => void;
+  /** Research this: Study's research conversation with the skill's statement. */
+  onResearch?: (node: ConceptNode) => void;
+  /** Ask your tutor about this: the companion thread opens with "About <statement>:" as a draft, nothing sent. */
+  onAskTutor?: (node: ConceptNode) => void;
+}
+
+/** The lens over the map (SPEC §21): the layer, the scrubber's date and the links, kept in memory by the app. */
+export interface ConceptLens {
+  lens: MapLens;
+  onLayer: (layer: MapLayer) => void;
+  /** A weekly date, or null for today's map. */
+  onScrub: (asOf: string | null) => void;
+  onLinks: (kcId: string) => void;
+  /** Today's local date (`YYYY-MM-DD`): the scrubber's last stop. */
+  today: string;
 }
 
 const SUBJECT_KEY: Record<string, string> = { "cur.mth.o": "concept.subject.mathematics", "cur.phy.o": "concept.subject.physics", "cur.chm.o": "concept.subject.chemistry", "cur.bio.o": "concept.subject.biology", "cur.acc.o": "concept.subject.accounting" };
@@ -78,18 +126,71 @@ function stateWord(t: ReturnType<typeof useT>, state: ConceptNode["state"]): str
   return state === "explaining" ? t("concept.state.explaining") : t(`mastery.${state}`);
 }
 
-function useDrawing(map: ConceptMapData, t: ReturnType<typeof useT>) {
+/** A misconception's status in words: "You said this isn't right" for a disputed one (LRN-37). */
+export function mistakeWord(t: ReturnType<typeof useT>, status: ConceptMistake["status"]): string {
+  return status === "disputed" ? t("map.mistake.disputed") : t(`concept.mistake.status.${status}`);
+}
+
+/** A skill's words on a layer: what its box, its table cell and its accessible name say (never colour alone). */
+export function layerWords(t: ReturnType<typeof useT>, layer: MapLayer, facts: LayerFacts): string[] {
+  switch (layer) {
+    case "mastery":
+      return [];
+    case "freshness":
+      return [t(`map.freshness.${facts.freshness}`), ...(facts.refreshDue ? [t("map.refresh_due")] : [])];
+    case "mistakes":
+      return facts.rings.length === 0 ? [] : [t("map.mistakes.words", { count: facts.rings.length, words: facts.rings.map((r) => mistakeWord(t, r)).join(", ") })];
+    case "study": {
+      const { materials, moments, cards_due: cards } = facts.study;
+      return [...(materials > 0 ? [t("map.study.materials", { count: materials })] : []), ...(moments > 0 ? [t("map.study.moments", { count: moments })] : []),
+        ...(cards > 0 ? [t("map.study.cards_due", { count: cards })] : [])];
+    }
+    case "notes":
+      return facts.notes > 0 ? [t("map.notes.count", { count: facts.notes })] : [];
+    case "tracked":
+      return facts.tracked ? [t("map.tracked.yes")] : [];
+  }
+}
+
+function paintOf(t: ReturnType<typeof useT>, layer: MapLayer, facts: LayerFacts): ConceptDrawLayer | undefined {
+  const words = layerWords(t, layer, facts);
+  switch (layer) {
+    case "mastery":
+      return undefined;
+    case "freshness": {
+      const look = FRESHNESS_LOOK[facts.freshness];
+      return { look, pattern: TOKENS.mastery.states[look].pattern as ConceptDrawLayer["pattern"] & string, word: words[0] ?? "", dashed: facts.refreshDue, words: words.slice(1) };
+    }
+    case "mistakes":
+      return { rings: facts.rings.length, words };
+    case "study":
+      return { dots: facts.study.materials + facts.study.moments + facts.study.cards_due, words };
+    case "notes":
+      return { pin: facts.notes > 0, words };
+    case "tracked":
+      return { words };
+  }
+}
+
+function useDrawing(map: ConceptMapData, t: ReturnType<typeof useT>, layer: MapLayer = "mastery") {
   return useMemo(() => {
     const badges = nodeBadges(map);
     const next = new Map(map.next.map((n, i) => [n.kc_id, i + 1]));
-    const nodes: ConceptDrawNode[] = map.nodes.map((n) => ({
-      id: n.kc_id, code: n.code, title: n.statement, state: n.state, stateWord: stateWord(t, n.state), linked: n.linked,
-      ...(n.linked ? { subject: t(SUBJECT_KEY[n.subject_id] ?? "concept.other_subject") } : {}),
-      asked: badges.get(n.kc_id)?.asked ?? 0, mistakes: (badges.get(n.kc_id)?.mistakes ?? []).filter((m) => m.status !== "resolved").length, next: next.get(n.kc_id) ?? 0,
-    }));
+    const nodes: ConceptDrawNode[] = map.nodes.map((n) => {
+      const facts = layerFacts(map, n);
+      const paint = n.linked ? undefined : paintOf(t, layer, facts);
+      return {
+        id: n.kc_id, code: n.code, title: n.statement, state: n.state, stateWord: stateWord(t, n.state), linked: n.linked,
+        ...(n.linked ? { subject: t(SUBJECT_KEY[n.subject_id] ?? "concept.other_subject") } : {}),
+        // A disputed misconception is the learner's word, not a mistake: it is counted on the Mistakes layer only.
+        asked: badges.get(n.kc_id)?.asked ?? 0, mistakes: (badges.get(n.kc_id)?.mistakes ?? []).filter((m) => m.status !== "resolved" && m.status !== "disputed").length, next: next.get(n.kc_id) ?? 0,
+        ...(paint !== undefined ? { layer: paint } : {}),
+        ...(facts.changed !== null ? { changed: t(`map.changed.${facts.changed}`) } : {}),
+      };
+    });
     const edges: ConceptDrawEdge[] = map.edges.map((e) => ({ from: e.from, to: e.to, kind: e.kind, strength: e.strength, reviewed: e.reviewed, name: e.misconception_name }));
     return { nodes, edges, badges };
-  }, [map, t]);
+  }, [map, t, layer]);
 }
 
 function NextList({ map, onPick }: { map: ConceptMapData; onPick: (kc: string) => void }) {
@@ -135,8 +236,9 @@ function MistakeLine({ m, map, onGap }: { m: ConceptMistake; map: ConceptMapData
   return (
     <li className="flex flex-col gap-2 py-2" data-mistake={m.misconception_id} data-status={m.status}>
       <span className="text-ui text-ink">{t("concept.mistake.line", { name: m.name, count: m.times })}</span>
-      <span className="text-meta text-muted">{t(`concept.mistake.status.${m.status}`)}</span>
-      {root !== undefined && m.idea !== null && (
+      <span className="text-meta text-muted">{mistakeWord(t, m.status)}</span>
+      {/* A mistake the learner disputed (LRN-37) offers no root gap: they said it isn't right. */}
+      {root !== undefined && m.idea !== null && m.status !== "disputed" && (
         <span className="flex flex-col gap-2 rounded-control bg-panel p-3">
           <span className="text-ui text-ink">{t("concept.root_gap.about", { idea: m.idea, skill: root.statement })}</span>
           {/* An unreviewed link is a suggestion, never curated content. */}
@@ -148,11 +250,75 @@ function MistakeLine({ m, map, onGap }: { m: ConceptMistake; map: ConceptMapData
   );
 }
 
-function NodeSheet({ node, map, actions, onClose, onGap, onPick }: { node: ConceptNode; map: ConceptMapData; actions: ConceptActions; onClose: () => void; onGap: (m: ConceptMistake) => void; onPick: (kc: string) => void }) {
+/** A lecture moment's time as the player shows it: 04:12, or 1:02:03 past an hour. */
+export function momentTime(ms: number): string {
+  const total = Math.floor(ms / 1000);
+  const [h, m, sec] = [Math.floor(total / 3600), Math.floor((total % 3600) / 60), total % 60];
+  const two = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${two(m)}:${two(sec)}` : `${two(m)}:${two(sec)}`;
+}
+
+/** The sheet's Study, notes and tutor sections and its three actions (SPEC §21.1): from the skill's links. */
+function SheetLinks({ node, links, actions }: { node: ConceptNode; links: KcLinks | "loading" | "failed" | undefined; actions: ConceptActions }) {
+  const t = useT();
+  const cards = node.study?.cards_due ?? 0;
+  if (links === undefined || links === "loading") return <p role="status" className="text-meta text-muted" data-sheet-links="loading">{t("map.sheet.loading")}</p>;
+  if (links === "failed") return <p className="text-meta text-muted" data-sheet-links="failed">{t("map.sheet.failed")}</p>;
+  const empty = links.materials.length === 0 && links.moments.length === 0 && cards === 0;
+  return (
+    <div className="flex flex-col gap-4" data-sheet-links="ready">
+      <div className="flex flex-col gap-1" data-sheet-study="">
+        <h3 className="text-label text-faint">{t("map.sheet.study")}</h3>
+        {empty ? <p className="text-meta text-muted">{t("map.sheet.no_study")}</p> : (
+          <ul className="flex flex-col gap-1">
+            {links.materials.map((m) => {
+              const id = "aid_id" in m ? m.aid_id : m.source_id;
+              return (
+                <li key={id}><button type="button" data-material={id} disabled={actions.onOpenMaterial === undefined} onClick={() => actions.onOpenMaterial?.(m)}
+                  className="flex items-center gap-2 text-start text-ui text-ink underline-offset-2 hover:underline"><Icon name="study" size={16} />{m.title}</button></li>
+              );
+            })}
+            {links.moments.map((m) => (
+              <li key={`${m.source_id}:${m.at_ms}`}><button type="button" data-moment={`${m.source_id}:${m.at_ms}`} disabled={actions.onOpenMoment === undefined} onClick={() => actions.onOpenMoment?.(m)}
+                className="flex items-center gap-2 text-start text-ui text-ink underline-offset-2 hover:underline"><Icon name="timer" size={16} />{t("map.sheet.moment", { title: m.title, at: momentTime(m.at_ms) })}</button></li>
+            ))}
+            {cards > 0 && <li className="text-meta text-muted" data-cards-due={cards}>{t("map.sheet.cards_due", { count: cards })}</li>}
+          </ul>
+        )}
+      </div>
+      {links.notes.length > 0 && (
+        <div className="flex flex-col gap-1" data-sheet-notes="">
+          <h3 className="text-label text-faint">{t("map.sheet.notes")}</h3>
+          <ul className="flex flex-col gap-1">
+            {links.notes.map((n) => (
+              <li key={n.note_id} data-note={n.note_id} className="flex flex-col">
+                <span className="text-ui text-ink">{n.text}</span>
+                <span className="text-meta text-faint">{t(`map.note.${n.confidence}`)}</span>
+              </li>
+            ))}
+          </ul>
+          {actions.onOpenKnows !== undefined && <span><Button size="sm" tone="ghost" data-open-knows="" onClick={() => actions.onOpenKnows?.()}>{t("map.sheet.open_knows")}</Button></span>}
+        </div>
+      )}
+      {links.tracked && <p className="text-meta text-muted" data-sheet-tracked="">{t("map.sheet.tracked")}</p>}
+      <span className="flex flex-wrap gap-2" data-sheet-actions="">
+        {actions.onMakeFlashcards !== undefined && links.materials.length > 0 && <Button size="sm" data-action="flashcards" onClick={() => actions.onMakeFlashcards?.(node, links)}>{t("map.sheet.make_flashcards")}</Button>}
+        {actions.onResearch !== undefined && <Button size="sm" data-action="research" onClick={() => actions.onResearch?.(node)}>{t("map.sheet.research")}</Button>}
+        {actions.onAskTutor !== undefined && <Button size="sm" data-action="ask-tutor" onClick={() => actions.onAskTutor?.(node)}><Icon name="tutor" size={16} />{t("map.sheet.ask_tutor")}</Button>}
+      </span>
+    </div>
+  );
+}
+
+function NodeSheet({ node, map, actions, onClose, onGap, onPick, links, onLinks }: { node: ConceptNode; map: ConceptMapData; actions: ConceptActions; onClose: () => void; onGap: (m: ConceptMistake) => void; onPick: (kc: string) => void;
+  links?: KcLinks | "loading" | "failed" | undefined; onLinks?: ((kcId: string) => void) | undefined }) {
   const t = useT();
   const id = useId();
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [node.kc_id]);
+  useEffect(() => {
+    if (!node.linked) onLinks?.(node.kc_id);
+  }, [node.kc_id, node.linked, onLinks]);
   const byId = new Map(map.nodes.map((n) => [n.kc_id, n]));
   const before = map.edges.filter((e) => e.to === node.kc_id && e.kind === "prerequisite").flatMap((e) => { const n = byId.get(e.from); return n === undefined ? [] : [{ e, n }]; });
   const after = map.edges.filter((e) => e.from === node.kc_id && e.kind === "prerequisite").map((e) => byId.get(e.to)).filter((n): n is ConceptNode => n !== undefined);
@@ -207,14 +373,19 @@ function NodeSheet({ node, map, actions, onClose, onGap, onPick }: { node: Conce
           <ul className="flex flex-col divide-y divide-line">{mistakes.map((m) => <MistakeLine key={m.misconception_id} m={m} map={map} onGap={onGap} />)}</ul>
         </div>
       )}
+      {onLinks !== undefined && !node.linked && <SheetLinks node={node} links={links} actions={actions} />}
     </section>
   );
 }
 
-function Legend() {
+function Legend({ layer = "mastery", changed = false }: { layer?: MapLayer; changed?: boolean }) {
   const t = useT();
   return (
-    <ul className="flex flex-wrap gap-x-5 gap-y-1 text-meta text-muted" data-concept-legend aria-label={t("concept.legend")}>
+    <ul className="flex flex-wrap gap-x-5 gap-y-1 text-meta text-muted" data-concept-legend={layer} aria-label={t("concept.legend")}>
+      <li data-legend-layer={layer}>{t(`map.legend.${layer}`)}</li>
+      {layer === "freshness" && FRESHNESS.map((f) => <li key={f} data-legend-freshness={f}>{t(`map.freshness.${f}`)}</li>)}
+      {layer === "freshness" && <li>{t("map.legend.refresh_due")}</li>}
+      {changed && <li data-legend-changed="">{t("map.legend.changed")}</li>}
       <li>{t("concept.legend.required")}</li>
       <li>{t("concept.legend.helpful")}</li>
       <li>{t("concept.legend.root_gap")}</li>
@@ -223,20 +394,52 @@ function Legend() {
   );
 }
 
-function MapTable({ map, onPick }: { map: ConceptMapData; onPick: (kc: string) => void }) {
+/** The scrubber (SPEC §21.5): weekly dates from the first learning event to today, at most 26 weeks; the date is read
+ * aloud and shown in words; "Today" returns to the live map. A dated map is read-only. */
+function Scrubber({ map, lens, onScrub, today }: { map: ConceptMapData; lens: MapLens; onScrub: (asOf: string | null) => void; today: string }) {
+  const t = useT();
+  const id = useId();
+  const dates = useMemo(() => weeklyDates(map.first_day ?? null, today), [map.first_day, today]);
+  const last = dates.length - 1;
+  const at = lens.asOf === null ? last : Math.max(0, dates.indexOf(lens.asOf));
+  const spoken = (i: number) => {
+    const date = dates[i] ?? today;
+    if (i === last) return t("map.scrubber.today");
+    return `${t("map.scrubber.date", { date: new Date(`${date}T12:00:00`) })}, ${t("map.scrubber.weeks_ago", { count: last - i })}`;
+  };
+  if (dates.length < 2) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-3" data-scrubber={lens.asOf ?? "today"}>
+      <label htmlFor={id} className="text-meta font-medium text-ink">{t("map.scrubber.label")}</label>
+      <input id={id} type="range" min={0} max={last} step={1} value={at} aria-valuetext={spoken(at)} className="min-w-40 flex-1"
+        onChange={(e) => { const i = Number(e.target.value); onScrub(i === last ? null : dates[i] ?? null); }} />
+      <span className="text-meta text-ink" data-scrubber-date="">{spoken(at)}</span>
+      {lens.asOf !== null && <Button size="sm" tone="ghost" onClick={() => onScrub(null)}>{t("map.scrubber.today")}</Button>}
+      {lens.scrubbing && <span role="status" className="text-meta text-muted">{t("map.scrubber.loading")}</span>}
+      {lens.scrubFailed && <span role="status" className="text-meta text-muted">{t("map.scrubber.failed")}</span>}
+    </div>
+  );
+}
+
+function MapTable({ map, onPick, layer = "mastery" }: { map: ConceptMapData; onPick: (kc: string) => void; layer?: MapLayer }) {
   const t = useT();
   const byId = new Map(map.nodes.map((n) => [n.kc_id, n]));
   const badges = nodeBadges(map);
+  const changed = map.nodes.some((n) => n.changed_since != null);
+  // The layer's own column: what each skill shows on it, in words (an empty layer cell says "not yet" in words).
+  const none: Record<MapLayer, string> = { mastery: "", freshness: "", mistakes: t("map.mistakes.none"), study: t("map.study.none"), notes: t("map.notes.none"), tracked: t("map.tracked.no") };
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-start text-ui" data-concept-table>
-        <caption className="sr-only">{t("concept.table.caption")}</caption>
+        <caption className="sr-only">{t("concept.table.caption")}{map.as_of != null ? ` ${t("map.table.as_of", { date: new Date(`${map.as_of}T12:00:00`) })}` : ""}</caption>
         <thead>
           <tr className="border-b border-line text-label text-faint">
             <th scope="col" className="p-2 text-start">{t("concept.table.skill")}</th>
             <th scope="col" className="p-2 text-start">{t("concept.table.state")}</th>
             <th scope="col" className="p-2 text-start">{t("concept.table.builds_on")}</th>
             <th scope="col" className="p-2 text-start">{t("concept.table.yours")}</th>
+            {layer !== "mastery" && <th scope="col" className="p-2 text-start" data-layer-column={layer}>{t(`map.table.${layer}`)}</th>}
+            {changed && <th scope="col" className="p-2 text-start" data-changed-column="">{t("map.table.changed")}</th>}
           </tr>
         </thead>
         <tbody>
@@ -257,6 +460,8 @@ function MapTable({ map, onPick }: { map: ConceptMapData; onPick: (kc: string) =
                 <td className="p-2">{stateWord(t, n.state)}</td>
                 <td className="p-2 text-muted">{needs.length === 0 ? t("concept.table.nothing") : needs.join("; ")}</td>
                 <td className="p-2 text-muted">{yours.join("; ")}</td>
+                {layer !== "mastery" && <td className="p-2 text-muted" data-layer-cell={layer}>{n.linked ? "" : layerWords(t, layer, layerFacts(map, n)).join("; ") || none[layer]}</td>}
+                {changed && <td className="p-2 text-muted">{n.changed_since != null ? t(`map.changed.${n.changed_since}`) : ""}</td>}
               </tr>
             );
           })}
@@ -267,9 +472,11 @@ function MapTable({ map, onPick }: { map: ConceptMapData; onPick: (kc: string) =
 }
 
 /** The concept map from its view: the subject map's "Map" mode, the gallery and the tests render this. */
-export function ConceptMapContent({ view, actions = {}, onRetry, onShowGap, onClearGap, pointed = null, initialKc }: {
+export function ConceptMapContent({ view, actions = {}, onRetry, onShowGap, onClearGap, pointed = null, initialKc, lens }: {
   view: ConceptMapView;
   actions?: ConceptActions;
+  /** The learner's map lens (SPEC §21): without it the map shows Mastery only, today. */
+  lens?: ConceptLens;
   onRetry?: () => void;
   onShowGap?: (gap: { misconceptionId: string; rootKcId: string; kcId: string }) => void;
   onClearGap?: () => void;
@@ -305,16 +512,19 @@ export function ConceptMapContent({ view, actions = {}, onRetry, onShowGap, onCl
   if (map.status === "unverified") return <ErrorState message={t("map.unverified")} />;
   if (map.nodes.length === 0) return <EmptyState message={t("map.no_topics")} />;
   return <Ready map={map} view={view} mode={mode} setMode={setMode} active={active} setActive={setActive} open={open} setOpen={setOpen} pick={pick}
-    scroller={scroller} actions={actions} onShowGap={onShowGap} onClearGap={onClearGap} pointed={pointed} reducedMotion={reducedMotion} />;
+    scroller={scroller} actions={actions} onShowGap={onShowGap} onClearGap={onClearGap} pointed={pointed} reducedMotion={reducedMotion} lens={lens} />;
 }
 
-function Ready({ map, view, mode, setMode, active, setActive, open, setOpen, pick, scroller, actions, onShowGap, onClearGap, pointed, reducedMotion }: {
+function Ready({ map, view, mode, setMode, active, setActive, open, setOpen, pick, scroller, actions, onShowGap, onClearGap, pointed, reducedMotion, lens }: {
   map: ConceptMapData; view: ConceptMapView; mode: "map" | "table"; setMode: (m: "map" | "table") => void; active: string | null; setActive: (kc: string) => void;
   open: string | null; setOpen: (kc: string | null) => void; pick: (kc: string) => void; scroller: RefObject<HTMLDivElement | null>; actions: ConceptActions;
   onShowGap: ((gap: { misconceptionId: string; rootKcId: string; kcId: string }) => void) | undefined; onClearGap: (() => void) | undefined; pointed: string | null; reducedMotion: boolean;
+  lens: ConceptLens | undefined;
 }) {
   const t = useT();
-  const drawing = useDrawing(map, t);
+  const layer = lens?.lens.layer ?? "mastery";
+  const drawing = useDrawing(map, t, layer);
+  const changed = map.nodes.some((n) => n.changed_since != null);
   const Drawing = useContext(RendererContext);
   const [zoom, setZoom] = useState<Zoom>("medium");
   const node = open === null ? null : map.nodes.find((n) => n.kc_id === open) ?? null;
@@ -338,8 +548,15 @@ function Ready({ map, view, mode, setMode, active, setActive, open, setOpen, pic
             {onClearGap !== undefined && <Button size="sm" tone="ghost" onClick={onClearGap}>{t("concept.gap.clear")}</Button>}
           </div>
         )}
+        {lens !== undefined && (
+          <div className="flex flex-col gap-3" data-map-lens={layer}>
+            <SegmentedControl label={t("map.layer")} value={layer} onChange={lens.onLayer} options={MAP_LAYERS.map((l) => ({ value: l, label: t(`map.layer.${l}`) }))} />
+            <Scrubber map={map} lens={lens.lens} onScrub={lens.onScrub} today={lens.today} />
+            {map.as_of != null && <p className="text-meta text-muted" data-as-of={map.as_of}>{t("map.scrubber.read_only", { date: new Date(`${map.as_of}T12:00:00`) })}</p>}
+          </div>
+        )}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Legend />
+          <Legend layer={layer} changed={changed} />
           {Drawing !== null && (
             <span className="flex flex-wrap items-center gap-3">
               {mode === "map" && <SegmentedControl label={t("concept.zoom")} value={zoom} onChange={setZoom} options={(["small", "medium", "large"] as const).map((z) => ({ value: z, label: t(`concept.zoom.${z}`) }))} />}
@@ -353,10 +570,10 @@ function Ready({ map, view, mode, setMode, active, setActive, open, setOpen, pic
               active={active} gap={gap?.path ?? []} pointed={pointed} reducedMotion={reducedMotion} zoom={ZOOMS[zoom]} onActivate={(kc) => setOpen(kc)} onFocusNode={setActive} />
           </div>
         ) : (
-          <MapTable map={map} onPick={pick} />
+          <MapTable map={map} onPick={pick} layer={layer} />
         )}
       </div>
-      {node !== null ? <NodeSheet node={node} map={map} actions={actions} onClose={close} onGap={showGap} onPick={pick} /> : (
+      {node !== null ? <NodeSheet node={node} map={map} actions={actions} onClose={close} onGap={showGap} onPick={pick} links={lens?.lens.links[node.kc_id]} onLinks={lens?.onLinks} /> : (
         <div className="flex flex-col gap-6" data-concept-side>
           <section aria-labelledby="concept-next" className="flex flex-col gap-3">
             <h2 id="concept-next" className="text-heading text-ink">{t("concept.next.title")}</h2>

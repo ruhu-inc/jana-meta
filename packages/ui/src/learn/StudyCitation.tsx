@@ -23,10 +23,12 @@ export function StudyCitation({ citation, locator, sourceTitle, number, disabled
   const label = locator?.kind === "page" ? t("study.ref.page", { page: locator.page })
     : locator?.kind === "slide" ? t("study.ref.slide", { slide: locator.slide })
     : locator?.kind === "time" ? timestamp(locator.start_ms)
+    : locator?.kind === "frame" ? t("study.ref.frame", { time: timestamp(locator.at_ms) })  // SPEC §20.4: "04:12 · on screen"
     : locator?.kind === "note" || locator?.kind === "text" ? t("study.ref.paragraph", { paragraph: locator.paragraph })
     : `[${number}]`;
   const location = locator?.kind === "page" ? t("study.source_page", { page: locator.page })
     : locator?.kind === "time" ? t("study.ref.time", { time: label })
+    : locator?.kind === "frame" ? t("study.ref.frame_full", { time: timestamp(locator.at_ms) })
     : locator?.kind === "slide" ? t("study.ref.slide_full", { slide: locator.slide })
     : locator?.kind === "note" || locator?.kind === "text" ? t("study.ref.paragraph_full", { paragraph: locator.paragraph })
     : t("study.ref.number", { number });
@@ -56,7 +58,7 @@ export function StudyCitations({ citations, locate, title, disabled, onOpen }: {
   const groups = new Map<string, { refs: [W.Citation, ...W.Citation[]]; locator: W.Locator | undefined; number: number }>();
   citations.forEach((ref, i) => {
     const locator = locate(ref);
-    const key = locator?.kind === "page" ? `${ref.source_id}:${ref.revision}:page:${locator.page}` : `reference:${i}`;
+    const key = locator?.kind === "page" ? `${ref.source_id}:${ref.revision}:page:${locator.page}` : locator?.kind === "frame" ? `${ref.source_id}:${ref.revision}:frame:${locator.frame_id}` : `reference:${i}`;
     const group = groups.get(key);
     if (group) group.refs.push(ref);
     else groups.set(key, { refs: [ref], locator, number: i + 1 });

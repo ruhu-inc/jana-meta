@@ -24,7 +24,7 @@ START = "2026-09-01T00:00:00.000Z"  # the harness clock's default time (2026-09-
 CONTRACT = "ops/licence#/$defs/CloudTierEntitlement"
 PAID_FEATURES = ["cloud_tier", "ask_anything", "study_area", "uploads", "recordings", "podcasts", "past_paper_import",
                  "online_voice", "exam_reminders"]  # fmt: skip
-PAID_LIMITS = {"ask_anything_per_day": 150, "uploads_per_day": 30, "upload_max_pages": 1000, "upload_max_mb": 200,
+PAID_LIMITS = {"ask_anything_per_day": 150, "uploads_per_day": 30, "upload_max_pages": 1000, "upload_max_mb": 100,
                "recording_hours_per_month": 10, "podcasts_per_day": 5, "voice_minutes_per_month": 300}  # fmt: skip
 # TABLE BIZ-18a, by billing country: (plan, billing) -> what the checkout shows.
 TABLE = {

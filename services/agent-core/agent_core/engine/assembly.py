@@ -339,6 +339,8 @@ class AppRuntime:
     _remark_lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False, repr=False)  # one re-mark at a time
     _plan_desk: PlanDesk | None = field(default=None, init=False, repr=False)
     _lesson_positions: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict, init=False, repr=False)
+    # The learner's map per profile for the life of the core (SPEC §21): the visit's baseline and the dated replays.
+    _map_states: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
     _lesson_tools: ToolExecutor | None = field(default=None, init=False, repr=False)
 
     async def study_perception(self, data: bytes) -> dict[str, Any]:
@@ -847,14 +849,25 @@ class AppRuntime:
             return
         positions = self._lesson_positions.setdefault(self.stores.profile_id, {})
         self.operation_boundary()
+        from agent_core.engine.learner_map import MapState
+
+        map_state = self._map_states.setdefault(self.stores.profile_id, MapState())
         yield LearnDesk(presented_content(self.content(), self.operation_policy()), source.learner.conn,
                         self.settings, listed=self.packs,
                         run_tool=self._lesson_tool, positions=positions,
-                        record=source.learner.record_batch)  # fmt: skip
+                        record=source.learner.record_batch, projector=source.learner.projector,
+                        device=self.stores.device, profile_id=self.stores.profile_id, map_state=map_state)  # fmt: skip
 
     def drop_lesson_positions(self, profile_id: str) -> None:
-        """A deleted profile's in-memory lesson positions go with it (DAT-09)."""
-        self._lesson_positions.pop(profile_id.removeprefix("prf_"), None)
+        """A deleted profile's in-memory lesson positions go with it (DAT-09), and so do its learner's map state and
+        the bands kept at its last map open in the device database (SPEC §21, JM-D45)."""
+        from agent_core.engine.learner_map import OPENED_KEY
+
+        internal = profile_id.removeprefix("prf_")
+        self._lesson_positions.pop(internal, None)
+        self._map_states.pop(internal, None)
+        if self.stores is not None:
+            self.stores.device.execute("DELETE FROM app_settings WHERE key = ?", (OPENED_KEY.format(profile=internal),))
 
     async def _lesson_tool(self, name: str, args: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
         """One checker call for a lesson's quick check (unit conversion, structured answers): the worker, as the

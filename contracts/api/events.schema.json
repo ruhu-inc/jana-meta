@@ -3344,7 +3344,8 @@
       "open_research",
       "open_plan",
       "open_knows",
-      "open_study_deck"
+      "open_study_deck",
+      "open_moment"
      ]
     },
     "payload": {
@@ -3374,6 +3375,14 @@
         "type": "string",
         "pattern": "^kc\\.(mth|phy|chm|bio|acc)\\.(o|a)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
        }
+      },
+      "source_id": {
+       "$ref": "https://jana.dev/contracts/study/workspace#/$defs/SourceId"
+      },
+      "at_ms": {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 7200000
       }
      }
     },

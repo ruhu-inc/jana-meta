@@ -120,7 +120,7 @@ from agent_core.engine.safety import (
 from agent_core.engine.sketch_flow import SketchFlow, offer_schema
 from agent_core.engine.soft_rules import RuleMatcher, tutor_context_lines
 from agent_core.engine.soft_rules import signals as rule_signals
-from agent_core.engine.state import NUMBER, BoardStep, Plan, PlanStep, Problem, SessionState, numbers_in
+from agent_core.engine.state import NUMBER, BoardStep, Plan, PlanStep, Problem, SessionState, expression_key, numbers_in
 from agent_core.engine.tone import cap_words, fit_spoken, word_cap
 from agent_core.engine.tool_drawings import checked
 from agent_core.engine.toolround import ToolRound
@@ -1573,6 +1573,8 @@ class Engine(Coordination, Offers, Predictions):
         final = output.get("final_answer")
         if output.get("status") != "complete" or not final:
             return None
+        if is_formula(str(final.get("value") or "")):
+            return None  # an exponent or coefficient cannot replace an unproved whole expression
         steps, _ = self._verified_steps(output)
         computed = [s for s in steps or []
                     if s.value is not None and s.check_id is not None and not self._given(s.value)]  # fmt: skip
@@ -1605,6 +1607,8 @@ class Engine(Coordination, Offers, Predictions):
     def _matches_check(self, value: str, check_id: str | None) -> bool:
         if not check_id or check_id not in self.state.check_values:
             return False
+        if is_formula(value):
+            return expression_key(value) in self.state.check_expressions.get(check_id, [])
         wanted = numbers_in(value)
         if not wanted:
             return False

@@ -39,9 +39,9 @@ features = ["cloud_tier", "ask_anything", "study_area", "uploads", "recordings",
 [paid.jana_online.limits]
 ask_anything_per_day = 150
 uploads_per_day = 30
-upload_max_pages = 1000  # a file up to 1,000 pages or 200 MB
-upload_max_mb = 200
-recording_hours_per_month = 10
+upload_max_pages = 1000  # a file up to 1,000 pages or 100 MB
+upload_max_mb = 100  # the study worker's source cap (study_worker/__main__.py) until it is raised (SPEC §20.3, W9)
+recording_hours_per_month = 10  # video minutes a month are drawn from this pool: 600 (JM-D44)
 podcasts_per_day = 5
 voice_minutes_per_month = 300  # online voice
 # The personal learning agent (W8, SPEC §19.7): held by the gateway per session pseudonym per day, never signed
@@ -73,9 +73,9 @@ features = ["cloud_tier", "ask_anything", "study_area", "uploads", "recordings",
 [paid.jana_family.limits]
 ask_anything_per_day = 150
 uploads_per_day = 30
-upload_max_pages = 1000  # a file up to 1,000 pages or 200 MB
-upload_max_mb = 200
-recording_hours_per_month = 10
+upload_max_pages = 1000  # a file up to 1,000 pages or 100 MB
+upload_max_mb = 100  # the study worker's source cap (study_worker/__main__.py) until it is raised (SPEC §20.3, W9)
+recording_hours_per_month = 10  # video minutes a month are drawn from this pool: 600 (JM-D44)
 podcasts_per_day = 5
 voice_minutes_per_month = 300  # online voice
 # The personal learning agent (W8, SPEC §19.7): held by the gateway per session pseudonym per day, never signed

@@ -7,13 +7,17 @@
 // ideas as a heat map whose cells carry fill, pattern, icon and word (DSN-23). A broken streak reads as a new one,
 // never as a loss; nothing here counts down, ranks or blames (LRN-35). Links lead to "What your tutor knows" (UXS-28),
 // the notes (UXS-52) and the session history (UXS-48). States: loading, canonical, empty (nothing studied yet), error-retriable, not served.
-import { useEffect, useId, useState, useSyncExternalStore } from "react";
-import { gradeShown, type KcState, type ProgressController, type ProgressState, type ProgressSubject, type ProgressView } from "@jana/client-core";
+// The learner's map (SPEC §21, JM-D35, W10): Progress opens on "My map", every installed subject as topic tiles
+// (`MapOverview`); "What moved today" is the first thing under it and its ideas' tiles are outlined on the map; the
+// lists, the Study activity line and the record follow, unchanged.
+import { useEffect, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { gradeShown, type KcState, type MapLayer, type MapOverviewController, type ProgressController, type ProgressState, type ProgressSubject, type ProgressView } from "@jana/client-core";
 import { ScreenHeader } from "../frame/Frame.js";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
 import { MasteryCell, MasteryMark, SegmentedBar, useCountsText } from "../learn/Mastery.js";
 import { Button, EmptyState, ErrorState, Skeleton, SubjectDot } from "../primitives/index.js";
+import { MapOverview } from "./MapOverview.js";
 
 export interface ProgressActions {
   onRetry: () => void;
@@ -63,7 +67,7 @@ function StudyLine({ days, freezes, minutes, sessions }: { days: number; freezes
 }
 
 /** The ideas whose bars moved today (LRN-34's reflection block), each with its state now. */
-function MovedToday({ moved: seen, names, states, onLearn }: { moved: string[]; names: ProgressNames; states: Map<string, { state: KcState; topic: string }>; onLearn?: () => void }) {
+function MovedToday({ moved: seen, names, states, onLearn, outlined = false }: { moved: string[]; names: ProgressNames; states: Map<string, { state: KcState; topic: string }>; onLearn?: () => void; outlined?: boolean }) {
   const t = useT();
   // The core lists every idea worked on today; one still at Not started has not moved, so it is counted on one quiet
   // line instead of being listed under "moved" beside its Not started mark.
@@ -86,6 +90,7 @@ function MovedToday({ moved: seen, names, states, onLearn }: { moved: string[]; 
         </ul>
       )}
       {still > 0 && <p data-progress-still={still} className="text-meta text-muted">{t("progress.moved.still", { count: still })}</p>}
+      {outlined && moved.length > 0 && <p data-moved-outlined="" className="text-meta text-muted">{t("progress.map.moved_outline")}</p>}
     </section>
   );
 }
@@ -202,7 +207,13 @@ function SubjectCard({ subject, names }: { subject: ProgressSubject; names: Prog
   );
 }
 
-export function ProgressContent({ state, names, actions }: { state: ProgressState; names: ProgressNames; actions: ProgressActions }) {
+/** The ideas that moved today, as LRN-34 lists them: the ones no longer at Not started. */
+export function movedToday(progress: ProgressView): string[] {
+  const states = new Map(progress.subjects.flatMap((s) => s.topics.flatMap((topic) => topic.kcs.map((kc) => [kc.kc_id, kc.state] as const))));
+  return progress.moved_today.filter((kc) => states.get(kc) !== "not_started");
+}
+
+export function ProgressContent({ state, names, actions, hero }: { state: ProgressState; names: ProgressNames; actions: ProgressActions; hero?: ReactNode }) {
   const t = useT();
   const progress = state.progress;
   const body = () => {
@@ -214,9 +225,11 @@ export function ProgressContent({ state, names, actions }: { state: ProgressStat
     const started = progress.subjects.some((s) => s.bands.learning + s.bands.secure > 0) || progress.time_studied.minutes_total > 0;
     return (
       <div className="flex flex-col gap-8">
-        {/* What moved leads; the streak and time studied are one quiet line under it (G1, D109). */}
+        {/* My map is the hero (JM-D35); what moved is first under it, and the streak and time studied one quiet line
+            under that (G1, D109). */}
+        {hero}
         <div className="flex flex-col gap-3">
-          <MovedToday moved={progress.moved_today} names={names} states={states} {...(actions.onLearn !== undefined && started ? { onLearn: actions.onLearn } : {})} />
+          <MovedToday moved={progress.moved_today} names={names} states={states} outlined={hero !== undefined} {...(actions.onLearn !== undefined && started ? { onLearn: actions.onLearn } : {})} />
           <StudyLine days={progress.streak.days} freezes={progress.streak.freezes_left} minutes={progress.time_studied.minutes_7d} sessions={progress.time_studied.sessions_7d} />
           {progress.study_activity !== undefined && <StudyActivityLine activity={progress.study_activity} />}
         </div>
@@ -245,13 +258,33 @@ export function ProgressContent({ state, names, actions }: { state: ProgressStat
   );
 }
 
+/** My map on Progress (SPEC §21): the overview's controller, the layer chosen (shared with the skill map, in memory
+ * only), where a tap goes, and the tile each idea sits in (to outline the ideas that moved today). */
+export interface ProgressMap {
+  controller: MapOverviewController;
+  layer: MapLayer;
+  onLayer: (layer: MapLayer) => void;
+  onOpen: (subjectId: string, topicId?: string) => void;
+  tileOf: (kcId: string) => string | null;
+}
+
+function Hero({ map, names, progress, version }: { map: ProgressMap; names: ProgressNames; progress: ProgressView | null; version: number }) {
+  const view = useSyncExternalStore(map.controller.subscribe, map.controller.getView, map.controller.getView);
+  useEffect(() => {
+    void map.controller.load();
+  }, [map.controller, version]);
+  const moved = useMemo(() => new Set((progress === null ? [] : movedToday(progress)).map((kc) => map.tileOf(kc)).filter((t): t is string => t !== null)), [progress, map]);
+  return <MapOverview view={view} subject={names.subject} layer={map.layer} onLayer={map.onLayer} onOpen={map.onOpen} moved={moved} onRetry={() => void map.controller.load()} />;
+}
+
 /** The Progress place (Ctrl+5): read when it opens, and again whenever a mastery change is reported. */
-export function Progress({ controller, names, actions, version = 0 }: {
-  controller: ProgressController; names: ProgressNames; actions: Omit<ProgressActions, "onRetry">; version?: number;
+export function Progress({ controller, names, actions, version = 0, map }: {
+  controller: ProgressController; names: ProgressNames; actions: Omit<ProgressActions, "onRetry">; version?: number; map?: ProgressMap;
 }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView);
   useEffect(() => {
     void controller.load();
   }, [controller, version]);
-  return <ProgressContent state={state} names={names} actions={{ ...actions, onRetry: () => void controller.load() }} />;
+  const hero = map !== undefined && state.status !== "unavailable" ? <Hero map={map} names={names} progress={state.progress} version={version} /> : undefined;
+  return <ProgressContent state={state} names={names} actions={{ ...actions, onRetry: () => void controller.load() }} {...(hero !== undefined ? { hero } : {})} />;
 }

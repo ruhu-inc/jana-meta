@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/learning/learning-event.schema.json sha256 0971c7010c4c7e153da5f265941e840a70de885a702ef9d2cfcffe59d73a78d7; do not edit",
+ "$comment": "GENERATED from contracts/learning/learning-event.schema.json sha256 b62d835dcc86d858c1583f9b822cb728710c888635c6fa8e1c8c909a8c577a3d; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/learning/learning-event",
  "title": "LearningEvent",
@@ -1840,7 +1840,7 @@
     "ref": {
      "type": "string",
      "maxLength": 64,
-     "pattern": "^(aid|att|card|rsr|jny):[0-9A-Za-z_:]{1,59}$"
+     "pattern": "^(aid|att|card|rsr|jny|src):[0-9A-Za-z_:]{1,59}$"
     },
     "kc_tags": {
      "type": "array",
@@ -1906,7 +1906,8 @@
         "audio_overview",
         "lesson_plan",
         "chapters",
-        "concept_map"
+        "concept_map",
+        "teaching_outline"
        ]
       },
       {

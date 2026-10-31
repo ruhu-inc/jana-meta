@@ -922,3 +922,8 @@ export declare const v916: ValidateFunction;
 export declare const v917: ValidateFunction;
 export declare const v918: ValidateFunction;
 export declare const v919: ValidateFunction;
+export declare const v920: ValidateFunction;
+export declare const v921: ValidateFunction;
+export declare const v922: ValidateFunction;
+export declare const v923: ValidateFunction;
+export declare const v924: ValidateFunction;

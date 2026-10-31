@@ -164,6 +164,15 @@ describe("UXS-46", () => {
     expect(within(document.querySelector<HTMLElement>("[data-settings-section='data_export']")!).getByRole("button", { name: "Save a report for support" })).toBeTruthy();
   });
 
+  test("browser export explains the missing desktop picker", async () => {
+    const { core } = await unlocked();
+    const archive = document.querySelector<HTMLElement>("[data-profile-archive]")!;
+    expect(within(archive).getByText(/Open Jana's desktop app to save a profile archive/)).toBeTruthy();
+    fireEvent.change(within(archive).getByLabelText("Passphrase for the archive"), { target: { value: "synthetic passphrase" } });
+    expect((within(archive).getByRole("button", { name: "Save a profile archive" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(core.exports).toHaveLength(0);
+  });
+
 
   test("help_searches_offline_and_names_this_computer", async () => {
     // Settings → Help from the core's offline help (OPS-23, the M24 Help API): its articles in the student's language

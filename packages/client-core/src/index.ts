@@ -25,6 +25,8 @@ export {
 export {
   ConceptMapController, EMPTY_CONCEPT_MAP, nodeBadges, openQuestions, pathOn, readConceptMap, type ConceptEdge, type ConceptMap, type ConceptMapView, type ConceptMistake,
   type ConceptNext, type ConceptNode, type ConceptQuestion, type GapHighlight, type NodeBadges,
+  EMPTY_LENS, EMPTY_OVERVIEW, FRESHNESS, FRESHNESS_LOOK, MAP_LAYERS, MapOverviewController, RINGED, SCRUB_WEEKS, layerFacts, readKcLinks, readOverview, weeklyDates,
+  type CurriculumOverview, type Freshness, type KcLinks, type LayerFacts, type MapLayer, type MapLens, type OverviewSubject, type OverviewTopic, type OverviewView,
 } from "./concept-map.js";
 export { hydrate, type CoreSnapshot } from "./hydrate.js";
 export { splitBlocks, type Blocks } from "./blocks.js";
@@ -111,7 +113,7 @@ export {
   type HistoryStep, type HistoryView,
 } from "./history.js";
 export * from "./ask-anything.js";
-export { StudyWorkspaceController, EMPTY_STUDY, GENERATE_TOOLS, type GenerateTool, type StudyWorkspaceView, type StudyContracts, type ResearchContracts, type PodcastAudio } from "./study-workspace.js";
+export { StudyWorkspaceController, EMPTY_STUDY, GENERATE_TOOLS, BROWSER_OPENER, VIDEO_SUFFIXES, chunkLines, citationMoment, lineMoment, lineText, momentLabel, momentUrl, type ExternalOpener, type GenerateTool, type StudyWorkspaceView, type StudyContracts, type ResearchContracts, type PodcastAudio } from "./study-workspace.js";
 export {
   EMPTY_EXAM_DATES, EMPTY_PAST_PAPERS, ExamDateController, PastPaperController, type ExamCountdown, type ExamDate, type ExamDateDraft, type ExamDateList,
   type ExamDatesView, type ExamReminder, type PaperSource, type PastPaperDraft, type PastPaperSubject, type PastPaperSummary, type PastPapersView, type PastPaperView,

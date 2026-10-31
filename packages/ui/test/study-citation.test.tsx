@@ -88,3 +88,18 @@ test("unknown locations stay numbered and replacement revisions remain identifia
   expect(citationKey(citation)).not.toBe(citationKey({ ...citation, revision: 2 }));
   expect(citationKey(citation)).not.toBe(citationKey({ ...citation, source_id: `src_${"1".repeat(26)}` }));
 });
+
+test("w9 a frame citation reads 'm:ss · on screen' and groups by its frame (SPEC §20.4)", () => {
+  const onOpen = vi.fn();
+  const frame = { kind: "frame" as const, at_ms: 252000, frame_id: `frm_${"A".repeat(26)}` };
+  const second = { ...citation, start: 4, end: 7, quote: "RNA" };
+  render(<StudyCitations citations={[citation, second]} locate={() => frame} title={() => "lecture.mp4"} onOpen={onOpen} />);
+  const badge = screen.getByRole("button", { name: "lecture.mp4 · On screen at 04:12 · 2 supporting passages" });
+  expect(badge.textContent).toBe("04:12 · on screen");
+  fireEvent.click(badge);
+  fireEvent.click(screen.getByRole("menuitem", { name: /Passage 1/ }));
+  expect(onOpen).toHaveBeenLastCalledWith(citation);
+  cleanup();
+  render(<StudyCitation citation={citation} locator={{ kind: "frame", at_ms: 3852000, frame_id: `frm_${"B".repeat(26)}` }} sourceTitle="lecture.mp4" number={1} onOpen={onOpen} />);
+  expect(screen.getByRole("button", { name: "lecture.mp4 · On screen at 1:04:12" }).textContent).toBe("1:04:12 · on screen");
+});

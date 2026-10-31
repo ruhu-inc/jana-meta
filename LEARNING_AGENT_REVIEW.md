@@ -1,5 +1,108 @@
 # Learning agent specification review
 
+## Live-demo and submission follow-up — 30–31 October 2026
+
+The four release-preparation steps are **in progress**, distinct from the completed seven-stage implementation
+below. A stable browser build initially used a separate synthetic adult profile, with cloud consent off. No real learner data
+was used. The live walkthrough verified saving short-explanation and worked-example preferences, history after a
+core/browser restart, retrying an interrupted message, changing to hints first, forgetting diagrams, and inspecting
+the resulting preferences. The memory view retained short explanations and hints first and reset the forgotten
+modality. Exact memory commands were local deterministic operations, not evidence of model generation.
+The final build also passed a visible two-profile check: Demo Ben opened with an empty companion thread and
+reported no saved preferences or notes; returning to Demo Ada restored her own conversation. Ben completed an
+offline square-root practice item (`sqrt(625) = 25`), with 1/1 marked and the skill moving from Not started to
+Learning. This is a synthetic checked attempt, not an educational outcome study.
+
+A real local Muse Glimmer turn answered “What should I study next?” in **29.169 seconds**. Its persisted trace records
+three local model calls and successful `plan` and `progress_read` tools, with cloud connectivity off. It also exposed
+a negative-claim gap: “No plan is set ... no cards due” passed the numeral-based checks. The guard now rejects these
+negative schedule claims unless code supplies the factual statement. This targeted guard does not establish that
+all unsupported natural-language claims can be recognized.
+
+Five concrete fixes followed failing regressions:
+
+- Interrupted companion text restored from the journal now becomes an explicit retry after reconciliation with
+  the authoritative snapshot. The original idempotency key is preserved, accepted messages are not resent, and
+  reconnect cannot duplicate an in-flight manual retry. The live retry saved the previously stranded preference.
+- Negative schedule claims cannot evade typed facts simply by using “no” instead of a numeric zero.
+- Browser previews no longer advertise native archive pickers. Data export explains the desktop requirement
+  instead of letting Save silently do nothing. The actual desktop export and restore path remains available.
+- Repeated identical companion suggestions render once. Distinct destinations remain separate, and durable events
+  are preserved in storage. The live thread had accumulated duplicate memory-view buttons.
+- A failed turn command while its event stream remains connected now offers explicit retry. Previously it waited
+  for a reconnect that might never happen. Disconnected streams retain the existing reconnect retry behavior.
+
+Verification: the full client run after suggestion deduplication passed **406 tests**; **25 affected UI tests**, **5 desktop archive tests**, and **25 backend
+companion/fact-binding/multi-day journey tests** pass. The backend run required loopback permission; the initial
+sandboxed run failed at socket creation, then passed with the required permission. Client/UI/desktop typing and
+affected ESLint/Ruff checks pass. The multi-day journey uses a scripted language model and an advancing test clock;
+it is separate from the real local-model observation above.
+After the suggestion fix, the focused companion/journal run passes 16 cases, including its new regression; typing
+and lint pass again. These counts overlap with the full client run and should not be added together.
+After the connected-stream send-recovery fix, all 23 companion/journal/stream tests and all 13 companion UI tests
+pass; UI typing and affected lint pass. The full 406-test run predates this last recovery change.
+
+`HACKATHON_DEMO.md` contains the timed three-minute storyboard and honest fallback plan. `HACKATHON_SUBMISSION.md`
+contains the draft entry, source links, contribution boundary and remaining inputs. README now explains prior
+versus event work, stable launch, isolated data and browser archive limits.
+
+Still required before calling the four release-preparation steps complete: a repeat of first-send
+continuity without a stall; native desktop export/restore rehearsal; a recorded and replay-checked
+video; contributor names and public links; and a verified filtered submission candidate. The owner explicitly
+approved online tutoring for the demo profile on 31 October, and consent is now enabled. Nothing has been
+published, uploaded or submitted. Early browser reply delays were observed but not
+isolated to a product cause; direct HTTP event delivery and pure client event folding both passed. Do not report
+that timing observation as fixed or as measured foreground UI latency.
+The later continuity rehearsal reproduced a more concrete failure: after a browser reload, the message asking
+what was agreed remained Sending and did not appear in the core's persisted turn records. The preceding agreement
+and source-rendered due counts did persist. The underlying send stall is **unresolved**; interrupted-message retry
+recovery is a mitigation, not proof the first-send path is reliable. Treat this as a release blocker for the live
+demo until reproduced and resolved or isolated to the browser-host environment.
+In a subsequent quiet run on the final rebuilt app, the saved retry reached the core and the real local model
+correctly recalled the index-laws agreement after a core/browser restart. Its due-card statements were rendered
+with review-schedule sources. A fresh memory-inspection send also reached the core. This verifies recovery and
+continuity on that run; it does not identify the intermittent first-send failure's original cause. The final live
+UI also displayed one memory-view suggestion after deduplication.
+
+### Authorized online walkthrough — 31 October 2026
+
+The actual stable app at `http://127.0.0.1:5197/` uses the isolated data directory
+`/tmp/jana-learning-agent-live-demo-20261030` and the existing budgeted Meta gateway. The first online Study
+reply completed in **13.213 seconds** of core trace time, with two `muse-spark-1.3` cloud calls, successful tool
+use, no degraded reason, and source-rendered review counts visible in the app. Trace duration is not a measurement
+of foreground UI latency. This was not a scripted provider. Personal tutor memory online, material processing,
+cloud voice and telemetry were not enabled as part of the online-tutoring approval.
+
+A core/browser restart retained the profile, consent and visible conversation. Asking online about the earlier
+local-only agreement did not recall it: the online history filter excludes that context under the current consent.
+This is not evidence of cloud continuity. A new continuation agreement was then made online for a separate check.
+After a second full core/browser restart, a fresh first send recalled that online index-laws agreement through
+Muse Spark in **9.035 seconds**, without degradation or manual retry; the reply was displayed in Study. The memory
+view retained Short explanations and Hint first, with the forgotten diagrams modality reset to the default.
+The previously observed intermittent first-send failure did not recur in these online runs; its original cause
+is still unproven. These successful runs do not establish a general foreground UI latency bound.
+
+The real guided handoff for `x^3 times x^2` exposed `plan_unverified`: the worker's symbolic proof was lost at the
+numeric-only plan boundary. Regressions also exposed an incorrect acceptance of `x^5` backed only by numeric `5`,
+and a numeric fallback replacing an unverified expression with its exponent. The fix preserves whole-expression
+proof separately, requires exact conservative spelling matches, and refuses that numeric fallback. Conditional,
+sampled, unknown and custom-assumption equivalence results do not authorize a symbolic answer. Checkpoint
+round-trips preserve the evidence; old checkpoints default to an empty map. No new table or public contract is needed.
+The solver guidance now requests a simplification result when that tool is offered.
+
+Repeating the original maths handoff after the fix completed without degradation in **16.384 seconds**. The trace
+records real Muse Spark Diagnoser, Solver and Coach calls, and the app displayed a guided question inviting the
+learner's attempt. The hint button also completed, using the authored first-attempt prompt; that is not another
+model-generated answer. The browser control host could not enter text into the rich maths editor, so this run
+does not claim a live learner-answer marking pass. Earlier authored practice and API checks remain separate evidence.
+
+The full client suite after the final send-recovery change passes **407 tests in 48 files**. The initial symbolic
+regressions failed before the fix. The expanded symbolic, numerical-plan, tool-role and engine checks passed
+**76 cases**: 74 before intentionally stopping the unrelated 10,000-turn fuzz test, and the remaining two cases in
+a separate passing run. The stress test is not a fresh pass; its earlier implementation-gate result remains historical.
+Affected Python typing, Ruff and `git diff --check` pass. A sandboxed worker run requires its process/local-socket
+permissions; an unavailable-worker result is not mathematical verification evidence.
+
 ## Implementation follow-up — 30 October 2026
 
 The original review below is historical. The seven-stage implementation now includes profile/egress guards, local

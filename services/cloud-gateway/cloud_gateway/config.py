@@ -264,7 +264,7 @@ class Offer(_Strict):
 
 
 # The `Limits` the gateway holds itself, never signed into the entitlement (its `PlanLimits` has no such key).
-GATEWAY_HELD_LIMITS = frozenset({"companion_turns_per_day", "tutor_memory_jobs_per_day"})
+GATEWAY_HELD_LIMITS = frozenset({"companion_turns_per_day", "tutor_memory_jobs_per_day", "video_minutes_per_month"})
 
 
 class Limits(_Strict):
@@ -283,6 +283,15 @@ class Limits(_Strict):
     voice_minutes_per_month: int | None = Field(None, ge=0)
     companion_turns_per_day: int | None = Field(None, ge=0)  # the Study companion's turns (W8, SPEC §19.7)
     tutor_memory_jobs_per_day: int | None = Field(None, ge=0)  # the Reflector's jobs on Spark (W8, JM-D21)
+    # Video minutes a month (W9, SPEC §20.3, JM-D44): drawn from the recording pool, one clock for one kind of
+    # thing; unset, it is 60 times recording_hours_per_month. Held by the gateway, never signed into entitlements.
+    video_minutes_per_month: int | None = Field(None, ge=0)
+
+    @model_validator(mode="after")
+    def _video_minutes_from_recording_hours(self) -> Limits:
+        if self.video_minutes_per_month is None and self.recording_hours_per_month is not None:
+            object.__setattr__(self, "video_minutes_per_month", 60 * self.recording_hours_per_month)
+        return self
 
     def granted(self) -> dict[str, int]:
         """The limits the entitlement signs: every one set, except those the gateway holds itself."""
