@@ -1,0 +1,594 @@
+packages/ui/test/concept-map-sheet.test.tsx
+  s_be0932c70088b2::t_413563c2f95fbf 1-9,11-21,23-25,27-82,84-88
+  s_be0932c70088b2::t_749ee486b6a1a1 10,22,26,83
+services/cloud-gateway/tests/test_w9_video_file_gateway.py
+  s_b586d79e77543e::t_0ac7b9082636af 26,187-188
+  s_b586d79e77543e::t_e653f82b4296e1 35,48,158-159
+  s_b586d79e77543e::t_a54b0a9a676f49 20,29-34,44-47,162-167,190-197
+  s_b586d79e77543e::t_41b9efd3866046 1-19,21-25,27-28,36-43,49-157,160-161,168-186,189,198-203
+services/agent-core/tests/test_w9_video_file.py
+  s_b586d79e77543e::t_a54b0a9a676f49 18,51-54,93-95,119-127,129-137,152-154,194-196
+  s_b586d79e77543e::t_e653f82b4296e1 76-77,85-86,101-102
+  s_b586d79e77543e::t_4ea8b133b6d364 1-17,19-50,55-65,67-75,78-84,87-92,96-100,103-118,128,138-151,155-193,197-200,202-216
+  s_b586d79e77543e::t_a5a131a4fd9eb2 66,201
+services/agent-core/agent_core/memory/queries.py
+  s_b586d79e77543e::t_43e48514333c40 613-629,659-660
+packages/client-core/src/study-workspace.ts
+  s_b586d79e77543e::t_ef54c7e2981fb9 11-52,130,323,326,336-345,382-384,387,391-397,406-408,901-904
+services/agent-core/tests/scenarios/w9/youtube_lecture.yaml
+  s_b586d79e77543e::t_616d7229807d0e 1-24,26-27
+  s_b586d79e77543e::t_c2291d9d5dc0e4 25
+evals/contracts/study/workspace/Frame/invalid/unknown_property.json
+  s_be0932c70088b2::t_7c932b8a6befd0 1-7
+apps/desktop/src/launch.ts
+  s_d5aed2df69fac2::t_7e2143d7519b7b 12-15
+services/agent-core/tests/w10_map_harness.py
+  s_be0932c70088b2::t_6531a17e1b2a3b 1-76,85-86,131-136,148-155,168-173,187,191-192,205-208,219-224,228,233-237,242-246,256,261-263,269-306
+  s_be0932c70088b2::t_e06d77743ceb67 77-84,87-130,137-147,156-167,174-186,188-190,193-204,209-218,225-227,229-232,238-241,247-255,257-260,264-268
+services/cloud-gateway/cloud_gateway/contracts/cloud/gateway.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 197-206,249-257,263-264,297,331-367,376-385,410,414-415,585,590-695,773-774,777,781-782,785,789-790,830
+  s_b586d79e77543e::t_e0e299775cfa75 325
+packages/ui/test/concept-map-scrubber.test.tsx
+  s_be0932c70088b2::t_d5c907325879c0 12,54-55,63,65
+  s_be0932c70088b2::t_dfd43e813f9acb 1-11,13-53,56-62,64,66-80
+contracts/data/schema.sql
+  s_b586d79e77543e::t_46b97fc9ae60f7 661-674
+packages/ui/src/learn/StudyPlayer.tsx
+  s_b586d79e77543e::t_97eb8fcba60ae1 1-20,22-140
+  s_b586d79e77543e::t_3f50a59d061703 21
+packages/contracts-ts/src/generated/personal_sync/personal_sync.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 862
+evals/contracts/api/commands/KcLinks/valid/minimal.json
+  s_be0932c70088b2::t_9b6d5ae6378337 2,6
+  s_be0932c70088b2::t_5adcf8c9ed9a7f 3-5,7
+  s_be0932c70088b2::t_cc156d49d37e54 1
+  s_be0932c70088b2::t_7d3a0eee741abd 8
+services/agent-core/tests/scenarios/w10/map_month_later.yaml
+  s_be0932c70088b2::t_2002fb8021309b 1-9,13-23,25-28
+  s_be0932c70088b2::t_db6e97d1840108 24
+  s_be0932c70088b2::t_82fd0aa15035f3 10-12,29-33
+evals/contracts/api/commands/CurriculumOverview/valid/minimal.json
+  s_be0932c70088b2::t_9b6d5ae6378337 2
+  s_be0932c70088b2::t_b7193f8123696a 1
+  s_be0932c70088b2::t_6dbc81eaf1c7ee 3
+contracts/agents/companion-turn.schema.json
+  s_b586d79e77543e::t_5012bff8dcc927 5,36-37
+packages/renderers/src/conceptmap/ConceptMapSvg.tsx
+  s_be0932c70088b2::t_37d0d22af8492b 8-12,14,36-61,90-107,226,230,252-253,258-262,265,281-304
+services/agent-core/agent_core/contracts/schemas/agents/companion-turn.schema.json
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,36-37
+services/agent-core/tests/w10_scenarios.py
+  s_be0932c70088b2::t_db6e97d1840108 1-54,61-71
+  s_be0932c70088b2::t_82fd0aa15035f3 55-57
+  s_be0932c70088b2::t_e06d77743ceb67 58-60
+services/cloud-gateway/tests/test_w9_teaching_outline_gateway.py
+  s_b586d79e77543e::t_a54b0a9a676f49 81-83,89-91,94-96
+  s_b586d79e77543e::t_e653f82b4296e1 120-121
+  s_b586d79e77543e::t_82a9ce8e597de5 63
+  s_b586d79e77543e::t_093f158801df05 1-62,64-80,84-88,92-93,97-119,122-126
+services/agent-core/tests/test_w9_companion_moment.py
+  s_b586d79e77543e::t_cfc50f49cf75f8 1-47,50-52,56-61,64-67,72-83,88-89,92-115,118-134,138-164,170-180,186-187,192-200
+  s_b586d79e77543e::t_6935a2ed337465 84-87
+  s_b586d79e77543e::t_32c5bf4b65fe9b 48-49,62-63,90-91,116-117
+  s_b586d79e77543e::t_d3196a01b72b69 68-71
+  s_b586d79e77543e::t_e653f82b4296e1 165-169,189-190
+  s_b586d79e77543e::t_a54b0a9a676f49 53-55,135-137,181-185,188,191
+packages/ui/src/generated/tools.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2
+services/cloud-gateway/tests/test_m45_regional_plans.py
+  s_b586d79e77543e::t_5828d479263f0b 27
+contract-additions-w10.json
+  s_be0932c70088b2::t_a89bffeb68042e 1-145,167-332,334-379,381-388,392-424,426-433,437-580
+  s_be0932c70088b2::t_992fb920be0e13 333,380,389-391,425,434-436
+  s_be0932c70088b2::t_c41d7b3195cc06 146-166
+contracts/policies/privacy.json
+  s_b586d79e77543e::t_46b97fc9ae60f7 35
+services/agent-core/tests/test_w9_scenarios.py
+  s_b586d79e77543e::t_244c8990531288 1-22
+services/agent-core/agent_core/contracts/learning/learning_event.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,487,494-503
+services/cloud-gateway/cloud_gateway/contracts/schemas/study/workspace.schema.json
+  s_b586d79e77543e::t_e0e299775cfa75 2,399-404,2819-2820
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 159-181,256-258,324-398,497-498,519-524,583-611,837-838,852-853,886-888,977-978,1002-1003,1068-1069,1277-1279,1477-1517,2286-2288,2481-2521,2887-2892,2950-2959,4353-4607
+services/agent-core/agent_core/tools/generated/register.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2
+services/agent-core/tests/test_w9_teaching_outline.py
+  s_b586d79e77543e::t_a54b0a9a676f49 144,222-227,231-240,258-260
+  s_b586d79e77543e::t_e653f82b4296e1 18,116-117,242-243,265
+  s_b586d79e77543e::t_c01f1ed17ef38c 168-170
+  s_b586d79e77543e::t_7bbd24fa4fe795 1-17,19-115,118-143,145-167,171-221,228-230,241,244-257,261-264,266-267
+services/agent-core/agent_core/contracts/schemas/learning/learning-event.schema.json
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,1843,1909-1910
+packages/i18n/locales/en.json
+  s_d5aed2df69fac2::t_7a96377e828067 151
+  s_be0932c70088b2::t_093f687512089d 1860
+  s_b586d79e77543e::t_d4e89085bca544 2513-2532,2534-2562
+  s_d5aed2df69fac2::t_7e2143d7519b7b 153
+  s_b586d79e77543e::t_f8a690896ca89c 2533
+  s_d5aed2df69fac2::t_815d8c7ecc6e18 152
+  s_be0932c70088b2::t_75169d1d50d488 1853-1859,1861-1865,2062-2124
+packages/client-core/test/journal.test.ts
+  s_d5aed2df69fac2::t_6e2b50e5443d0b 5-9,33-37,39-56,58-59,61-64
+  s_d5aed2df69fac2::t_7a96377e828067 32,38,57,60
+  s_d5aed2df69fac2::t_af09b0de20790f 13-31
+  s_d5aed2df69fac2::t_e4e2c3b57b0712 65
+services/agent-core/agent_core/engine/study_session.py
+  s_b586d79e77543e::t_ae81cc610fc63e 347,349-350
+  s_b586d79e77543e::t_626bae19233103 348,351-353
+services/cloud-gateway/cloud_gateway/config.py
+  s_b586d79e77543e::t_58e581d9ec3b4a 267,286-294
+services/agent-core/agent_core/engine/learner_map.py
+  s_be0932c70088b2::t_219c6b3901570f 15-17
+  s_be0932c70088b2::t_18cb87c7a8ca03 547-554
+  s_be0932c70088b2::t_e06d77743ceb67 75-79,192-196,199-204,216-224,233-240,242-246,249-255,260-264,291-295,300-303,310-315,378-382,450-467,480-485,520-527,536-543
+  s_be0932c70088b2::t_5b4f126f90c377 143-144,148-150,153-162
+  s_be0932c70088b2::t_992fb920be0e13 53-54,257
+  s_be0932c70088b2::t_140b5d657f072e 247
+  s_be0932c70088b2::t_b20b6d1dbfda96 265-266,269,281-282,330-331,333
+  s_be0932c70088b2::t_78a1704d76654c 1-14,18-52,55-74,80-142,145-147,151-152,163-191,197-198,205-215,225-232,241,248,256,258-259,267-268,270-280,283-290,296-299,304-309,316-329,332,334-377,383-449,468-479,486-519,528-535,544-546
+services/agent-core/agent_core/engine/learn.py
+  s_be0932c70088b2::t_b20b6d1dbfda96 393-394
+  s_be0932c70088b2::t_75a92cd8948322 402-403
+  s_be0932c70088b2::t_18cb87c7a8ca03 40,280-288,310,330,332-336,339-353,359-365,368-392,395-401,404-440
+  s_be0932c70088b2::t_b6eb114b7947d4 441
+services/agent-core/agent_core/engine/study_links.py
+  s_b586d79e77543e::t_71c3f06093fac0 1-13,15-16,18-27,29-57,60-97,111-119,122-165,167-174,177-186,188-199,201-202,204-205,207-210
+  s_b586d79e77543e::t_e653f82b4296e1 14,28,200,206
+  s_b586d79e77543e::t_3a4e7ad13d62b6 58-59
+  s_b586d79e77543e::t_4e4a8ce5c3a4b6 166,175-176
+  s_b586d79e77543e::t_43e48514333c40 98-106,109-110
+  s_b586d79e77543e::t_96151142e7fa7b 17,107-108,120-121,187,203
+packages/client-core/src/index.ts
+  s_b586d79e77543e::t_ef54c7e2981fb9 116
+  s_be0932c70088b2::t_9d2b4c10b4ed0c 28-29
+services/agent-core/agent_core/engine/concept_map.py
+  s_be0932c70088b2::t_955802c2434ad4 88-97,99-103,123-124,176
+packages/client-core/test/learner-map.test.ts
+  s_be0932c70088b2::t_2691e1f2866f4a 1-98
+services/study-worker/tests/test_video_frames.py
+  s_b586d79e77543e::t_2226530ffa1fb2 1-7,10-49,51-70,73-95,97
+  s_b586d79e77543e::t_e653f82b4296e1 8-9,50,71-72,96
+services/agent-core/agent_core/engine/memory_tools.py
+  s_b586d79e77543e::t_4bdc44bf3c4a8e 216-226,230-231,296-299
+  s_b586d79e77543e::t_43e48514333c40 251,258,273-286,315-345,356,360
+  s_b586d79e77543e::t_a54b0a9a676f49 227-229,293,300-312,346-355,357-359
+  s_b586d79e77543e::t_364652f44c21f1 361
+packages/client-core/src/concept-map.ts
+  s_be0932c70088b2::t_9d2b4c10b4ed0c 5-9,21-106,179-181,189-190,197-246,262-265,270-272,304,307-310,314-355
+packages/renderers/src/index.ts
+  s_be0932c70088b2::t_aadb57a6132b24 56
+services/agent-core/tests/w9_scenarios.py
+  s_b586d79e77543e::t_a5d02a50b72545 1-32,36-70,72-74,77-83,88-107
+  s_b586d79e77543e::t_96aaa542f83d44 75-76
+  s_b586d79e77543e::t_a54b0a9a676f49 33-35,71,84-87
+services/agent-core/agent_core/store/generated/schema.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,6,8
+services/agent-core/agent_core/api/learn.py
+  s_be0932c70088b2::t_ba6df5f4ba2f29 25,77-85,87-90,92-97,102-112
+  s_be0932c70088b2::t_a9db75df71bb5e 70-71
+  s_be0932c70088b2::t_b4792cdf6bfc3e 113-114
+contract-additions-w9.json
+  s_b586d79e77543e::t_626bae19233103 195-209
+  s_b586d79e77543e::t_e0e299775cfa75 757-765
+  s_b586d79e77543e::t_9b1a584e574638 1-194,210-756,766-897
+services/agent-core/tests/test_w9_links.py
+  s_b586d79e77543e::t_a54b0a9a676f49 59-62,95-98,126-128,148-150
+  s_b586d79e77543e::t_ee81bca7dc0ee6 1-58,63-94,99-125,129,132-139,144-147,151-158
+  s_b586d79e77543e::t_93368217f5a3fc 130-131
+  s_b586d79e77543e::t_4e4a8ce5c3a4b6 140-143
+scripts/governance/data-inventory.toml
+  s_b586d79e77543e::t_46b97fc9ae60f7 661-669
+apps/desktop/src/App.tsx
+  s_b586d79e77543e::t_d4e89085bca544 1065-1067,1323-1326
+  s_be0932c70088b2::t_bd84a0f9e4a5b1 38,69-70,128,136,366-367,448,1022-1039,1291-1293,1317-1318,1374
+  s_be0932c70088b2::t_ab7983cb3a7e9f 40,47,617-618
+packages/contracts-ts/src/generated/api/commands.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 19-21,817-818,831-832,4792-4796
+  s_be0932c70088b2::t_a89bffeb68042e 17-18,4650-4660,4710,4751,4860-4930,4932-4939,4943-4956,4958-4965,4969-4980
+  s_be0932c70088b2::t_992fb920be0e13 2,4931,4940-4942,4957,4966-4968
+  s_be0932c70088b2::t_c41d7b3195cc06 4752
+packages/contracts-ts/src/generated/index.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 4,788-1044
+  s_be0932c70088b2::t_a89bffeb68042e 190-787
+services/cloud-gateway/cloud_gateway/study_recording.py
+  s_b586d79e77543e::t_a54b0a9a676f49 79-81,87-89
+  s_b586d79e77543e::t_58e581d9ec3b4a 61-78,82-86,90-123,126-127,129-130
+services/agent-core/agent_core/engine/companion.py
+  s_b586d79e77543e::t_43e48514333c40 69,71,73,87-93,96-97,100-102,161,337-346,351,664-665,667-668,681-685,752-769,771,859-860,882-912,915-936
+  s_b586d79e77543e::t_e653f82b4296e1 913-914
+  s_b586d79e77543e::t_8324f1865d4f58 74
+  s_b586d79e77543e::t_c604039360c02b 937-938
+packages/ui/test/fixtures/kc-links.json
+  s_be0932c70088b2::t_2cfa93d476914a 1-28,30-41,43-52
+  s_be0932c70088b2::t_5335ad677f7557 29,42
+evals/contracts/api/commands/CurriculumOverview/invalid/unknown_property.json
+  s_be0932c70088b2::t_9b6d5ae6378337 2
+  s_be0932c70088b2::t_5adcf8c9ed9a7f 3
+  s_be0932c70088b2::t_5ac6260f88de7f 1
+  s_be0932c70088b2::t_8019060fe6ae29 4
+packages/contracts-ts/src/generated/client.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 4,444-578
+  s_be0932c70088b2::t_a89bffeb68042e 162-443
+packages/client-core/test/profilecore.ts
+  s_be0932c70088b2::t_19f52149982bd7 210-213,761-769
+services/agent-core/agent_core/contracts/api/commands.py
+  s_be0932c70088b2::t_c41d7b3195cc06 2439-2441,2457
+  s_be0932c70088b2::t_a89bffeb68042e 2308-2316,2334-2339,2419,2436-2438,2456,2670-2728,2730-2738,2741-2759,2761-2769,2772-2809
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 4573-4574,4592,5059-5072
+  s_be0932c70088b2::t_992fb920be0e13 2,2729,2739-2740,2760,2770-2771
+  s_be0932c70088b2::t_600fbb9ed55b0c 2810-2811
+  s_b586d79e77543e::t_e598abf32016da 5073-5074
+evals/contracts/index.json
+  s_be0932c70088b2::t_7c932b8a6befd0 728,1025-1027,4964-4975,5432-5443,5684-5695
+  s_be0932c70088b2::t_9b6d5ae6378337 729-739,1016-1024
+services/agent-core/agent_core/contracts/personal_sync/personal_sync.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 968,975-984
+services/agent-core/tests/test_w9_video_link_source.py
+  s_b586d79e77543e::t_e653f82b4296e1 8,32-33,37,69-72
+  s_b586d79e77543e::t_25a7c828b19ee8 1-7,9-31,34-36,38-43,48-54,58-59,62-68,73-94,102-110,114-117,121
+  s_b586d79e77543e::t_ae81cc610fc63e 55-57,60-61
+  s_b586d79e77543e::t_a54b0a9a676f49 44-47,95-101,111-113,118-120
+contracts/api/commands.schema.json
+  s_be0932c70088b2::t_a89bffeb68042e 9212-9272,9458-9459,9614-9625,10409-10592,10594-10601,10605-10637,10639-10646,10650-10730,12039-12040,12045-12077
+  s_be0932c70088b2::t_c41d7b3195cc06 9626-9637
+  s_be0932c70088b2::t_992fb920be0e13 10593,10602-10604,10638,10647-10649
+  s_b586d79e77543e::t_5012bff8dcc927 9802-9820
+services/agent-core/agent_core/store/sqlite.py
+  s_b586d79e77543e::t_46b97fc9ae60f7 40,108
+content/agent/roles/companion.md
+  s_b586d79e77543e::t_43e48514333c40 48-54,62
+packages/ui/test/fixtures/concept-map.phy.json
+  s_be0932c70088b2::t_ee4d43a92b8f6a 21-31,43-53,65-75,87-97,109-119,131-141,153-163,175-185,197-207,219-229,241-251,263-273,285-295,307-317,329-339,351-361,373-383,395-405,417-427,439-449,461-471,483-493,505-515,527-537,549-559,571-581,593-603,615-625,637-647,659-669,681-691,703-713,725-735,747-757,769-779,791-801,813-823,835-845,857-867,879-889,901-911,923-933,945-955,967-977,989-999,1011-1021,1033-1043,1055-1065,1077-1087,1099-1109,1121-1131,1143-1153,1165-1175,1187-1197,1209-1219,1231-1241,1253-1263,1275-1285,1297-1307,1319-1329,1341-1351,1363-1373,1385-1395,1407-1417,1429-1439,1451-1461,1473-1483,1495-1505,1517-1527,1539-1549,1561-1571,1583-1593,1605-1615,1627-1637,1649-1659,1671-1681,1693-1703,1715-1725,1737-1747,1759-1769,1781-1791,1803-1813,1825-1835,1847-1857,1869-1879,1891-1901,1913-1923,1935-1945,1957-1967,1979-1989,2001-2011,2023-2033,2045-2055,2067-2077,2089-2099,2111-2121,2133-2143,2155-2165,2177-2187,2199-2209,2221-2231,2243-2253,2265-2275,2287-2297,2309-2319,2331-2341,2353-2363,3357-3371,3384-3386
+evals/contracts/study/workspace/TeachingOutline/invalid/unknown_property.json
+  s_be0932c70088b2::t_7c932b8a6befd0 1-7
+services/cloud-gateway/cloud_gateway/study.py
+  s_b586d79e77543e::t_a54b0a9a676f49 1439-1443
+  s_b586d79e77543e::t_58e581d9ec3b4a 479-480,484-493,664-685,731-732,757-763,816-817,1209-1217,1444,1977-1978,1982-2000,2003,2007-2008,2142,2205
+  s_b586d79e77543e::t_a643547b751193 1218
+evals/contracts/study/workspace/SourceChapter/valid/minimal.json
+  s_be0932c70088b2::t_7c932b8a6befd0 1-5
+packages/renderers/test/conceptmap-view.test.tsx
+  s_be0932c70088b2::t_aadb57a6132b24 69-114
+services/agent-core/agent_core/contracts/schemas/api/events.schema.json
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,3341-3342,3372-3379
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_be0932c70088b2::t_a89bffeb68042e 9202-9256,9436-9437,9591-9592,9604-9612,10374-10549,10551-10558,10562-10594,10596-10603,10607-10687
+  s_be0932c70088b2::t_992fb920be0e13 2,10550,10559-10561,10595,10604-10606
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 9773-9790
+  s_be0932c70088b2::t_c41d7b3195cc06 9593-9603
+packages/contracts-ts/src/generated/study/workspace.ts
+  s_b586d79e77543e::t_e0e299775cfa75 2,318,1186
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 69,75-85,100,111-120,135-136,164-166,259-263,309-317,319-332,362,367,379-384,559,628-705,1039,1210,1232-1246
+packages/ui/test/learner-map-fixtures.ts
+  s_be0932c70088b2::t_d5c907325879c0 1-23
+services/agent-core/tests/test_w10_snapshot_as_of.py
+  s_be0932c70088b2::t_f511cc2092c9aa 1-23,25-27,36-102,105-147
+  s_be0932c70088b2::t_e06d77743ceb67 24,28-35
+  s_be0932c70088b2::t_6d353e686d7238 103-104
+evals/contracts/api/commands/KcLinks/invalid/unknown_property.json
+  s_be0932c70088b2::t_5adcf8c9ed9a7f 3-5,7-8
+  s_be0932c70088b2::t_9b6d5ae6378337 2,6
+  s_be0932c70088b2::t_a0d58354771df4 1
+  s_be0932c70088b2::t_5b4c5f505a12e9 9
+services/agent-core/agent_core/contracts/study/workspace.py
+  s_b586d79e77543e::t_e0e299775cfa75 2,589,1199
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 92-100,102,128-140,154,158-166,185,190,211-220,222,313-322,340,372-373,613,1085,1089-1198,1235,1326-1343,1380-1381,1390-1407
+packages/ui/test/companion-thread.test.tsx
+  s_b586d79e77543e::t_faabdc187ba878 336-361
+  s_be0932c70088b2::t_84e2c3c7f90c34 313-332,334-335
+  s_be0932c70088b2::t_51dab1da841e4d 333
+contracts/study/workspace.schema.json
+  s_b586d79e77543e::t_626bae19233103 403-409
+  s_b586d79e77543e::t_5012bff8dcc927 158-180,255-257,323-402,502-503,524-530,589-617,843-844,858-859,892-894,984-985,1009-1010,1075-1076,1284-1286,1484-1524,2295-2297,2490-2530,2896-2902,2960-2971,4375-4632
+  s_b586d79e77543e::t_e0e299775cfa75 2828-2829
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_be0932c70088b2::t_a89bffeb68042e 1314-1315,1320-1352
+  s_be0932c70088b2::t_992fb920be0e13 2
+contracts/learning/learning-event.schema.json
+  s_b586d79e77543e::t_5012bff8dcc927 1817,1843,1909-1910,1933
+packages/contracts-ts/src/generated/agents/companion_turn.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,21-22
+services/study-worker/study_worker/__main__.py
+  s_b586d79e77543e::t_58e581d9ec3b4a 29,31,36-49
+services/agent-core/tests/test_w8_scenarios.py
+  s_be0932c70088b2::t_2f93d86c7b245e 8,10
+packages/contracts-ts/src/generated/api/events.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,194-198,1350-1351,1364-1365
+README.md
+  s_d5aed2df69fac2::t_46bf83a55c41da 13-15,18-21,107-116
+  s_d5aed2df69fac2::t_ad0e98c21b6515 16-17
+  s_d5aed2df69fac2::t_28bf2acf653e82 117
+  s_d5aed2df69fac2::t_7af3401bce464a 118
+packages/ui/test/study-outline.test.tsx
+  s_b586d79e77543e::t_b9e35d69658c60 1-62
+packages/ui/test/study-link-add.test.tsx
+  s_b586d79e77543e::t_336db080ed488e 14
+  s_b586d79e77543e::t_d6714fc6f1b6d5 1-13,15-50
+services/agent-core/tests/test_w10_kc_links.py
+  s_be0932c70088b2::t_8884ec10465ec3 1-21,32-34,41-53,67-72,75-111
+  s_be0932c70088b2::t_5ea7a842b2da47 112
+  s_be0932c70088b2::t_219c6b3901570f 113-128
+  s_be0932c70088b2::t_5335ad677f7557 22-31,73-74
+  s_be0932c70088b2::t_e06d77743ceb67 35-40,54-66
+packages/ui/src/learn/CompanionThread.tsx
+  s_d5aed2df69fac2::t_815d8c7ecc6e18 65,67,73,163
+  s_b586d79e77543e::t_d4e89085bca544 12,30-31,33,172
+  s_be0932c70088b2::t_05b1c7d41cd75d 9-10,78,84-87,99,102-111,176
+services/agent-core/agent_core/contracts/agents/companion_turn.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,19-26
+services/agent-core/agent_core/engine/state.py
+  s_d5aed2df69fac2::t_9076de1bfe8892 24-30,140-141
+services/agent-core/tests/test_w10_scenarios.py
+  s_be0932c70088b2::t_db6e97d1840108 1-23
+evals/lock.json
+  s_b586d79e77543e::t_244c8990531288 7446
+  s_be0932c70088b2::t_26465bab37f7d5 14873-14878
+  s_b586d79e77543e::t_ebcbc09cff948a 7447
+  s_be0932c70088b2::t_58bb927e137d55 7449
+services/agent-core/agent_core/store/profile_stores.py
+  s_b586d79e77543e::t_e653f82b4296e1 84-85
+services/agent-core/agent_core/engine/concept_questions.py
+  s_be0932c70088b2::t_955802c2434ad4 13-16,74-76,79-80,163-164,178,204-206
+services/study-worker/study_worker/media.py
+  s_b586d79e77543e::t_1368f1e8722a01 1-6,20-23,25-46,52-55,58-61,63,66,92-100,104,107,112-113,115,117,119,140-142,144-148,150-153,156-157,161-182,184-243,247-249,254-261
+  s_b586d79e77543e::t_a54b0a9a676f49 158-160,250-253
+  s_b586d79e77543e::t_c7928f56298f8e 24,143,149,154-155
+  s_b586d79e77543e::t_e653f82b4296e1 183
+  s_b586d79e77543e::t_0521aa38bf67d2 244-246
+services/agent-core/agent_core/engine/study_outline.py
+  s_b586d79e77543e::t_a75d888df8e500 15,92-95,98-100
+  s_b586d79e77543e::t_80bdfa5a5d2fc4 1-14,16-91,96-97,101-131
+evals/suites.toml
+  s_be0932c70088b2::t_26465bab37f7d5 130-138
+  s_b586d79e77543e::t_244c8990531288 121-124,129
+  s_b586d79e77543e::t_0560f758b81e23 128
+LEARNING_AGENT_REVIEW.md
+  s_d5aed2df69fac2::t_4042bba68d07d3 42-43
+  s_d5aed2df69fac2::t_6f03f0b1ec5aca 93-98,100-104
+  s_d5aed2df69fac2::t_2caea45ef18155 3,6,49,51-53,66-78,84-92,99
+  s_d5aed2df69fac2::t_ca7652e2ea80b9 79-83
+  s_d5aed2df69fac2::t_c97d9a90033525 50
+  s_d5aed2df69fac2::t_28bf2acf653e82 4-5,7-10,15-21,23-29,34,36-39,44-48,54-55,105
+  s_d5aed2df69fac2::t_8eb9421507d8cf 11-14
+  s_d5aed2df69fac2::t_732a77a955d22b 30-31,40-41,56-60
+  s_d5aed2df69fac2::t_ad0e98c21b6515 22,32-33,35
+  s_d5aed2df69fac2::t_5620e298172704 61-65
+services/agent-core/tests/scenario_cases.py
+  s_b586d79e77543e::t_1bfe1de3f137b9 2-6
+  s_be0932c70088b2::t_2f93d86c7b245e 7-30,32-34,36-43
+  s_b586d79e77543e::t_e653f82b4296e1 1
+  s_b586d79e77543e::t_f24858a01ec6af 31,35
+packages/ui/src/index.ts
+  s_be0932c70088b2::t_2712dbf50ce47f 79-80
+  s_b586d79e77543e::t_d4e89085bca544 110-112
+services/agent-core/agent_core/store/migration_v23.py
+  s_b586d79e77543e::t_46b97fc9ae60f7 1-14
+packages/ui/src/progress/Progress.tsx
+  s_be0932c70088b2::t_efa7247279248e 10-14,20,70,93,210-216,228-230,232,261-279,281-282,288-289
+services/agent-core/tests/fixtures/w9/youtube_panel_projectile.txt
+  s_b586d79e77543e::t_1ae8c302410ade 1-72
+services/agent-core/agent_core/engine/study_topics.py
+  s_b586d79e77543e::t_a75d888df8e500 57-59,62-66,69,77-78,83-84
+packages/ui/src/learn/StudyCitation.tsx
+  s_b586d79e77543e::t_d4e89085bca544 26,31,61
+packages/ui/src/progress/MapOverview.tsx
+  s_be0932c70088b2::t_834943ac912874 1-50,52-99
+  s_be0932c70088b2::t_093f687512089d 51
+services/agent-core/agent_core/engine/toolround.py
+  s_d5aed2df69fac2::t_9076de1bfe8892 23,37-55,384
+packages/ui/test/study-citation.test.tsx
+  s_b586d79e77543e::t_faabdc187ba878 91-105
+packages/ui/test/study-player.test.tsx
+  s_b586d79e77543e::t_7f8af0ebfad669 1-93
+services/agent-core/tests/test_companion_fact_binding.py
+  s_d5aed2df69fac2::t_ea118cbf3b8463 18-26
+evals/contracts/study/workspace/TeachingOutline/valid/minimal.json
+  s_be0932c70088b2::t_7c932b8a6befd0 1-6
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_be0932c70088b2::t_992fb920be0e13 2
+  s_be0932c70088b2::t_a89bffeb68042e 1322-1323,1328-1360
+packages/ui/test/settings.test.tsx
+  s_d5aed2df69fac2::t_9a5616b415635e 167-175
+services/agent-core/agent_core/store/retention.py
+  s_b586d79e77543e::t_46b97fc9ae60f7 390-397
+services/agent-core/agent_core/engine/companion_facts.py
+  s_d5aed2df69fac2::t_b388d668842dd7 28-32
+  s_d5aed2df69fac2::t_31f70006a9fdae 42-46
+services/agent-core/agent_core/engine/assembly.py
+  s_be0932c70088b2::t_6618dc134ffd56 862-870
+  s_be0932c70088b2::t_437ee5235cd39b 342-343,852-854,858-859
+contracts/registers/toolsets.json
+  s_b586d79e77543e::t_5012bff8dcc927 1436-1437
+packages/contracts-ts/src/generated/lan/lan_compute.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 1003
+packages/ui/src/learn/ConceptMap.tsx
+  s_be0932c70088b2::t_6117e376458559 475,478-479,515,518,522,525-527,551-557,559,573,576
+  s_be0932c70088b2::t_69beab24d43d6f 253-314,319-321,376,381,384-388,397-424,428-430,434,441-442,463-464
+  s_be0932c70088b2::t_c56f776d155f5e 240-241
+  s_be0932c70088b2::t_cb077ca52b2bd0 9-16,18-19,38-53,98-120,129-175,179-190,193,239
+packages/contracts-ts/src/generated/learning/learning_event.ts
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,548
+services/agent-core/agent_core/contracts/lan/lan_compute.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 1029,1036-1045
+services/agent-core/tests/test_w10_map_layers.py
+  s_be0932c70088b2::t_f7074651206040 256-273
+  s_be0932c70088b2::t_e06d77743ceb67 49-54,120-126,160-162,243-245
+  s_be0932c70088b2::t_7a28474dd6fecf 1-30,36-37,39,41-44,46-47,55,60-62,64-107,109-113,115-119,127-128,130-159,163-242,246-255
+  s_be0932c70088b2::t_3709c712fec126 114,129
+  s_be0932c70088b2::t_75a92cd8948322 31-35,38,40,45,48,56-59,63,108
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_b586d79e77543e::t_d4e89085bca544 14-17,35-37,45-47,66,144-147,316-317,398,400,404,417-423,474,477
+  s_be0932c70088b2::t_0b5f84d109fe7e 33-34,140-143
+packages/ui/src/learn/StudyGenerate.tsx
+  s_b586d79e77543e::t_d4e89085bca544 1-3,7,12
+packages/ui/src/learn/SubjectMap.tsx
+  s_be0932c70088b2::t_37641f512c5844 16,263-266,278,326,400-406,410-413,430-431,439-440
+SPEC.md
+  s_49ba057c5af1a1::t_2473f06a08f9db 623,625,2031,2033,2137-2141,2150,2152,2154,2165-2167,2212-2216,2231-2233,2253-2255,2264-2266,2272-2274,2286-2288,2304-2305,2316,2331-2333,2338,2400-2404,2416-2420,2429-2433,2440-2442,2444-2445,2449,2452,2455,2460-2464,2474-2476,2489-2492,2495-2497,2499-2501,2512-2514,2526-2528,2534
+  s_49ba057c5af1a1::t_194f96ed79ce0d 30,2037-2041,2143,2146,2149,2156-2157,2161-2162,2223,2225,2230,2236-2237,2241-2244,2259-2260,2277-2278,2285,2301-2302,2307-2308,2311,2328
+  s_49ba057c5af1a1::t_f372460f80d8f9 31,2034-2036,2042,2118-2120,2122-2136,2142,2144,2147-2148,2151,2153,2155,2158-2160,2163-2164,2169-2198,2200-2211,2217-2222,2224,2226-2229,2234-2235,2238-2240,2245-2252,2256-2258,2261-2263,2267-2271,2275-2276,2279-2284,2289-2300,2303,2306,2309-2310,2312-2315,2317-2327,2329-2330,2334-2337,2405-2415,2421-2428,2434-2439,2443,2446-2448,2450-2451,2453-2454,2456-2459,2465-2473,2477-2488,2493-2494,2498,2502-2511,2515-2525,2529-2533,2535-2543
+  s_b586d79e77543e::t_66940150cf7ce8 2109-2116
+  s_49ba057c5af1a1::t_a7782c67cec3fa 624,2032,2121,2145,2168
+  s_d5aed2df69fac2::t_f84bfc8491a036 1633
+  s_b586d79e77543e::t_f57a548f2da19a 2043-2108,2117
+  s_d5aed2df69fac2::t_28bf2acf653e82 1627-1632
+  s_d5aed2df69fac2::t_4042bba68d07d3 1623-1625
+  s_49ba057c5af1a1::t_949f817862bb34 2199
+  s_be0932c70088b2::t_85edf48556e372 2352-2354
+  s_d5aed2df69fac2::t_6ae6c5452d5c88 1634-1642
+  s_be0932c70088b2::t_8286341b481f65 2375-2378
+  s_be0932c70088b2::t_1544058a8337fb 2339-2351,2355-2374,2379-2399
+  s_d5aed2df69fac2::t_46bf83a55c41da 1617-1622,1626
+services/agent-core/agent_core/contracts/cloud/gateway.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 197-206,249-257,263-264,297,331-367,376-385,410,414-415,585,590-695,773-774,777,781-782,785,789-790,830
+  s_b586d79e77543e::t_e0e299775cfa75 325
+services/agent-core/tests/test_companion_continuity.py
+  s_b586d79e77543e::t_1121ec5c970eb1 126
+packages/client-core/test/study-workspace.test.ts
+  s_b586d79e77543e::t_faabdc187ba878 577-581,583-586,588-593,595-627
+  s_b586d79e77543e::t_1cd6e946d0991a 587
+  s_b586d79e77543e::t_3da120f0147545 582
+  s_b586d79e77543e::t_e11bdc5a5e596e 594
+SPEC_W9_W10_REVIEW.md
+  s_49ba057c5af1a1::t_2577055aead04e 1-321
+packages/ui/src/learn/StudyLinkAdd.tsx
+  s_b586d79e77543e::t_3da120f0147545 22-23
+  s_b586d79e77543e::t_f8a690896ca89c 30
+  s_b586d79e77543e::t_b6bb1ed179ad4c 1-21,24-29,31-38
+packages/client-core/src/session.ts
+  s_d5aed2df69fac2::t_1b53585eed6531 221-241
+  s_d5aed2df69fac2::t_ad0e98c21b6515 435
+  s_d5aed2df69fac2::t_815d8c7ecc6e18 431-434
+  s_d5aed2df69fac2::t_c831bb40479875 141,422-423,439-440
+packages/ui/src/settings/DataExport.tsx
+  s_d5aed2df69fac2::t_7e2143d7519b7b 38
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_be0932c70088b2::t_a89bffeb68042e 259-260,263-264,273-274,390-391,459-460
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 392-394,461-463
+packages/ui/test/fixtures/curriculum-overview.json
+  s_be0932c70088b2::t_e3a5d3336f8b76 1-1428
+contracts/api/events.schema.json
+  s_b586d79e77543e::t_5012bff8dcc927 3347-3348,3378-3385
+services/agent-core/tests/test_concept_map.py
+  s_be0932c70088b2::t_ee4d43a92b8f6a 259-266
+services/agent-core/agent_core/contracts/schemas/study/workspace.schema.json
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 159-181,256-258,324-398,497-498,519-524,583-611,837-838,852-853,886-888,977-978,1002-1003,1068-1069,1277-1279,1477-1517,2286-2288,2481-2521,2887-2892,2950-2959,4353-4607
+  s_b586d79e77543e::t_e0e299775cfa75 2,399-404,2819-2820
+evals/contracts/study/workspace/SourceChapter/invalid/unknown_property.json
+  s_be0932c70088b2::t_7c932b8a6befd0 1-6
+HACKATHON_SUBMISSION.md
+  s_d5aed2df69fac2::t_c97d9a90033525 53
+  s_d5aed2df69fac2::t_b7cdba76090953 1-51,54-70
+  s_d5aed2df69fac2::t_ca7652e2ea80b9 52
+evals/contracts/study/workspace/Frame/valid/minimal.json
+  s_be0932c70088b2::t_7c932b8a6befd0 1-6
+packages/client-core/test/companion.test.ts
+  s_b586d79e77543e::t_40957d07327b0f 241-259
+  s_d5aed2df69fac2::t_ab8917147eb1a4 48-55
+packages/ui/src/learn/StudyOutline.tsx
+  s_b586d79e77543e::t_c819dc5d2ca405 1-67
+services/agent-core/tests/test_w10_overview.py
+  s_be0932c70088b2::t_e06d77743ceb67 44-48,53-55
+  s_be0932c70088b2::t_e3a5d3336f8b76 1-43,49-52,56-65,67-68
+  s_be0932c70088b2::t_23caefe46215b9 66
+apps/desktop/src/main.tsx
+  s_d5aed2df69fac2::t_7e2143d7519b7b 8,29-32
+services/agent-core/tests/test_symbolic_plan_evidence.py
+  s_d5aed2df69fac2::t_d0446272b0ab07 40-43,45
+  s_d5aed2df69fac2::t_1f41687efa6b90 56
+  s_d5aed2df69fac2::t_ce67814d503e4f 1-10,14-30,33-39,44,46,48,53-55,57-64
+  s_d5aed2df69fac2::t_ca3dbf9558a19f 11-12,47,49-52
+  s_d5aed2df69fac2::t_aeb91a43aeaabe 13,31-32,65-78
+packages/client-core/src/companion.ts
+  s_b586d79e77543e::t_ef54c7e2981fb9 52,89-91,310-325,490-493
+  s_d5aed2df69fac2::t_ae6b50516390f6 211-212,214-222
+packages/ui/test/concept-map-layers.test.tsx
+  s_be0932c70088b2::t_515f3f21f14cc7 56-57,92,94
+  s_be0932c70088b2::t_8f0a03c4a8515e 1-10,12-15,17-55,58-91,93,95-123
+  s_be0932c70088b2::t_d5c907325879c0 11,16
+services/agent-core/agent_core/api/companion.py
+  s_b586d79e77543e::t_43e48514333c40 61-72,77
+content/agent/guidance/solver-tool-discipline.md
+  s_d5aed2df69fac2::t_1a91d3456aa426 16
+  s_d5aed2df69fac2::t_5123fb6ac020cd 3,17
+packages/ui/test/map-overview.test.tsx
+  s_be0932c70088b2::t_9c0a8e6eb7e65b 1-55,57-87,90-92
+  s_be0932c70088b2::t_093f687512089d 56,88-89
+services/cloud-gateway/cloud_gateway/plans.toml
+  s_b586d79e77543e::t_5828d479263f0b 42-44,76-78
+services/agent-core/agent_core/engine/study.py
+  s_b586d79e77543e::t_e8b5c14bdaca49 2503
+  s_b586d79e77543e::t_a54b0a9a676f49 85-89,475-479,483-485,812-814
+  s_b586d79e77543e::t_626bae19233103 25,28,82-84,90-92,440-441,465-474,480-482,491-492,512,525-529,532-550,565-566,644-648,656-671,803-811,815-816,1150-1154,1204-1205,1242-1244,1255-1256,1260,1379,1387,1399-1401,1435-1438,1532-1545,1852,2201-2202,2243,2280-2286,2393-2395,2489,2493,2498-2502,2529
+services/agent-core/agent_core/net/study.py
+  s_b586d79e77543e::t_626bae19233103 19-22,28-29,273-274,317,323,351-352
+  s_b586d79e77543e::t_e653f82b4296e1 23-27
+services/agent-core/agent_core/engine/turn.py
+  s_d5aed2df69fac2::t_ad61a140a8e336 1576-1577
+  s_d5aed2df69fac2::t_fc8efdf29e37ce 123,1610-1611
+services/agent-core/agent_core/learner/projections.py
+  s_be0932c70088b2::t_b52b2f6a4db16c 1339-1412
+packages/contracts-ts/src/generated/cloud/gateway.ts
+  s_b586d79e77543e::t_e0e299775cfa75 685,932
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 39-48,73-74,380-384,464,601-678,726,748-762,882-886,898,958
+HACKATHON_DEMO.md
+  s_d5aed2df69fac2::t_6f03f0b1ec5aca 3,24-31
+  s_d5aed2df69fac2::t_ca7652e2ea80b9 32-33
+  s_d5aed2df69fac2::t_b7cdba76090953 1-2,4-23,34-56
+packages/ui/src/learn/Mastery.tsx
+  s_be0932c70088b2::t_d7cf18c05ec2fe 31-35
+services/study-worker/tests/video_fixture.py
+  s_b586d79e77543e::t_a54b0a9a676f49 13,26-28
+  s_b586d79e77543e::t_73e889e1f80ce1 1-12,14-25,29-40,42-70
+  s_b586d79e77543e::t_e0e299775cfa75 41
+packages/contracts-ts/src/generated/validators.d.ts
+  s_be0932c70088b2::t_a89bffeb68042e 925-926
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 927-929
+services/agent-core/agent_core/contracts/api/events.py
+  s_b586d79e77543e::t_6cfb2bc08bdfb1 2,1051-1053,1589-1620
+  s_b586d79e77543e::t_028e006b19473a 1621-1622
+packages/contracts-ts/src/generated/client-validators.js
+  s_be0932c70088b2::t_034be5f3acaa98 10
+packages/contracts-ts/src/generated/validators.js
+  s_be0932c70088b2::t_91df9d48230ee8 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b814436d401596039ba6d0c03688d4aff8dab432",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    },
+    "s_b586d79e77543e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d395856-caf0-4867-806f-2d188e872612",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    },
+    "s_be0932c70088b2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "085ec3f5-5a9f-460b-8878-5dbf4624a90c",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    },
+    "s_d5aed2df69fac2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a182ee-0034-74e3-b39d-a21d9d9af76c",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
