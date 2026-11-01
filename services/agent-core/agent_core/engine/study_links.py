@@ -6,9 +6,11 @@ line, then the text line; chapter headings interleaved when the video has them) 
 (`[m:ss] text` or `m:ss text`). Timestamps are `m:ss`, `mm:ss` or `h:mm:ss`. A line with no timestamp between two
 timestamped blocks is a chapter heading, kept as a chapter and never as a chunk; a gap of 60 s or more starts a
 chapter too, but never more than 12 such chapters a source (the largest gaps win: a panel paste with one line every
-30 to 40 s is one chapter, not one a line; live-run fix 2026-11-01). Lines merge into chunks of at most 4,000 code points, each line keeping its own moment as a `[m:ss]` prefix, so
-every line, citation and companion excerpt can name and open its moment. A paste whose last timestamp passes 2:00:00
-(the `Locator.time` bound) is refused; a paste with no timestamp at all is one plain text unit (no moments)."""
+30 to 40 s is one chapter, not one a line; live-run fix 2026-11-01). Lines merge into chunks of at most 4,000 code
+points, each line keeping its own moment as a `[m:ss]` prefix, so every line, citation and companion excerpt can name
+and open its moment (the prefix's readers, `line_moment`, `moment_at`, `first_moment`, `line_text` and `moment_label`,
+are `store.moments`', shared with the memory queries, and re-exported here). A paste whose last timestamp passes
+2:00:00 (the `Locator.time` bound) is refused; a paste with no timestamp at all is one plain text unit (no moments)."""
 
 from __future__ import annotations
 
@@ -17,6 +19,13 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
+
+from agent_core.store.moments import first_moment as first_moment
+from agent_core.store.moments import line_moment as line_moment
+from agent_core.store.moments import line_text as line_text
+from agent_core.store.moments import moment_at as moment_at
+from agent_core.store.moments import moment_label as moment_label
+from agent_core.store.moments import to_ms
 
 VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
 MAX_MS = 7_200_000  # Locator.time's bound: two hours
@@ -28,7 +37,6 @@ HEADING_MAX = 120
 _TS = r"(?:(\d{1,2}):)?(\d{1,2}):(\d{2})"
 _BARE = re.compile(rf"^\[?{_TS}\]?\s*$")
 _SAME_LINE = re.compile(rf"^\[?{_TS}\]?[\s\-\u2013:]+(\S.*)$")  # a dash or an en dash between
-_PREFIX = re.compile(r"^\[(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\]\s?")
 
 
 class TranscriptTooLong(ValueError):
@@ -70,51 +78,6 @@ def youtube_url(video_id: str, at_ms: int = 0) -> str:
     return f"https://www.youtube.com/watch?v={video_id}" + (f"&t={seconds}" if seconds else "")
 
 
-def moment_label(ms: int) -> str:
-    """A moment's label, as the panel writes it: `m:ss` under an hour, `h:mm:ss` from one hour."""
-    seconds = max(0, int(ms)) // 1000
-    hours, rest = divmod(seconds, 3600)
-    minutes, secs = divmod(rest, 60)
-    return f"{hours}:{minutes:02d}:{secs:02d}" if hours else f"{minutes}:{secs:02d}"
-
-
-def _ms(hours: str | None, minutes: str, seconds: str) -> int:
-    return (int(hours or 0) * 3600 + int(minutes) * 60 + int(seconds)) * 1000
-
-
-def line_moment(line: str) -> int | None:
-    """The moment a chunk line carries as its `[m:ss]` prefix, or None."""
-    found = _PREFIX.match(line)
-    return _ms(*found.groups()) if found else None
-
-
-def moment_at(text: str, offset: int) -> int | None:
-    """The moment of the line of `text` that holds code point `offset` (a citation's start), from its prefix."""
-    if offset < 0 or offset > len(text):
-        return None
-    start = text.rfind("\n", 0, offset) + 1
-    end = text.find("\n", start)
-    return line_moment(text[start : end if end >= 0 else len(text)])
-
-
-_ANY_MOMENT = re.compile(r"\[((?:\d{1,2}:)?\d{1,2}:\d{2})\]")
-
-
-def first_moment(text: str) -> int | None:
-    """The first `[m:ss]` moment anywhere in `text` (an excerpt that may start mid-line), or None."""
-    found = _ANY_MOMENT.search(text)
-    if found is None:
-        return None
-    parts = found.group(1).split(":")
-    hours = parts[0] if len(parts) == 3 else None
-    return _ms(hours, parts[-2], parts[-1])
-
-
-def line_text(line: str) -> str:
-    """A chunk line without its moment prefix."""
-    return _PREFIX.sub("", line, count=1)
-
-
 @dataclass
 class Transcript:
     kind: str  # "timed" | "plain"
@@ -136,12 +99,12 @@ def _entries(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
             continue
         bare = _BARE.match(line)
         if bare:
-            pending = _ms(*bare.groups())
+            pending = to_ms(*bare.groups())
             continue
         same = _SAME_LINE.match(line)
         if same:
             hours, minutes, seconds, words = same.groups()
-            lines.append((_ms(hours, minutes, seconds), words.strip()))
+            lines.append((to_ms(hours, minutes, seconds), words.strip()))
             pending = None
             continue
         if pending is not None:

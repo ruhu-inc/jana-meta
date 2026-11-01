@@ -21,6 +21,7 @@ from datetime import UTC, date, datetime, timedelta
 from typing import Any, Literal, Protocol, cast
 
 from agent_core.config import Settings
+from agent_core.store.moments import first_moment
 
 HintUse = Literal["low", "medium", "high"]
 # A KC's state (LRN-09); its student-facing label is the string catalogue's (G99), never a probability.
@@ -618,8 +619,6 @@ class StudyExcerpt:
 def moment_locator(locator: Any, text: str) -> dict[str, Any] | None:
     """A chunk's locator for an excerpt of it: a time locator starts at the excerpt's own line when the line carries
     its `[m:ss]` moment (SPEC §20.3), else the chunk's own span."""
-    from agent_core.engine.study_links import first_moment
-
     if not isinstance(locator, dict):
         return None
     if locator.get("kind") == "time":
