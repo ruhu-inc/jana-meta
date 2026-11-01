@@ -2,7 +2,7 @@
 // into one plain line with one action, and shows the hardware class and why, the model and content versions and the
 // connection. ARC-26 notices that need no engine change: content-only (the runtime cannot run) and a subject whose
 // pack failed verification. Against the fake core, with seeded components (the core's side: test_m11e_health.py).
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { ProfileController, StoreHolder, hardwareReport, healthProblems, savingPower } from "@jana/client-core";
 import type { Health, ModelCatalogue } from "@jana/contracts-ts";
@@ -22,7 +22,7 @@ async function openPanel(core: FakeProfileCore) {
   expect(await profiles.unlock(BEN.profile_id)).toBe(true);
   render(
     <LocaleProvider locale="en">
-      <Settings profiles={profiles} />
+      <Settings profiles={profiles} section={{ id: "help", at: 1 }} />
     </LocaleProvider>,
   );
   await screen.findByRole("heading", { name: "Help" });
@@ -72,7 +72,7 @@ describe("OBS-15", () => {
     const panel = screen.getByText("Answers are taking longer than they should on this computer.");
     expect(panel.closest("[data-family-group]")).toBeNull();
     expect(panel.closest("[data-settings-section]")?.getAttribute("data-settings-section")).toBe("help");
-    expect(document.querySelectorAll("[data-family-group]")).toHaveLength(2);
+    expect(document.querySelectorAll("[data-settings-section='help'] [data-family-group]")).toHaveLength(0);
   });
 
   test("the panel names the runtime and content-only states once each, and why a class was chosen", () => {
@@ -105,7 +105,7 @@ describe("OBS-15", () => {
     await profiles.unlock(BEN.profile_id);
     render(
       <LocaleProvider locale="en">
-        <Settings profiles={profiles} />
+        <Settings profiles={profiles} section={{ id: "help", at: 1 }} />
       </LocaleProvider>,
     );
     fireEvent.click(await screen.findByRole("button", { name: "How the tutor is running" }));
@@ -115,11 +115,16 @@ describe("OBS-15", () => {
   test("the family sections are unchanged with the Help section present (D53)", async () => {
     const core = new FakeProfileCore();
     await openPanel(core);
+    // Each family group still has its own section, reached from the section list.
+    const nav = screen.getByRole("navigation", { name: "Settings sections" });
+    const groups = () => [...document.querySelectorAll("[data-family-group]")].map((g) => [g.getAttribute("data-family-group"), g.closest("[data-settings-section]")?.querySelector("h2")?.textContent]);
+    expect([...FAMILY_GROUPS]).toEqual(["online", "profiles"]);
+    fireEvent.click(within(nav).getByRole("button", { name: "Online features" }));
     await screen.findByRole("checkbox", { name: "Downloads" });
     expect(screen.queryByLabelText("Adult PIN")).toBeNull();
-    const groups = [...document.querySelectorAll("[data-family-group]")].map((g) => g.getAttribute("data-family-group"));
-    expect(groups).toEqual([...FAMILY_GROUPS]);
-    expect([...document.querySelectorAll("[data-family-group]")].map((g) => g.closest("[data-settings-section]")?.querySelector("h2")?.textContent)).toEqual(["Online features", "Profiles"]);
+    expect(groups()).toEqual([["online", "Online features"]]);
+    fireEvent.click(within(nav).getByRole("button", { name: "Profiles" }));
+    expect(groups()).toEqual([["profiles", "Profiles"]]);
   });
 });
 

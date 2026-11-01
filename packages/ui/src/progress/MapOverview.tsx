@@ -3,8 +3,10 @@
 // word), or on the Freshness layer in the look of its freshest touch with that word, and says in words how many of its
 // skills are secure, whether one is refresh due, the mistakes being watched and the skills that moved since last time
 // (never colour alone, DSN-04; never a probability, JM-D36). A tile whose ideas moved today is outlined, as "What moved
-// today" under the hero says. A tap opens the subject's skill map with the layer chosen here.
-import type { CSSProperties } from "react";
+// today" under the hero says. A tap opens the subject's skill map with the layer chosen here. Simpler by default
+// (SPEC §22.1, JM-D51): the tiles open on the Mastery layer with no switch in sight; "Layers" reveals the switch, and
+// it is already revealed when the map arrives on another layer (the lens is shared with the skill map, in memory).
+import { useId, useState, type CSSProperties } from "react";
 import { FRESHNESS_LOOK, type MapLayer, type OverviewSubject, type OverviewTopic, type OverviewView } from "@jana/client-core";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
@@ -76,6 +78,8 @@ function SubjectTiles({ subject, name, layer, moved, onOpen }: { subject: Overvi
 export function MapOverview({ view, subject, layer, onLayer, onOpen, moved = new Set(), onRetry }: MapOverviewProps) {
   const t = useT();
   const shown: OverviewLayer = (OVERVIEW_LAYERS as readonly string[]).includes(layer) ? (layer as OverviewLayer) : "mastery";
+  const [layersOpen, setLayersOpen] = useState(shown !== "mastery");
+  const layersId = useId();
   const body = () => {
     if (view.status === "failed") return <ErrorState message={t("progress.map.failed")} {...(onRetry !== undefined ? { action: { label: t("action.try_again"), onClick: onRetry } } : {})} />;
     if (view.overview === null) return <div aria-busy="true" data-overview-loading=""><span className="sr-only">{t("progress.map.loading")}</span><Skeleton lines={3} /></div>;
@@ -91,8 +95,15 @@ export function MapOverview({ view, subject, layer, onLayer, onOpen, moved = new
           <h2 id="progress-map" className="text-heading text-ink">{t("progress.map.title")}</h2>
           <p className="text-meta text-muted">{t("progress.map.lead")}</p>
         </div>
-        <SegmentedControl label={t("map.layer")} value={shown} onChange={(v) => onLayer(v)} options={OVERVIEW_LAYERS.map((l) => ({ value: l, label: t(`map.layer.${l}`) }))} />
+        <Button size="sm" tone="ghost" aria-expanded={layersOpen} aria-controls={layersId} onClick={() => setLayersOpen((open) => !open)}>
+          <Icon name={layersOpen ? "collapse" : "expand"} size={16} />{t("progress.map.layers")}
+        </Button>
       </div>
+      {layersOpen && (
+        <div id={layersId} data-overview-layers="">
+          <SegmentedControl label={t("map.layer")} value={shown} onChange={(v) => onLayer(v)} options={OVERVIEW_LAYERS.map((l) => ({ value: l, label: t(`map.layer.${l}`) }))} />
+        </div>
+      )}
       {body()}
     </section>
   );

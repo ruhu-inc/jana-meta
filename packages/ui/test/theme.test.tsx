@@ -46,7 +46,7 @@ afterEach(() => {
 
 function Shell({ profiles }: { profiles: ProfileController }) {
   useAppliedPreferences(profiles);
-  return <Settings profiles={profiles} />;
+  return <Settings profiles={profiles} section={{ id: "accessibility_language", at: 1 }} />;
 }
 
 const choice = (name: string) => screen.getByRole("radio", { name });

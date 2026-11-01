@@ -210,6 +210,7 @@
   },
   "PackManager": {
     "fixture": "settings.canonical",
+    "click": "[data-settings-link=content]",
     "selector": "[data-settings-section=content]"
   },
   "OnlineFeatures": {

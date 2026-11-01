@@ -154,20 +154,23 @@ test("card answer and ratings require reveal; rating sends the selected source c
 });
 test("study quiz allows skipped answers and submits only user-selected choices", () => {
   const controller = show({ source, aid: { aid_id: `aid_${"0".repeat(26)}`, job_id: `stj_${"0".repeat(26)}`, kind: "quiz", sources: [{ source_id: sid, revision: 1 }], title: "Biology", claims: [cited("From this material")], status: "ready", created_at: now, quiz_id: `sqz_${"0".repeat(26)}` }, quiz: { quiz_id: `sqz_${"0".repeat(26)}`, aid_id: `aid_${"0".repeat(26)}`, revision: 1, status: "ready", items: [{ item_id: "q1", type: "choice", stem: cited("Which molecule?"), options: [{ option_id: "a", text: "DNA" }, { option_id: "b", text: "Water" }] }] } });
-  fireEvent.click(screen.getByRole("button", { name: "Submit quiz" })); expect(controller.submit).toHaveBeenLastCalledWith({});
-  fireEvent.click(screen.getByRole("radio", { name: "DNA" })); fireEvent.click(screen.getByRole("button", { name: "Submit quiz" })); expect(controller.submit).toHaveBeenLastCalledWith({ q1: "a" });
+  fireEvent.click(screen.getByRole("button", { name: "Finish quiz" })); expect(controller.submit).toHaveBeenLastCalledWith({});
+  fireEvent.click(screen.getByRole("radio", { name: "DNA" })); fireEvent.click(screen.getByRole("button", { name: "Finish quiz" })); expect(controller.submit).toHaveBeenLastCalledWith({ q1: "a" });
 });
 
 test("material chat sends the learner's prompt and audio uses only the accepted overview", () => {
   const controller = show({ source, canSpeak: true, selections: [{ source_id: sid, revision: 1 }], aid: {
     aid_id: `aid_${"0".repeat(26)}`, job_id: `stj_${"0".repeat(26)}`, kind: "audio_overview", sources: [{ source_id: sid, revision: 1 }], title: "Biology overview", claims: [cited("Enzymes are catalysts.")], status: "ready", created_at: now,
   } });
+  fireEvent.click(screen.getByRole("tab", { name: "Ask this material" }));
   const field = screen.getByRole("textbox", { name: "Ask about this material" });
   fireEvent.change(field, { target: { value: "What do enzymes do?" } });
-  fireEvent.click(screen.getByRole("button", { name: "Ask material" }));
-  expect(controller.generate).toHaveBeenCalledWith("chat", 10, false, true, "What do enzymes do?");
+  fireEvent.click(screen.getByRole("tab", { name: "Generate" }));
   fireEvent.click(screen.getByRole("button", { name: "Play overview" }));
   expect(controller.playOverview).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("tab", { name: "Ask this material" }));
+  fireEvent.click(screen.getByRole("button", { name: "Ask material" }));
+  expect(controller.generate).toHaveBeenCalledWith("chat", 10, false, true, "What do enzymes do?");
 });
 
 test("a submission request shows guided help without automatically generating an answer", () => {
@@ -196,7 +199,10 @@ test("the empty library focuses on adding material instead of disabled tools", (
 
 test("stu21_settings_respected: a quiz's settings dialog sends its types, difficulty, topics and focus", () => {
   const controller = show({ source, materialTopics: [{ title: "Enzymes", chunk_ids: [`sck_${"0".repeat(26)}`] }, { title: "Respiration", chunk_ids: [`sck_${"1".repeat(26)}`] }] });
-  for (const tool of ["Summary", "Quiz", "Flashcards", "Notes", "Podcast", "Lesson plan"]) expect(screen.getByRole("button", { name: new RegExp(`^${tool}`) })).toBeTruthy();
+  for (const tool of ["Summary", "Quiz", "Flashcards"]) expect(screen.getByRole("button", { name: new RegExp(`^${tool}`) })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /^Notes/ })).toBeNull();
+  fireEvent.click(screen.getByText("More study tools"));
+  for (const tool of ["Notes", "Podcast", "Lesson plan"]) expect(screen.getByRole("button", { name: new RegExp(`^${tool}`) })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Settings: Quiz" }));
   const dialog = screen.getByRole("dialog", { name: "Quiz" });
   expect(dialog).toBeTruthy();
@@ -236,12 +242,14 @@ test("stu21_sets_persist_progress: My Sets shows live progress and opens a set; 
     { aid_id: `aid_${"3".repeat(26)}`, kind: "summary", sources: [{ source_id: sid, revision: 1 }], status: "ready", created_at: now, private: true },
   ] as StudyWorkspaceView["sets"];
   const controller = show({ sources: [source], sets });
-  fireEvent.click(screen.getByRole("button", { name: "All study sets" }));
+  fireEvent.click(screen.getByRole("button", { name: "More" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "All study sets" }));
   expect(screen.getByText("5 questions left")).toBeTruthy();
   expect(screen.getByText("12 cards due today")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: /Quiz · Biology/ }));
   expect(controller.openSet).toHaveBeenCalledWith(sets[0]);
-  fireEvent.click(screen.getByRole("button", { name: "All study sets" }));
+  fireEvent.click(screen.getByRole("button", { name: "More" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "All study sets" }));
   fireEvent.click(screen.getByRole("button", { name: /Summary · Private material/ }));
   expect(controller.openSet).toHaveBeenCalledTimes(1);
   fireEvent.click(screen.getByRole("button", { name: "Open material" }));
@@ -255,12 +263,13 @@ test("stu21_sets_persist_progress: a quiz opens with its draft and keeps each ne
     { item_id: "q2", type: "multi_select", stem: cited("Which are nucleic acids?"), options: [{ option_id: "a", text: "DNA" }, { option_id: "b", text: "RNA" }, { option_id: "c", text: "Glucose" }] },
     { item_id: "q3", type: "fill_blank", stem: cited("____ stores genetic information.") },
   ] } });
-  fireEvent.click(screen.getByRole("checkbox", { name: "Show all questions" }));
+  fireEvent.click(screen.getByRole("button", { name: "Questions" }));
+  fireEvent.click(screen.getByRole("menuitemradio", { name: "Show all questions" }));
   expect((screen.getByRole("radio", { name: "True" }) as HTMLInputElement).checked).toBe(true);
   fireEvent.click(screen.getByRole("checkbox", { name: "DNA" }));
   fireEvent.click(screen.getByRole("checkbox", { name: "RNA" }));
   expect(controller.saveDraft).toHaveBeenLastCalledWith({ q1: "true", q2: "a,b" }, 1);
-  fireEvent.click(screen.getByRole("button", { name: "Submit quiz" }));
+  fireEvent.click(screen.getByRole("button", { name: "Finish quiz" }));
   expect(controller.submit).toHaveBeenLastCalledWith({ q1: "true", q2: "a,b" });
 });
 
@@ -330,7 +339,7 @@ test("a running tool explains progress, prevents duplicate clicks and keeps othe
 
 test("partial-source chat offers its review beside the composer and sends only after confirmation", () => {
   const controller = show({ source: { ...source, state: "partial" }, selections: [{ source_id: sid, revision: 1 }] });
-  fireEvent.click(screen.getByRole("tab", { name: "Chat" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Ask this material" }));
   fireEvent.change(screen.getByRole("textbox", { name: "Ask about this material" }), { target: { value: "What is DNA?" } });
   const send = screen.getByRole("button", { name: "Ask material" });
   expect(send.hasAttribute("disabled")).toBe(true);
@@ -406,7 +415,8 @@ test("focused quiz restores its question, navigates without losing answers, and 
   fireEvent.click(screen.getByRole("button", { name: "Previous question" }));
   expect((screen.getByRole("radio", { name: "True" }) as HTMLInputElement).checked).toBe(true);
   expect(controller.saveDraft).toHaveBeenCalledWith({ q1: "true", q2: "DNA" }, 0);
-  fireEvent.click(screen.getByRole("checkbox", { name: "Show all questions" }));
+  fireEvent.click(screen.getByRole("button", { name: "Questions" }));
+  fireEvent.click(screen.getByRole("menuitemradio", { name: "Show all questions" }));
   expect(screen.getByText("Second question")).toBeTruthy();
 });
 
@@ -451,11 +461,15 @@ test("equivalent quiz type orders reuse a known set with the same question count
 test("Study quiz help sends a question-aware request directly, with just the two reference shortcuts", () => {
   const quizId = `sqz_${"0".repeat(26)}`;
   const controller = show({ source, aid: { ...aidBase, aid_id: `aid_${"0".repeat(26)}`, kind: "quiz", quiz_id: quizId }, quiz: { quiz_id: quizId, aid_id: `aid_${"0".repeat(26)}`, revision: 1, status: "ready", items: [{ item_id: "q1", type: "true_false", stem: cited("DNA is a protein.") }, { item_id: "q2", type: "fill_blank", stem: cited("____ stores information.") }] } });
+  expect(screen.queryByRole("button", { name: "Give me a hint" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Need help?" }));
   expect(screen.getAllByRole("button", { name: "Give me a hint" })).toHaveLength(1);
   expect(screen.queryByRole("button", { name: "Explain simply" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Walk me through it" }));
   expect(controller.requestQuizHelp).toHaveBeenLastCalledWith("q1", "walk_through", false);
   fireEvent.click(screen.getByRole("button", { name: "Next question" }));
+  expect(screen.queryByRole("button", { name: "Give me a hint" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Need help?" }));
   fireEvent.click(screen.getByRole("button", { name: "Give me a hint" }));
   expect(controller.requestQuizHelp).toHaveBeenLastCalledWith("q2", "hint", false);
   expect(controller.generate).not.toHaveBeenCalled();
@@ -464,6 +478,7 @@ test("Study quiz help sends a question-aware request directly, with just the two
 test("partial PDF help exposes review where requested and never silently confirms it", () => {
   const quizId = `sqz_${"0".repeat(26)}`;
   const controller = show({ source: { ...source, kind: "pdf", state: "partial" }, aid: { ...aidBase, aid_id: `aid_${"0".repeat(26)}`, kind: "quiz", quiz_id: quizId }, quiz: { quiz_id: quizId, aid_id: `aid_${"0".repeat(26)}`, revision: 1, status: "ready", items: [{ item_id: "q1", type: "true_false", stem: cited("DNA is a protein.") }] } });
+  fireEvent.click(screen.getByRole("button", { name: "Need help?" }));
   fireEvent.click(screen.getByRole("button", { name: "Give me a hint" }));
   const dialog = screen.getByRole("dialog", { name: "Review material for help" });
   expect(controller.requestQuizHelp).not.toHaveBeenCalled();
@@ -480,8 +495,8 @@ test("coaching stays beside its quiz with source access and does not replace a s
   const help = screen.getByRole("region", { name: "Help with this question" });
   expect(within(help).getByText("Which category does the material assign to DNA?")).toBeTruthy();
   expect((screen.getByRole("radio", { name: "False" }) as HTMLInputElement).checked).toBe(true);
-  fireEvent.change(screen.getByRole("textbox", { name: "Ask about this material" }), { target: { value: "Explain that first step again" } });
-  fireEvent.click(screen.getByRole("button", { name: "Ask material" }));
+  fireEvent.change(within(help).getByRole("textbox", { name: "Ask a follow-up about this question" }), { target: { value: "Explain that first step again" } });
+  fireEvent.click(within(help).getByRole("button", { name: "Send follow-up" }));
   expect(controller.requestQuizHelp).toHaveBeenCalledWith("q1", "hint", false, "Explain that first step again");
   expect(controller.generate).not.toHaveBeenCalled();
   fireEvent.click(within(help).getByRole("button", { name: "Biology · Reference 1" }));
@@ -500,8 +515,7 @@ test.each(["hint", "walk_through"] as const)("unverified choice %s offers labell
   expect(within(help).getByText(/General study strategy/)).toBeTruthy();
   expect(within(help).queryByText(/DNA|Water/)).toBeNull();
   expect((screen.getByRole("radio", { name: "Water" }) as HTMLInputElement).checked).toBe(true);
-  fireEvent.click(within(help).getByRole("button", { name: "Let me try the question" }));
-  expect((screen.getByRole("radio", { name: "Water" }) as HTMLInputElement).checked).toBe(true);
+  expect(within(help).getByRole("textbox", { name: "Ask a follow-up about this question" })).toBeTruthy();
   expect(controller.submit).not.toHaveBeenCalled();
   expect(controller.checkAnswer).not.toHaveBeenCalled();
 });

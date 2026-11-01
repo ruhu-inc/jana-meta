@@ -21,8 +21,13 @@ type Start = { topic: string } | { capture_id: string };
 type Phase = { kind: "start" } | { kind: "talking"; start: Start; history: R.ChatEntry[]; turn: R.ChatTurn | null }
   | { kind: "brief"; start: Start; brief: R.Brief } | { kind: "pack"; id: string };
 
-export function StudyResearch({ controller, initialCapture, topicRequest, onCaptureUsed, onOpenSource, onPracticeDiagram, disabled }: {
+export function StudyResearch({ controller, initialCapture, topicRequest, start: startRequest, hideStart = false, onCaptureUsed, onOpenSource, onPracticeDiagram, disabled }: {
   controller: StudyWorkspaceController;
+  /** A topic the learner chose to research from Explore's one topic field (the crowding review of 2026-11-01): the
+   * conversation starts at once. A new `seq` starts it again. */
+  start?: { topic: string; seq: number } | null;
+  /** Explore draws the topic field itself: the start phase shows only what is in progress and the saved packs. */
+  hideStart?: boolean;
   /** A topic handed over by the companion's "Research this topic" (SPEC §19.3.3): filled in for the learner, who starts
    * the conversation themselves (it is never skipped). A new `seq` fills it again. */
   topicRequest?: { topic: string; seq: number } | null;
@@ -79,6 +84,13 @@ export function StudyResearch({ controller, initialCapture, topicRequest, onCapt
   }, [initialCapture]);
 
   const topicField = useRef<HTMLInputElement>(null);
+  const started = useRef<number | null>(null);
+  useEffect(() => {
+    if (!startRequest || started.current === startRequest.seq) return;
+    started.current = startRequest.seq;
+    const asked = startRequest.topic.trim().slice(0, 200);
+    if (asked.length >= 3) void ask({ topic: asked }, [], null);
+  }, [startRequest?.seq]);
   useEffect(() => {
     if (!topicRequest) return;
     setPhase({ kind: "start" });
@@ -203,13 +215,15 @@ export function StudyResearch({ controller, initialCapture, topicRequest, onCapt
     </section>;
   }
 
-  return <section className="flex flex-col gap-3" aria-labelledby="study-research" data-research-start>
-    <h2 id="study-research" className="text-ui font-semibold text-ink">{t("study.research.heading")}</h2>
-    <p className="text-meta text-muted">{t("study.research.help")}</p>
-    <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); const asked = topic.trim(); if (asked.length < 3) return; void ask({ topic: asked.slice(0, 200) }, [], null); }}>
-      <label className="flex min-w-0 flex-1 basis-56 flex-col gap-1 text-ui text-ink">{t("study.research.topic_label")}<input ref={topicField} className={FIELD_LOOK} value={topic} maxLength={200} disabled={busy || disabled} onChange={(e) => setTopic(e.target.value)} /></label>
-      <Button type="submit" disabled={busy || disabled || topic.trim().length < 3}>{t("study.research.research")}</Button>
-    </form>
+  return <section className="flex flex-col gap-3" aria-labelledby={hideStart ? undefined : "study-research"} aria-label={hideStart ? t("study.research.your_packs") : undefined} data-research-start>
+    {!hideStart && <>
+      <h2 id="study-research" className="text-ui font-semibold text-ink">{t("study.research.heading")}</h2>
+      <p className="text-meta text-muted">{t("study.research.help")}</p>
+      <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); const asked = topic.trim(); if (asked.length < 3) return; void ask({ topic: asked.slice(0, 200) }, [], null); }}>
+        <label className="flex min-w-0 flex-1 basis-56 flex-col gap-1 text-ui text-ink">{t("study.research.topic_label")}<input ref={topicField} className={FIELD_LOOK} value={topic} maxLength={200} disabled={busy || disabled} onChange={(e) => setTopic(e.target.value)} /></label>
+        <Button type="submit" disabled={busy || disabled || topic.trim().length < 3}>{t("study.research.research")}</Button>
+      </form>
+    </>}
     {busy && <p role="status" className="text-meta text-muted">{t("study.research.thinking")}</p>}
     {errorLine}
     {packs.length > 0 && <div className="flex flex-col gap-2" aria-label={t("study.research.your_packs")}>{packs.slice(0, 6).map((p) => <Button key={p.research_id} size="sm" tone="ghost" onClick={() => setPhase({ kind: "pack", id: p.research_id })}>

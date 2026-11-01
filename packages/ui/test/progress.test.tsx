@@ -1,8 +1,8 @@
 // DSN-23 (mastery state styling) on the generated tokens and on the screens that show mastery: the subject map and the
 // Progress heat map; UXS-27's grade line in the exam board's own letters only (D27); UXS-26's mock band by the same rule;
 // Home's plan card words (UXS-12).
-import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, test } from "vitest";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { BASE } from "@jana/i18n";
 import { EMPTY_PLAN, KC_STATES, gradeShown, mockBandShown, type KcState, type ProgressView } from "@jana/client-core";
 import { GalleryView, STATES } from "../gallery/index.js";
@@ -149,5 +149,96 @@ describe("UXS-12", () => {
     render(<GalleryView state={STATES.find((s) => s.id === "home-plan.canonical")!} />);
     const card = screen.getByRole("region", { name: /^Next up/ });
     expect(within(card).getAllByRole("listitem")[0]!.getAttribute("data-next")).toBe("");
+  });
+});
+
+// Simpler by default (SPEC §22.1, W11; the live UX review): the header is the title and one overflow menu, recent
+// activity leads, a subject selector chooses the card, and the topics not started sit collapsed after the touched ones.
+describe("Progress, simpler by default", () => {
+  const canonical = () => STATES.find((s) => s.id === "progress.canonical")!.payload.progress as ProgressView;
+  const show = (view: ProgressView, actions: Partial<Parameters<typeof ProgressContent>[0]["actions"]> = {}) => render(
+    <LocaleProvider locale="en">
+      <ProgressContent state={{ status: "ready", progress: view }} names={{ subject: (s) => s[0]!.toUpperCase() + s.slice(1), kc: () => null }} actions={{ onRetry: () => undefined, ...actions }} />
+    </LocaleProvider>,
+  );
+
+  test("the header keeps the title, What your tutor knows and one overflow menu that reaches every other action", () => {
+    const actions = { onKnows: vi.fn(), onNotes: vi.fn(), onHistory: vi.fn(), onDiagnostic: vi.fn() };
+    show(canonical(), actions);
+    const header = screen.getByRole("banner");
+    expect(within(header).getByRole("heading", { level: 1 }).textContent).toBe("Progress");
+    // Two controls in the header: the two-click destination (UXS-01) and the menu's trigger; nothing else to wrap or clip.
+    const buttons = within(header).getAllByRole("button");
+    expect(buttons).toHaveLength(2);
+    fireEvent.click(within(header).getByRole("button", { name: "What your tutor knows" }));
+    expect(actions.onKnows).toHaveBeenCalledTimes(1);
+    const more = within(header).getByRole("button", { name: "More" });
+    expect(more.getAttribute("aria-haspopup")).toBe("menu");
+    expect(more.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(more);
+    const menu = screen.getByRole("menu", { name: "More" });
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Study notes", "Session history", "Find my starting point"]);
+    fireEvent.click(within(menu).getByRole("menuitem", { name: "Session history" }));
+    expect(actions.onHistory).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("menu")).toBeNull();
+    for (const [name, spy] of [["Study notes", actions.onNotes], ["Find my starting point", actions.onDiagnostic]] as const) {
+      fireEvent.click(within(header).getByRole("button", { name: "More" }));
+      fireEvent.click(screen.getByRole("menuitem", { name }));
+      expect(spy).toHaveBeenCalledTimes(1);
+    }
+    cleanup();
+    // With no actions wired (the gallery's loading state, an older host), the header is the title alone.
+    show(canonical());
+    expect(within(screen.getByRole("banner")).queryAllByRole("button")).toEqual([]);
+  });
+
+  test("recent activity leads, before the subject card and with no map on the first screen", () => {
+    const { container } = show(canonical());
+    const moved = container.querySelector("[data-progress-moved]")!;
+    const card = container.querySelector("[data-progress-subject]")!;
+    expect(moved.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelector("[data-progress-streak]")!.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // No map handed in: no "Show my map" and no controls row for a single subject.
+    expect(screen.queryByRole("button", { name: /my map/ })).toBeNull();
+    expect(container.querySelector("[data-progress-controls]")).toBeNull();
+  });
+
+  test("topics not started sit collapsed under one line after the touched ones", () => {
+    const view = canonical();
+    const physics = view.subjects[0]!;
+    // Forces and Energy become untouched; Motion stays the one topic worked on.
+    const rest = (topic: ProgressView["subjects"][number]["topics"][number]) => ({ ...topic, kcs: topic.kcs.map((kc) => ({ ...kc, state: "not_started" as const, band: "not_started" as const })) });
+    const topics = physics.topics.map((topic, i) => (i === 0 ? topic : rest(topic)));
+    const { container } = show({ ...view, subjects: [{ ...physics, topics }] });
+    const touched = [...container.querySelectorAll("[data-heat-map] [data-progress-topic]")].map((li) => li.getAttribute("data-progress-topic"));
+    expect(touched).toEqual([physics.topics[0]!.topic_id]);
+    const toggle = screen.getByRole("button", { name: "2 topics not started" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    const hidden = document.getElementById(toggle.getAttribute("aria-controls")!)!;
+    expect(hidden.querySelector("[inert]")).not.toBeNull();
+    expect([...hidden.querySelectorAll("[data-progress-topic]")].map((li) => li.getAttribute("data-progress-topic"))).toEqual(physics.topics.slice(1).map((topic) => topic.topic_id));
+    // The touched list comes first in reading order.
+    expect(container.querySelector("[data-heat-map]")!.compareDocumentPosition(hidden) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(hidden.querySelector("[inert]")).toBeNull();
+    cleanup();
+    // Every topic touched: no line to disclose.
+    show(canonical());
+    expect(screen.queryByRole("button", { name: /not started/ })).toBeNull();
+  });
+
+  test("a subject selector chooses the card shown", () => {
+    const view = canonical();
+    const physics = view.subjects[0]!;
+    const chemistry = { ...physics, subject: "chemistry", topics: physics.topics.map((topic) => ({ ...topic, topic_id: `${topic.topic_id}.chem`, title: `${topic.title} (chemistry)` })) };
+    const { container } = show({ ...view, subjects: [physics, chemistry] });
+    const group = screen.getByRole("radiogroup", { name: "Subject" });
+    expect(within(group).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Physics", "Chemistry"]);
+    expect([...container.querySelectorAll("[data-progress-subject]")].map((s) => s.getAttribute("data-progress-subject"))).toEqual(["physics"]);
+    fireEvent.click(within(group).getByRole("radio", { name: "Chemistry" }));
+    expect([...container.querySelectorAll("[data-progress-subject]")].map((s) => s.getAttribute("data-progress-subject"))).toEqual(["chemistry"]);
+    expect(screen.getByRole("heading", { level: 2, name: "Chemistry" })).toBeTruthy();
+    expect(container.querySelector("[data-progress-topic$=\".chem\"] .text-ui")!.textContent).toBe("Motion (chemistry)");
   });
 });

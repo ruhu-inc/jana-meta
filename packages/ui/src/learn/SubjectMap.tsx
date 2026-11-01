@@ -1,18 +1,22 @@
 // The subject map, Learn (UXS-22, LRN-34, DSN-23; direction A "Studio"): the 56 px header names the place and carries
 // the subject switch; under it the subject in display type with how many of its topics are secure, the lesson in
-// progress when there is one ("Continue"), then one subject's topics as cards grouped by syllabus section. Each card
-// shows the first TABLE UXS-22a label whose rule holds over its KCs (fill, pattern, icon and word, never colour alone)
-// beside the mastery ring, a segmented bar of its KCs by LRN-34 band with the counts in words, and how many lessons it
-// has. A topic with no progress shows only its mark ("Not started"), and a topic with no lessons no lesson count. Selecting a card opens the topic sheet beside the cards: every KC with its own TABLE LRN-09a label, the topic's
-// lessons, practice and "Ask the tutor about this", "Check my mastery" on a KC that is nearly secure and "I already
-// know this" on one that is not secure. An action the app cannot offer yet (no handler) is not shown, never a dead
-// button. States: canonical, loading (skeleton cards), empty (no pack, or no topics), error-retriable (the read failed)
-// and the unverified pack. When the map carries board syllabuses (CUR-06, D113) a "Syllabus" switch shows every topic
-// or one syllabus's: a chosen syllabus hides the topics outside it (and a section left empty), each tile shows its
-// codes, and a line under the switch names every board shown as not endorsing Jana. The topic sheet lists the topic's
-// syllabus points, "Partly covers" on a partial one.
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
-import { syllabusCodes, topicLabel, type ConceptMapController, type ConceptMapView, type ConceptNode, type MapKc, type MapSyllabus, type MapTopic, type MapView, type SubjectMapController } from "@jana/client-core";
+// progress when there is one ("Continue") or else the next lesson to take ("Next up", the first lesson of the first
+// topic not yet secure), then one subject's topics as rows grouped by syllabus section. Each section is a disclosure:
+// the section of the lesson in progress or next up (or of a topic opened by a deep link) is open, the others closed,
+// so the page is a short list and not a catalogue. A topic is one row, one button: its title, the first TABLE UXS-22a
+// label whose rule holds over its KCs (fill, pattern, icon and word, never colour alone) beside the mastery ring, a
+// segmented bar of its KCs by LRN-34 band with the counts in words, and how many lessons it has. A topic with no
+// progress shows only its mark ("Not started"), and a topic with no lessons no lesson count. Selecting a row opens the
+// topic sheet beside the rows: the topic's lessons (each one row to start it), practice and "Ask the tutor about this",
+// every KC with its own TABLE LRN-09a label, "Check my mastery" on a KC that is nearly secure and "I already know this"
+// on one that is not secure. An action the app cannot offer yet (no handler) is not shown, never a dead button.
+// States: canonical, loading (skeleton rows), empty (no pack, or no topics), error-retriable (the read failed) and the
+// unverified pack. When the map carries board syllabuses (CUR-06, D113) a "Syllabus" switch shows every topic or one
+// syllabus's: a chosen syllabus hides the topics outside it (and a section left empty), each row shows its codes, and
+// a line under the switch names every board shown as not endorsing Jana. The topic sheet lists the topic's syllabus
+// points, "Partly covers" on a partial one.
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
+import { syllabusCodes, topicLabel, type ConceptMapController, type ConceptMapView, type ConceptNode, type MapKc, type MapLesson, type MapSection, type MapSyllabus, type MapTopic, type MapView, type SubjectMapController } from "@jana/client-core";
 import { ConceptMapContent, type ConceptActions, type ConceptLens } from "./ConceptMap.js";
 import { useVoicePointer } from "../voice/SpeechTools.js";
 import { ScreenHeader } from "../frame/Frame.js";
@@ -50,7 +54,8 @@ const SEGMENTS_MAX = 4;
 /** The value the syllabus switch uses for "All topics" (scheme ids never start with a dash). */
 const ALL = "-all";
 
-function Tile({ topic, onOpen, selected, onStartLesson, syllabus }: { topic: MapTopic; onOpen: (topic: MapTopic, from: HTMLButtonElement) => void; selected: boolean; onStartLesson: MapActions["onStartLesson"]; syllabus: MapSyllabus | null }) {
+/** One topic as one row, one button: the whole row opens the topic; its lessons are inside the opened topic. */
+function TopicRow({ topic, onOpen, selected, syllabus }: { topic: MapTopic; onOpen: (topic: MapTopic, from: HTMLButtonElement) => void; selected: boolean; syllabus: MapSyllabus | null }) {
   const t = useT();
   const codes = syllabus === null ? [] : syllabusCodes(topic, syllabus.scheme).map((p) => p.code);
   const counts = useCountsText()(topic.kcs);
@@ -58,41 +63,69 @@ function Tile({ topic, onOpen, selected, onStartLesson, syllabus }: { topic: Map
   // An untouched topic says so once, with its mark; the counts, the bar and the ring appear with the first progress.
   const started = topic.kcs.some((k) => k.band !== "not_started");
   return (
-    <li className="flex flex-col gap-2">
+    <li>
       <button
         type="button"
         data-topic-id={topic.node_id}
         data-label={label}
         aria-expanded={selected}
         onClick={(e) => onOpen(topic, e.currentTarget)}
-        className="jana-press flex w-full flex-1 flex-col items-stretch gap-3 rounded-card border border-line bg-canvas p-5 text-start hover:bg-wash aria-expanded:border-line-strong aria-expanded:bg-wash"
+        className="jana-press flex min-h-11 w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-start hover:bg-wash aria-expanded:bg-wash"
       >
-        <span className="flex items-start justify-between gap-3">
+        <span className="flex min-w-0 flex-1 basis-56 flex-col gap-1">
           <span className="text-body font-semibold text-ink">{topic.title}</span>
-          <span aria-hidden="true" className="mt-1 shrink-0 text-faint"><Icon name="expand" size={16} /></span>
+          {syllabus !== null && codes.length > 0 && (
+            <span className="text-meta text-muted" data-syllabus-codes={codes.join(" ")}>{t("map.syllabus.codes", { code: syllabus.syllabus_code, points: codes.join(", ") })}</span>
+          )}
+          {started && <span className="text-meta text-muted">{counts}</span>}
         </span>
-        {syllabus !== null && codes.length > 0 && (
-          <span className="text-meta text-muted" data-syllabus-codes={codes.join(" ")}>{t("map.syllabus.codes", { code: syllabus.syllabus_code, points: codes.join(", ") })}</span>
-        )}
-        {started && (
-          <>
-            <span className="text-meta text-muted">{counts}</span>
-            <SegmentedBar kcs={topic.kcs} />
-          </>
-        )}
-        <span className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
-          <span className="flex items-center gap-2">
-            {started && <MasteryRing kcs={topic.kcs} />}
-            <MasteryMark state={label} />
-          </span>
-          {topic.lessons.length > 0 && <span className="text-meta text-faint">{t("map.lessons", { count: topic.lessons.length })}</span>}
+        {started && <span className="w-36 shrink-0"><SegmentedBar kcs={topic.kcs} /></span>}
+        <span className="flex items-center gap-2">
+          {started && <MasteryRing kcs={topic.kcs} />}
+          <MasteryMark state={label} />
         </span>
+        {topic.lessons.length > 0 && <span className="text-meta text-faint">{t("map.lessons", { count: topic.lessons.length })}</span>}
+        <span aria-hidden="true" className="text-faint"><Icon name={selected ? "collapse" : "expand"} size={16} /></span>
       </button>
-      {onStartLesson !== undefined && topic.lessons.map((lesson) => (
-        <span key={lesson.lesson_id} className="flex"><Button size="sm" tone="ghost" onClick={() => onStartLesson(lesson.lesson_id)}><Icon name="learn" size={16} />{t("map.open_lesson", { title: lesson.title })}</Button></span>
-      ))}
     </li>
   );
+}
+
+/** One syllabus section as a disclosure: its heading is the button, its topics the rows inside. */
+function Section({ section, open, onToggle, children }: { section: MapSection; open: boolean; onToggle: () => void; children: ReactNode }) {
+  const t = useT();
+  const id = `section-${section.node_id}`;
+  const secure = section.topics.filter((tp) => topicLabel(tp.kcs.map((k) => k.state)) === "mastered").length;
+  return (
+    <section aria-labelledby={id} data-section-id={section.node_id} data-section-open={open} className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <h2 className="text-heading text-ink">
+          <button type="button" id={id} aria-expanded={open} aria-controls={`${id}-topics`} onClick={onToggle}
+            className="jana-press -ms-2 flex min-h-11 items-center gap-2 rounded-control px-2 text-start hover:bg-wash">
+            <span aria-hidden="true" className="text-faint"><Icon name={open ? "collapse" : "expand"} /></span>
+            {section.title}
+          </button>
+        </h2>
+        <span className="text-meta text-muted">{t("map.section.secure", { count: secure, total: section.topics.length })}</span>
+      </div>
+      <div id={`${id}-topics`} className="jana-disclosure" data-open={open}>
+        <div className="overflow-hidden" inert={!open} aria-hidden={!open}>
+          <ul className="flex flex-col divide-y divide-line rounded-card border border-line bg-canvas">{children}</ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** The lesson to take next: the first lesson of the first topic, in syllabus order, that is not yet secure. */
+function nextLesson(sections: MapSection[]): { section: MapSection; topic: MapTopic; lesson: MapLesson } | null {
+  for (const section of sections) {
+    for (const topic of section.topics) {
+      const lesson = topic.lessons[0];
+      if (lesson !== undefined && topicLabel(topic.kcs.map((k) => k.state)) !== "mastered") return { section, topic, lesson };
+    }
+  }
+  return null;
 }
 
 function TopicSheet({ topic, actions, onClose, syllabuses }: { topic: MapTopic; actions: MapActions; onClose: () => void; syllabuses: MapSyllabus[] }) {
@@ -117,21 +150,25 @@ function TopicSheet({ topic, actions, onClose, syllabuses }: { topic: MapTopic; 
         {topic.lessons.length === 0 ? (
           <p className="text-ui text-muted">{t("sheet.no_lesson")}</p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {topic.lessons.map((lesson) => (
-              <li key={lesson.lesson_id} className="flex flex-col gap-2 rounded-control bg-panel p-3" data-lesson-id={lesson.lesson_id}>
-                <span className="text-ui text-ink">{t("sheet.lesson_meta", { title: lesson.title, minutes: lesson.estimated_minutes })}</span>
-                {actions.onStartLesson !== undefined && (
-                  <span>
-                    <Button tone="primary" size="sm" onClick={() => actions.onStartLesson?.(lesson.lesson_id)}>
-                      <Icon name="learn" size={16} />
-                      {t("sheet.start_lesson")}
-                    </Button>
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
+          <>
+            <h3 className="text-label text-faint">{t("sheet.lessons")}</h3>
+            <ul className="flex flex-col gap-2">
+              {topic.lessons.map((lesson) => (
+                <li key={lesson.lesson_id} data-lesson-id={lesson.lesson_id}>
+                  {actions.onStartLesson !== undefined ? (
+                    <button type="button" onClick={() => actions.onStartLesson?.(lesson.lesson_id)}
+                      className="jana-press flex min-h-11 w-full items-center gap-3 rounded-control bg-panel px-3 py-2 text-start text-ui text-ink hover:bg-wash">
+                      <span aria-hidden="true" className="shrink-0 text-muted"><Icon name="learn" size={16} /></span>
+                      <span className="flex-1">{t("sheet.lesson_meta", { title: lesson.title, minutes: lesson.estimated_minutes })}</span>
+                      <span aria-hidden="true" className="shrink-0 text-faint"><Icon name="go-next" size={16} /></span>
+                    </button>
+                  ) : (
+                    <span className="flex min-h-11 items-center rounded-control bg-panel px-3 py-2 text-ui text-ink">{t("sheet.lesson_meta", { title: lesson.title, minutes: lesson.estimated_minutes })}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         {(actions.onPractise !== undefined || actions.onAsk !== undefined) && (
           <div className="flex flex-wrap gap-2">
@@ -221,10 +258,10 @@ function Loading() {
     <div role="status" aria-busy="true" className="flex flex-col gap-4" data-map-loading>
       <span className="sr-only">{t("map.loading")}</span>
       <span className="block h-6 w-64"><Skeleton lines={1} /></span>
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-4">
+      <ul className="flex flex-col divide-y divide-line rounded-card border border-line bg-canvas">
         {[0, 1, 2, 3].map((i) => (
-          <li key={i} className="flex min-h-40 flex-col justify-center rounded-card border border-line bg-canvas p-5">
-            <Skeleton lines={3} />
+          <li key={i} className="flex min-h-16 flex-col justify-center px-4 py-3">
+            <Skeleton lines={1} />
           </li>
         ))}
       </ul>
@@ -298,6 +335,8 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
   const [open, setOpen] = useState<{ id: string; from: HTMLButtonElement | null } | null>(initialTopic === undefined ? null : { id: initialTopic, from: null });
   const [ownSyllabus, setOwnSyllabus] = useState<string | null>(view.syllabus ?? null);
   const [showing, setShowing] = useState<"tiles" | "map">(concept?.initial === true ? "map" : "tiles");
+  // A section the student opened or closed; any other follows the default (the current or next section open).
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const openConcept = concept?.onOpen;
   useEffect(() => {
     if (showing === "map") openConcept?.();
@@ -314,6 +353,11 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
   const topics = sections.flatMap((s) => s.topics);
   const topic = open === null ? null : topics.find((tp) => tp.node_id === open.id) ?? null;
   const secure = topics.filter((tp) => topicLabel(tp.kcs.map((k) => k.state)) === "mastered").length;
+  const continuing = inProgress !== null && onContinue !== undefined;
+  const next = continuing || actions.onStartLesson === undefined ? null : nextLesson(sections);
+  const current = (continuing ? sections.find((s) => s.topics.some((tp) => tp.lessons.some((l) => l.lesson_id === inProgress.lessonId))) : undefined)?.node_id
+    ?? next?.section.node_id ?? sections[0]?.node_id ?? null;
+  const sectionOpen = (section: MapSection) => toggled[section.node_id] ?? (section.node_id === current || section.topics.some((tp) => tp.node_id === open?.id));
   const close = () => {
     open?.from?.focus();
     setOpen(null);
@@ -337,14 +381,11 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
       <div className="flex flex-col gap-8">
         {syllabuses.length > 0 && <SyllabusSwitch syllabuses={syllabuses} value={syllabus?.scheme ?? null} onChange={chooseSyllabus} />}
         {sections.map((section) => (
-          <section key={section.node_id} aria-labelledby={`section-${section.node_id}`} data-section-id={section.node_id} className="flex flex-col gap-4">
-            <h2 id={`section-${section.node_id}`} className="text-heading text-ink">{section.title}</h2>
-            <ul className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-4">
-              {section.topics.map((tp) => (
-                <Tile key={tp.node_id} topic={tp} syllabus={syllabus} onStartLesson={actions.onStartLesson} selected={open?.id === tp.node_id} onOpen={(picked, from) => setOpen({ id: picked.node_id, from })} />
-              ))}
-            </ul>
-          </section>
+          <Section key={section.node_id} section={section} open={sectionOpen(section)} onToggle={() => setToggled((known) => ({ ...known, [section.node_id]: !sectionOpen(section) }))}>
+            {section.topics.map((tp) => (
+              <TopicRow key={tp.node_id} topic={tp} syllabus={syllabus} selected={open?.id === tp.node_id} onOpen={(picked, from) => setOpen({ id: picked.node_id, from })} />
+            ))}
+          </Section>
         ))}
       </div>
     );
@@ -383,6 +424,18 @@ export function SubjectMapContent({ view, subjects = [], onSubject, onSyllabus, 
                 </div>
                 <Button tone="primary" onClick={() => onContinue(inProgress.lessonId)}>
                   {t("map.continue")}
+                  <Icon name="go-next" size={16} />
+                </Button>
+              </section>
+            )}
+            {next !== null && showing === "tiles" && (
+              <section aria-labelledby="map-next-up" data-next-up={next.lesson.lesson_id} className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 rounded-card border border-line bg-canvas px-6 py-5">
+                <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1">
+                  <h2 id="map-next-up" className="text-label text-faint">{t("map.next_up")}</h2>
+                  <p className="text-ui text-muted">{t("map.next_up.meta", { topic: next.topic.title, minutes: next.lesson.estimated_minutes })}</p>
+                </div>
+                <Button tone="primary" onClick={() => actions.onStartLesson?.(next.lesson.lesson_id)}>
+                  {t("map.open_lesson", { title: next.lesson.title })}
                   <Icon name="go-next" size={16} />
                 </Button>
               </section>

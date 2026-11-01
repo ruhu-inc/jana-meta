@@ -161,20 +161,20 @@ export function PastPaperShelf({ view, subjects, actions, locked }: { view: Past
         {importing ? <ImportForm view={view} subjects={subjects} onCancel={() => setImporting(false)} onImport={(draft) => { actions.onImport(draft); setImporting(false); }} />
           : <div><Button disabled={locked || view.importing} onClick={() => setImporting(true)}><Icon name="study-area" size={16} />{t(view.importing ? "past_paper.importing" : "past_paper.import")}</Button></div>}
         {view.papers.length === 0 ? <EmptyState message={t("past_paper.empty")} /> : (
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3">
+          <ul className="flex flex-col divide-y divide-line rounded-card border border-line bg-canvas px-5">
             {view.papers.map((p) => (
-              <li key={p.paper_id} data-past-paper-id={p.paper_id} className="flex flex-col justify-between gap-3 rounded-card border border-line bg-canvas p-5">
-                <div className="flex flex-col gap-1">
-                  <p className="flex items-center gap-1.5 text-meta font-medium text-faint"><SubjectDot subject={p.subject} />{label(p.subject)} · {t("past_paper.kind")}</p>
-                  <h3 className="text-ui font-semibold text-ink"><PackInline text={p.title} /></h3>
-                  <p className="text-meta text-muted tabular-nums">{t("mock.paper_meta", { minutes: p.duration_minutes, marks: p.total_marks, questions: p.questions })}</p>
-                  <p className="text-meta text-muted">{t("past_paper.marking_summary", { checked: p.marking.checked + p.marking.key, judged: p.marking.judged })}</p>
-                  {!p.has_mark_scheme && <p className="text-meta text-faint">{t("past_paper.no_scheme")}</p>}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button disabled={locked} onClick={() => actions.onSit(p.paper_id)}>{t("past_paper.sit")}</Button>
+              <li key={p.paper_id} data-past-paper-id={p.paper_id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="flex items-center gap-1.5 text-ui font-medium text-ink"><SubjectDot subject={p.subject} /><PackInline text={p.title} /></span>
+                  <span className="text-meta text-muted tabular-nums">
+                    {[label(p.subject), t("mock.row_meta", { minutes: p.duration_minutes, questions: p.questions }), t("past_paper.marking_summary", { checked: p.marking.checked + p.marking.key, judged: p.marking.judged })].join(" · ")}
+                  </span>
+                  {!p.has_mark_scheme && <span className="text-meta text-faint">{t("past_paper.no_scheme")}</span>}
+                </span>
+                <span className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" disabled={locked} onClick={() => actions.onSit(p.paper_id)}>{t("past_paper.sit")}</Button>
                   <Button tone="ghost" size="sm" disabled={locked} onClick={() => actions.onRemove(p.paper_id)}>{t("past_paper.remove")}</Button>
-                </div>
+                </span>
               </li>
             ))}
           </ul>

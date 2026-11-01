@@ -244,10 +244,10 @@ describe("W8 Your tutor in Study", () => {
     expect(screen.queryByRole("button", { name: /Biology/ })).toBeNull();
   });
 
-  test("inside a material the thread is a third tab beside Generate and Chat, and the study ask box steps aside", () => {
+  test("inside a material the thread is a third tab beside Generate and Ask this material, and the study ask box steps aside", () => {
     const { container } = study({ source, followCurrent: true });
     const tabs = screen.getAllByRole("tab").map((t) => t.textContent);
-    expect(tabs).toEqual(["Generate", "Chat", "Your tutor"]);
+    expect(tabs).toEqual(["Generate", "Ask this material", "Your tutor"]);
     fireEvent.click(screen.getByRole("tab", { name: "Your tutor" }));
     expect(container.querySelector('[data-companion-place="tab"]')).not.toBeNull();
     expect(screen.getByRole("textbox", { name: "Message to your tutor" })).toBeDefined();

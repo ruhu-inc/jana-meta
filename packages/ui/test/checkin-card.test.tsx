@@ -93,7 +93,7 @@ function HomeWithCheckin({ companion }: { companion: CompanionController }) {
 const shown = (node: React.ReactElement) => render(<LocaleProvider locale="en">{node}</LocaleProvider>);
 
 describe("W8 check-in card", () => {
-  test("shown when a check-in is due, between the countdown and the Last time card, with its words as plain text", async () => {
+  test("shown when a check-in is due, as a row of Continue learning after the Last time sentence, with its words as plain text", async () => {
     const c = core();
     const { companion } = await unlocked(c);
     const { container } = shown(<HomeWithCheckin companion={companion} />);
@@ -104,8 +104,11 @@ describe("W8 check-in card", () => {
     expect(within(card).getByRole("heading", { name: "A check-in from your tutor" })).toBeDefined();
     expect(card.querySelector("[data-checkin-text]")?.textContent).toBe(TEXT);
     expect(card.querySelector("b")).toBeNull();
-    expect(container.querySelector("[data-exam-countdown]")?.nextElementSibling).toBe(card);
-    expect(card.nextElementSibling?.hasAttribute("data-last-time")).toBe(true);
+    const block = screen.getByRole("region", { name: "Continue learning" });
+    expect(block.contains(card)).toBe(true);
+    expect(card.previousElementSibling?.hasAttribute("data-last-time")).toBe(true);
+    // The countdown sits quiet at the foot of the block, after the check-in.
+    expect(card.compareDocumentPosition(block.querySelector("[data-exam-countdown]")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test("Answer in Study opens the thread through the check-in's route, with the check-in as the opener", async () => {
@@ -210,7 +213,7 @@ describe("W8 check-in notifications (JM-D24)", () => {
       c.fake.settings.get(PROFILES[0]!.profile_id)!.checkin_notifications = false;
       const note = notifier(permission);
       const { profiles } = await unlocked(c);
-      shown(<Settings profiles={profiles} notifier={note.value} />);
+      shown(<Settings profiles={profiles} notifier={note.value} section={{ id: "online_features", at: 1 }} />);
       const row = await waitFor(() => {
         const found = document.querySelector<HTMLElement>('[data-online-feature="tutor_memory_online"]');
         if (found === null || found.querySelector("[data-checkin-notifications]") === null) throw new Error("not yet");

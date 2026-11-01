@@ -11,21 +11,28 @@ import { PREFERENCE_SECTIONS, Settings } from "../src/settings/Settings.js";
 const BEN = PROFILES[1]!;
 afterEach(cleanup);
 
-async function unlocked(setUp: (core: FakeProfileCore) => void = () => undefined, chooseSource?: (kind: string) => Promise<string | null>) {
+/** Settings open at one section (Accessibility and language unless said otherwise), once that section is on the page. */
+async function unlocked(setUp: (core: FakeProfileCore) => void = () => undefined, chooseSource?: (kind: string) => Promise<string | null>, at = "accessibility_language") {
   const core = new FakeProfileCore();
   setUp(core);
   const profiles = new ProfileController(core.launch, new StoreHolder(), { fetch: core.fetch });
   await profiles.load();
   expect(await profiles.unlock(BEN.profile_id)).toBe(true);
-  const view = render(<LocaleProvider locale="en"><Settings profiles={profiles} {...(chooseSource !== undefined ? { chooseSource } : {})} /></LocaleProvider>);
-  await screen.findByRole("checkbox", { name: "Easy-read text" });
+  const view = render(<LocaleProvider locale="en"><Settings profiles={profiles} section={{ id: at, at: 1 }} {...(chooseSource !== undefined ? { chooseSource } : {})} /></LocaleProvider>);
+  await waitFor(() => expect(shown()).toBe(at));
+  if (at === "accessibility_language") await screen.findByRole("checkbox", { name: "Easy-read text" });
   return { core, profiles, view };
 }
 
+const nav = () => screen.getByRole("navigation", { name: "Settings sections" });
 /** The section list's names, in order. */
-const listed = () => within(screen.getByRole("navigation", { name: "Settings sections" })).getAllByRole("button").map((b) => b.textContent);
+const listed = () => within(nav()).getAllByRole("button").map((b) => b.textContent);
 /** The section headings on the page, in order. */
 const headings = () => [...document.querySelectorAll("[data-settings-section] > h2")].map((h) => h.textContent);
+/** The id of the one section whose body is on the page. */
+const shown = () => document.querySelector("[data-settings-section]")?.getAttribute("data-settings-section") ?? null;
+/** Selects a section in the side list. */
+const open = (name: string) => fireEvent.click(within(nav()).getByRole("button", { name }));
 
 /** TABLE UXS-46a's stage 2 rows, in order, by the names the page gives them. */
 const STAGE_2 = ["Online features", "Profiles", "Tutor models", "Content", "What leaves this device", "Accessibility and language", "Study", "Tutor", "Data export", "Licence", "Help", "About"];
@@ -39,13 +46,15 @@ describe("UXS-29", () => {
     const preference = core.log.find((r) => r.method === "PATCH" && r.path.endsWith("/settings"))!;
     expect(preference.headers["x-profile-token"]).toBe(token);
     expect(preference.headers["x-adult-token"]).toBeUndefined();
-    // Every section is open on the page: the online switches need no reveal, PIN or adult token.
-    await screen.findByRole("checkbox", { name: "Downloads" });
-    expect(screen.queryByLabelText("Adult PIN")).toBeNull();
-    expect(document.body.textContent).not.toMatch(/\bPIN\b/);
     // No answer-policy choice anywhere (D86); the only radios are the student's own Theme (DSN-05), text size (DSN-07)
     // and extra time in mock exams (ASM-24, LOC-24).
     expect(screen.queryAllByRole("radio").filter((r) => !["Theme", "Board and chat text size", "Extra time in mock exams"].includes(r.closest("[role='radiogroup']")?.getAttribute("aria-label") ?? ""))).toHaveLength(0);
+    // Online features opens from the list like any section: the online switches need no reveal, PIN or adult token.
+    open("Online features");
+    await screen.findByRole("checkbox", { name: "Downloads" });
+    expect(screen.queryByLabelText("Adult PIN")).toBeNull();
+    expect(document.body.textContent).not.toMatch(/\bPIN\b/);
+    expect(screen.queryAllByRole("radio")).toHaveLength(0);
     // Switching a feature on asks once and needs nothing more than the launch credential.
     fireEvent.click(screen.getByRole("checkbox", { name: "Downloads" }));
     expect(screen.queryByLabelText(/PIN|code/i)).toBeNull();
@@ -57,12 +66,15 @@ describe("UXS-29", () => {
     const { core } = await unlocked();
     const preferences = PREFERENCE_SECTIONS.flatMap((s) => s.keys);
     expect(preferences).not.toContain("solution_policy");
+    // Online features and Profiles are two sections of the page, each with its own heading and its own family group.
+    expect([...FAMILY_GROUPS]).toEqual(["online", "profiles"]);
+    open("Online features");
     await screen.findByRole("checkbox", { name: "Downloads" });
-    // Online features and Profiles are two sections of the page, each with its own heading.
-    const groups = [...document.querySelectorAll<HTMLElement>("[data-family-group]")];
-    expect(groups.map((g) => g.dataset.familyGroup)).toEqual([...FAMILY_GROUPS]);
-    expect(groups.map((g) => g.closest("[data-settings-section]")?.querySelector("h2")?.textContent)).toEqual(["Online features", "Profiles"]);
-    const deletes = within(groups[1]!).getAllByRole("button", { name: "Delete profile" }) as HTMLButtonElement[];
+    const groupsShown = () => [...document.querySelectorAll<HTMLElement>("[data-family-group]")].map((g) => [g.dataset.familyGroup, g.closest("[data-settings-section]")?.querySelector("h2")?.textContent]);
+    expect(groupsShown()).toEqual([["online", "Online features"]]);
+    open("Profiles");
+    expect(groupsShown()).toEqual([["profiles", "Profiles"]]);
+    const deletes = within(document.querySelector<HTMLElement>("[data-family-group='profiles']")!).getAllByRole("button", { name: "Delete profile" }) as HTMLButtonElement[];
     expect(deletes[0]!.disabled).toBe(true); // another profile's data stays scoped to its owner
     expect(deletes[1]!.disabled).toBe(false);
     fireEvent.click(deletes[1]!);
@@ -81,7 +93,7 @@ describe("UXS-29", () => {
 
 describe("JM-D15", () => {
   test("jm_d15_settings_add_a_profile_asks_for_an_adult_age", async () => {
-    const { core } = await unlocked();
+    const { core } = await unlocked(undefined, undefined, "profiles");
     const posted = () => core.log.filter((r) => r.method === "POST" && r.path === "/v1/profiles").map((r) => r.body as Record<string, unknown>);
     fireEvent.click(await screen.findByRole("button", { name: "Add a profile" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Name" }), { target: { value: "Dee" } });
@@ -113,38 +125,56 @@ describe("JM-D15", () => {
 describe("UXS-46", () => {
   test.each(["S2", "S3"] as const)("installed voice controls are reachable once with a %s core", async (stage) => {
     const { profiles, view } = await unlocked((core) => { core.sectionsStage = stage; });
-    view.rerender(<LocaleProvider locale="en"><Settings profiles={profiles} voiceSettings={<p>Installed voice choices</p>} /></LocaleProvider>);
-    await screen.findByText("Installed voice choices");
-    await waitFor(() => expect(screen.getAllByText("Installed voice choices")).toHaveLength(1));
+    view.rerender(<LocaleProvider locale="en"><Settings profiles={profiles} section={{ id: "accessibility_language", at: 1 }} voiceSettings={<p>Installed voice choices</p>} /></LocaleProvider>);
+    if (stage === "S2") {
+      // A stage 2 core has no Voice section: the voice choices sit in Accessibility and language.
+      await screen.findByText("Installed voice choices");
+      await waitFor(() => expect(listed()).not.toContain("Voice"));
+    } else {
+      // A stage 3 core has one: the voice choices sit there, and nowhere else.
+      await waitFor(() => expect(listed()).toContain("Voice"));
+      expect(screen.queryByText("Installed voice choices")).toBeNull();
+      open("Voice");
+      await screen.findByText("Installed voice choices");
+    }
+    expect(screen.getAllByText("Installed voice choices")).toHaveLength(1);
     expect(screen.getByText("Installed voice choices").closest("[data-settings-section]")?.getAttribute("data-settings-section"))
       .toBe(stage === "S2" ? "accessibility_language" : "voice");
   });
 
   test("test_uxs46_settings_page_sections", async () => {
     const { core } = await unlocked();
-    // Exactly the sections the core names for this build's stage, in its order, each on the page with its heading.
+    // Exactly the sections the core names for this build's stage, in its order, in the list; the selected one's body
+    // on the page with its heading.
     await waitFor(() => expect(core.log.some((r) => r.path === "/v1/settings/sections")).toBe(true));
     expect(listed()).toEqual(STAGE_2);
-    expect(headings()).toEqual(STAGE_2);
-    const nav = screen.getByRole("navigation", { name: "Settings sections" });
-    expect(within(nav).getByRole("button", { name: "Online features" }).getAttribute("aria-current")).toBe("true");
-    fireEvent.click(within(nav).getByRole("button", { name: "Licence" }));
-    expect(within(nav).getByRole("button", { name: "Licence" }).getAttribute("aria-current")).toBe("true");
+    expect(headings()).toEqual(["Accessibility and language"]);
+    expect(within(nav()).getByRole("button", { name: "Accessibility and language" }).getAttribute("aria-current")).toBe("true");
+    open("Licence");
+    expect(within(nav()).getByRole("button", { name: "Licence" }).getAttribute("aria-current")).toBe("true");
+    expect(within(nav()).getByRole("button", { name: "Accessibility and language" }).getAttribute("aria-current")).toBeNull();
+    expect(headings()).toEqual(["Licence"]);
     expect(document.activeElement).toBe(screen.getByRole("heading", { level: 2, name: "Licence" }));
     // Licence: no school licence on a family computer, and nothing to type (PLT-19).
     await screen.findByText(/No school licence is installed/);
     expect(document.querySelector("[data-licence='none']")).not.toBeNull();
     // About: the version from the core and the licences of what the app ships, with the brand (DSN-25), and updates.
+    open("About");
     await screen.findByText("0.1.0-fake");
     expect(document.querySelector("[data-about] [data-brand]")).not.toBeNull();
     expect(within(document.querySelector<HTMLElement>("[data-settings-section='about']")!).getByRole("button", { name: "Choose an update from USB or a file" })).toBeTruthy();
     // Tutor models holds the model manager; Content the packs; Tutor the tutor's name; Data export the archive.
+    open("Tutor models");
     expect(document.querySelector("[data-settings-section='tutor_models'] [data-model-manager]")).not.toBeNull();
+    open("Content");
     expect(within(document.querySelector<HTMLElement>("[data-settings-section='content']")!).getByRole("button", { name: "Install content from USB or a file" })).toBeTruthy();
+    open("Tutor");
     expect(document.querySelector("[data-settings-section='tutor']")!.textContent).toContain("Your tutor is called Jana.");
+    open("Data export");
     expect(document.querySelector("[data-settings-section='data_export'] [data-profile-archive]")).not.toBeNull();
     // Board and chat text size writes the student's text scale (DSN-07).
-    const size = screen.getByRole("radiogroup", { name: "Board and chat text size" });
+    open("Accessibility and language");
+    const size = await screen.findByRole("radiogroup", { name: "Board and chat text size" });
     fireEvent.click(within(size).getByRole("radio", { name: "Largest" }));
     await waitFor(() => expect(core.settings.get(BEN.profile_id)!.text_scale).toBe(1.5));
     // The character-key shortcuts switch (LOC-12) and the keyboard help it describes.
@@ -164,7 +194,8 @@ describe("UXS-46", () => {
     // app has no body for says so.
     await unlocked((core) => { core.sectionsStage = "S3"; });
     await waitFor(() => expect(listed()).toEqual([...STAGE_2, "Voice"]));
-    expect(headings()).toEqual([...STAGE_2, "Voice"]);
+    open("Voice");
+    expect(headings()).toEqual(["Voice"]);
     expect(document.querySelector("[data-settings-section='voice']")!.textContent).toContain("isn't in this version of the app yet");
     cleanup();
     // A core from before the route: the stage 2 sections, in the table's order.
@@ -176,7 +207,7 @@ describe("UXS-46", () => {
   test("test_uxs46_data_export_saves_the_open_profiles_archive", async () => {
     // Data export (DAT-10): the archive needs a passphrase of 12 or more characters and a folder; it is the open
     // profile's, conversations and photos stay out, and the passphrase leaves the field once the core accepts it.
-    const { core } = await unlocked(() => undefined, async () => "/synthetic/folder");
+    const { core } = await unlocked(() => undefined, async () => "/synthetic/folder", "data_export");
     const archive = document.querySelector<HTMLElement>("[data-profile-archive]")!;
     const save = within(archive).getByRole("button", { name: "Save a profile archive" }) as HTMLButtonElement;
     const field = within(archive).getByLabelText("Passphrase for the archive") as HTMLInputElement;
@@ -189,14 +220,17 @@ describe("UXS-46", () => {
     await within(archive).findByText(/being saved in the folder you chose/);
     expect(core.exports.at(-1)).toEqual({ kind: "profile_archive", include_study_sources: false, profile_ids: [BEN.profile_id], passphrase: "synthetic passphrase", destination: { kind: "file", path: "/synthetic/folder" } });
     expect(field.value).toBe("");
-    // Help leads to the report for support, which now sits in Data export.
+    // Help leads to the report for support, which now sits in Data export: that section opens, with focus on its heading.
+    open("Help");
+    expect(shown()).toBe("help");
     fireEvent.click(screen.getByRole("button", { name: "Save a report for support (in Data export)" }));
+    expect(shown()).toBe("data_export");
     expect(document.activeElement).toBe(screen.getByRole("heading", { level: 2, name: "Data export" }));
     expect(within(document.querySelector<HTMLElement>("[data-settings-section='data_export']")!).getByRole("button", { name: "Save a report for support" })).toBeTruthy();
   });
 
   test("browser export explains the missing desktop picker", async () => {
-    const { core } = await unlocked();
+    const { core } = await unlocked(undefined, undefined, "data_export");
     const archive = document.querySelector<HTMLElement>("[data-profile-archive]")!;
     expect(within(archive).getByText(/Open the desktop app to save a profile archive/)).toBeTruthy();
     fireEvent.change(within(archive).getByLabelText("Passphrase for the archive"), { target: { value: "synthetic passphrase" } });
@@ -215,7 +249,7 @@ describe("UXS-46", () => {
     const profiles = new ProfileController(core.launch, new StoreHolder(), { fetch: core.fetch });
     await profiles.load();
     expect(await profiles.unlock(BEN.profile_id)).toBe(true);
-    render(<LocaleProvider locale="en"><Settings profiles={profiles} /></LocaleProvider>);
+    render(<LocaleProvider locale="en"><Settings profiles={profiles} section={{ id: "help", at: 1 }} /></LocaleProvider>);
     const help = await waitFor(() => {
       const found = document.querySelector<HTMLElement>("[data-offline-help]");
       expect(found).not.toBeNull();
@@ -250,14 +284,14 @@ describe("UXS-46", () => {
     const profiles = new ProfileController(core.launch, new StoreHolder(), { fetch: core.fetch });
     await profiles.load();
     expect(await profiles.unlock(BEN.profile_id)).toBe(true);
-    render(<LocaleProvider locale="en"><Settings profiles={profiles} /></LocaleProvider>);
+    render(<LocaleProvider locale="en"><Settings profiles={profiles} section={{ id: "help", at: 1 }} /></LocaleProvider>);
     await screen.findByText("Help articles aren't on this computer yet. Saving a report for support still works.");
     expect(screen.getByRole("heading", { level: 3, name: "Your problem reports" })).toBeTruthy();
   });
 
   test("test_obs17_crash_report_review", async () => {
     const report = { crash_id: "crh_1", process: "core", kind: "exception", version: "0.1.0", error_type: "ValueError", stack: [], log_tail: ["a line"], detail: {}, hardware_class: "mid", day: 20376 };
-    const { core, view } = await unlocked();
+    const { core, view } = await unlocked(undefined, undefined, "help");
     // While crash reports are off nothing is listed, so nothing asks (PLT-18).
     expect(document.querySelector("[data-crash-review]")).toBeNull();
     view.unmount();
@@ -266,7 +300,7 @@ describe("UXS-46", () => {
     const profiles = new ProfileController(core.launch, new StoreHolder(), { fetch: core.fetch });
     await profiles.load();
     expect(await profiles.unlock(BEN.profile_id)).toBe(true);
-    render(<LocaleProvider locale="en"><Settings profiles={profiles} /></LocaleProvider>);
+    render(<LocaleProvider locale="en"><Settings profiles={profiles} section={{ id: "help", at: 1 }} /></LocaleProvider>);
     const row = await waitFor(() => {
       const found = document.querySelector<HTMLElement>("[data-crash-id='crh_1']");
       expect(found).not.toBeNull();
@@ -287,11 +321,57 @@ describe("CUR-08", () => {
     await unlocked((core) => core.packs.push(
       { pack_id: "pack.phy.o", subject: "physics", level: "O", version: "1.0.0", signature_ok: true, size_bytes: 1000 },
       { pack_id: "pack.chm.o", subject: "chemistry", level: "O", version: "1.0.0", signature_ok: false, size_bytes: 1000 },
-    ));
+    ), undefined, "content");
     // Settings → Content names the pack that failed its check, and only that one.
     const damaged = await screen.findByText(/The content pack pack\.chm\.o is damaged or was changed/);
     expect(damaged.closest("[data-settings-section]")?.getAttribute("data-settings-section")).toBe("content");
     expect(screen.queryByText(/pack\.phy\.o/)).toBeNull();
-    expect(document.querySelectorAll("[data-family-group]")).toHaveLength(2);
+  });
+});
+
+describe("one section at a time", () => {
+  test("only the selected section's body is shown, and the list says which", async () => {
+    await unlocked();
+    expect(document.querySelectorAll("[data-settings-section]")).toHaveLength(1);
+    expect(headings()).toEqual(["Accessibility and language"]);
+    expect(within(nav()).getByRole("button", { name: "Accessibility and language" }).getAttribute("aria-current")).toBe("true");
+    expect(screen.queryByRole("heading", { level: 2, name: "Help" })).toBeNull();
+    open("Help");
+    expect(document.querySelectorAll("[data-settings-section]")).toHaveLength(1);
+    expect(headings()).toEqual(["Help"]);
+    expect(screen.queryByRole("checkbox", { name: "Easy-read text" })).toBeNull();
+    expect(within(nav()).getByRole("button", { name: "Help" }).getAttribute("aria-current")).toBe("true");
+    expect(within(nav()).getByRole("button", { name: "Accessibility and language" }).getAttribute("aria-current")).toBeNull();
+    // The list is one navigation landmark, and every section stays reachable from it.
+    expect(listed()).toEqual(STAGE_2);
+  });
+
+  test("opening at a section lands on it, and a later request for a section opens that one", async () => {
+    const { profiles, view } = await unlocked(undefined, undefined, "licence");
+    expect(headings()).toEqual(["Licence"]);
+    expect(within(nav()).getByRole("button", { name: "Licence" }).getAttribute("aria-current")).toBe("true");
+    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 2, name: "Licence" }));
+    // The student menu asks for another section while the page is open.
+    view.rerender(<LocaleProvider locale="en"><Settings profiles={profiles} section={{ id: "about", at: 2 }} /></LocaleProvider>);
+    await waitFor(() => expect(shown()).toBe("about"));
+    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 2, name: "About" }));
+    // Selecting a different section by hand, then the same request again, lands on it again.
+    open("Help");
+    expect(shown()).toBe("help");
+    view.rerender(<LocaleProvider locale="en"><Settings profiles={profiles} section={{ id: "about", at: 3 }} /></LocaleProvider>);
+    await waitFor(() => expect(shown()).toBe("about"));
+  });
+
+  test("the compact selector offers every section and follows the side list", async () => {
+    await unlocked();
+    const select = within(nav()).getByRole("combobox", { name: "Settings sections" }) as HTMLSelectElement;
+    expect([...select.options].map((o) => o.textContent)).toEqual(STAGE_2);
+    expect(select.value).toBe("accessibility_language");
+    fireEvent.change(select, { target: { value: "data_export" } });
+    expect(shown()).toBe("data_export");
+    expect(headings()).toEqual(["Data export"]);
+    expect(within(nav()).getByRole("button", { name: "Data export" }).getAttribute("aria-current")).toBe("true");
+    open("Tutor");
+    expect(select.value).toBe("tutor");
   });
 });

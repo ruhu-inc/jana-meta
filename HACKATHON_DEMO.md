@@ -314,10 +314,10 @@ The local runner is `python -m jana_tools.hackathon_dev --port 5199 --data-dir /
 | Time | Action and narration |
 | --- | --- |
 | 0:00–0:25 | Study → Materials → notes.pdf. Show page 14, then page 15's diagrams. “These are my actual lecture notes. Jana keeps the original equations and diagrams available.” |
-| 0:25–1:15 | Back to study → Chat → the saved ridge/lasso question. Show the L2 and L1 equations. “Ridge favours small coefficients; lasso encourages sparse solutions. The explanation connects these penalties to Gaussian and Laplace priors.” |
+| 0:25–1:15 | Back to study → Ask this material → History → the saved ridge/lasso question. Show the L2 and L1 equations. “Ridge favours small coefficients; lasso encourages sparse solutions. The explanation connects these penalties to Gaussian and Laplace priors.” |
 | 1:15–1:45 | Open a page citation, compare it with the original PDF, then Back to study aid. “I can inspect the passage behind the explanation.” Page numbers are PDF page numbers, not printed page numbers. |
-| 1:45–2:35 | Generate → My Sets → the **three-question** quiz. Choose lasso's L1 penalty for ridge once; Check answer gives Incorrect without immediately revealing the key. Correct it, then answer the sparsity and prior questions. |
-| 2:35–3:00 | Submit quiz and show the three Correct verdicts and cited explanations. “I can turn my own technical material into practice and trace the answers back to it.” These Study results do not update syllabus mastery. |
+| 1:45–2:35 | Generate → My Sets → the **three-question** quiz (one question at a time; Need help? holds the hints). Choose lasso's L1 penalty for ridge once; Check answer gives Incorrect without immediately revealing the key. Correct it, then Next question through the sparsity and prior questions. |
+| 2:35–3:00 | Finish quiz and show the results screen: 3 of 3 correct, then the cited explanations. “I can turn my own technical material into practice and trace the answers back to it.” These Study results do not update syllabus mastery. |
 
 Question used for the saved explanation:
 

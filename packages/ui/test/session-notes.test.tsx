@@ -2,9 +2,33 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, expect, test, vi } from "vitest";
 import { EMPTY_SESSION_NOTES, type SessionNotesView } from "@jana/client-core";
 import { NOTE } from "../../client-core/test/notescore.js";
-import { SessionNotesContent } from "../src/learn/SessionNotes.js";
+import { NotesPlace, SessionNotesContent } from "../src/learn/SessionNotes.js";
 import { LessonLinkProvider } from "../src/learn/link.js";
 afterEach(cleanup);
+test("the editor opens only from New note, under one header with one action, and comes back to the lists", () => {
+  const done = vi.fn();
+  render(<NotesPlace header={(end) => <header><h1>Notes and saved</h1>{end}</header>} editor={(finish) => { done.mockImplementation(finish); return <p>Editor</p>; }}><p>Lists</p></NotesPlace>);
+  expect(screen.getByText("Lists")).toBeTruthy(); expect(screen.queryByText("Editor")).toBeNull();
+  expect(screen.getAllByRole("banner")).toHaveLength(1);
+  expect(screen.getAllByRole("button")).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "New note" }));
+  expect(screen.getByText("Editor")).toBeTruthy(); expect(screen.queryByText("Lists")).toBeNull();
+  expect(screen.queryByRole("button", { name: "New note" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Back to notes" }));
+  expect(screen.getByText("Lists")).toBeTruthy(); expect(screen.queryByText("Editor")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "New note" }));
+  act(() => done()); // the editor's own way back: a saved or abandoned note
+  expect(screen.getByText("Lists")).toBeTruthy(); expect(screen.queryByText("Editor")).toBeNull();
+});
+test("the learner's own notes follow the session notes list and leave an open note alone", () => {
+  const actions = noteActions(), props = { actions, subject: () => "Physics", kc: () => "Speed", below: <p>Own notes</p> };
+  const view = { ...EMPTY_SESSION_NOTES, status: "ready" as const, notes: [NOTE] };
+  const shown = render(<SessionNotesContent {...props} view={view} />);
+  expect(screen.getByText("Own notes")).toBeTruthy();
+  shown.rerender(<SessionNotesContent {...props} view={{ ...view, opened: NOTE }} />);
+  expect(screen.queryByText("Own notes")).toBeNull();
+  expect(screen.getByRole("button", { name: "Back to session notes" })).toBeTruthy();
+});
 function noteActions() {
   return { onSearch: vi.fn(), onOpen: vi.fn(), onClose: vi.fn(), onRetry: vi.fn(), onPrivate: vi.fn(), onDelete: vi.fn(), onReference: vi.fn(async () => true), onExport: vi.fn() };
 }

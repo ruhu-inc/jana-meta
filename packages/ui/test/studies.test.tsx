@@ -20,8 +20,9 @@ async function family(adult = false) {
   await profiles.load();
   expect(await profiles.unlock(BEN.profile_id)).toBe(true);
   const chosen: string[] = [];
-  render(<LocaleProvider locale="en"><Settings profiles={profiles} chooseSource={async (kind) => { chosen.push(kind); return "/synthetic/study-folder"; }} /></LocaleProvider>);
-  await screen.findByRole("checkbox", { name: "Easy-read text" });
+  // Settings open at Online features, where the research consents sit below the switches.
+  render(<LocaleProvider locale="en"><Settings profiles={profiles} section={{ id: "online_features", at: 1 }} chooseSource={async (kind) => { chosen.push(kind); return "/synthetic/study-folder"; }} /></LocaleProvider>);
+  await screen.findByRole("checkbox", { name: "Downloads" });
   const study = await waitFor(() => {
     const found = document.querySelector<HTMLElement>("[data-study-scope='research_use']");
     expect(found).not.toBeNull();
@@ -110,6 +111,8 @@ describe("PRV-06", () => {
 describe("OBS-20", () => {
   test("test_obs20_report_schema_in_what_leaves_this_device", async () => {
     await family();
+    // The schema sits in "What leaves this device", opened from the section list.
+    fireEvent.click(within(screen.getByRole("navigation", { name: "Settings sections" })).getByRole("button", { name: "What leaves this device" }));
     fireEvent.click(screen.getByRole("button", { name: "What a usage report holds" }));
     const schema = await waitFor(() => {
       const found = document.querySelector<HTMLElement>("[data-report-schema]");

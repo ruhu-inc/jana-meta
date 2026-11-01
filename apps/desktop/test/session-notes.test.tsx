@@ -22,7 +22,7 @@ test("a note opens the curriculum's actual nested topic with its existing learni
   fireEvent.click(await screen.findByRole("button", { name: `Review ${topic.title} in Learn` }));
   const sheet = await screen.findByRole("dialog", { name: topic.title });
   expect(within(sheet).getByRole("button", { name: "Practise this" })).toBeTruthy();
-  expect(within(sheet).getByRole("button", { name: /Start the lesson/ })).toBeTruthy();
+  expect(within(sheet).getByRole("button", { name: /about \d+ min/ })).toBeTruthy();
 });
 test("a note reference opens the accepted turn in history with no model, and another profile sees no note", async () => {
   const fake = notesCore();

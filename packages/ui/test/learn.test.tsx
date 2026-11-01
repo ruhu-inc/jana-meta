@@ -170,7 +170,8 @@ describe("UXS-22", () => {
     }
     expect(within(sheet).queryByRole("button", { name: "Practise this" })).toBeNull();
     expect(within(sheet).queryByRole("button", { name: "Ask the tutor about this" })).toBeNull();
-    fireEvent.click(within(sheet).getByRole("button", { name: /Start the lesson/ }));
+    // Each lesson is one row that starts it, named by the lesson.
+    fireEvent.click(within(sheet).getByRole("button", { name: `${TOPIC.lessons[0]!.title} · about ${TOPIC.lessons[0]!.estimated_minutes} min` }));
     expect(started).toEqual([TOPIC.lessons[0]!.lesson_id]);
     const nearly = rows.find((r) => r.getAttribute("data-state") === "ready_to_check")!;
     fireEvent.click(within(nearly as HTMLElement).getByRole("button", { name: "Check my mastery" }));
@@ -179,6 +180,91 @@ describe("UXS-22", () => {
     fireEvent.keyDown(sheet, { key: "Escape" });
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.activeElement).toBe(tile());
+  });
+
+  test("a topic is one clickable row and the lesson choices live inside the opened topic", () => {
+    const map = payload<{ map: Map }>("subject-map.canonical").map;
+    const started: string[] = [];
+    render(wrap(<SubjectMapContent view={{ status: "ready", subjectId: map.subject_id, map }} actions={{ onStartLesson: (id) => started.push(id) }} />));
+    // One button per topic: the row itself, named by the topic, and no "Open lesson" button beside it.
+    for (const row of document.querySelectorAll("[data-topic-id]")) {
+      expect(row.closest("li")!.querySelectorAll("button")).toHaveLength(1);
+      expect(row.getAttribute("aria-expanded")).toBe("false");
+    }
+    const withLessons = map.sections[0]!.topics.find((tp) => tp.lessons.length > 0)!;
+    const sections = [...document.querySelectorAll("[data-section-id]")];
+    for (const section of sections) expect(within(section as HTMLElement).queryByRole("button", { name: /^Open lesson:/ })).toBeNull();
+    // Opening the row shows its lessons as rows inside the topic, one click away.
+    const row = document.querySelector<HTMLButtonElement>(`[data-topic-id="${withLessons.node_id}"]`)!;
+    fireEvent.click(row);
+    expect(row.getAttribute("aria-expanded")).toBe("true");
+    const sheet = screen.getByRole("dialog", { name: withLessons.title });
+    expect(within(sheet).getByRole("heading", { name: "Lessons" })).toBeTruthy();
+    const lessons = within(sheet).getAllByRole("button", { name: /about \d+ min$/ });
+    expect(lessons).toHaveLength(withLessons.lessons.length);
+    fireEvent.click(lessons[0]!);
+    expect(started).toEqual([withLessons.lessons[0]!.lesson_id]);
+  });
+
+  test("the next lesson is offered once at the top, and not while a lesson is in progress", () => {
+    const map = payload<{ map: Map }>("subject-map.canonical").map;
+    const started: string[] = [];
+    const { unmount } = render(wrap(<SubjectMapContent view={{ status: "ready", subjectId: map.subject_id, map }} actions={{ onStartLesson: (id) => started.push(id) }} />));
+    // The first lesson of the first topic that is not yet secure: the percentages lesson in Number.
+    const next = map.sections.flatMap((s) => s.topics).find((tp) => tp.lessons.length > 0 && !tp.kcs.every((k) => k.state === "mastered"))!;
+    const card = document.querySelector("[data-next-up]")!;
+    expect(card.getAttribute("data-next-up")).toBe(next.lessons[0]!.lesson_id);
+    expect(within(card as HTMLElement).getByRole("heading", { name: "Next up" })).toBeTruthy();
+    expect(card.textContent).toContain(`${next.title} · about ${next.lessons[0]!.estimated_minutes} min`);
+    expect(screen.getAllByRole("button", { name: /^Open lesson:/ })).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: `Open lesson: ${next.lessons[0]!.title}` }));
+    expect(started).toEqual([next.lessons[0]!.lesson_id]);
+    unmount();
+
+    // With a lesson part way through, "Continue" stands alone; without a way to start a lesson, nothing is offered.
+    const inProgress = { lessonId: next.lessons[0]!.lesson_id, title: next.lessons[0]!.title, part: 2, parts: 5 };
+    const second = render(wrap(<SubjectMapContent view={{ status: "ready", subjectId: map.subject_id, map }} actions={{ onStartLesson: () => undefined }} inProgress={inProgress} onContinue={() => undefined} />));
+    expect(document.querySelector("[data-next-up]")).toBeNull();
+    expect(document.querySelector("[data-in-progress]")).not.toBeNull();
+    second.unmount();
+    render(wrap(<SubjectMapContent view={{ status: "ready", subjectId: map.subject_id, map }} />));
+    expect(document.querySelector("[data-next-up]")).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Open lesson:/ })).toBeNull();
+  });
+
+  test("syllabus sections collapse: the section with the next lesson is open and the heading toggles the others", () => {
+    const map = payload<{ map: Map }>("subject-map.canonical").map;
+    const [first, second] = map.sections as [Map["sections"][number], Map["sections"][number]];
+    render(wrap(<SubjectMapContent view={{ status: "ready", subjectId: map.subject_id, map }} actions={{ onStartLesson: () => undefined }} />));
+    const heading = (title: string) => within(screen.getByRole("heading", { level: 2, name: title })).getByRole("button");
+    const section = (id: string) => document.querySelector(`[data-section-id="${id}"]`)!;
+    // The next lesson is in the first section: open; the second is closed, its rows out of reach until it opens.
+    expect(heading(first.title).getAttribute("aria-expanded")).toBe("true");
+    expect(heading(second.title).getAttribute("aria-expanded")).toBe("false");
+    expect(section(second.node_id).querySelector("[inert]")).not.toBeNull();
+    expect(section(first.node_id).querySelector("[inert]")).toBeNull();
+    expect(section(second.node_id).querySelectorAll("[data-topic-id]")).toHaveLength(second.topics.length);
+    expect(section(first.node_id).textContent).toContain(`of ${first.topics.length} topics secure`);
+
+    fireEvent.click(heading(second.title));
+    expect(heading(second.title).getAttribute("aria-expanded")).toBe("true");
+    expect(section(second.node_id).querySelector("[inert]")).toBeNull();
+    expect(heading(second.title).getAttribute("aria-controls")).toBe(section(second.node_id).querySelector(".jana-disclosure")!.id);
+    fireEvent.click(heading(first.title));
+    expect(heading(first.title).getAttribute("aria-expanded")).toBe("false");
+    expect(section(first.node_id).querySelector("[inert]")).not.toBeNull();
+  });
+
+  test("a deep link to a topic opens its section as well as its sheet", () => {
+    const map = payload<{ map: Map }>("subject-map.canonical").map;
+    const linked = map.sections[1]!.topics[0]!;
+    render(wrap(<SubjectMapContent view={{ status: "ready", subjectId: map.subject_id, map }} actions={{ onStartLesson: () => undefined }} initialTopic={linked.node_id} />));
+    expect(screen.getByRole("dialog", { name: linked.title })).toBeTruthy();
+    for (const s of map.sections) {
+      const button = within(screen.getByRole("heading", { level: 2, name: s.title })).getByRole("button");
+      expect(button.getAttribute("aria-expanded"), s.title).toBe("true");
+    }
+    expect(document.querySelector(`[data-topic-id="${linked.node_id}"]`)!.getAttribute("aria-expanded")).toBe("true");
   });
 
   test("map_empty_and_failed_states", async () => {

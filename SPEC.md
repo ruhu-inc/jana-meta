@@ -2602,7 +2602,19 @@ at 04:12, two cards due, the tutor's note, and **Ask your tutor about this**.
 
 ## 22. Simpler by default: one online choice, one Study view, four Settings groups (W11)
 
-Status: **specified 2026-11-01, reviewed the same day** (§22.12 maps the review's findings). Three simplifications
+Status: **specified 2026-11-01, reviewed the same day** (§22.12 maps the review's findings). **Built in part the same day** from a live crowding review of every screen (commit on `main` after
+`4a5860fa`): Study's Chat tab is **Ask this material** with its history behind one History button and a one-line ask
+box that grows; a quiz is its own practice screen (one question, **Check answer**, **Need help?**, a Questions menu,
+**Finish quiz** at the last question, the results as their own view with the grading provenance once); coaching made
+for a quiz question stays with that question and never appears as a "previous question"; a saved set reopens at its
+question or its results (a lock race in the Study controller, fixed); the library header keeps Add material with
+Activity and All study sets behind **More**, and Explore takes one topic before **Research with sources** or **Draft a
+concept map**; Home leads with **Continue learning**; Lessons are one row per topic with collapsible sections;
+Progress keeps the title and one overflow menu, leads with recent activity, and its map opens on Mastery with
+**Layers** on demand (JM-D51 as recommended); Practice keeps **Check answer** and **Need help?** with earlier attempts
+collapsed; Notes and saved has one header and opens its editor from **New note**; Mock exams ask for a subject first
+and list compact rows; Settings shows one section at a time with a compact selector at narrow widths. Not built: the
+one online choice at sign-up (§22.3) and the four Settings groups (§22.6), which wait on the decisions below. Three simplifications
 of what a learner meets first, and one merger explicitly deferred (§22.11). No model call, no new data class, no new
 learner migration, no new consent: every consent, switch and notice that exists today is recorded exactly as today,
 only asked in fewer places. Decisions in §22.2 are **proposed, owner to confirm**. Paths are relative to this

@@ -1,7 +1,9 @@
 // Mock exams (UXS-25, UXS-26, ASM-15 to ASM-20, AGT-24, LOC-24; direction A "Studio"). The Mock exam place (the
-// sidebar's place, Ctrl+4) offers the papers on this computer by subject, each with its kind, time, marks, questions and
-// calculator note (and the time with the student's extra time), and lists the student's own mocks. A chosen paper waits
-// `ready` with the ASM-16 notice and "Start". The sitting: the 56 px header names the paper and carries the clock (the
+// sidebar's place, Ctrl+4) lists the student's own mocks, then the papers on this computer a subject at a time: the
+// subject choice (preselected and not shown when only one subject has papers), then that subject's papers as compact
+// rows by paper kind, each with its time, question count and calculator note (and the time with the student's extra
+// time) and "Start", or "Continue" on the paper of the open sitting. A chosen paper waits `ready` with the ASM-16
+// notice, its marks and "Start". The sitting: the 56 px header names the paper and carries the clock (the
 // core's active time, counting down while it runs, shown with "Extra time: 25%" when the profile has it), "Pause" while
 // pauses remain and "Submit paper"; beside the question the navigator marks each question answered, flagged for review
 // or not seen yet, each with its icon and word; the question card has the answer, "Flag for review" and "Clear answer"
@@ -19,14 +21,14 @@
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type DragEvent, type ClipboardEvent as ReactClipboardEvent } from "react";
 import {
   CLIENT_KEYS, LOCKED_STATES, examLock, mockBandShown, pauseBudget, remainingAt, type ExamDateController, type ExamLock, type MockController, type MockExam, type MockPaper,
-  type HelpKind, type MockResult, type MockView, type PartAnswer, type PastPaperController, type PastPaperSummary, type PracticeItem,
+  type HelpKind, type MockResult, type MockSitting, type MockView, type PartAnswer, type PastPaperController, type PastPaperSummary, type PracticeItem,
 } from "@jana/client-core";
 import { HelpChips } from "../chips/NextStepChips.js";
 import type { api_commands } from "@jana/contracts-ts";
 import { ScreenHeader } from "../frame/Frame.js";
 import { Icon, type IconName } from "../icons.js";
 import { useT } from "../i18n.js";
-import { IconButton, Button, Callout, Chip, ConfirmDialog, EmptyState, ErrorState, FIELD_LOOK, Loader, ProgressBar, Skeleton, SubjectDot } from "../primitives/index.js";
+import { IconButton, Button, Callout, Chip, ConfirmDialog, EmptyState, ErrorState, FIELD_LOOK, Loader, ProgressBar, SegmentedControl, Skeleton, SubjectDot } from "../primitives/index.js";
 import { ItemVisual, PartInput, answerOf, type Draft } from "../learn/items.js";
 import { PackInline, PackText } from "../learn/PackText.js";
 import { ExamDatesPanel, MarkingLabel, PastPaperShelf, type PastPaperSubjectOption } from "./PastPapers.js";
@@ -123,33 +125,48 @@ export interface MockSubject {
   label: string;
 }
 
-function PaperCard({ paper, extra, onChoose, busy }: { paper: MockPaper; extra: number; onChoose: () => void; busy: boolean }) {
+/** One paper of the catalogue as a compact row: its title, then its time, question count and calculator note (and the
+ * time with the student's extra time) as quiet meta text, then one action: "Start", or "Continue" when the open sitting
+ * is on this paper. Marks and the full notice wait on the `ready` screen, one click on. */
+function PaperRow({ paper, extra, open, busy, onChoose, onOpen }: {
+  paper: MockPaper; extra: number; open: MockSitting | null; busy: boolean; onChoose: () => void; onOpen: (examId: string) => void;
+}) {
   const t = useT();
+  const meta = [
+    t("mock.row_meta", { minutes: paper.duration_minutes, questions: paper.questions }),
+    t(paper.calculator ? "mock.calculator.on" : "mock.calculator.off"),
+    ...(extra > 0 ? [t("mock.extra_meta", { minutes: Math.round(paper.duration_minutes * (100 + extra) / 100) })] : []),
+  ].join(" · ");
   return (
-    <li data-paper-id={paper.paper_id} className="flex flex-col justify-between gap-3 rounded-card border border-line bg-canvas p-5">
-      <div className="flex flex-col gap-1">
-        <p className="text-meta font-medium text-faint">{t(`mock.kind.${paper.paper_kind}`)}</p>
-        <h3 className="text-ui font-semibold text-ink"><PackInline text={paper.title} /></h3>
-        <p className="text-meta text-muted tabular-nums">{t("mock.paper_meta", { minutes: paper.duration_minutes, marks: paper.total_marks, questions: paper.questions })}</p>
-        {extra > 0 && <p className="text-meta text-muted tabular-nums">{t("mock.extra_meta", { minutes: Math.round(paper.duration_minutes * (100 + extra) / 100) })}</p>}
-        <p className="flex items-center gap-1.5 text-meta text-muted"><Icon name="calculator" size={16} />{t(paper.calculator ? "mock.calculator.on" : "mock.calculator.off")}</p>
-      </div>
-      <div><Button disabled={busy} onClick={onChoose}>{t("mock.choose")}</Button></div>
+    <li data-paper-id={paper.paper_id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-ui font-medium text-ink"><PackInline text={paper.title} /></span>
+        <span className="text-meta text-muted tabular-nums">{meta}</span>
+      </span>
+      {open !== null
+        ? <Button size="sm" tone="primary" disabled={busy} onClick={() => onOpen(open.exam_id)}>{t("mock.list.continue")}</Button>
+        : <Button size="sm" disabled={busy} onClick={onChoose}>{t("mock.start")}</Button>}
     </li>
   );
 }
 
+/** The papers on this computer, a subject first: the subject choice (not shown when only one subject has papers), then
+ * that subject's papers as compact rows grouped by paper kind. The student's mocks sit above. */
 function Papers({ view, subjects, extra, onChoose, onOpen, onRetry, now, titleOf }: {
   view: MockView; subjects: MockSubject[]; extra: number; onChoose: (paperId: string) => void; onOpen: (examId: string) => void; onRetry?: (() => void) | undefined; now: number;
   titleOf?: (paperId: string) => string | null;
 }) {
   const t = useT();
+  const [picked, setPicked] = useState<string | null>(null);
   if (view.status === "idle" || view.status === "loading") return <div className="flex flex-col gap-4"><Skeleton lines={3} /></div>;
   if (view.status === "unavailable") return <div data-mock-unavailable="" className="rounded-card border border-line bg-canvas p-7"><p className="text-body text-ink">{t("mock.unavailable")}</p></div>;
   if (view.status === "failed") return <ErrorState message={t("mock.failed")} {...(onRetry !== undefined ? { action: { label: t("action.try_again"), onClick: onRetry } } : {})} />;
   const titled = (paperId: string) => view.papers.find((p) => p.paper_id === paperId)?.title ?? titleOf?.(paperId) ?? t("mock.title");
   const groups = subjects.map((s) => ({ ...s, papers: view.papers.filter((p) => p.subject === s.subject) })).filter((g) => g.papers.length > 0);
+  const shown = groups.find((g) => g.subject === picked) ?? groups[0];
+  const kinds = shown === undefined ? [] : [...new Set(shown.papers.map((p) => p.paper_kind))].map((kind) => ({ kind, papers: shown.papers.filter((p) => p.paper_kind === kind) }));
   const lock = examLock(view);
+  const openSitting = view.sittings.find((s) => LOCKED_STATES.includes(s.state)) ?? null;
   return (
     <div className="flex flex-col gap-10">
       {view.sittings.length > 0 && (
@@ -181,14 +198,24 @@ function Papers({ view, subjects, extra, onChoose, onOpen, onRetry, now, titleOf
           <p className="text-ui text-muted">{t("mock.intro")}</p>
         </div>
         {lock !== null && <Callout tone="hint" icon="timer" heading={t("mock.one_at_a_time")} />}
-        {groups.length === 0 ? <EmptyState message={t("mock.empty")} /> : groups.map((g) => (
-          <div key={g.subject} className="flex flex-col gap-3" data-mock-subject={g.subject}>
-            <h3 className="flex items-center gap-2 text-ui font-semibold text-ink"><SubjectDot subject={g.subject} />{g.label}</h3>
-            <ul className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3">
-              {g.papers.map((p) => <PaperCard key={p.paper_id} paper={p} extra={extra} busy={view.opening || lock !== null} onChoose={() => onChoose(p.paper_id)} />)}
-            </ul>
+        {shown === undefined ? <EmptyState message={t("mock.empty")} /> : (
+          <div className="flex flex-col gap-4" data-mock-subject={shown.subject}>
+            {groups.length > 1 && (
+              <div><SegmentedControl label={t("mock.subject")} options={groups.map((g) => ({ value: g.subject, label: g.label }))} value={shown.subject} onChange={setPicked} /></div>
+            )}
+            {kinds.map((k) => (
+              <div key={k.kind} className="flex flex-col gap-2" data-paper-kind={k.kind}>
+                <h3 className="flex items-center gap-2 text-ui font-semibold text-ink"><SubjectDot subject={shown.subject} />{t(`mock.kind.${k.kind}`)}</h3>
+                <ul className="flex flex-col divide-y divide-line rounded-card border border-line bg-canvas px-5">
+                  {k.papers.map((p) => (
+                    <PaperRow key={p.paper_id} paper={p} extra={extra} open={openSitting?.paper_id === p.paper_id ? openSitting : null}
+                      busy={view.opening || (lock !== null && openSitting?.paper_id !== p.paper_id)} onChoose={() => onChoose(p.paper_id)} onOpen={onOpen} />
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </section>
     </div>
   );

@@ -7,16 +7,19 @@
 // ideas as a heat map whose cells carry fill, pattern, icon and word (DSN-23). A broken streak reads as a new one,
 // never as a loss; nothing here counts down, ranks or blames (LRN-35). Links lead to "What your tutor knows" (UXS-28),
 // the notes (UXS-52) and the session history (UXS-48). States: loading, canonical, empty (nothing studied yet), error-retriable, not served.
-// The learner's map (SPEC §21, JM-D35, W10): Progress opens on "My map", every installed subject as topic tiles
-// (`MapOverview`); "What moved today" is the first thing under it and its ideas' tiles are outlined on the map; the
-// lists, the Study activity line and the record follow, unchanged.
+// Simpler by default (SPEC §22.1, W11; the live UX review): the header is the title and one overflow menu (tutor
+// knows, notes, session history, find my starting point), so nothing clips in a narrow window. The page leads with
+// recent activity ("What moved today", the week's line, Study activity), then a subject selector and the chosen
+// subject's card; topics not started yet sit collapsed under one disclosure after the touched ones. The learner's map
+// (SPEC §21, JM-D35, W10: every installed subject as topic tiles, `MapOverview`) opens from "Show my map" beside the
+// selector rather than filling the first screen; while it is open the ideas that moved today are outlined on it.
 import { useEffect, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { gradeShown, type KcState, type MapLayer, type MapOverviewController, type ProgressController, type ProgressState, type ProgressSubject, type ProgressView } from "@jana/client-core";
 import { ScreenHeader } from "../frame/Frame.js";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
 import { MasteryCell, MasteryMark, SegmentedBar, useCountsText } from "../learn/Mastery.js";
-import { Button, EmptyState, ErrorState, Skeleton, SubjectDot } from "../primitives/index.js";
+import { Button, Disclosure, EmptyState, ErrorState, IconButton, MenuButton, SegmentedControl, Skeleton, SubjectDot, type MenuItem } from "../primitives/index.js";
 import { MapOverview } from "./MapOverview.js";
 
 export interface ProgressActions {
@@ -169,12 +172,37 @@ function History({ subject, label }: { subject: ProgressSubject; label: string }
   );
 }
 
+/** One topic's row of the heat map: its title, its counts in words and one cell per idea (DSN-23). */
+function TopicRow({ topic, names }: { topic: ProgressSubject["topics"][number]; names: ProgressNames }) {
+  const t = useT();
+  const counts = useCountsText();
+  return (
+    <li data-progress-topic={topic.topic_id} className="flex flex-wrap items-center gap-x-6 gap-y-2 py-3">
+      <span className="flex min-w-48 flex-1 flex-col gap-0.5">
+        <span className="text-ui text-ink">{topic.title}</span>
+        <span className="text-meta text-faint">{counts(topic.kcs)}</span>
+      </span>
+      <ul aria-label={t("progress.topic_ideas", { topic: topic.title })} className="flex flex-wrap gap-1">
+        {topic.kcs.map((kc) => <MasteryCell key={kc.kc_id} state={kc.state} label={names.kc(kc.kc_id) ?? undefined} kcId={kc.kc_id} />)}
+      </ul>
+    </li>
+  );
+}
+
+/** A topic is untouched while none of its ideas has left Not started. */
+const untouched = (topic: ProgressSubject["topics"][number]) => topic.kcs.every((kc) => kc.state === "not_started");
+
 function SubjectCard({ subject, names }: { subject: ProgressSubject; names: ProgressNames }) {
   const t = useT();
   const counts = useCountsText();
+  const [restOpen, setRestOpen] = useState(false);
   const label = names.subject(subject.subject);
   const kcs = subject.topics.flatMap((topic) => topic.kcs);
   const total = kcs.length;
+  // The topics worked on lead; the ones not started yet are counted on one line and listed on request, so a
+  // syllabus of untouched topics never dominates the page.
+  const touched = subject.topics.filter((topic) => !untouched(topic));
+  const rest = subject.topics.filter(untouched);
   return (
     <section aria-labelledby={`progress-${subject.subject}`} data-progress-subject={subject.subject} className="flex flex-col gap-6 rounded-card border border-line bg-canvas p-6">
       <div className="flex flex-col gap-3">
@@ -188,19 +216,18 @@ function SubjectCard({ subject, names }: { subject: ProgressSubject; names: Prog
       {subject.topics.length > 0 && (
         <div className="flex flex-col gap-3">
           <h3 className="text-ui font-medium text-ink">{t("progress.topics")}</h3>
-          <ul className="flex flex-col divide-y divide-line" data-heat-map={subject.subject}>
-            {subject.topics.map((topic) => (
-              <li key={topic.topic_id} data-progress-topic={topic.topic_id} className="flex flex-wrap items-center gap-x-6 gap-y-2 py-3">
-                <span className="flex min-w-48 flex-1 flex-col gap-0.5">
-                  <span className="text-ui text-ink">{topic.title}</span>
-                  <span className="text-meta text-faint">{counts(topic.kcs)}</span>
-                </span>
-                <ul aria-label={t("progress.topic_ideas", { topic: topic.title })} className="flex flex-wrap gap-1">
-                  {topic.kcs.map((kc) => <MasteryCell key={kc.kc_id} state={kc.state} label={names.kc(kc.kc_id) ?? undefined} kcId={kc.kc_id} />)}
-                </ul>
-              </li>
-            ))}
-          </ul>
+          {touched.length > 0 && (
+            <ul className="flex flex-col divide-y divide-line" data-heat-map={subject.subject}>
+              {touched.map((topic) => <TopicRow key={topic.topic_id} topic={topic} names={names} />)}
+            </ul>
+          )}
+          {rest.length > 0 && (
+            <Disclosure summary={t("progress.topics.not_started", { count: rest.length })} open={restOpen} onToggle={() => setRestOpen((open) => !open)}>
+              <ul className="flex flex-col divide-y divide-line" data-heat-map-rest={subject.subject}>
+                {rest.map((topic) => <TopicRow key={topic.topic_id} topic={topic} names={names} />)}
+              </ul>
+            </Disclosure>
+          )}
         </div>
       )}
     </section>
@@ -216,6 +243,16 @@ export function movedToday(progress: ProgressView): string[] {
 export function ProgressContent({ state, names, actions, hero }: { state: ProgressState; names: ProgressNames; actions: ProgressActions; hero?: ReactNode }) {
   const t = useT();
   const progress = state.progress;
+  // The subject shown (the first until one is chosen) and whether the map is open; both stay while the screen lives.
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  const mapId = useId();
+  // "What your tutor knows" stays a visible header action: it is a two-click destination from Home (UXS-01, routes.ts).
+  const menu: MenuItem[] = [
+    ...(actions.onNotes !== undefined ? [{ id: "notes", label: t("notes.title"), icon: "notes" as const, onSelect: actions.onNotes }] : []),
+    ...(actions.onHistory !== undefined ? [{ id: "history", label: t("history.title"), icon: "timer" as const, onSelect: actions.onHistory }] : []),
+    ...(actions.onDiagnostic !== undefined ? [{ id: "diagnostic", label: t("assessment.find_start"), icon: "search" as const, onSelect: actions.onDiagnostic }] : []),
+  ];
   const body = () => {
     if (state.status === "unavailable") return <EmptyState message={t("progress.unavailable")} />;
     if (state.status === "failed") return <ErrorState message={t("progress.failed")} action={{ label: t("action.try_again"), onClick: actions.onRetry }} />;
@@ -223,13 +260,14 @@ export function ProgressContent({ state, names, actions, hero }: { state: Progre
     const states = new Map<string, { state: KcState; topic: string }>();
     for (const s of progress.subjects) for (const topic of s.topics) for (const kc of topic.kcs) states.set(kc.kc_id, { state: kc.state, topic: topic.title });
     const started = progress.subjects.some((s) => s.bands.learning + s.bands.secure > 0) || progress.time_studied.minutes_total > 0;
+    const subjects = progress.subjects;
+    const subject = subjects.find((s) => s.subject === chosen) ?? subjects[0];
+    const mapShown = hero !== undefined && mapOpen;
     return (
       <div className="flex flex-col gap-8">
-        {/* My map is the hero (JM-D35); what moved is first under it, and the streak and time studied one quiet line
-            under that (G1, D109). */}
-        {hero}
+        {/* Recent activity leads: what moved today, then the streak and time studied as one quiet line (G1, D109). */}
         <div className="flex flex-col gap-3">
-          <MovedToday moved={progress.moved_today} names={names} states={states} outlined={hero !== undefined} {...(actions.onLearn !== undefined && started ? { onLearn: actions.onLearn } : {})} />
+          <MovedToday moved={progress.moved_today} names={names} states={states} outlined={mapShown} {...(actions.onLearn !== undefined && started ? { onLearn: actions.onLearn } : {})} />
           <StudyLine days={progress.streak.days} freezes={progress.streak.freezes_left} minutes={progress.time_studied.minutes_7d} sessions={progress.time_studied.sessions_7d} />
           {progress.study_activity !== undefined && <StudyActivityLine activity={progress.study_activity} />}
         </div>
@@ -239,18 +277,30 @@ export function ProgressContent({ state, names, actions, hero }: { state: Progre
             {actions.onLearn !== undefined && <Button tone="primary" onClick={actions.onLearn}>{t("home.browse_topics")}</Button>}
           </section>
         )}
-        {progress.subjects.map((subject) => <SubjectCard key={subject.subject} subject={subject} names={names} />)}
+        {/* The subject selector and, beside it, the one secondary action that opens the detailed maps (SPEC §22.1). */}
+        {(subjects.length > 1 || hero !== undefined) && (
+          <div data-progress-controls="" className="flex flex-wrap items-center justify-between gap-3">
+            {subjects.length > 1 && subject !== undefined
+              ? <SegmentedControl label={t("progress.subject_select")} value={subject.subject} onChange={setChosen} options={subjects.map((s) => ({ value: s.subject, label: names.subject(s.subject) }))} />
+              : <span />}
+            {hero !== undefined && (
+              <Button aria-expanded={mapOpen} aria-controls={mapId} onClick={() => setMapOpen((open) => !open)}>
+                <Icon name={mapOpen ? "collapse" : "expand"} size={16} />{t(mapOpen ? "progress.map.hide" : "progress.map.show")}
+              </Button>
+            )}
+          </div>
+        )}
+        {mapShown && <div id={mapId} data-progress-map-open="">{hero}</div>}
+        {subject !== undefined && <SubjectCard key={subject.subject} subject={subject} names={names} />}
       </div>
     );
   };
   return (
     <div className="flex min-h-full flex-col" data-progress={state.status}>
-      <ScreenHeader end={<>
-        {actions.onDiagnostic !== undefined && <Button tone="ghost" onClick={actions.onDiagnostic}>{t("assessment.find_start")}</Button>}
-        {actions.onNotes !== undefined && <Button tone="ghost" onClick={actions.onNotes}><Icon name="notes" size={16} />{t("notes.title")}</Button>}
-        {actions.onHistory !== undefined && <Button tone="ghost" onClick={actions.onHistory}><Icon name="timer" size={16} />{t("history.title")}</Button>}
-        {actions.onKnows !== undefined && <Button tone="ghost" onClick={actions.onKnows}><Icon name="tutor" size={16} />{t("progress.knows")}</Button>}
-      </>}>
+      <ScreenHeader {...(menu.length > 0 || actions.onKnows !== undefined ? { end: <span className="flex items-center gap-1">
+        {actions.onKnows !== undefined && <Button size="sm" tone="ghost" onClick={actions.onKnows}><Icon name="tutor" size={16} />{t("progress.knows")}</Button>}
+        {menu.length > 0 && <MenuButton label={t("frame.more")} items={menu} trigger={(props) => <IconButton {...props} icon="more" label={t("frame.more")} />} />}
+      </span> } : {})}>
         <h1 className="text-ui font-semibold text-ink">{t("app.progress")}</h1>
       </ScreenHeader>
       <div className="flex-1 px-6 pt-6 pb-12 lg:px-10"><div className="mx-auto w-full max-w-240">{body()}</div></div>
@@ -259,7 +309,8 @@ export function ProgressContent({ state, names, actions, hero }: { state: Progre
 }
 
 /** My map on Progress (SPEC §21): the overview's controller, the layer chosen (shared with the skill map, in memory
- * only), where a tap goes, and the tile each idea sits in (to outline the ideas that moved today). */
+ * only), where a tap goes, and the tile each idea sits in (to outline the ideas that moved today). Mounted only while
+ * "Show my map" is open, so the overview is read when the learner asks for it. */
 export interface ProgressMap {
   controller: MapOverviewController;
   layer: MapLayer;

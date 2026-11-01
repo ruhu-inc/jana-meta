@@ -56,7 +56,7 @@ const key = (init: KeyboardEventInit) => fireEvent.keyDown(window, init);
 async function startPaper(nav: HTMLElement) {
   fireEvent.click(within(nav).getByRole("button", { name: "Mock exam" }));
   await screen.findByRole("heading", { level: 1, name: "Mock exam" });
-  fireEvent.click(await screen.findByRole("button", { name: "Choose this paper" }));
+  fireEvent.click((await screen.findAllByRole("button", { name: "Start" }))[0]!);
   await screen.findByText(BASE["mock.ready_notice"]!);
   fireEvent.click(screen.getByRole("button", { name: "Start" }));
   await screen.findByRole("timer", { name: "Time left" });
@@ -175,8 +175,8 @@ describe("UXS-25", () => {
     for (const settings of core.settings.values()) settings.extra_time_percent = 25;
     const nav = await launch(core);
     fireEvent.click(within(nav).getByRole("button", { name: "Mock exam" }));
-    await screen.findByText("With your extra time: 75 minutes");
-    fireEvent.click(screen.getByRole("button", { name: "Choose this paper" }));
+    await screen.findByText(/With your extra time: 75 minutes/);
+    fireEvent.click(screen.getAllByRole("button", { name: "Start" })[0]!);
     fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await screen.findByRole("timer", { name: "Time left" });
     // With 25% extra time a 60-minute paper allows 75 minutes, and the header says so (LOC-24).
@@ -188,6 +188,7 @@ describe("UXS-25", () => {
     const { core } = fakeCore();
     await launch(core);
     key({ key: ",", ctrlKey: true });
+    fireEvent.click(await screen.findByRole("button", { name: "Accessibility and language" }));
     const group = await screen.findByRole("radiogroup", { name: "Extra time in mock exams" });
     expect(within(group).getByRole("radio", { name: "None" }).getAttribute("aria-checked")).toBe("true");
     fireEvent.click(within(group).getByRole("radio", { name: "+25%" }));

@@ -1,19 +1,23 @@
-// Home (UXS-12, UXS-67; direction A "Studio"): it tells the student what to do next. "Ready to learn, {name}?" in
-// display type leads to the one input (UXS-67, D117): four ways to add material above it (Upload, Link, Paste,
-// Record, each opening the study area) and one box that takes a problem, a question or a request. What happens next is
-// chosen by the content: a problem in an installed subject opens the tutor, material the study area, any other
-// question Ask anything, whose answer shows here above the box. The subjects sit beside it as chips; then the study
-// plan, "Next up" (LRN-28 to LRN-33): the next activity first with Start, Change and Not today; then two cards, "Pick
-// up where you left off" (the newest sessions, each reopening where it was left, UXS-19) and today's practice, the
-// ideas the learner model says are due, each with its mastery word (DSN-23). Where no tutor answers here, the box
-// gives way to worked-solution search (UXS-51, PLT-29). The header carries the gentle daily goal chip (LRN-45).
-import { useEffect, useRef, type ChangeEvent, type ReactNode } from "react";
+// Home (UXS-12, UXS-67; direction A "Studio"; one primary task after the 2026-11 UX review): it tells the student what
+// to do next. "Ready to learn, {name}?" in display type leads to Continue learning, one block that merges the Last time
+// sentence (the core's own words, shown verbatim, never reworded or renumbered here; SPEC §19.5.2) with the study
+// plan's next activity and its one primary button, Start, Continue or Keep learning (LRN-28 to LRN-33), today's
+// check-in from the tutor when one is due (SPEC §19.5.5) and, quiet at its foot, the exam countdown (LRN-44). The
+// cards that join the block read `useContinueBlock` and drop their own chrome; standalone (Study's library, the
+// gallery) they are unchanged. Under the block a compact row of secondary actions: Ask a question reveals the one box
+// (UXS-67, D117: a problem in an installed subject opens the tutor, material the study area, any other question Ask
+// anything, whose answer shows above the box, STU-20) and Add material reveals Upload, Paste and Record, each opening
+// the study area. Then the quiet rows (`more`: worked-solution search, the diagnostic; UXS-51, PLT-29), the subjects as
+// chips, and two cards, "Pick up where you left off" (the newest sessions, each reopening where it was left, UXS-19)
+// and today's practice, the ideas the learner model says are due, each with its mastery word (DSN-23). The header
+// carries the gentle daily goal chip (LRN-45).
+import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ChangeEvent, type ReactNode, type RefObject } from "react";
 import { CLIENT_KEYS, type DueIdea, type SessionGroup } from "@jana/client-core";
 import { ScreenHeader } from "../frame/Frame.js";
 import { useT } from "../i18n.js";
 import { Icon, type IconName } from "../icons.js";
 import { MasteryMark } from "../learn/Mastery.js";
-import { SubjectDot, SuggestionChip } from "../primitives/index.js";
+import { Button, SubjectDot, SuggestionChip } from "../primitives/index.js";
 
 export interface HomeSubject {
   subjectId: string;
@@ -30,10 +34,42 @@ export interface HomePickup {
   day: SessionGroup;
 }
 
+/** A secondary, de-emphasised row under the actions (worked-solution search, the diagnostic): never a card. */
+export interface HomeEntry {
+  id: string;
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+}
+
 /** The greeting's part of the day, by the computer's local hour. */
 export function partOfDay(hour: number): "morning" | "afternoon" | "evening" {
   if (hour >= CLIENT_KEYS.ui_greeting_evening_hour) return "evening";
   return hour >= CLIENT_KEYS.ui_greeting_afternoon_hour ? "afternoon" : "morning";
+}
+
+const ContinueBlock = createContext(false);
+
+/** True inside Home's Continue learning block: the cards that join it (Last time, the check-in, the plan) render as
+ * rows of the one block, without their own card chrome, instead of as cards that compete with it. */
+export function useContinueBlock(): boolean {
+  return useContext(ContinueBlock);
+}
+
+/** Whether the block has anything to show. Its slots are nodes Home cannot see into (a plan still loading, a card the
+ * core did not give, an older core with neither), so the DOM says: any words, or any of the cards' own markers. */
+function useHasContent(body: RefObject<HTMLDivElement | null>): boolean {
+  const [has, setHas] = useState(true);
+  useLayoutEffect(() => {
+    const node = body.current;
+    if (node === null) return;
+    const check = () => setHas((node.textContent ?? "").trim() !== "" || node.querySelector("[data-plan],[data-last-time],[data-checkin],[data-exam-countdown]") !== null);
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(node, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [body]);
+  return has;
 }
 
 function Row({ icon, name, meta, subject, onClick, children }: { icon: IconName; name: string; meta: string; subject: string; onClick: () => void; children?: ReactNode }) {
@@ -50,7 +86,7 @@ function Row({ icon, name, meta, subject, onClick, children }: { icon: IconName;
   );
 }
 
-/** The three ways to add material above the box (UXS-67); each opens the study area. */
+/** The three ways to add material, behind the Add material action (UXS-67); each opens the study area. */
 export interface HomeMaterials {
   onUpload: (file: File) => void;
   onPaste: () => void;
@@ -61,7 +97,7 @@ export interface HomeMaterials {
 const UPLOAD_ACCEPT = ".pdf,.docx,.pptx,.txt,.md,.png,.jpg,.jpeg,.webp,application/pdf,text/plain,text/markdown,image/png,image/jpeg,image/webp";
 const RECORDING_ACCEPT = ".mp3,.m4a,.wav,.ogg,.webm,audio/*";
 
-function Materials({ materials }: { materials: HomeMaterials }) {
+function Materials({ id, materials }: { id: string; materials: HomeMaterials }) {
   const t = useT();
   const upload = useRef<HTMLInputElement>(null), record = useRef<HTMLInputElement>(null);
   const picked = (pick: (file: File) => void) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +106,7 @@ function Materials({ materials }: { materials: HomeMaterials }) {
     if (file) pick(file);
   };
   return (
-    <div role="group" aria-label={t("home.add_material")} data-home-materials="" className="flex flex-wrap gap-2">
+    <div id={id} role="group" aria-label={t("home.add_material")} data-home-materials="" className="flex flex-wrap gap-2">
       <SuggestionChip icon="study" onClick={() => upload.current?.click()}>{t("home.material.upload")}</SuggestionChip>
       <SuggestionChip icon="notes" onClick={materials.onPaste}>{t("home.material.paste")}</SuggestionChip>
       <SuggestionChip icon="voice" onClick={() => record.current?.click()}>{t("home.material.record")}</SuggestionChip>
@@ -80,28 +116,30 @@ function Materials({ materials }: { materials: HomeMaterials }) {
   );
 }
 
-export function Home({ name, ask, materials, answer, notice, plan, countdown, lastTime, checkin, goal, mock, subjects, onSubject, pickup, onPickup, practice, onPractice }: {
+export function Home({ name, ask, materials, answer, notice, plan, countdown, lastTime, checkin, goal, mock, more, subjects, onSubject, pickup, onPickup, practice, onPractice }: {
   name: string;
-  /** The one box (the composer, inline), or null where no tutor answers here. */
+  /** The one box (the composer, inline), revealed by Ask a question; or null where no tutor answers here. */
   ask: ReactNode | null;
-  /** The four ways to add material, or null where the study area is not available. */
+  /** The three ways to add material, revealed by Add material, or null where the study area is not available. */
   materials?: HomeMaterials | null;
-  /** Ask anything's answer to the box's last general question (STU-20). */
+  /** Ask anything's answer to the box's last general question (STU-20), above the box. */
   answer?: ReactNode;
   /** What still works where no tutor answers (PLT-29), or why the tutor waits while a mock exam is open (AGT-24). */
   notice?: ReactNode;
-  /** The study plan card (UXS-12): "Next up". */
+  /** The study plan card (UXS-12): "Next up", a row of the Continue learning block with its one primary button. */
   plan?: ReactNode;
   /** The daily goal chip in the header (LRN-45), absent when the learner hid it. */
   goal?: ReactNode;
-  /** The countdown to the nearest exam date and any reminder due (LRN-44), above the plan. */
+  /** The countdown to the nearest exam date and any reminder due (LRN-44), quiet at the foot of the block. */
   countdown?: ReactNode;
-  /** The Last time card beside the countdown (SPEC §19.5.2): where the learner left off, what is due, the exam. */
+  /** The Last time card (SPEC §19.5.2): its sentence leads the Continue learning block, verbatim. */
   lastTime?: ReactNode;
-  /** Today's check-in from the tutor (SPEC §19.5.5), above the Last time card, when one is due. */
+  /** Today's check-in from the tutor (SPEC §19.5.5), a row of the block when one is due. */
   checkin?: ReactNode;
   /** A mock exam card: one closed after the abandonment window, with "Start a new mock" (TABLE UXS-25a). */
   mock?: ReactNode;
+  /** Secondary, de-emphasised rows under the actions: worked-solution search, the diagnostic. */
+  more?: HomeEntry[];
   subjects: HomeSubject[];
   onSubject: (subjectId: string) => void;
   pickup: HomePickup[];
@@ -117,6 +155,14 @@ export function Home({ name, ask, materials, answer, notice, plan, countdown, la
   useEffect(() => {
     if (document.activeElement === null || document.activeElement === document.body) greeting.current?.focus();
   }, []);
+  const body = useRef<HTMLDivElement>(null);
+  const hasContinue = useHasContent(body);
+  const continues = plan !== undefined || lastTime !== undefined || checkin !== undefined || countdown !== undefined;
+  // The box stays on Home (UXS-12: the hub is the greeting and the Ask box; UXS-67's one input) but after the block,
+  // under its own small heading; Add material reveals its three ways on demand (one more click, nothing removed).
+  const addId = useId();
+  const [addOpen, setAddOpen] = useState(false);
+  const addable = ask !== null && materials != null;
   return (
     <div className="flex h-full min-h-0 flex-col">
       <ScreenHeader {...(goal !== undefined ? { end: goal } : {})} />
@@ -126,18 +172,36 @@ export function Home({ name, ask, materials, answer, notice, plan, countdown, la
             <div className="flex flex-col gap-1 px-1">
               <h1 id="home-greeting" ref={greeting} tabIndex={-1} className="text-display">{t("home.ready", { name })}</h1>
             </div>
-            {answer}
-            {/* The current answer stays above the input; material actions remain attached to the input. */}
-            {ask !== null && materials != null && <Materials materials={materials} />}
-            {ask !== null && <>
-              <h2 className="sr-only">{t("home.ask")}</h2>
-              {ask}
-            </>}
+            {continues && (
+              <section aria-labelledby="home-continue" data-home-continue="" hidden={!hasContinue}
+                className={`${hasContinue ? "flex" : "hidden"} flex-col gap-4 rounded-card border border-line bg-canvas px-5 pt-5 pb-4`}>
+                <h2 id="home-continue" className="text-heading text-ink">{t("home.continue")}</h2>
+                <div ref={body} className="flex flex-col gap-4">
+                  <ContinueBlock.Provider value={true}>
+                    {lastTime}
+                    {checkin}
+                    {plan}
+                  </ContinueBlock.Provider>
+                  {countdown !== undefined && (
+                    <div className="[&>section]:rounded-none [&>section]:border-x-0 [&>section]:border-b-0 [&>section]:border-t [&>section]:bg-transparent [&>section]:px-0 [&>section]:pt-3 [&>section]:pb-0">{countdown}</div>
+                  )}
+                </div>
+              </section>
+            )}
+            {ask !== null && (
+              <section aria-labelledby="home-ask" data-home-ask="" className="flex flex-col gap-3">
+                <h2 id="home-ask" className="px-1 text-heading text-ink">{t("home.ask")}</h2>
+                {answer}
+                {ask}
+              </section>
+            )}
+            {addable && (
+              <div role="group" aria-label={t("home.secondary")} data-home-actions="" className="flex flex-col gap-3 px-1">
+                <span><Button size="sm" aria-expanded={addOpen} aria-controls={addId} onClick={() => setAddOpen((open) => !open)}><Icon name="study" size={16} />{t("home.add_material")}</Button></span>
+                {addOpen && <Materials id={addId} materials={materials} />}
+              </div>
+            )}
             {notice}
-            {countdown}
-            {checkin}
-            {lastTime}
-            {plan}
             {subjects.length > 1 && (
               <div role="group" aria-label={t("home.subjects")} className="flex flex-wrap gap-2">
                 {subjects.map((s) => (
@@ -147,6 +211,19 @@ export function Home({ name, ask, materials, answer, notice, plan, countdown, la
                   </SuggestionChip>
                 ))}
               </div>
+            )}
+            {more !== undefined && more.length > 0 && (
+              <ul aria-label={t("home.more")} data-home-more="" className="flex flex-col divide-y divide-line border-t border-line">
+                {more.map((entry) => (
+                  <li key={entry.id} data-home-entry={entry.id}>
+                    <button type="button" onClick={entry.onClick} className="jana-press flex min-h-11 w-full items-center gap-3 rounded-control px-2 text-start text-ui text-muted hover:bg-wash hover:text-ink">
+                      <span aria-hidden="true" className="inline-flex text-faint"><Icon name={entry.icon} size={16} /></span>
+                      <span className="flex-1">{entry.label}</span>
+                      <span aria-hidden="true" className="inline-flex text-faint"><Icon name="go-next" size={16} /></span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
           {mock}

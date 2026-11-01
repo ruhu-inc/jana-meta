@@ -40,7 +40,7 @@ import {
   type CheckinNotifier, type CompanionAction, type ConceptNode, type KcLinks, type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
 } from "@jana/client-core";
 import {
-  AskAnswer, CompanionThread, StudyWorkspace, SuggestionChip, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, LastTimeCard, CheckinCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
+  AskAnswer, CompanionThread, StudyWorkspace, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, NotesPlace, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, LastTimeCard, CheckinCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
   ConceptMapRendererProvider, GapLinkProvider, ResearchLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
@@ -1215,13 +1215,12 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         ask={ask}
         materials={materials}
         answer={answer}
-        notice={lock !== null ? <ExamLockNotice lock={lock} now={lockNow} place="tutor" onOpen={openMock} /> : <>{heldNote}{notice}
-          {/* Quiet chips under the Ask box, not full-width bars (redesign, D109). */}
-          <div className="flex flex-wrap gap-2">
-            <SuggestionChip icon="search" onClick={() => setScreen("search")}>{t("search.title")}</SuggestionChip>
-            <SuggestionChip icon="mastery-nearly" onClick={() => openAssessment()}>{t(assessmentView.assessments.some((a) => ["in_progress", "waiting", "stopped"].includes(a.state)) ? "assessment.finish" : "assessment.find_start")}</SuggestionChip>
-          </div>
-        </>}
+        notice={lock !== null ? <ExamLockNotice lock={lock} now={lockNow} place="tutor" onOpen={openMock} /> : <>{heldNote}{notice}</>}
+        /* Worked-solution search and the diagnostic are quiet rows under the main actions (the crowding review of 2026-11-01). */
+        more={[
+          { id: "search", icon: "search", label: t("search.title"), onClick: () => setScreen("search") },
+          { id: "diagnostic", icon: "mastery-nearly", label: t(assessmentView.assessments.some((a) => ["in_progress", "waiting", "stopped"].includes(a.state)) ? "assessment.finish" : "assessment.find_start"), onClick: () => openAssessment() },
+        ]}
         plan={<div className="flex flex-col gap-4">
           {journeyCard && <div className="[&>section]:mx-0 [&>section]:my-0">{journeyCard}</div>}
           {savedStudy.journey && <details open={!journeyView.journey}><summary className="cursor-pointer text-meta text-muted">{t("study.journey.title")}</summary><div className="mt-3"><StudyJourney journey={savedStudy.journey} busy={savedStudy.busy} onReviewDue={() => { void runtime.studyWorkspace.load(); }} onContinue={() => { setStudyResume("next"); setScreen("study"); }} onLesson={() => { setStudyResume("lesson"); setScreen("study"); }} onResults={() => { setStudyResume("quiz"); setScreen("study"); }} /></div></details>}
@@ -1283,7 +1282,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     if (screen === "assessment") return <AssessmentPlace controller={runtime.assessments} subjects={installed.map((s) => s.subject)}
       names={{ subject: subjectLabel, topic: (id) => Object.values(maps).flatMap((m) => m.sections.flatMap((s) => s.topics)).find((tp) => tp.node_id === id)?.title ?? id, kc: (id) => known.statements.get(id) ?? id }}
       plan={planCard} onClose={() => setScreen("home")} />;
-    if (screen === "saved-questions") return <SavedQuestions header={notesSwitch} controller={runtime.savedQuestions} onClose={() => setScreen("home")} subject={subjectLabel}
+    if (screen === "saved-questions") return <SavedQuestions header={notesHeader()} controller={runtime.savedQuestions} onClose={() => setScreen("home")} subject={subjectLabel}
       topic={(id) => Object.values(maps).flatMap((m) => m.sections.flatMap((s) => s.topics)).find((tp) => tp.node_id === id)?.title ?? id} />;
     if (screen === "progress") {
       return (
@@ -1337,8 +1336,9 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       return <StudyPlace controller={runtime.studyWorkspace} chat={studyTab === "chat"}>{(place) =>
         withSpeech(workspace, session, place, (answer) => void runtime.studyWorkspace.voiced(answer))}</StudyPlace>;
     }
-    if (screen === "notes") return withSpeech(<>{notesSwitch}<div className="mx-auto w-full max-w-240">
-      <SessionNotes controller={runtime.sessionNotes} subject={subjectLabel} kc={(id) => known.statements.get(id) ?? id} topicForKc={(id) => known.topicLinks.get(id) ?? null} onReference={async (reference) => {
+    // One header with one action: the lists by default, the editor only on New note (live UX review, 2026-11-01).
+    if (screen === "notes") return withSpeech(<NotesPlace header={notesHeader} editor={(done) => <StudyNotes embedded show="editor" onDone={done} />}>
+      <SessionNotes controller={runtime.sessionNotes} subject={subjectLabel} kc={(id) => known.statements.get(id) ?? id} topicForKc={(id) => known.topicLinks.get(id) ?? null} below={<StudyNotes embedded show="list" />} onReference={async (reference) => {
         if (lock !== null || protectedCheck !== undefined) return false;
         const generation = profiles.generation;
         try {
@@ -1352,8 +1352,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
           return true;
         } catch { return false; }
       }} />
-      <StudyNotes embedded />
-    </div></>);
+    </NotesPlace>);
     if (screen === "history") return <>
       <ScreenHeader end={<Button onClick={() => setScreen("notes")}>{t("notes.back")}</Button>}><h1 className="text-ui font-semibold text-ink">{t("notes.source_turn")}</h1></ScreenHeader>
       {session === null || session === "failed" ? <Opening failed={session === "failed"} /> : <Transcript sessionId={session.sessionId} {...(noteReference !== null ? { focusTurnId: noteReference.turn_id } : {})} />}
@@ -1403,9 +1402,10 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       cloudVoiceOn ? TUTOR_PLACE : null);
   };
   // The place's one header, as every other place has: its name, then the switch between its two lists (and, in a
-  // narrow window, the menu button ScreenHeader adds).
-  const notesSwitch = (
-    <ScreenHeader>
+  // narrow window, the menu button ScreenHeader adds), and at most one action at the end (New note, or the way back
+  // from the editor).
+  const notesHeader = (end?: React.ReactNode) => (
+    <ScreenHeader {...(end === undefined || end === null ? {} : { end })}>
       <h1 className="text-ui font-semibold text-ink">{t("nav.notes_saved")}</h1>
       <div role="group" aria-label={t("nav.notes_saved")} className="flex gap-1">
         {(["notes", "saved-questions"] as const).map((place) => (
@@ -1453,7 +1453,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   // The screens that bring their own header (Home, the tutor) leave the drawer's menu button to it.
   const ownHeader = screen === "home" || screen === "learn" || screen === "lesson" || screen === "practice" || screen === "mock" || screen === "settings" || screen === "tutor"
     || screen === "progress" || screen === "search" || screen === "assessment" || screen === "saved-questions" || screen === "history"
-    || screen === "session-history" || (lock !== null && screen === "notes");
+    || screen === "session-history" || screen === "notes";
   const scrolls = screen === "learn" || screen === "lesson" || screen === "practice" || screen === "mock" || screen === "settings" || screen === "knows" || screen === "knows-from-settings"
     || screen === "knows-from-progress" || screen === "progress" || screen === "session-history" || screen === "search" || screen === "assessment" || screen === "saved-questions" || screen === "study" || screen === "notes"
     || (screen === "tutor" && (!tutorOffered || lock !== null));

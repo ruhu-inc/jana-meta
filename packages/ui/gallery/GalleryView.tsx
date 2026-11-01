@@ -7,7 +7,7 @@ import { DegradedNotices } from "../src/status/DegradedNotices.js";
 import { LessonLinkProvider } from "../src/learn/link.js";
 // Rendering one gallery state (DSN-15, DSN-16): the context (theme, motion, locale, text scale, elapsed time) wraps
 // the component, which renders from the state's synthetic payload exactly as it renders live data.
-import { useEffect, useMemo, useRef, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   EMPTY_KNOWS, EMPTY_LESSON, EMPTY_MOCKS, EMPTY_PRACTICE, ProfileController, StoreHolder, connectionKey, emptyConnection, emptyConnectivity, emptyStore, hydrate, knowsViewOf, optimistic,
   modelManagerView, readCheckResult, readHelp, readKnows, readLesson, readSubjectMap, reduce, reduceConnectivity, tutorSetup, type ConnectivitySlice, type Envelope,
@@ -244,10 +244,18 @@ function galleryProfiles(): ProfileController {
 /** Data-only study fixtures use the same view; no provider or profile endpoint is involved. */
 function StudyFixture({ state }: { state: GalleryState }) {
   const t = useT(), root = useRef<HTMLDivElement>(null);
+  // All study sets waits in the library's More menu (the crowding review of 2026-11-01): open it, then, once the menu
+  // has rendered, its item.
+  const [menuOpened, setMenuOpened] = useState(false);
   useEffect(() => {
-    if (state.variant === "sets") Array.from(root.current?.querySelectorAll("button") ?? [])
-      .find((button) => button.textContent?.trim() === t("study.all_sets"))?.click();
-  }, [state.variant, t]);
+    if (state.variant !== "sets" || menuOpened) return;
+    root.current?.querySelector<HTMLButtonElement>(`button[aria-label="${t("study.library_more")}"]`)?.click();
+    setMenuOpened(true);
+  }, [state.variant, t, menuOpened]);
+  useEffect(() => {
+    if (state.variant !== "sets" || !menuOpened) return;
+    Array.from(root.current?.querySelectorAll<HTMLButtonElement>("[role^='menuitem']") ?? []).find((item) => item.textContent?.trim() === t("study.all_sets"))?.click();
+  }, [state.variant, t, menuOpened]);
   const controller = useMemo(() => {
     const view = { ...EMPTY_STUDY, ...(state.payload.view as Partial<StudyWorkspaceView>) } as StudyWorkspaceView;
     const noop = async () => undefined;

@@ -135,7 +135,8 @@ describe("UXS-24", () => {
     core.mark = () => ({ verdict: "incorrect", category: null });
     fireEvent.click(within(nav).getByRole("button", { name: "Practice" }));
     await screen.findByRole("heading", { level: 1, name: "Today's practice" });
-    // Every practice question offers the three help chips (ASM-28).
+    // Every practice question offers the three help chips (ASM-28), behind Need help? since the crowding review.
+    fireEvent.click(screen.getByRole("button", { name: "Need help?" }));
     const chips = screen.getByRole("group", { name: "Help with this question" });
     expect(within(chips).getAllByRole("button").map((b) => b.textContent)).toEqual(["Give me a hint", "Walk me through it", "Explain simply"]);
     answer("1.2", "m/s");
@@ -184,6 +185,7 @@ async function verifyReturnContext(index: number) {
     }
     answer("0.9", "m/s");
     const turns = core.turnsStarted;
+    fireEvent.click(screen.getByRole("button", { name: "Need help?" }));
     fireEvent.click(screen.getByRole("button", { name: "Give me a hint" }));
     // The tutor opens with the item loaded; its header leads back to the same question.
     const back = await screen.findByRole("button", { name: `Back to practice question ${index + 1}` });

@@ -57,6 +57,7 @@ test("practice help returns to the same saved question and keeps the answer draf
   const itemId = runtime.practice.getView().item?.item_id;
   fireEvent.change(screen.getByLabelText("Your answer"), { target: { value: "12.5" } });
   const draft = runtime.practice.getView().draft;
+  fireEvent.click(screen.getByRole("button", { name: "Need help?" }));
   fireEvent.click(screen.getByRole("button", { name: "Give me a hint" }));
   fireEvent.click(await screen.findByRole("button", { name: "Back to your question" }));
   await screen.findByRole("heading", { level: 1, name: "Today's practice" });

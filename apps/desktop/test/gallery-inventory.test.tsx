@@ -16,7 +16,8 @@ test.each(Object.entries(inventory) as [string, Entry][])("uia27_inventory_galle
     const state = STATES.find((s) => s.id === entry.fixture);
     expect(state, name).toBeDefined(); expect(state!.state, name).toBe("canonical");
     const { container } = render(<GalleryView state={state!} registry={registry()} />);
-    if (entry.click) fireEvent.click(container.querySelector(entry.click)!);
+    // What is clicked may arrive after a load (Settings shows a skeleton until its fake profile unlocks).
+    if (entry.click) fireEvent.click(await waitFor(() => { const el = container.querySelector(entry.click!); expect(el, `${name}: ${entry.click}`).not.toBeNull(); return el!; }));
     if (entry.part) {
       const select = container.querySelector<HTMLSelectElement>("select[data-part-equivalents]")!;
       expect(select.options.length).toBeGreaterThan(1); fireEvent.change(select, { target: { value: select.options[1]!.value } });

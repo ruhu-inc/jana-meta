@@ -76,7 +76,7 @@ describe("UXS-22 and UXS-23", () => {
     });
     fireEvent.click(tile);
     const sheet = await screen.findByRole("dialog", { name: TOPIC.title });
-    fireEvent.click(within(sheet).getByRole("button", { name: /Start the lesson/ }));
+    fireEvent.click(within(sheet).getByRole("button", { name: /about \d+ min/ }));
     fireEvent.click(await screen.findByRole("button", { name: "Ask about this" }));
     await waitFor(() => expect(sessions.at(-1)).toMatchObject({
       subject: "physics", topic_id: LESSON.node_id, origin: { kind: "lesson", ref: LESSON.lesson_id },
@@ -97,7 +97,7 @@ describe("UXS-22 and UXS-23", () => {
     const sheet = await screen.findByRole("dialog", { name: TOPIC.title });
     // A tutor answers on this computer: the sheet offers to ask it.
     expect(within(sheet).getByRole("button", { name: "Ask the tutor about this" })).toBeTruthy();
-    fireEvent.click(within(sheet).getByRole("button", { name: /Start the lesson/ }));
+    fireEvent.click(within(sheet).getByRole("button", { name: /about \d+ min/ }));
     await screen.findByRole("heading", { level: 1, name: String(LESSON.title) });
     expect(screen.getByRole("button", { name: "Ask about this" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Back to the map" }));

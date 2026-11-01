@@ -20,6 +20,7 @@ describe("UXS-28", () => {
     render(<App runtime={runtime} />);
     fireEvent.click(await screen.findByRole("button", { name: /^Ada/ }));
     fireEvent.click(await findMenuItem("Settings"));
+    fireEvent.click(await screen.findByRole("button", { name: /^Study$/ }));
     fireEvent.click(await screen.findByRole("button", { name: "What the tutor knows about you" }));
     await screen.findByRole("heading", { name: "What the tutor knows about you" });
     const row = await waitFor(() => {

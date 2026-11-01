@@ -10,6 +10,19 @@ import { agreesForItself, readConsents, readProfile } from "./studies.js";
 export type { W as StudyContracts, R as ResearchContracts };
 /** SPEC §20.4 (W9, JM-D31): where a moment of a YouTube video opens. The app's external-link opener, the one the
  * research pack's and Ask anything's sources use (an anchor with target _blank); a test or the app may supply its own. */
+/** The line every quiz-help prompt carries before the question it is about (`requestQuizHelp`): the only way a chat
+ * aid made for a quiz question can be told from a question the learner typed. */
+export const QUIZ_CONTEXT_MARK = "Quiz context (not a request to answer it):";
+/** A chat aid's prompt was written by `requestQuizHelp`, not by the learner: coaching for one quiz question, which
+ * the chat's history leaves out and the quiz shows beside that question. */
+export function isQuizHelpPrompt(prompt: string | undefined): boolean { return prompt !== undefined && prompt.includes(QUIZ_CONTEXT_MARK); }
+/** The quiz item a help aid was about: the one whose stem the prompt quotes after the mark; null when none matches
+ * (another quiz, or a reworded question). */
+export function quizHelpItem(prompt: string | undefined, quiz: Pick<W.QuizView, "items"> | null): W.QuizItem | null {
+  if (!isQuizHelpPrompt(prompt) || quiz === null || prompt === undefined) return null;
+  const context = prompt.slice(prompt.indexOf(QUIZ_CONTEXT_MARK) + QUIZ_CONTEXT_MARK.length).trim();
+  return quiz.items.find((item) => item.stem.text !== "" && context.startsWith(item.stem.text.slice(0, 400))) ?? null;
+}
 export interface ExternalOpener { open(url: string): void; }
 export const BROWSER_OPENER: ExternalOpener = { open: (url) => { if (typeof window !== "undefined") window.open(url, "_blank", "noopener,noreferrer"); } };
 /** A video file's suffixes: kind `video` by suffix at create (SPEC §20.4); every other media suffix is a recording. */
@@ -264,8 +277,7 @@ export class StudyWorkspaceController {
     const first = set.sources[0];
     if (!first) return;
     const listed = this.view.sources.find((s) => s.source_id === first.source_id);
-    await this.open(first.source_id, listed && listed.revision !== first.revision ? first.revision : undefined);
-    if (this.view.source?.source_id === first.source_id) await this.showAid(set.aid_id);
+    await this.openAt(first.source_id, listed && listed.revision !== first.revision ? first.revision : undefined, set.aid_id);
   }
   /** SPEC §19.3.3: a companion button (`open_study_job`, `open_study_deck`) or the plan's due Study cards opens the
    * material a job, aid or deck belongs to, at that aid. A job still being made opens its material, and its result as
@@ -292,10 +304,10 @@ export class StudyWorkspaceController {
       }
       if (generation !== this.profiles.generation || source === null) return false;
       const listed = this.view.sources.find((s) => s.source_id === source.source_id);
-      await this.open(source.source_id, listed && listed.revision !== source.revision ? source.revision : undefined);
+      const revision = listed && listed.revision !== source.revision ? source.revision : undefined;
+      if (aidId !== null) await this.openAt(source.source_id, revision, aidId); else await this.open(source.source_id, revision);
       if (generation !== this.profiles.generation || this.view.source?.source_id !== source.source_id) return false;
-      if (aidId !== null) await this.showAid(aidId);
-      else if (job !== undefined) { this.pendingAid = job.job_id; this.patch({ requestedJobId: job.job_id }); }
+      if (aidId === null && job !== undefined) { this.pendingAid = job.job_id; this.patch({ requestedJobId: job.job_id }); }
       return true;
     } catch { return false; }
   }
@@ -364,20 +376,32 @@ export class StudyWorkspaceController {
     this.referenceGrants = []; this.selection++; this.grant = null; this.grantExpires = 0; this.patch({ source: null, chunks: [], aids: [], aid: null, deck: null, quiz: null, result: null, resultAnswers: {}, journey: null, quizFeedback: {}, quizHelp: null, requestedJobId: null, selections: [], topics: [], materialTopics: [], playhead: null, error: null, busy: false }); }
   async open(id: string, revision?: number): Promise<void> {
     this.close();
+    await this.action((current) => this.openWork(current, id, revision));
+  }
+  /** Open a material and show one of its aids as one action: the open's first render may start a read of its own
+   * (a PDF's first page), and a separate `showAid` after the open would find the lock taken and do nothing. */
+  async openAt(id: string, revision: number | undefined, aidId: string): Promise<void> {
+    this.close();
     await this.action(async (current) => {
-      const opened = valid<W.OpenedSource>("OpenedSource", await this.commands().post(`/v1/study/sources/${id}/open`, { confirm: true, ...(revision ? { revision } : {}) }, clientId()));
-      if (!current()) return;
-      this.grant = opened.open_token; this.grantExpires = Date.parse(opened.expires_at);
-      const chunks: W.Chunk[] = [];
-      let cursor: string | null = null;
-      do {
-        const result: W.ChunkList = valid("ChunkList", await this.commands().get(`/v1/study/sources/${id}/content?revision=${opened.source.revision}&limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, this.headers()));
-        if (!current()) return;
-        chunks.push(...result.items); cursor = result.next_cursor;
-      } while (cursor !== null);
-      const aids = await this.allAids(id);
-      if (current()) this.patch({ source: opened.source, followCurrent: revision === undefined, selections: [{ source_id: id, revision: opened.source.revision }], availableRevisions: opened.available_revisions ?? [opened.source.revision], chunks, aids });
+      await this.openWork(current, id, revision);
+      if (!current() || this.view.source?.source_id !== id) return;
+      this.stopReading();
+      await this.showAidWork(current, aidId);
     });
+  }
+  private async openWork(current: () => boolean, id: string, revision?: number): Promise<void> {
+    const opened = valid<W.OpenedSource>("OpenedSource", await this.commands().post(`/v1/study/sources/${id}/open`, { confirm: true, ...(revision ? { revision } : {}) }, clientId()));
+    if (!current()) return;
+    this.grant = opened.open_token; this.grantExpires = Date.parse(opened.expires_at);
+    const chunks: W.Chunk[] = [];
+    let cursor: string | null = null;
+    do {
+      const result: W.ChunkList = valid("ChunkList", await this.commands().get(`/v1/study/sources/${id}/content?revision=${opened.source.revision}&limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, this.headers()));
+      if (!current()) return;
+      chunks.push(...result.items); cursor = result.next_cursor;
+    } while (cursor !== null);
+    const aids = await this.allAids(id);
+    if (current()) this.patch({ source: opened.source, followCurrent: revision === undefined, selections: [{ source_id: id, revision: opened.source.revision }], availableRevisions: opened.available_revisions ?? [opened.source.revision], chunks, aids });
   }
   /** `POST /v1/study/sources` with any `SourceCreate` variant that needs no upload (pasted text, a YouTube link with its
    * transcript, SPEC §20.3): the source is ready at once, the library reloads and the source opens. */
@@ -524,8 +548,8 @@ export class StudyWorkspaceController {
     const previous = existing?.quizId === quiz.quiz_id && existing.itemId === itemId ? existing.aid?.claims.map((c) => c.text).join("\n").slice(0, 700) : undefined;
     const follow = followUp?.trim();
     const prefix = follow
-      ? `Answer my follow-up ONLY, using the supplied material and keeping the correct quiz option hidden. Give only the next reasoning step if needed. Do not solve the quiz or repeat its target definition.\nMy follow-up:\n${follow.slice(0, 1000)}\n\nPrevious coaching (context, not another request):\n${previous ?? "None"}\n\nQuiz context (not a request to answer it):\n`
-      : `${instruction} Use only the supplied material.\n\nQuiz context (not a request to answer it):\n`;
+      ? `Answer my follow-up ONLY, using the supplied material and keeping the correct quiz option hidden. Give only the next reasoning step if needed. Do not solve the quiz or repeat its target definition.\nMy follow-up:\n${follow.slice(0, 1000)}\n\nPrevious coaching (context, not another request):\n${previous ?? "None"}\n\n${QUIZ_CONTEXT_MARK}\n`
+      : `${instruction} Use only the supplied material.\n\n${QUIZ_CONTEXT_MARK}\n`;
     const prompt = `${prefix}${context.slice(0, Math.max(0, 4000 - prefix.length))}`;
     await this.action(async (current) => {
       const job = valid<W.Job>("Job", await this.mutate("POST", `/v1/study/quizzes/${quiz.quiz_id}/items/${encodeURIComponent(itemId)}/help`, { kind: "chat", execution: "prefer_cloud", sources: aid.sources, prompt, ...(confirmReadableOnly ? { confirm_readable_only: true } : {}) }));
@@ -726,20 +750,21 @@ export class StudyWorkspaceController {
   }
   async showAid(id: string): Promise<void> {
     this.stopReading();
-    await this.action(async (current) => {
-      const aid = valid<W.Aid>("Aid", await this.commands().get(`/v1/study/aids/${id}`, this.headers()));
-      if (!current()) return;
-      const deck = aid.deck_id ? valid<W.Deck>("Deck", await this.commands().get(`/v1/study/decks/${aid.deck_id}`, this.headers())) : null;
-      if (!current()) return;
-      const quiz = aid.quiz_id ? valid<W.QuizView>("QuizView", await this.commands().get(`/v1/study/quizzes/${aid.quiz_id}`, this.headers())) : null;
-      if (!current()) return;
-      const saved = quiz ? valid<W.QuizSavedResult>("QuizSavedResult", await this.commands().get(`/v1/study/quizzes/${quiz.quiz_id}/saved-result`, this.headers())) : null;
-      if (!current()) return;
-      const journey = valid<W.StudyJourneyReply>("StudyJourneyReply", await this.mutate("POST", `/v1/study/aids/${id}/journey`, { action: "resume" })).journey;
-      if (current()) this.patch({ aid, deck, quiz, result: saved?.result ?? null,
-        resultAnswers: Object.fromEntries((saved?.answers ?? []).map((a) => [a.item_id, a.answer])), journey, quizFeedback: {}, quizHelp: null, requestedJobId: null });
-      if (current() && aid.kind === "audio_overview") await this.loadPodcastVoice();
-    });
+    await this.action((current) => this.showAidWork(current, id));
+  }
+  private async showAidWork(current: () => boolean, id: string): Promise<void> {
+    const aid = valid<W.Aid>("Aid", await this.commands().get(`/v1/study/aids/${id}`, this.headers()));
+    if (!current()) return;
+    const deck = aid.deck_id ? valid<W.Deck>("Deck", await this.commands().get(`/v1/study/decks/${aid.deck_id}`, this.headers())) : null;
+    if (!current()) return;
+    const quiz = aid.quiz_id ? valid<W.QuizView>("QuizView", await this.commands().get(`/v1/study/quizzes/${aid.quiz_id}`, this.headers())) : null;
+    if (!current()) return;
+    const saved = quiz ? valid<W.QuizSavedResult>("QuizSavedResult", await this.commands().get(`/v1/study/quizzes/${quiz.quiz_id}/saved-result`, this.headers())) : null;
+    if (!current()) return;
+    const journey = valid<W.StudyJourneyReply>("StudyJourneyReply", await this.mutate("POST", `/v1/study/aids/${id}/journey`, { action: "resume" })).journey;
+    if (current()) this.patch({ aid, deck, quiz, result: saved?.result ?? null,
+      resultAnswers: Object.fromEntries((saved?.answers ?? []).map((a) => [a.item_id, a.answer])), journey, quizFeedback: {}, quizHelp: null, requestedJobId: null });
+    if (current() && aid.kind === "audio_overview") await this.loadPodcastVoice();
   }
   /** Explicit actions update only the saved journey; generated aids and assessment evidence stay unchanged. */
   async saveJourney(action: W.StudyJourneyAction["action"]): Promise<void> {
@@ -757,9 +782,8 @@ export class StudyWorkspaceController {
     const source = journey.sources[0];
     if (!aidId || !source) return;
     const currentRevision = this.view.sources.some((s) => s.source_id === source.source_id && s.revision === source.revision);
-    await this.open(source.source_id, currentRevision ? undefined : source.revision);
+    await this.openAt(source.source_id, currentRevision ? undefined : source.revision, aidId);
     if (this.view.source?.source_id !== source.source_id || this.view.source.revision !== source.revision) return;
-    await this.showAid(aidId);
     if (!target && this.view.aid?.aid_id === aidId && !this.view.error) {
       if (journey.phase === "flashcards" && this.view.deck) this.patch({ deck: { ...this.view.deck, cards: this.view.deck.cards.filter((c) => journey.review_card_ids.includes(c.card_id)) } });
       if (journey.retry_quiz && this.view.result) { this.clearResult(); await this.saveDraft({}, 0); }
@@ -871,13 +895,14 @@ export class StudyWorkspaceController {
   async loadPage(page: number, revision?: number, sourceId?: string): Promise<Blob | null> {
     const source = this.view.source;
     if (!source) return null;
-    let result: Blob | null = null;
-    await this.action(async (current) => {
+    // A page read takes no lock: it is started by the material's own render, and must never stop the aid the learner
+    // asked for (a saved quiz) from showing meanwhile.
+    const generation = this.profiles.generation, selection = this.selection;
+    try {
       const blob = await this.commands().request<Blob>("GET", `/v1/study/sources/${sourceId ?? source.source_id}/pages/${page}?revision=${revision ?? source.revision}`, undefined, null, this.headers(), true);
-      if (blob.type !== "image/png" || blob.size > 2500000) throw new CommandError(200, "invalid_reply", false, undefined);
-      if (current()) result = blob;
-    });
-    return result;
+      if (blob.type !== "image/png" || blob.size > 2500000) return null;
+      return generation === this.profiles.generation && selection === this.selection ? blob : null;
+    } catch { return null; }
   }
   async readCitation(citation: W.Citation): Promise<boolean> {
     let ok = false;

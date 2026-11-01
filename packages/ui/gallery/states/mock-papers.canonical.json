@@ -2,7 +2,7 @@
   "id": "mock-papers.canonical",
   "title": "Mock exam place",
   "component": "MockPapers",
-  "note": "The Mock exam place (UXS-25): the student's mocks, then the papers on this computer by subject with kind, time, marks, questions, the calculator note and the time with extra time.",
+  "note": "The Mock exam place (UXS-25): the student's mocks, then the papers on this computer a subject at a time (the subject choice, then that subject's papers as compact rows by kind with time, questions, the calculator note and the time with extra time).",
   "state": "canonical",
   "payload": {
     "view": {
@@ -95,7 +95,9 @@
     "Choose a paper",
     "Your mocks",
     "31 out of 40",
-    "With your extra time: 75 minutes",
+    "Section mock",
+    "30 minutes · 24 questions",
+    "With your extra time: 38 minutes",
     "No calculator"
   ]
 }

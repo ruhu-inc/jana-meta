@@ -104,28 +104,74 @@ describe("STU-20", () => {
 });
 
 describe("UXS-67", () => {
-  test("Home leads with one input under Ready to learn, with Upload, Paste and Record above the box", () => {
-    const picked: string[] = [];
-    render(
-      <LocaleProvider locale="en">
-        <Home name="Ada" ask={<textarea aria-label="Ask anything, or paste a question" />} answer={<p>the answer</p>}
-          materials={{ onUpload: (f) => picked.push(`upload:${f.name}`), onPaste: () => picked.push("paste"), onRecord: (f) => picked.push(`record:${f.name}`) }}
-          plan={<p data-plan="">Next up</p>} subjects={[]} onSubject={() => undefined} pickup={[]} onPickup={() => undefined}
-          practice={{ ideas: [], refreshes: 0, subjectLabel: (s) => s }} onPractice={() => undefined} />
-      </LocaleProvider>,
-    );
+  const FOLLOWING = Node.DOCUMENT_POSITION_FOLLOWING;
+  const home = (extra: Partial<Parameters<typeof Home>[0]> = {}, picked: string[] = []) => render(
+    <LocaleProvider locale="en">
+      <Home name="Ada" ask={<textarea aria-label="Ask anything, or paste a question" />} answer={<p>the answer</p>}
+        materials={{ onUpload: (f) => picked.push(`upload:${f.name}`), onPaste: () => picked.push("paste"), onRecord: (f) => picked.push(`record:${f.name}`) }}
+        lastTime={<p data-last-time="">Last time you worked on physics.</p>} plan={<p data-plan="">Next up</p>}
+        subjects={[]} onSubject={() => undefined} pickup={[]} onPickup={() => undefined}
+        practice={{ ideas: [], refreshes: 0, subjectLabel: (s) => s }} onPractice={() => undefined} {...extra} />
+    </LocaleProvider>,
+  );
+
+  test("Continue learning leads and the Ask box follows it under its own heading", () => {
+    home();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Ready to learn, Ada?");
-    const group = screen.getByRole("group", { name: "Add material" });
-    expect(within(group).getAllByRole("button").map((b) => b.textContent)).toEqual(["Upload", "Paste", "Record"]);
+    // One block right under the greeting holds the Last time sentence and the plan.
+    const block = screen.getByRole("region", { name: "Continue learning" });
+    expect(screen.getByRole("heading", { level: 1 }).parentElement?.nextElementSibling).toBe(block);
+    expect(block.querySelector("[data-last-time]")?.textContent).toBe("Last time you worked on physics.");
+    expect(block.querySelector("[data-plan]")).not.toBeNull();
+    // The Ask box comes next, under its own heading (UXS-12 keeps it on the hub), with Ask anything's answer above it.
+    const askSection = screen.getByRole("region", { name: "Ask a question" });
+    expect(block.nextElementSibling).toBe(askSection);
     const box = screen.getByRole("textbox", { name: "Ask anything, or paste a question" });
-    // Results precede the input; material controls remain directly above it, and the plan follows both.
-    expect(group.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByText("the answer").compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByText("the answer").compareDocumentPosition(document.querySelector("[data-plan]")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(askSection.contains(box)).toBe(true);
+    expect(screen.getByText("the answer").compareDocumentPosition(box) & FOLLOWING).toBeTruthy();
+    // Then the one secondary action, Add material, and nothing else between.
+    const actions = screen.getByRole("group", { name: "Other ways to start" });
+    expect(askSection.nextElementSibling).toBe(actions);
+    expect(within(actions).getAllByRole("button").map((b) => b.textContent)).toEqual(["Add material"]);
+  });
+
+  test("Add material reveals Upload, Paste and Record, each still opening the study area", () => {
+    const picked: string[] = [];
+    home({}, picked);
+    expect(screen.queryByRole("group", { name: "Add material" })).toBeNull();
+    const add = screen.getByRole("button", { name: "Add material" });
+    expect(add.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(add);
+    expect(add.getAttribute("aria-expanded")).toBe("true");
+    const group = screen.getByRole("group", { name: "Add material" });
+    expect(add.getAttribute("aria-controls")).toBe(group.id);
+    expect(within(group).getAllByRole("button").map((b) => b.textContent)).toEqual(["Upload", "Paste", "Record"]);
     fireEvent.click(within(group).getByRole("button", { name: "Paste" }));
     const [upload, record] = [...document.querySelectorAll<HTMLInputElement>("[data-home-materials] input[type=file]")];
     fireEvent.change(upload!, { target: { files: [new File(["x"], "notes.pdf")] } });
     fireEvent.change(record!, { target: { files: [new File(["x"], "lecture.m4a")] } });
     expect(picked).toEqual(["paste", "upload:notes.pdf", "record:lecture.m4a"]);
+    // Without the study area there is no Add material; without a box, no actions at all.
+    cleanup();
+    home({ materials: null });
+    expect(screen.queryByRole("button", { name: "Add material" })).toBeNull();
+    expect(screen.getByRole("region", { name: "Ask a question" })).toBeDefined();
+    cleanup();
+    home({ ask: null });
+    expect(screen.queryByRole("group", { name: "Other ways to start" })).toBeNull();
+  });
+
+  test("worked-solution search and the diagnostic are quiet rows under the actions, not cards", () => {
+    const opened: string[] = [];
+    home({ more: [
+      { id: "search", icon: "search", label: "Search worked solutions", onClick: () => opened.push("search") },
+      { id: "diagnostic", icon: "mastery-nearly", label: "Find where to start", onClick: () => opened.push("diagnostic") },
+    ] });
+    const rows = screen.getByRole("list", { name: "More" });
+    expect(within(rows).getAllByRole("button").map((b) => b.textContent)).toEqual(["Search worked solutions", "Find where to start"]);
+    expect(screen.getByRole("group", { name: "Other ways to start" }).compareDocumentPosition(rows) & FOLLOWING).toBeTruthy();
+    expect(rows.querySelector("section")).toBeNull();
+    fireEvent.click(within(rows).getByRole("button", { name: "Find where to start" }));
+    expect(opened).toEqual(["diagnostic"]);
   });
 });

@@ -336,11 +336,11 @@ describe("PRD-21", () => {
     render(
       <LocaleProvider locale="en">
         <StoreProvider holder={holder} session={null}>
-          <AppFrame profiles={profiles}><Settings profiles={profiles} /></AppFrame>
+          <AppFrame profiles={profiles}><Settings profiles={profiles} section={{ id: "online_features", at: 1 }} /></AppFrame>
         </StoreProvider>
       </LocaleProvider>,
     );
-    await screen.findByRole("checkbox", { name: "Easy-read text" });
+    await screen.findByRole("checkbox", { name: "Downloads" });
     await settled("Offline");
     // The student sees the indicator and its popover, which lists the features and switches nothing.
     fireEvent.click(trigger());

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { GENERATE_TOOLS, type GenerateTool, type StudyContracts as W } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Icon, type IconName } from "../icons.js";
-import { Button, Dialog, FIELD_LOOK, IconButton, Notice, SegmentedControl } from "../primitives/index.js";
+import { Button, Dialog, Disclosure, FIELD_LOOK, IconButton, Notice, SegmentedControl } from "../primitives/index.js";
 
 const TOOL_ICON: Record<GenerateTool, IconName> = { summary: "notes", quiz: "question", flashcards: "flashcards", notes: "learn", audio_overview: "read-aloud", lesson_plan: "timer", concept_map: "share" };
 /** Small, decorative accents use Jana's existing palette; names and icons still identify every tool. */
@@ -22,6 +22,7 @@ const SUMMARY_STYLES = { detailed: "", cheat: "Format as concise revision bullet
 /** Three common tools first; additional formats remain available in a disclosure. */
 export function GenerateTools({ disabled, empty = false, onPick, onConfigure, pendingKinds = [] }: { disabled: boolean; empty?: boolean; pendingKinds?: readonly string[]; onPick: (tool: GenerateTool) => void; onConfigure?: (tool: GenerateTool) => void }) {
   const t = useT();
+  const [moreOpen, setMoreOpen] = useState(false);
   const card = (tool: GenerateTool) => <div key={tool} className="flex items-center rounded-card border border-line bg-canvas"><button type="button" disabled={disabled || empty || pendingKinds.includes(tool)} onClick={() => onPick(tool)}
         className="jana-press flex min-h-16 min-w-0 flex-1 items-start gap-3 rounded-card px-3 py-3 text-start hover:bg-wash disabled:cursor-not-allowed disabled:bg-chrome disabled:text-faint">
         <StudyToolIcon kind={tool} />
@@ -31,7 +32,7 @@ export function GenerateTools({ disabled, empty = false, onPick, onConfigure, pe
     <h2 id="study-generate" className="text-ui font-semibold text-ink">{t("study.generate_heading")}</h2>
     <p className="text-meta text-muted">{t(empty ? "study.generate_needs_material" : "study.generate_help")}</p>
     <div className="grid grid-cols-1 gap-2 @xl:grid-cols-3">{GENERATE_TOOLS.filter((tool) => ["summary", "quiz", "flashcards"].includes(tool)).map(card)}</div>
-    <details><summary className="cursor-pointer py-2 text-meta text-muted">{t("study.more_tools")}</summary><div className="mt-2 grid grid-cols-1 gap-2 @xl:grid-cols-2">{GENERATE_TOOLS.filter((tool) => !["summary", "quiz", "flashcards"].includes(tool)).map(card)}</div></details>
+    <Disclosure summary={t("study.more_tools")} open={moreOpen} onToggle={() => setMoreOpen((open) => !open)}><div className="grid grid-cols-1 gap-2 pt-2 @xl:grid-cols-2">{GENERATE_TOOLS.filter((tool) => !["summary", "quiz", "flashcards"].includes(tool)).map(card)}</div></Disclosure>
   </section>;
 }
 
@@ -118,11 +119,14 @@ export function MySets({ sets, busy, onOpen, heading = true, contextual = false,
     if (items) items.push(set); else groups.set(key, [set]);
   }
   const families = [...groups.values()].map((items) => items.sort((a, b) => Number(b.status === "ready") - Number(a.status === "ready") || b.created_at.localeCompare(a.created_at)));
-  const row = (set: W.StudySet) => { const progress = progressText(t, set.progress), name = `${t(`study.tool.${set.kind}`)} · ${set.title ?? t("study.private_source")}`; return <div key={set.aid_id} className="flex flex-col gap-2 py-1">
+  // A set is named by what it holds ("Quiz · Biology · 3 questions"), its date in the meta line; inside its material
+  // the material's title is left out.
+  const size = (set: W.StudySet) => set.progress ? "questions_total" in set.progress ? t("study.quiz_questions", { count: set.progress.questions_total }) : t("study.sets.cards_count", { count: set.progress.cards_total }) : null;
+  const row = (set: W.StudySet) => { const progress = progressText(t, set.progress), name = [t(`study.tool.${set.kind}`), ...(contextual ? [] : [set.title ?? t("study.private_source")]), ...(size(set) ? [size(set)] : [])].join(" · "); return <div key={set.aid_id} className="flex flex-col gap-2 py-1">
     <div className="flex items-center gap-3">
       <div className="min-w-0 flex-1 [&>button]:w-full [&>button]:justify-start [&>button]:text-start [&>button]:min-w-0"><Button size="sm" tone="ghost" disabled={busy} onClick={() => { if (set.private && !set.title) setConfirm(set.aid_id); else onOpen(set); }}>
         <StudyToolIcon kind={set.kind} size={16} />
-        <span className="flex min-w-0 flex-col gap-0.5"><span className="truncate">{contextual ? t(`study.tool.${set.kind}`) : name}</span><span className="text-meta font-normal text-muted">{t("study.set_created", { when: new Date(set.created_at) })}</span></span>
+        <span className="flex min-w-0 flex-col gap-0.5"><span className="truncate">{name}</span><span className="text-meta font-normal text-muted">{t("study.set_created", { when: new Date(set.created_at) })}</span></span>
       </Button></div>
       {set.status === "stale" ? <p className="text-meta text-muted">{t("study.stale")}</p> : progress && <p className="text-meta text-muted">{progress}</p>}
     </div>

@@ -52,6 +52,7 @@ async function home(fake: ReturnType<typeof routed>) {
   fireEvent.click(await screen.findByRole("button", { name: /^Ada/ }));
   const nav = await screen.findByRole("navigation", { name: "Main" });
   await screen.findByRole("heading", { level: 1, name: /^Ready to learn, Ada\?$/ });
+  fireEvent.click(await screen.findByRole("button", { name: "Add material" }));
   await screen.findByRole("group", { name: "Add material" });
   return nav;
 }

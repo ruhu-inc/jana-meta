@@ -14,6 +14,7 @@ import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
 import { Button, ErrorState, IconButton, Loader } from "../primitives/index.js";
 import { ComposerShell } from "../primitives/ComposerShell.js";
+import { useAutoGrow } from "../primitives/autogrow.js";
 
 /** What the thread reads and does: the companion controller, or a stand-in with the same members (the tests). */
 export type CompanionThreadSource = Pick<CompanionController, "holder" | "getThread" | "subscribe" | "send" | "retry" | "answerNotice" | "loadEarlier">;
@@ -100,6 +101,7 @@ export function CompanionThread({ companion, onAction, place = "panel", draft: g
   const [answering, setAnswering] = useState(false);
   const list = useRef<HTMLOListElement>(null);
   const composer = useRef<HTMLTextAreaElement>(null);
+  useAutoGrow(composer, draft);
   const draftShown = useRef(onDraftShown);
   draftShown.current = onDraftShown;
   useEffect(() => {
@@ -127,8 +129,9 @@ export function CompanionThread({ companion, onAction, place = "panel", draft: g
   return (
     <section aria-labelledby={heading} data-companion-thread={sessionId ?? ""} data-companion-place={place}
       className={`flex flex-col gap-3 ${place === "panel" ? "rounded-card border border-line bg-canvas px-5 py-4" : ""}`}>
+      {/* Inside a material the tab already names the thread: the heading stays for assistive technology only. */}
       <header className="flex flex-col gap-1">
-        <h2 id={heading} className="flex items-center gap-2 text-ui font-semibold text-ink"><Icon name="study-area" size={16} />{t("study.companion.title")}</h2>
+        <h2 id={heading} className={place === "tab" ? "sr-only" : "flex items-center gap-2 text-ui font-semibold text-ink"}>{place === "tab" ? null : <Icon name="study-area" size={16} />}{t("study.companion.title")}</h2>
         <p data-companion-local="" className="text-meta text-muted">{t("study.companion.on_this_computer")}</p>
       </header>
       {(thread.status === "idle" || thread.status === "opening") && thread.opener === null && <Loader label={t("study.companion.opening")} />}
@@ -173,7 +176,7 @@ export function CompanionThread({ companion, onAction, place = "panel", draft: g
       <form onSubmit={(e) => { e.preventDefault(); send(); }}>
         <ComposerShell send={<IconButton type="submit" tone="action" icon="send" tip="above" label={t("study.companion.send")} disabled={!ready || draft.trim() === ""} />}>
           <label htmlFor={`${heading}-message`} className="sr-only">{t("study.companion.message_label")}</label>
-          <textarea ref={composer} id={`${heading}-message`} data-companion-draft={draft !== "" ? "" : undefined} rows={2} maxLength={COMPANION_MESSAGE_MAX} disabled={!ready} placeholder={t("study.companion.placeholder")} value={draft}
+          <textarea ref={composer} id={`${heading}-message`} data-companion-draft={draft !== "" ? "" : undefined} rows={1} maxLength={COMPANION_MESSAGE_MAX} disabled={!ready} placeholder={t("study.companion.placeholder")} value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
             className="w-full resize-none bg-transparent px-1 text-body text-ink outline-none placeholder:text-placeholder" />

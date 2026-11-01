@@ -232,7 +232,7 @@ describe("UXS-27", () => {
     expect(within(table).getAllByRole("row")).toHaveLength(4);
     expect(within(table).getAllByRole("row")[3]!.textContent).toMatch(/42$/);
     // "What your tutor knows" opens from here and leads back.
-    fireEvent.click(screen.getByRole("button", { name: "What your tutor knows" }));
+    fireEvent.click(within(screen.getByRole("banner")).getByRole("button", { name: "What your tutor knows" }));
     await screen.findByRole("heading", { name: "What the tutor knows about you" });
   });
 
@@ -305,6 +305,7 @@ describe("PRM-03", () => {
     });
     await launch(core);
     fireEvent.click(menuItem("Settings"));
+    fireEvent.click(await screen.findByRole("button", { name: /^Tutor$/ }));
     const section = await waitFor(() => {
       const found = document.querySelector<HTMLElement>("[data-settings-section='tutor']");
       expect(found).not.toBeNull();

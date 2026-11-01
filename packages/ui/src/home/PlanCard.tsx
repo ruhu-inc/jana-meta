@@ -5,12 +5,15 @@
 // offers to continue at the next activity (stopping kept the rest, LRN-31). A finished plan offers Keep learning: a
 // fresh proposal, started at once (the `start` action of the new card), at any hour and as often as wanted (D54). Not
 // today asks nothing further and leaves lessons, practice and the tutor open (LRN-32). The streak with its freezes sits
-// at the foot, said neutrally (LRN-33, LRN-35).
+// at the foot, said neutrally (LRN-33, LRN-35). Inside Home's Continue learning block (`useContinueBlock`) the card is
+// a row of the block: no chrome of its own, "Next up" a quiet label under the block's heading, the hero's Start the
+// block's one primary button. Standalone (the gallery) it is the card it was.
 import { useState, type ReactNode } from "react";
 import { nextBlock, type PlanBlock, type PlanChoice, type PlanState } from "@jana/client-core";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
 import { Button, ErrorState, Skeleton } from "../primitives/index.js";
+import { useContinueBlock } from "./Home.js";
 
 /** The words for a block's activity: its title and what it is (the core's ids become names here). */
 export interface PlanNames {
@@ -102,24 +105,43 @@ function HeroRow({ block, text, action, secondary }: { block: PlanBlock; text: {
 export function PlanCard({ state, names, streak, actions }: { state: PlanState; names: PlanNames; streak: { days: number; freezes: number } | null; actions: PlanActions }) {
   const t = useT();
   const text = useBlockText(names);
+  const embedded = useContinueBlock();
   const [changing, setChanging] = useState(false);
   const plan = state.plan;
   if (state.status === "unavailable" || state.status === "idle") return null;
-  const frame = (children: ReactNode, status: string) => (
-    <section aria-labelledby="home-plan" data-plan={status} aria-busy={state.busy} className="flex flex-col gap-4 rounded-card border border-line bg-canvas px-3 pt-5 pb-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 px-2">
-        <h2 id="home-plan" className="text-heading text-ink">{t("plan.title")} <span className="text-meta font-regular text-faint">{t("plan.estimates")}</span></h2>
-        {plan?.status === "proposed" && !changing && <Button size="sm" tone="ghost" disabled={state.busy} aria-expanded={changing} onClick={() => setChanging(true)}>{t("plan.change")}</Button>}
-      </div>
-      {children}
+  const frame = (children: ReactNode, status: string) => {
+    const change = plan?.status === "proposed" && !changing && <Button size="sm" tone="ghost" disabled={state.busy} aria-expanded={changing} onClick={() => setChanging(true)}>{t("plan.change")}</Button>;
+    const foot = <>
       {state.actionFailed && <div className="px-2"><ErrorState message={t("plan.action_failed")} /></div>}
       {streak !== null && streak.days > 0 && (
         <p data-plan-streak={streak.days} className="border-t border-line px-2 pt-3 text-meta text-muted">
           {streak.days === 1 ? t("progress.streak.new") : t("plan.streak", { days: streak.days })} · {t("progress.streak.freezes", { count: streak.freezes })}
         </p>
       )}
-    </section>
-  );
+    </>;
+    if (embedded) {
+      return (
+        <section aria-labelledby="home-plan" data-plan={status} aria-busy={state.busy} className="flex flex-col gap-3 border-t border-line pt-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 px-2">
+            <h3 id="home-plan" className="text-label font-medium text-faint">{t("plan.title")} <span className="font-regular">{t("plan.estimates")}</span></h3>
+            {change}
+          </div>
+          {children}
+          {foot}
+        </section>
+      );
+    }
+    return (
+      <section aria-labelledby="home-plan" data-plan={status} aria-busy={state.busy} className="flex flex-col gap-4 rounded-card border border-line bg-canvas px-3 pt-5 pb-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 px-2">
+          <h2 id="home-plan" className="text-heading text-ink">{t("plan.title")} <span className="text-meta font-regular text-faint">{t("plan.estimates")}</span></h2>
+          {change}
+        </div>
+        {children}
+        {foot}
+      </section>
+    );
+  };
   if (state.status === "failed") return frame(<div className="px-2"><ErrorState message={t("plan.failed")} action={{ label: t("action.try_again"), onClick: actions.onRetry }} /></div>, "failed");
   // Shaped like the hero it stands in for (title, two lines, Start), so the Ask box below does not jump when it lands.
   if (plan === null) return frame(<div className="flex flex-col items-start gap-3 px-2"><div className="w-full"><Skeleton lines={3} /></div><span aria-hidden="true" className="block h-11 w-24 rounded-control bg-panel" /></div>, "loading");

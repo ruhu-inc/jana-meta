@@ -1,7 +1,9 @@
-// Settings (UXS-29, UXS-46, TABLE UXS-46a; direction A "Studio"): one calm page with the section list beside the
-// sections, every section open, with no PIN and no parent account (D86, D87). The page lists exactly the sections the
-// core names for this build's stage, in its order (`GET /v1/settings/sections`; the stage 2 sections from a core
-// without the route). Selecting a section in the list brings it into view and marks it current. The sections: Online
+// Settings (UXS-29, UXS-46, TABLE UXS-46a; direction A "Studio"): one calm page that shows one section at a time, with
+// no PIN and no parent account (D86, D87). The page lists exactly the sections the core names for this build's stage,
+// in its order (`GET /v1/settings/sections`; the stage 2 sections from a core without the route): beside the open
+// section as a side list where the page is wide enough, and as one compact select above it where it is not (a
+// container query, so the learner never scrolls past a long menu to reach a long section). Selecting a section shows
+// its body and marks it current; `section` opens the page at one (the student menu's deep links). The sections: Online
 // features (the switches, with the study screen's research consents and research export below them, UXS-07, PRV-06,
 // EVL-22); Profiles (UXS-29); Tutor models (UXS-11); Content (packs from USB or a file, and packs that failed their
 // check); "What leaves this device", the egress ledger (ARC-10, PRV-28) and what a usage report holds (the published
@@ -25,7 +27,7 @@ import { characterKeysStored, sessionCharacterKeys, useCharacterKeys } from "../
 import { TOKENS } from "../generated/tokens.js";
 import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
-import { Button, Disclosure, ErrorState, Notice, SegmentedControl, Skeleton, Switch } from "../primitives/index.js";
+import { Button, Disclosure, ErrorState, FIELD_LOOK, Notice, SegmentedControl, Skeleton, Switch } from "../primitives/index.js";
 import { useProfiles } from "../profiles/ProfilePicker.js";
 import { sessionTheme, THEME_PREFERENCES, themeStored, useThemePreference, type ThemePreference } from "./theme.js";
 import { DataExport } from "./DataExport.js";
@@ -72,7 +74,7 @@ function Card({ children }: { children: ReactNode }) {
 function Section({ id, heading, children }: { id: SectionId; heading: string; children: ReactNode }) {
   return (
     <section id={`settings-${id}`} data-settings-section={id} aria-labelledby={`settings-${id}-title`} className="flex scroll-mt-4 flex-col gap-3">
-      <h2 id={`settings-${id}-title`} className="text-heading text-ink">{heading}</h2>
+      <h2 id={`settings-${id}-title`} tabIndex={-1} className="text-heading text-ink">{heading}</h2>
       {children}
     </section>
   );
@@ -227,7 +229,11 @@ export function Settings({ profiles, onClose, onOpenKnows, chooseSource, voiceSe
   // The core's sections for this build's stage, in its order; the stage 2 sections until it answers (the same list on
   // a stage 2 core) or when it cannot.
   const [sections, setSections] = useState<string[]>([...STAGE_2_SECTIONS]);
-  const [current, setCurrent] = useState<SectionId>(STAGE_2_SECTIONS[0]);
+  // The selected section, the only one whose body is on the page; the one the page was opened at, else the first.
+  const [current, setCurrent] = useState<SectionId>(section?.id ?? STAGE_2_SECTIONS[0]);
+  // Counts the requests to land on the selected section (a list click, a deep link, Help's way to Data export), so
+  // its heading takes focus once that section is on the page.
+  const [landings, setLandings] = useState(0);
   const page = useRef<HTMLDivElement>(null);
   const installing = useInstallations(profiles, chooseSource);
   const characterKeys = useCharacterKeys(view.active, view.settings);
@@ -245,18 +251,23 @@ export function Settings({ profiles, onClose, onOpenKnows, chooseSource, voiceSe
     const key = named[id];
     return key !== undefined ? t(key) : t(`settings.section.${id}`);
   };
+  // A section the core does not list (a stale deep link) cannot be shown: the first one is.
+  const shown: SectionId = sections.includes(current) ? current : (sections[0] ?? current);
   const go = (id: SectionId) => {
     setCurrent(id);
-    const target = page.current?.querySelector<HTMLElement>(`#settings-${id}`);
+    setLandings((n) => n + 1);
+  };
+  useEffect(() => {
+    if (landings === 0) return;
+    const target = page.current?.querySelector<HTMLElement>("[data-settings-section]");
     target?.scrollIntoView?.({ block: "start" });
     target?.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
-  };
+  }, [landings]);
   const shownAt = useRef<number | null>(null);
   useEffect(() => {
     if (section === null || shownAt.current === section.at || !sections.includes(section.id)) return;
     shownAt.current = section.at;
-    const id = section.id;
-    requestAnimationFrame(() => go(id));
+    go(section.id);
   });
   const preferences = (section: "accessibility" | "study") => view.settings !== null
     ? <Preferences profiles={profiles} settings={view.settings} section={section} onOpenKnows={onOpenKnows} onKeys={() => setKeysOpen(true)} />
@@ -339,17 +350,25 @@ export function Settings({ profiles, onClose, onOpenKnows, chooseSource, voiceSe
       <ScreenHeader end={onClose !== undefined ? <Button tone="ghost" onClick={onClose}><Icon name="go-back" size={16} />{t("action.back")}</Button> : undefined}>
         <h1 className="text-ui font-semibold text-ink">{t("settings.title")}</h1>
       </ScreenHeader>
-      <div className="flex flex-1 flex-wrap items-start gap-8 px-8 pt-4 pb-12">
-        <nav aria-label={t("settings.sections")} className="flex w-60 shrink-0 flex-col gap-0.5 lg:sticky lg:top-4">
-          {sections.map((id) => (
-            <button key={id} type="button" data-settings-link={id} aria-current={current === id ? "true" : undefined} onClick={() => go(id)}
-              className="jana-press relative flex min-h-10 items-center rounded-control px-3 text-start text-ui font-medium text-muted after:absolute after:inset-x-0 after:-inset-y-0.5 after:content-[''] hover:bg-wash hover:text-ink aria-[current=true]:bg-wash aria-[current=true]:font-semibold aria-[current=true]:text-ink">
-              {title(id)}
-            </button>
-          ))}
-        </nav>
-        <div className="flex max-w-170 min-w-0 flex-1 basis-105 flex-col gap-8">
-          {sections.map((id) => <Section key={id} id={id} heading={title(id)}>{body(id)}</Section>)}
+      <div className="@container flex flex-1 flex-col">
+        {/* Wide enough (the list, a gap and a readable section): the side list; otherwise one select above the section. */}
+        <div className="flex flex-col gap-6 px-8 pt-4 pb-12 @3xl:flex-row @3xl:items-start @3xl:gap-8">
+          <nav aria-label={t("settings.sections")} className="shrink-0 @3xl:sticky @3xl:top-4 @3xl:w-60">
+            <select aria-label={t("settings.sections")} data-settings-select value={shown} onChange={(event) => setCurrent(event.target.value)} className={`${FIELD_LOOK} max-w-80 @3xl:hidden`}>
+              {sections.map((id) => <option key={id} value={id}>{title(id)}</option>)}
+            </select>
+            <div className="hidden flex-col gap-0.5 @3xl:flex">
+              {sections.map((id) => (
+                <button key={id} type="button" data-settings-link={id} aria-current={shown === id ? "true" : undefined} onClick={() => go(id)}
+                  className="jana-press relative flex min-h-10 items-center rounded-control px-3 text-start text-ui font-medium text-muted after:absolute after:inset-x-0 after:-inset-y-0.5 after:content-[''] hover:bg-wash hover:text-ink aria-[current=true]:bg-wash aria-[current=true]:font-semibold aria-[current=true]:text-ink">
+                  {title(id)}
+                </button>
+              ))}
+            </div>
+          </nav>
+          <div className="flex max-w-170 min-w-0 flex-1 flex-col gap-8">
+            <Section key={shown} id={shown} heading={title(shown)}>{body(shown)}</Section>
+          </div>
         </div>
       </div>
       <KeyboardHelp open={keysOpen} onClose={() => setKeysOpen(false)} characterKeys={characterKeys} />

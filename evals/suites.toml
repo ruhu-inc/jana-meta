@@ -20,7 +20,7 @@ files = ["evals/safety/*.yaml", "evals/safety/scripts/*.yaml"]
 owner = "Subject leads"
 cadence = "nightly; every change"
 stage = "S1"
-version = "2026-11-01.1"
+version = "2026-11-01.2"
 files = ["content/curriculum/*/*/*.yaml", "content/curriculum/*/*/*/*.yaml", "content/curriculum/ref/*/*.yaml"]
 
 [suites.marking]
@@ -41,7 +41,7 @@ files = ["evals/prompt-snapshots/*/*.txt"]
 owner = "Client lead"
 cadence = "every commit touching client"
 stage = "S1"
-version = "2026-11-01.1"
+version = "2026-11-01.2"
 files = ["packages/ui/gallery/states/*.json"]
 
 [suites.performance]
@@ -125,7 +125,7 @@ files = []
 owner = "Engine engineer"
 cadence = "every commit touching engine, memory or study"
 stage = "S2"
-version = "2026-11-01.1"
+version = "2026-11-01.2"
 files = ["services/agent-core/tests/scenarios/w8/*.yaml", "services/agent-core/tests/scenarios/w9/*.yaml"]
 
 [suites.learner_map]

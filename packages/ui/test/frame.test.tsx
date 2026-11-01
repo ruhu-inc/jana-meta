@@ -402,7 +402,7 @@ describe("UXS-12", () => {
       </LocaleProvider>,
     );
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Ready to learn, Ada?");
-    expect(screen.getByRole("heading", { name: "Ask a question" })).toBeTruthy();
+    // The Ask box stays on the hub, under its own heading after the Continue learning block.
     expect(screen.getByRole("textbox", { name: "Message to the tutor" })).toBeTruthy();
     const group = screen.getByRole("group", { name: "Choose a subject" });
     expect(within(group).getByRole("button", { name: "Physics" }).getAttribute("aria-pressed")).toBe("true");

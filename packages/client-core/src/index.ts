@@ -113,7 +113,7 @@ export {
   type HistoryStep, type HistoryView,
 } from "./history.js";
 export * from "./ask-anything.js";
-export { StudyWorkspaceController, EMPTY_STUDY, GENERATE_TOOLS, BROWSER_OPENER, VIDEO_SUFFIXES, chunkLines, citationMoment, lineMoment, lineText, momentLabel, momentUrl, type ExternalOpener, type GenerateTool, type StudyWorkspaceView, type StudyContracts, type ResearchContracts, type PodcastAudio } from "./study-workspace.js";
+export { StudyWorkspaceController, EMPTY_STUDY, GENERATE_TOOLS, BROWSER_OPENER, VIDEO_SUFFIXES, QUIZ_CONTEXT_MARK, isQuizHelpPrompt, quizHelpItem, chunkLines, citationMoment, lineMoment, lineText, momentLabel, momentUrl, type ExternalOpener, type GenerateTool, type StudyWorkspaceView, type StudyContracts, type ResearchContracts, type PodcastAudio } from "./study-workspace.js";
 export {
   EMPTY_EXAM_DATES, EMPTY_PAST_PAPERS, ExamDateController, PastPaperController, type ExamCountdown, type ExamDate, type ExamDateDraft, type ExamDateList,
   type ExamDatesView, type ExamReminder, type PaperSource, type PastPaperDraft, type PastPaperSubject, type PastPaperSummary, type PastPapersView, type PastPaperView,

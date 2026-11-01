@@ -1,15 +1,19 @@
 // Study from your materials (STU, D61–D64): the library with My Sets, then an opened material as a split view, the
 // material on the left (a recording with its player, chapters and transcript, STU-22) and its study tools on the
-// right: the Generate panel with each tool's settings (STU-21, D118) and Chat, with the ask box docked at the foot of
-// the tools so a question about the material is always one step away.
+// right: the Generate panel with each tool's settings (STU-21, D118), **Ask this material** (one conversation grounded
+// in the material, its history on demand, a one-line ask box that grows as the learner types) and **Your tutor**.
+// A quiz is its own practice screen (StudyQuiz.tsx). The library's header keeps Add material; Activity and All study
+// sets wait in a More menu, and Explore asks for one topic before the learner chooses research or a concept map
+// (the crowding review of 2026-11-01).
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { followUps, type GenerateTool, type HelpKind, type StudyContracts as W, type StudyWorkspaceController } from "@jana/client-core";
+import { followUps, isQuizHelpPrompt, type GenerateTool, type StudyContracts as W, type StudyWorkspaceController } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
-import { Button, Dialog, EmptyState, ErrorState, FIELD_LOOK, IconButton, Loader, Notice, ProgressBar } from "../primitives/index.js";
-import { FollowUpChips, HelpChips } from "../chips/NextStepChips.js";
+import { Button, Dialog, EmptyState, ErrorState, FIELD_LOOK, IconButton, Loader, MenuButton, Notice, ProgressBar } from "../primitives/index.js";
+import { FollowUpChips } from "../chips/NextStepChips.js";
 import { ComposerShell } from "../primitives/ComposerShell.js";
-import { StudyInline as PackInline, StudyText as PackText, StudySourceText } from "./StudyText.js";
+import { useAutoGrow } from "../primitives/autogrow.js";
+import { StudyText as PackText, StudySourceText } from "./StudyText.js";
 import { useOpenLesson, useOpenTopic } from "./link.js";
 import { defaultRequest, GenerateDialog, GenerateTools, MySets, type GenerateRequest } from "./StudyGenerate.js";
 import { StudyPlayer } from "./StudyPlayer.js";
@@ -20,13 +24,14 @@ import { StudyConceptMap } from "./StudyConceptMap.js";
 import { StudyResearch } from "./StudyResearch.js";
 import { StudyLibrary, materialGroups } from "./StudyLibrary.js";
 import { StudyJourney } from "./StudyJourney.js";
+import { StudyQuiz, type StudyHelpKind } from "./StudyQuiz.js";
 import { citationKey, StudyCitations } from "./StudyCitation.js";
 
 const ACCEPT = ".pdf,.txt,.md,.docx,.odt,.pptx,.odp,.png,.jpg,.jpeg,.webp,.wav,.mp3,.m4a,.mp4,.webm,.ogg,.flac,.aac,.mov,.mkv,.avi";
 export type StudyTab = "generate" | "chat" | "companion";
 type Tab = StudyTab;
 const TABS: readonly Tab[] = ["generate", "chat"];
-/** With the companion thread (SPEC §19.4): **Your tutor** is a third tab beside Generate and Chat. */
+/** With the companion thread (SPEC §19.4): **Your tutor** is a third tab beside Generate and Ask this material. */
 const TABS_WITH_COMPANION: readonly Tab[] = [...TABS, "companion"];
 /** Somewhere the app asks Study to go (SPEC §19.3.3, a companion button or the plan's due Study cards): a job, aid or
  * deck opened in its material, the add panel, research with a topic filled in (never started for the learner), or
@@ -36,14 +41,12 @@ export type StudyRequest = { kind: "target"; job_id?: string; aid_id?: string; d
   | { kind: "source"; source_id: string } | { kind: "flashcards"; source_id: string }
   // Open the moment (SPEC §20.4, a companion button): the material opens at a moment (the browser for a YouTube video).
   | { kind: "moment"; source_id: string; at_ms: number };
-const STUDY_HELP = ["hint", "walk_through"] as const;
-/** The tab an aid of this kind lives under: a chat reply under Chat, every generated aid under Generate. */
+/** The tab an aid of this kind lives under: a chat reply under Ask this material, every generated aid under Generate. */
 const tabOf = (kind: string): Tab => (kind === "chat" ? "chat" : "generate");
-/** A multi-select answer is its chosen option ids, comma-separated (STU-21). */
-const picked = (answer: string | undefined) => (answer ?? "").split(",").filter(Boolean);
 
-/** `onTab` hears which tab is open: the voice conversation lives in Chat (VOC-53, D130). */
-export function StudyWorkspace({ controller, lastTime, companion, request, onRequestDone, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened, onAskMoment, onSkill, skillName }: { controller: StudyWorkspaceController; /** The Last time card in the library (SPEC §19.5.2). */ lastTime?: ReactNode;
+/** `onTab` hears which tab is open: the voice conversation lives in Ask this material (VOC-53, D130). */
+export function StudyWorkspace({ controller, companion, request, onRequestDone, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened, onAskMoment, onSkill, skillName }: { controller: StudyWorkspaceController;
+  /** The Last time card (SPEC §19.5.2) is Home's Continue learning block now; the library no longer repeats it. */ lastTime?: ReactNode;
   /** Ask about this moment (SPEC §20.5 step 4): Your tutor opens with the moment as its pending context. */ onAskMoment?: (source: W.Source, at_ms: number) => void;
   /** A skill chip in the outline: the learner's map at that skill (SPEC §21). */ onSkill?: (kcId: string) => void; skillName?: (kcId: string) => string | null;
   /** **Your tutor** (SPEC §19.4): the library's panel above the sources and a third tab inside a material, one thread. */ companion?: (place: "panel" | "tab") => ReactNode;
@@ -95,7 +98,7 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   }, [sourceOpen, view.source?.source_id, view.chunks, view.busy, pageImage, pageLoading, pageFailed]);
   // Study processing uses the online plan; saved passages remain readable on this computer.
   const preferCloud = true;
-  const [helpReview, setHelpReview] = useState<{ itemId: string; kind: (typeof STUDY_HELP)[number] } | null>(null);
+  const [helpReview, setHelpReview] = useState<{ itemId: string; kind: StudyHelpKind } | null>(null);
   const [chatPrompt, setChatPrompt] = useState(""), [noteConfirm, setNoteConfirm] = useState<string | null>(null), [extraConfirm, setExtraConfirm] = useState<string | null>(null);
   const [chatContext, setChatContext] = useState<string | null>(null);
   useEffect(() => { setChatContext(null); }, [view.aid?.aid_id, view.source?.source_id, view.source?.revision]);
@@ -105,23 +108,21 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   useEffect(() => setReadableConfirmed(reviewedRevisions.current.has(reviewKey)), [reviewKey]);
   const review = (value: boolean) => { setReadableConfirmed(value); if (value) reviewedRevisions.current.add(reviewKey); else reviewedRevisions.current.delete(reviewKey); };
   const [correcting, setCorrecting] = useState(false), [correctedText, setCorrectedText] = useState("");
-  const [deleting, setDeleting] = useState(false), [revealed, setRevealed] = useState(false), [answers, setAnswers] = useState<Record<string, string>>({});
+  const [deleting, setDeleting] = useState(false), [revealed, setRevealed] = useState(false);
   const [citation, setCitation] = useState<W.Citation | null>(null), [tool, setTool] = useState<GenerateTool | null>(null);
   const [toolContext, setToolContext] = useState<string | null>(null);
   useEffect(() => { setToolContext(null); }, [view.aid?.aid_id, view.source?.source_id, view.source?.revision]);
   const [duplicate, setDuplicate] = useState<{ tool: GenerateTool; request: GenerateRequest; aid: W.Aid } | null>(null);
-  const [quizPosition, setQuizPosition] = useState(0), [allQuestions, setAllQuestions] = useState(false);
-  const [questionTries, setQuestionTries] = useState<Record<string, number>>({});
-  const [checkedAnswers, setCheckedAnswers] = useState<Record<string, string>>({});
   const [pasting, setPasting] = useState(initialAdd === "paste"), [managing, setManaging] = useState(false), [dragging, setDragging] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [tab, setTab] = useState<Tab>(view.aid ? tabOf(view.aid.kind) : "generate");
   useEffect(() => { onTab?.(tab); }, [onTab, tab]);
   useEffect(() => { if (!companion && tab === "companion") setTab("generate"); }, [companion, tab]);
-  useEffect(() => { if (view.aid) { setTab(tabOf(view.aid.kind)); setSourceOpen(false); } }, [view.aid?.aid_id, view.aid?.kind]);
-  const resultPanel = useRef<HTMLElement>(null), quizHelpPanel = useRef<HTMLElement>(null);
-  useEffect(() => { if (view.quizHelp) { quizHelpPanel.current?.focus({ preventScroll: true }); quizHelpPanel.current?.scrollIntoView?.({ block: "nearest" }); } }, [view.quizHelp?.jobId, view.quizHelp?.aid?.aid_id]);
+  useEffect(() => { if (view.aid) { setTab(tabOf(view.aid.kind)); setSourceOpen(false); setHistoryOpen(false); } }, [view.aid?.aid_id, view.aid?.kind]);
+  const resultPanel = useRef<HTMLElement>(null);
   useEffect(() => { if (view.aid) { resultPanel.current?.focus({ preventScroll: true }); resultPanel.current?.scrollIntoView?.({ block: "start" }); } }, [view.aid?.aid_id, tab]);
   const passage = useRef<HTMLDivElement>(null), returnFocus = useRef<HTMLElement | null>(null), ask = useRef<HTMLTextAreaElement>(null);
+  useAutoGrow(ask, chatPrompt);
   useEffect(() => { void controller.load(); void controller.loadAccess?.(); return () => controller.close(); }, [controller]);
   const journeyOpened = useRef(onJourneyOpened);
   journeyOpened.current = onJourneyOpened;
@@ -140,8 +141,8 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   // the app opens is, so a development build's double mount never cancels it.
   const requestDone = useRef(onRequestDone);
   requestDone.current = onRequestDone;
-  const [researchTopic, setResearchTopic] = useState<{ topic: string; seq: number } | null>(null);
-  const addPanel = useRef<HTMLDivElement>(null);
+  const [researchStart, setResearchStart] = useState<{ topic: string; seq: number } | null>(null);
+  const addPanel = useRef<HTMLDivElement>(null), exploreField = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!request) return;
     let live = true;
@@ -160,7 +161,8 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
       else {
         if (controller.getView().source) controller.close();
         if (request.kind === "add") { setLibraryTab("materials"); setAdding(true); setPasting(false); requestAnimationFrame(() => addPanel.current?.scrollIntoView?.({ block: "start" })); }
-        else { setLibraryTab("explore"); setResearchTopic((current) => ({ topic: request.topic, seq: (current?.seq ?? 0) + 1 })); }
+        // A topic handed over by the companion is filled in, never started for the learner (SPEC §19.3.3).
+        else { setLibraryTab("explore"); setTopicText(request.topic.slice(0, 200)); requestAnimationFrame(() => { exploreField.current?.scrollIntoView?.({ block: "center" }); exploreField.current?.focus({ preventScroll: true }); }); }
       }
       if (live) requestDone.current?.();
     });
@@ -188,35 +190,13 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   }, [controller, active, view.source?.private]);
   const card = view.deck?.cards.find((c) => !c.suspended);
   useEffect(() => setRevealed(false), [card?.card_id]);
-  // A quiz opens where it was left: its draft answers, scrolled to the question the learner was on (STU-21).
-  const quizBox = useRef<HTMLFormElement>(null);
-  // ASM-28: a first wrong answer never shows the answer; it offers help and a second attempt. The explanation shows
-  // after the second attempt, or when the learner asks for it.
-  const [round, setRound] = useState(0), [shownAnswers, setShownAnswers] = useState<string[]>([]);
-  useEffect(() => { setRound(0); setShownAnswers([]); setAllQuestions(false); setQuestionTries({}); setCheckedAnswers({}); setQuizPosition(view.quiz?.draft?.position ?? 0); }, [view.quiz?.quiz_id]);
-  useEffect(() => { if (view.result) setRound((r) => r + 1); }, [view.result?.attempt_id]);
-  const help = (kind: HelpKind, itemId: string) => {
-    if (kind === "explain_simply") return;
+  // ASM-28 in a quiz: a first wrong answer never shows the answer. Help on a partially readable PDF asks for the
+  // extraction review first (StudyQuiz holds the rest of the quiz's state).
+  const help = (kind: StudyHelpKind, itemId: string) => {
     if (view.source?.state === "partial" && !readableConfirmed) setHelpReview({ itemId, kind });
     else void controller.requestQuizHelp(itemId, kind, readableConfirmed);
   };
   useEffect(() => setHelpReview(null), [view.quiz?.quiz_id, view.source?.revision]);
-  useEffect(() => {
-    const draft = view.quiz?.draft;
-    setAnswers(view.result ? view.resultAnswers ?? {} : draft ? Object.fromEntries(draft.answers.map((a) => [a.item_id, a.answer])) : {});
-    if (draft) quizBox.current?.querySelector<HTMLElement>(`[data-item="${draft.position}"]`)?.scrollIntoView?.({ block: "nearest" });
-  }, [view.quiz?.quiz_id]);
-  const answer = (id: string, value: string, position: number, save = true) => {
-    const next = { ...answers, [id]: value };
-    setAnswers(next);
-    if (save) void controller.saveDraft(next, position);
-  };
-  const moveQuestion = (position: number) => { setQuizPosition(position); void controller.saveDraft(answers, position); };
-  const checkQuestion = (id: string) => { const quizId = view.quiz?.quiz_id, value = answers[id] ?? ""; void controller.checkAnswer(id, value).then(() => {
-    if (controller.getView().quiz?.quiz_id !== quizId) return;
-    if (!controller.getView().error) { setQuestionTries((now) => ({ ...now, [id]: (now[id] ?? 0) + 1 })); setCheckedAnswers((now) => ({ ...now, [id]: value })); }
-    void controller.saveDraft(answers, quizPosition);
-  }); };
   useEffect(() => { setCitation(null); setDeleting(false); setCorrecting(false); }, [view.source?.source_id]);
   useEffect(() => {
     if (citation) {
@@ -250,16 +230,22 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   const revisionTag = (revision: number) => revision > 1 ? ` · ${t("study.revision", { revision })}` : "";
   const errorText = (code: string) => t(`study.error.${code}`) === `study.error.${code}` ? t("study.error.generic") : t(`study.error.${code}`);
   const accessBlocked = (view.access && view.access.status !== "ready") || view.error === "consent_required";
-  // A concept map of a typed topic, with no document (the pack's curated skills, or Muse Spark's with no source).
+  // Explore (the crowding review of 2026-11-01): one topic, then research with sources or a concept map of the topic
+  // (the pack's curated skills, or Muse Spark's with no source). Each result says where it came from.
   const topicMap = view.conceptTopic ?? null;
-  const topicMaps = <section className="flex flex-col gap-3" aria-labelledby="study-topic-map" data-topic-maps>
-    <h2 id="study-topic-map" className="text-ui font-semibold text-ink">{t("study.concept.topic_heading")}</h2>
-    <p className="text-meta text-muted">{t("study.concept.topic_help")}</p>
-    <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); void controller.makeTopicMap(topicText, preferCloud).then(() => { if (!controller.getView().error) setTopicText(""); }); }}>
-      <label className="flex min-w-0 flex-1 basis-56 flex-col gap-1 text-ui text-ink">{t("study.concept.topic_label")}<input className={FIELD_LOOK} value={topicText} maxLength={120} disabled={view.busy} onChange={(e) => setTopicText(e.target.value)} /></label>
-      <Button type="submit" disabled={view.busy || !topicText.trim()}>{t("study.concept.topic_make")}</Button>
+  const exploreTopic = topicText.trim();
+  const explore = <section className="flex flex-col gap-4" aria-labelledby="study-explore" data-explore>
+    <div className="flex flex-col gap-1"><h2 id="study-explore" className="text-ui font-semibold text-ink">{t("study.explore.heading")}</h2><p className="text-meta text-muted">{t("study.explore.help")}</p></div>
+    <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); if (exploreTopic.length < 3 || accessBlocked || view.busy) return; setResearchStart((current) => ({ topic: exploreTopic, seq: (current?.seq ?? 0) + 1 })); }}>
+      <label className="flex flex-col gap-1 text-ui text-ink">{t("study.research.topic_label")}<input ref={exploreField} className={FIELD_LOOK} value={topicText} maxLength={200} disabled={view.busy} onChange={(e) => setTopicText(e.target.value)} /></label>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" tone="primary" disabled={view.busy || Boolean(accessBlocked) || exploreTopic.length < 3}>{t("study.explore.research")}</Button>
+        <Button disabled={view.busy || exploreTopic.length === 0} onClick={() => { void controller.makeTopicMap(exploreTopic, preferCloud).then(() => { if (!controller.getView().error) setTopicText(""); }); }}>{t("study.explore.map")}</Button>
+      </div>
+      <p className="text-meta text-muted">{t("study.explore.provenance")}</p>
     </form>
-    {(view.conceptTopics ?? []).length > 0 && <div className="flex flex-wrap gap-2" aria-label={t("study.concept.topic_saved")}>{(view.conceptTopics ?? []).slice(0, 8).map((m) => <Button key={m.map_id} size="sm" tone="ghost" aria-pressed={topicMap?.map_id === m.map_id} disabled={view.busy} onClick={() => { void controller.openTopicMap(m.map_id); }}>{m.topic}</Button>)}</div>}
+    <StudyResearch controller={controller} hideStart start={researchStart} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
+    {(view.conceptTopics ?? []).length > 0 && <div className="flex flex-col gap-2" aria-label={t("study.concept.topic_saved")}><p className="text-meta text-muted">{t("study.concept.topic_saved")}</p><div className="flex flex-wrap gap-2">{(view.conceptTopics ?? []).slice(0, 8).map((m) => <Button key={m.map_id} size="sm" tone="ghost" aria-pressed={topicMap?.map_id === m.map_id} disabled={view.busy} onClick={() => { void controller.openTopicMap(m.map_id); }}>{m.topic}</Button>)}</div></div>}
     {topicMap !== null && <StudyConceptMap map={topicMap.concept_map} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editTopicMap(ops); }}
       heading={<div className="flex flex-wrap items-center justify-between gap-2" data-topic-map={topicMap.map_id} data-origin={topicMap.origin}>
         <div className="flex flex-col"><h3 className="text-heading text-ink">{topicMap.topic}</h3><p className="text-meta text-muted">{t(`study.concept.topic_origin.${topicMap.origin}`)}</p></div>
@@ -305,17 +291,25 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   </Dialog>;
 
   // --- the library -------------------------------------------------------------------------------------------------
-  if (!view.source) return <><section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10" aria-labelledby="study-heading">
+  if (!view.source) {
+    // Secondary navigation waits in one menu: the activity log and every study set across materials.
+    const more = [
+      ...(activityJobs.length > 0 ? [{ id: "activity", icon: "timer" as const, label: t("study.activity"), onSelect: () => { setActivityLimit(8); setActivityOpen(true); } }] : []),
+      ...(view.sets.length > 0 ? [{ id: "sets", icon: "learn" as const, label: t("study.all_sets"), onSelect: () => setAllSetsOpen(true) }] : []),
+    ];
+    return <><section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10" aria-labelledby="study-heading">
     <header className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h1 id="study-heading" className="text-title text-ink">{t("study.title")}</h1><Button size="sm" tone="primary" aria-expanded={adding || pasting || view.sources.length === 0} onClick={() => { setLibraryTab("materials"); setAdding((v) => !v); setPasting(false); }}>{t("study.library_add")}</Button></div>
-      <p className="text-ui text-muted">{t("study.library_intro")}</p>
-      <div className="flex flex-wrap gap-2">{activityButton}{view.sets.length > 0 && <Button size="sm" tone="ghost" onClick={() => setAllSetsOpen(true)}><Icon name="learn" size={16} />{t("study.all_sets")}</Button>}</div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h1 id="study-heading" className="text-title text-ink">{t("study.title")}</h1>
+        {libraryTab === "materials" && <span className="flex items-center gap-1">
+          <Button size="sm" tone="primary" aria-expanded={adding || pasting || view.sources.length === 0} onClick={() => { setAdding((v) => !v); setPasting(false); }}>{t("study.library_add")}</Button>
+          {more.length > 0 && <MenuButton label={t("study.library_more")} items={more} trigger={(props) => <IconButton icon="more" size="sm" label={t("study.library_more")} {...props} />} />}
+        </span>}
+      </div>
     </header>
     <div role="tablist" aria-label={t("study.library.navigation")} className="flex gap-1 border-b border-line pb-2">{(["materials", ...(companion ? ["companion"] : []), "explore"] as const).map((name) => <Button key={name} role="tab" size="sm" tone="ghost" aria-selected={libraryTab === name} onClick={() => setLibraryTab(name as typeof libraryTab)}>{t(name === "companion" ? "study.tab.companion" : `study.library.${name}`)}</Button>)}</div>
     {libraryTab === "companion" && companion?.("panel")}
     {status}
     {libraryTab === "materials" && <>
-    {view.sources.length > 0 && lastTime}
     <div ref={addPanel} hidden={!adding && !pasting && view.sources.length > 0} className="flex flex-col gap-4 rounded-card border border-line bg-canvas p-5">
       {/* A drop zone over the native picker, which stays in the tab order (focus rings the whole zone). */}
       <label data-study-drop={dragging ? "over" : ""} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDragging(true); } }} onDragLeave={() => setDragging(false)}
@@ -344,18 +338,18 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
       onArchive={(ids, archived) => { void controller.archiveSources(ids, archived); }} />
     <Dialog open={confirm !== null} heading={t("study.private_source")} closeLabel={t("action.cancel")} onClose={() => setConfirm(null)}><p className="text-ui">{t("study.private_confirm")}</p><Button onClick={() => { const id = confirm; setConfirm(null); if (id) void controller.open(id); }}>{t("study.open_private")}</Button></Dialog>
     </>}
-    {libraryTab === "explore" && <>
-    <StudyResearch controller={controller} initialCapture={initialResearch ?? null} topicRequest={researchTopic} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
-    {topicMaps}
-    </>}
+    {libraryTab === "explore" && explore}
     {jobs(view.jobs.filter((job) => ["running", "queued", "waiting_online", "paused"].includes(job.state)))}
   </section>{activityDialog}<Dialog open={allSetsOpen} heading={t("study.all_sets")} closeLabel={t("action.close")} onClose={() => setAllSetsOpen(false)} wide><MySets sets={view.sets} busy={view.busy} heading={false} onOpen={(set) => { setAllSetsOpen(false); void controller.openSet(set); }} /></Dialog></>;
+  }
 
   // --- an opened material: the material beside its study tools ----------------------------------------------------
   const source = view.source;
   const savedJourney = view.journey?.sources.some((s) => s.source_id === source.source_id && s.revision === source.revision) ? view.journey : null;
   const teach = () => { void controller.generate("chat", 10, readableConfirmed, preferCloud, t("study.journey.teach_prompt"), undefined, undefined, "lesson"); };
-  const chats = view.aids.filter((aid) => aid.kind === "chat");
+  // The conversation's history is what the learner asked; coaching made for a quiz question stays with that question.
+  const chats = view.aids.filter((aid) => aid.kind === "chat" && !isQuizHelpPrompt(aid.prompt));
+  const helpAids = view.aids.filter((aid) => aid.kind === "chat" && isQuizHelpPrompt(aid.prompt));
   const shown = view.aid !== null && view.aid !== undefined && tabOf(view.aid.kind) === tab ? view.aid : null;
   const sourceAliases = new Map(materialFamily.map((s) => [s.source_id, source.source_id]));
   const setsHere = view.sets.filter((set) => set.kind !== "chapters" && set.sources.some((s) => familyIds.has(s.source_id)));
@@ -365,7 +359,7 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   const currentJobs = sourceJobs.filter((j) => j.job_id !== view.quizHelp?.jobId && (["running", "queued", "waiting_online"].includes(j.state) || (!shown && j.job_id === view.requestedJobId && ["failed", "paused"].includes(j.state))));
   const helpJob = view.jobs.find((j) => j.job_id === view.quizHelp?.jobId);
   const helpPending = !!helpJob && ["queued", "running", "waiting_online", "paused"].includes(helpJob.state);
-  const safeHelp = helpJob?.state === "failed" && helpJob.error === "insufficient_evidence" && view.quiz?.items.some((item) => item.item_id === view.quizHelp?.itemId && item.type === "choice");
+  const safeHelp = helpJob?.state === "failed" && helpJob.error === "insufficient_evidence" && !!view.quiz?.items.some((item) => item.item_id === view.quizHelp?.itemId && item.type === "choice");
   const pendingKinds = currentJobs.filter((j) => ["running", "queued", "waiting_online", "paused"].includes(j.state)).map((j) => j.kind);
   const canConfigure = !accessBlocked && ["ready", "partial"].includes(source.state);
   const pick = (next: GenerateTool, contextAidId?: string) => { setToolContext(contextAidId ?? null); setTool(next); if (!contextAidId && view.materialTopics.length === 0) void controller.loadMaterialTopics(); };
@@ -392,6 +386,9 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
     if (previous?.label === label) previous.claims.push(c); else groups.push({ label, claims: [c] });
     return groups;
   }, []) : null;
+  const askMaterial = () => { const work = chatContext ? controller.generate("chat", 10, readableConfirmed, preferCloud, chatPrompt, undefined, chatContext) : controller.generate("chat", 10, readableConfirmed, preferCloud, chatPrompt);
+    void work.then(() => { if (!controller.getView().error) setChatPrompt(""); }); };
+  const goAsk = () => { setTab("chat"); requestAnimationFrame(() => ask.current?.focus()); };
 
   // The split needs the screen's own width (a container query), not the window's: the sidebar and the board take room.
   // The settings dialog sits outside the container query: a size container would trap its fixed overlay.
@@ -460,7 +457,6 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
         {savedJourney && <StudyJourney journey={savedJourney} busy={view.busy} onReviewDue={() => { void controller.refreshDueReview(); }} onContinue={() => { if (savedJourney.phase === "make_quiz" && shown?.aid_id === savedJourney.cards_aid_id) pick("quiz", shown.aid_id); else void controller.continueJourney(); }} onLesson={() => { void controller.continueJourney("lesson"); }} onResults={() => { void controller.continueJourney("quiz"); }} />}
         {status}
         {jobs(currentJobs)}
-        <details className="text-meta text-muted"><summary className="cursor-pointer">{t("study.about_sources")}</summary><p className="mt-2">{t("study.grounded_notice")}</p></details>
         {tab === "generate" && !shown && <>
           <GenerateTools disabled={view.busy || !canConfigure} pendingKinds={pendingKinds} onPick={quickGenerate} onConfigure={pick} />
           <MySets sets={setsHere} busy={view.busy} contextual sourceAliases={sourceAliases} onOpen={(set) => { void controller.openSet(set); }} />
@@ -472,14 +468,21 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
           </div>}<div className="flex flex-wrap gap-2">{openTopic && <Button size="sm" onClick={() => openTopic(topic.node_id)}>{t("study.topic_guide")}</Button>}{onPractice && <Button size="sm" onClick={() => onPractice(topic.subject, topic.kc_ids)}>{t("study.topic_practice")}</Button>}{openLesson && topic.lesson_ids.map((lesson, i) => <Button size="sm" key={lesson} onClick={() => openLesson(lesson)}>{t("study.topic_lesson", { number: i + 1 })}</Button>)}</div></div>)}</section>}
           <fieldset hidden={view.sources.length < 2} className="flex flex-col gap-2"><legend className="text-ui font-semibold">{t("study.extra_sources")}</legend><p className="text-meta text-muted">{t("study.extra_sources_help")}</p>{view.sources.filter((s) => s.source_id !== source.source_id && (!("state" in s) || s.state === "ready")).map((s) => <div key={s.source_id} className="flex flex-col gap-2"><label className="flex min-h-11 items-center gap-2 text-ui"><input type="checkbox" checked={view.selections.some((x) => x.source_id === s.source_id)} disabled={view.busy || (view.selections.length >= 8 && !view.selections.some((x) => x.source_id === s.source_id))} onChange={() => { if (s.private && !view.selections.some((x) => x.source_id === s.source_id)) setExtraConfirm(s.source_id); else void controller.selectExtra(s.source_id); }} />{"title" in s ? s.title : t("study.private_source")}</label>{extraConfirm === s.source_id && <><p className="text-ui">{t("study.private_confirm")}</p><div className="flex gap-2"><Button size="sm" onClick={() => { setExtraConfirm(null); void controller.selectExtra(s.source_id); }}>{t("study.open_private")}</Button><Button size="sm" tone="ghost" onClick={() => setExtraConfirm(null)}>{t("action.cancel")}</Button></div></>}</div>)}</fieldset>
         </>}
+        {/* Ask this material: the review once per revision, the history on demand, then the conversation. */}
         {tab === "chat" && source.state === "partial" && <label className="flex min-h-11 items-center gap-2 text-ui text-ink"><input type="checkbox" checked={readableConfirmed} onChange={(e) => review(e.target.checked)} />{t("study.confirm_readable")}</label>}
-        {tab === "chat" && chats.length > 0 && (chats.length > 1 || !shown) && <details open={!shown}><summary className="cursor-pointer text-meta text-muted">{t("study.previous_questions")}</summary><ul className="flex flex-col" aria-label={t("study.aids")}>{chats.map((aid) => <li key={aid.aid_id}><Button size="sm" tone="ghost" aria-pressed={view.aid?.aid_id === aid.aid_id} disabled={view.busy} onClick={() => { void controller.showAid(aid.aid_id); }}>{aid.prompt ?? aid.title}{aid.status === "stale" ? ` · ${t("study.stale")}` : ""}</Button></li>)}</ul></details>}
+        {tab === "chat" && <div className="flex flex-wrap items-center gap-2">
+          <details className="text-meta text-muted"><summary className="cursor-pointer">{t("study.about_sources")}</summary><p className="mt-2">{t("study.grounded_notice")}</p></details>
+          <span className="flex-1" />
+          {chats.length > 0 && <Button size="sm" tone="ghost" aria-expanded={historyOpen} aria-controls="study-chat-history" onClick={() => setHistoryOpen((open) => !open)}><Icon name="timer" size={16} />{t("study.history", { count: chats.length })}</Button>}
+        </div>}
+        {tab === "chat" && chats.length > 0 && <ul id="study-chat-history" hidden={!historyOpen} className="flex flex-col divide-y divide-line rounded-card border border-line" aria-label={t("study.previous_questions")}>{chats.map((aid) => <li key={aid.aid_id} className="[&>button]:w-full [&>button]:justify-start [&>button]:text-start"><Button size="sm" tone="ghost" aria-pressed={view.aid?.aid_id === aid.aid_id} disabled={view.busy} onClick={() => { setHistoryOpen(false); void controller.showAid(aid.aid_id); }}><span className="truncate">{aid.prompt ?? aid.title}</span>{aid.status === "stale" ? <span className="text-meta text-muted"> · {t("study.stale")}</span> : null}</Button></li>)}</ul>}
+        {tab === "chat" && !shown && <p className="text-meta text-muted">{t("study.ask_intro")}</p>}
         {shown && <article ref={resultPanel} tabIndex={-1} aria-label={`${t(`study.tool.${shown.kind}`)} · ${shown.title}`} className="flex flex-col gap-4 outline-none">
           {tab === "generate" && <span><Button size="sm" tone="ghost" onClick={() => controller.hideAid()}><Icon name="go-back" size={16} />{t("study.all_tools")}</Button></span>}
           {tab === "generate" && <h2 className="text-ui font-semibold text-ink">{t(`study.tool.${shown.kind}`)} · {shown.title}</h2>}
           {view.deck && <p role="status" className="text-meta text-muted">{t("study.cards_in_review", { count: view.deck.cards.filter((c) => !c.suspended).length })}</p>}
           {view.quiz && <p role="status" className="text-meta text-muted">{t("study.quiz_questions", { count: view.quiz.items.length })}</p>}
-          {shown.prompt && <p className="whitespace-pre-wrap rounded-card bg-panel px-4 py-3 text-ui font-medium">{shown.prompt}</p>}
+          {shown.prompt && <p data-said="student" className="self-end whitespace-pre-wrap rounded-card border border-line px-4 py-3 text-ui text-ink">{shown.prompt}</p>}
           {shown.kind === "audio_overview" && <><div className="flex flex-wrap gap-2">{view.reading ? <>
             {view.podcastVoice?.enabled && <Button tone="primary" onClick={() => view.audioPaused ? controller.resumeOverview() : controller.pauseOverview()}>{t(view.audioPaused ? "study.resume_audio" : "study.pause_audio")}</Button>}
             <Button onClick={() => controller.stopReading()}>{t("study.stop_audio")}</Button>
@@ -510,64 +513,24 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
             })}</div></> : <span><Button tone="primary" onClick={() => setRevealed(true)}>{t("study.reveal")}</Button></span>}
           </section>)}
           {view.deck && <span><Button disabled={view.busy || !canConfigure || shown.status !== "ready"} onClick={() => pick("quiz", shown.aid_id)}>{t("study.generate.quiz")}</Button></span>}
-          {view.quiz && <form ref={quizBox} className="flex flex-col gap-5" onSubmit={(e) => { e.preventDefault(); void controller.submit(answers); }}>
-            <label className="flex min-h-11 items-center gap-2 text-meta text-muted"><input type="checkbox" checked={allQuestions} onChange={(e) => setAllQuestions(e.target.checked)} />{t("study.show_all_questions")}</label>
-            {view.quiz.items.map((item, i) => (allQuestions || i === quizPosition) && <div key={item.item_id} className="flex flex-col gap-3"><fieldset data-item={i} disabled={view.busy || !!view.result || view.quiz?.status !== "ready"} className="flex flex-col gap-3"><legend className="text-meta font-medium text-muted">{t("study.question_of", { number: i + 1, total: (view.quiz?.items.length ?? 0) })}{item.type === "multi_select" ? ` · ${t("study.choose_all")}` : ""}</legend>{claim(item.stem)}
-              {item.type === "choice" ? item.options?.map((option) => <label key={option.option_id} className="flex min-h-11 items-center gap-3 rounded-control border border-line px-4 py-2 text-ui text-ink has-checked:border-ink"><input type="radio" name={item.item_id} value={option.option_id} checked={answers[item.item_id] === option.option_id} onChange={() => answer(item.item_id, option.option_id, i)} /><span><PackInline text={option.text} /></span></label>)
-                : item.type === "multi_select" ? item.options?.map((option) => { const chosen = picked(answers[item.item_id]); return <label key={option.option_id} className="flex min-h-11 items-center gap-3 rounded-control border border-line px-4 py-2 text-ui text-ink has-checked:border-ink"><input type="checkbox" checked={chosen.includes(option.option_id)} onChange={() => answer(item.item_id, (chosen.includes(option.option_id) ? chosen.filter((x) => x !== option.option_id) : [...chosen, option.option_id]).join(","), i)} /><span><PackInline text={option.text} /></span></label>; })
-                : item.type === "true_false" ? (["true", "false"] as const).map((value) => <label key={value} className="flex min-h-11 items-center gap-3 rounded-control border border-line px-4 py-2 text-ui text-ink has-checked:border-ink"><input type="radio" name={item.item_id} value={value} checked={answers[item.item_id] === value} onChange={() => answer(item.item_id, value, i)} />{t(`study.${value}`)}</label>)
-                : <label className="flex flex-col gap-2 text-ui">{t(item.type === "fill_blank" ? "study.fill_blank" : "study.answer")}<input className={FIELD_LOOK} value={answers[item.item_id] ?? ""} onChange={(e) => answer(item.item_id, e.target.value, i, false)} onBlur={() => { void controller.saveDraft(answers, i); }} /></label>}
-            </fieldset>{!view.result && <>
-              <span><Button size="sm" disabled={view.busy || !answers[item.item_id]?.trim() || view.quiz?.status !== "ready"} onClick={() => checkQuestion(item.item_id)}>{t("study.check_answer")}</Button></span>
-              {view.quizFeedback?.[item.item_id] && checkedAnswers[item.item_id] === answers[item.item_id] && <section aria-label={t("study.question_feedback")} className="flex flex-col gap-2" aria-live="polite">{(() => {
-                const feedback = view.quizFeedback?.[item.item_id];
-                if (!feedback) return null;
-                const open = !["incorrect", "partial"].includes(feedback.verdict) || (questionTries[item.item_id] ?? 0) >= 2 || shownAnswers.includes(item.item_id);
-                return <><p className="text-ui font-semibold">{t(`study.verdict.${feedback.verdict}`)}</p>{"explanation" in feedback && (open ? <><p className="text-meta text-muted">{feedback.label}</p>{claim(feedback.explanation)}</> : <><p className="text-meta text-muted">{t("study.not_yet")}</p><Button size="sm" tone="ghost" onClick={() => setShownAnswers((now) => [...now, item.item_id])}>{t("study.show_answer")}</Button></>)}</>;
-              })()}</section>}
-            </>}</div>)}
-            {!allQuestions && <nav aria-label={t("study.quiz_navigation")} className="flex flex-wrap gap-2"><Button size="sm" disabled={view.busy || quizPosition === 0} onClick={() => moveQuestion(quizPosition - 1)}>{t("study.previous_question")}</Button><Button size="sm" disabled={view.busy || quizPosition >= view.quiz.items.length - 1} onClick={() => moveQuestion(quizPosition + 1)}>{t("study.next_question")}</Button></nav>}
-            {!view.result && <span><Button type="submit" tone="primary" disabled={view.busy || view.quiz.status !== "ready"}>{t("study.submit")}</Button></span>}
-            {view.result && <section className="flex flex-col gap-3" aria-label={t("study.results")}><p className="text-meta text-muted">{t("study.no_mastery")}</p>{view.result.results.map((r) => {
-              const item = view.quiz?.items.find((x) => x.item_id === r.item_id);
-              const missed = r.verdict === "incorrect" || r.verdict === "partial";
-              const open = !missed || round >= 2 || shownAnswers.includes(r.item_id);
-              return <div key={r.item_id} className="flex flex-col gap-2"><p className="text-ui font-semibold">{t(`study.verdict.${r.verdict}`)}</p>
-                {"explanation" in r && open && <><p className="text-meta text-muted">{r.label}</p>{claim(r.explanation)}</>}
-                {"explanation" in r && !open && <><p className="text-meta text-muted">{t("study.not_yet")}</p>{item && <HelpChips kinds={STUDY_HELP} disabled={view.busy || !!accessBlocked || helpPending} onHelp={(kind) => help(kind, item.item_id)} />}<span><Button size="sm" tone="ghost" onClick={() => setShownAnswers((now) => [...now, r.item_id])}>{t("study.show_answer")}</Button></span></>}
-              </div>;
-            })}{round < 2 && view.result.results.some((r) => (r.verdict === "incorrect" || r.verdict === "partial") && !shownAnswers.includes(r.item_id)) && <span><Button tone="primary" disabled={view.busy} onClick={() => controller.clearResult()}>{t("study.try_again")}</Button></span>}</section>}
-          </form>}
-          {view.quiz && view.quizHelp?.quizId === view.quiz.quiz_id && (allQuestions || view.quiz.items[quizPosition]?.item_id === view.quizHelp.itemId) && <section ref={quizHelpPanel} tabIndex={-1} aria-label={t("study.quiz_help")} className="flex flex-col gap-3 rounded-card border border-line p-4 outline-none" aria-live="polite">
-            <h3 className="text-ui font-semibold">{t(`help.chip.${view.quizHelp.kind}`)}</h3>
-            {view.quizHelp.aid ? view.quizHelp.aid.claims.map((c, i) => claim(c, String(i))) : safeHelp && helpJob ? <>
-              <p className="text-meta text-muted">{t("study.quiz_help_general")}</p>
-              <p className="text-ui">{t(view.quizHelp.kind === "hint" ? "study.quiz_help_safe_hint" : "study.quiz_help_safe_walk")}</p>
-              <p className="text-ui">{t("study.quiz_help_safe_followup")}</p>
-              <details><summary className="cursor-pointer text-meta text-muted">{t("study.quiz_help_tailored")}</summary>{jobs([helpJob], true)}</details>
-            </> : helpJob && ["failed", "paused", "waiting_online", "cancelled"].includes(helpJob.state) ? jobs([helpJob], true) : <Loader label={t("study.quiz_help_loading")} />}
-            {(view.quizHelp.aid || safeHelp) && <span><Button size="sm" tone="ghost" onClick={() => {
-              const quiz = view.quiz, quizHelp = view.quizHelp;
-              if (!quiz || !quizHelp) return;
-              const index = quiz.items.findIndex((item) => item.item_id === quizHelp.itemId);
-              if (index >= 0) { moveQuestion(index); quizBox.current?.querySelector<HTMLElement>(`[data-item="${index}"] input`)?.focus(); }
-            }}>{t("study.quiz_help_try")}</Button></span>}
-          </section>}
+          {view.quiz && <StudyQuiz key={view.quiz.quiz_id} quiz={view.quiz} result={view.result} resultAnswers={view.resultAnswers ?? {}} feedback={view.quizFeedback ?? {}} busy={view.busy} accessBlocked={Boolean(accessBlocked)} stale={shown.status === "stale"}
+            quizHelp={view.quizHelp} helpJob={helpJob} helpPending={helpPending} safeHelp={safeHelp} helpAids={helpAids} claim={claim} jobs={jobs}
+            onDraft={(answers, position) => { void controller.saveDraft(answers, position); }}
+            onCheck={(id, value) => { const quizId = view.quiz?.quiz_id; return controller.checkAnswer(id, value).then(() => controller.getView().quiz?.quiz_id === quizId && !controller.getView().error); }}
+            onSubmit={(answers) => { void controller.submit(answers); }} onClearResult={() => controller.clearResult()} onHelp={help}
+            onFollowUp={(itemId, kind, text) => controller.requestQuizHelp(itemId, kind, readableConfirmed, text).then(() => !controller.getView().error)} />}
         </article>}
-        <span>{activityButton}</span>
+        {tab === "generate" && <div className="flex flex-wrap items-center gap-2 pt-2">{activityButton}<span className="flex-1" /><Button size="sm" tone="ghost" onClick={goAsk}><Icon name="question" size={16} />{t("study.chat_prompt")}</Button></div>}
         </>}
       </div>
-      {/* The ask box: always here, whichever tool is open */}
-      <form hidden={tab === "companion"} className="flex shrink-0 flex-col gap-3 border-t border-line px-4 pt-3 pb-4" onSubmit={(e) => { e.preventDefault(); const item = tab === "generate" ? view.quiz?.items[quizPosition] : undefined;
-        const work = item ? controller.requestQuizHelp(item.item_id, view.quizHelp?.itemId === item.item_id ? view.quizHelp.kind : "walk_through", readableConfirmed, chatPrompt) : chatContext ? controller.generate("chat", 10, readableConfirmed, preferCloud, chatPrompt, undefined, chatContext) : controller.generate("chat", 10, readableConfirmed, preferCloud, chatPrompt);
-        void work.then(() => { if (!controller.getView().error) setChatPrompt(""); }); }}>
-        {tab === "generate" && view.quiz && !view.result && view.quiz.items[quizPosition] && <HelpChips kinds={STUDY_HELP} disabled={view.busy || !!accessBlocked || helpPending || view.quiz.status !== "ready"} onHelp={(kind) => { const item = view.quiz?.items[quizPosition]; if (item) help(kind, item.item_id); }} />}
-        <ComposerShell send={<IconButton type="submit" tone="action" icon="send" tip="above" label={t("study.ask_material")} disabled={view.busy || helpPending || !chatPrompt.trim() || !ready} />}
-          below={<p className="px-1 pb-1 text-meta text-faint">{t("study.ask_grounded")}</p>}>
+      {/* The ask box: one line that grows, at the foot of Ask this material */}
+      {tab === "chat" && <form className="flex shrink-0 flex-col gap-3 border-t border-line px-4 pt-3 pb-4" onSubmit={(e) => { e.preventDefault(); askMaterial(); }}>
+        <ComposerShell send={<IconButton type="submit" tone="action" icon="send" tip="above" label={t("study.ask_material")} disabled={view.busy || helpPending || !chatPrompt.trim() || !ready} />}>
           <label htmlFor="study-ask" className="sr-only">{t("study.chat_prompt")}</label>
-          <textarea id="study-ask" ref={ask} rows={2} required maxLength={tab === "generate" && view.quiz ? 1000 : 4000} placeholder={t("study.ask_placeholder")} className="w-full resize-none bg-transparent px-1 text-body text-ink outline-none placeholder:text-placeholder" value={chatPrompt} onChange={(e) => setChatPrompt(e.target.value)} />
+          <textarea id="study-ask" ref={ask} rows={1} required maxLength={4000} placeholder={t("study.ask_placeholder")} className="w-full resize-none bg-transparent px-1 text-body text-ink outline-none placeholder:text-placeholder" value={chatPrompt} onChange={(e) => setChatPrompt(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && chatPrompt.trim() && ready && !view.busy) { e.preventDefault(); askMaterial(); } }} />
         </ComposerShell>
-      </form>
+      </form>}
     </aside>
   </div></section>
   {activityDialog}

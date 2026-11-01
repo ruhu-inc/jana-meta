@@ -7448,7 +7448,7 @@
     "content/curriculum/ref/phy-o/conventions.yaml": "0f38a9f6987826853749658a7752064d2bdf832b98babaee00423374a7d7db4b",
     "evals/held-out/answer_oracles.enc": "9f7e7dfeff0c79e496af67827a46300db8665a226e7bfdc9c58a4712057552a9"
    },
-   "version": "2026-11-01.1"
+   "version": "2026-11-01.2"
   },
   "classification": {
    "files": {},
@@ -7464,7 +7464,7 @@
     "services/agent-core/tests/scenarios/w8/study_quiz_activity.yaml": "8f7898f68d83be3bf0d8a2476a0d52b76844d516fc9c5fea3342f501caddf60a",
     "services/agent-core/tests/scenarios/w9/youtube_lecture.yaml": "45e85200130591d7107937e25cbb3f2b0372abf5e5095d1f5f9c56365fca37f7"
    },
-   "version": "2026-11-01.1"
+   "version": "2026-11-01.2"
   },
   "content_packs": {
    "files": {
@@ -15415,7 +15415,7 @@
     "packages/ui/gallery/states/memory-chip.canonical.json": "38d332bee5d1c22795038a0026a1b6c88b1039bc93775425db4c7a58d43f2727",
     "packages/ui/gallery/states/memory-chip.error-retriable.json": "7dd694bc6cc1cedff01e2268088b92e96360cb23f603991c6040d9d2ec4388a1",
     "packages/ui/gallery/states/memory-chip.loading.json": "b69d6e772ccec054eda76860093db9664c6f0997c079c251863c140d910b507b",
-    "packages/ui/gallery/states/mock-papers.canonical.json": "3935d8f84f8e8bcd73e6122e0d36e035c9d6c98e81f6c75942ee44c44c0f9d72",
+    "packages/ui/gallery/states/mock-papers.canonical.json": "c4fe38ef8cfb02c0655a490f8e56b082061b799d7aa91282e3879997bf7fbbfa",
     "packages/ui/gallery/states/mock-papers.empty.json": "f5f3311d7f1cad4467d6e98cdce21cd0fe4cfbbf073ba43558d2dcdddde3c183",
     "packages/ui/gallery/states/mock-papers.error-final.json": "874106c5d7a10b8757469f1a93837dea79dc9e55912c796ba69778ed18736db6",
     "packages/ui/gallery/states/mock-papers.error-retriable.json": "f01f66ca82550de5e11e8633d57cde9da4592f183af0c4577b227b9df6324672",
@@ -15643,19 +15643,19 @@
     "packages/ui/gallery/states/study-workspace.canonical.generate.json": "73c03831aa97c4522ac65d9a606a8173bdcd3655359529531de3c5b8a0c7e358",
     "packages/ui/gallery/states/study-workspace.canonical.partial.json": "108ce4fa5dae7243838b7ce07d18cf06836b2c36500030ef1a24506f4329d8f9",
     "packages/ui/gallery/states/study-workspace.canonical.private.json": "fd7ec79d97848af2e8bf36c6ee4301467d5809b6a13313f21140f12cebd14878",
-    "packages/ui/gallery/states/study-workspace.canonical.quiz.json": "aaa49efffe02c6b1b471e169a789f46f5f5e949d9126bcd1ae0aa74e3f933ce4",
+    "packages/ui/gallery/states/study-workspace.canonical.quiz.json": "6ec9628720fd47d1d8316a0ee06f72dbe769a75ba956634a2715f35b93d28c3a",
     "packages/ui/gallery/states/study-workspace.canonical.reader.json": "d85f8d1cb02596ee027a8ad58877e8a35d4de44d442ba075c91f5f4faf90b24c",
     "packages/ui/gallery/states/study-workspace.canonical.recording.json": "0bcb75392f551763edfdd6f348a4330bcfff90ce66efd6d817628458f7280177",
     "packages/ui/gallery/states/study-workspace.canonical.sets.json": "1f19eb7a89d3205eedf9d98cc6ad8247ac69004c9c9877d86de99b623cf5baf2",
     "packages/ui/gallery/states/study-workspace.canonical.topics.json": "4ec6da11b68c826bf05f11c8776ba39ccb7f05d44046d4ab8ac8070e8478a45b",
-    "packages/ui/gallery/states/study-workspace.empty.library.json": "13ca0c35ac8ca7f271a5c20394e4adcad51ef1ebd2eacab20927626c012c3ece",
+    "packages/ui/gallery/states/study-workspace.empty.library.json": "a8ca6621d23ad882754797620e6749e1ad1f913e91e888260b040189b2957f83",
     "packages/ui/gallery/states/study-workspace.error-retriable.distress.json": "bb557b8698ab5bc91d5b8a893c6fff169a5d3b731a2810c91c914e11dae2d910",
     "packages/ui/gallery/states/study-workspace.error-retriable.graded-work.json": "fdf407e3c294ff6309063e5cab10aff78334087a9cbef0161796c410ccb01725",
     "packages/ui/gallery/states/study-workspace.error-retriable.load.json": "2aec0816900aa6fd4f59cc8c7275d07a95a3668238cf47fe8bade1e7bab9cfc0",
     "packages/ui/gallery/states/study-workspace.loading.sources.json": "3c313cc0eb6d940a6b634da6b27eed834779e20b31a214e2a87ca0352b6b8d6d",
     "packages/ui/gallery/states/subject-map.canonical.json": "01a88643f11eaf24a0a04372b42d5d3034cb6faa3343dfbbb64254c48efd96a2",
     "packages/ui/gallery/states/subject-map.canonical.syllabus.json": "a739701b8d69d3c9a47a26e716ec2a4ce6934d91b1c118b4199d657a1d17a22f",
-    "packages/ui/gallery/states/subject-map.canonical.topic-sheet.json": "97749c13dd6de4f452bd6c3c159f546c2f87583fcc6c5154f6cef80622e481c7",
+    "packages/ui/gallery/states/subject-map.canonical.topic-sheet.json": "5c52465f66c38b5667161144976b58e187969653fe340b6f9b589ac0571128a3",
     "packages/ui/gallery/states/subject-map.empty.json": "cd8f1dab79c450e98845778360f4a853c48cec07aa0fb45a2bdd3be1b1103840",
     "packages/ui/gallery/states/subject-map.error-final.json": "de586465c6cc7411ec41ce8eb04520d4e70fe471fe35ab99a133cc8fafd2f077",
     "packages/ui/gallery/states/subject-map.error-retriable.json": "5661bb48eea0796f9b5a0244a937fa193bc7455690376f536294e9f5c0c1fe5d",
@@ -15954,7 +15954,7 @@
     "packages/ui/gallery/states/worked-search.loading.json": "3169dc86db4254501b1e351e1a18a97c583e6da512a3b4a38cdf6b43177581da",
     "packages/ui/gallery/states/your-turn-line.canonical.json": "c83e03d83ea0aaabeda7e7a1c693c170920c5b8246ef25d45637a6c6a86e9a7a"
    },
-   "version": "2026-11-01.1"
+   "version": "2026-11-01.2"
   }
  },
  "version": 1

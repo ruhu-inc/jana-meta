@@ -1,5 +1,5 @@
 import { formatDate } from "@jana/i18n";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { NOTE_SECTIONS, readSessionNote, sessionNoteText, type NoteReference, type SessionNote, type SessionNotesController, type SessionNotesView } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Button, EmptyState, ErrorState, FIELD_LOOK, Loader, Notice } from "../primitives/index.js";
@@ -19,7 +19,26 @@ export interface SessionNotesActions {
   onReference: (reference: NoteReference) => Promise<boolean>;
   onExport?: (note: SessionNote) => void;
 }
-export function SessionNotesContent({ view, actions, subject, kc, topicForKc }: { view: SessionNotesView; actions: SessionNotesActions } & NoteNames) {
+/** The Notes view under the place's one header: its lists by default, the editor only once the learner asks for a new
+ * note (the header's one action), and from the editor a way back to the lists. */
+export function NotesPlace({ header, editor, children }: {
+  /** The place's header, given its one action: New note over the lists, Back to notes over the editor. */
+  header: (end: ReactNode) => ReactNode;
+  /** The editor, given what it calls when the note is saved or given up. */
+  editor: (done: () => void) => ReactNode;
+  children: ReactNode;
+}) {
+  const t = useT(), [editing, setEditing] = useState(false);
+  const done = () => setEditing(false);
+  return <>
+    {header(editing ? <Button tone="ghost" onClick={done}>{t("notes.back_to_notes")}</Button> : <Button tone="primary" onClick={() => setEditing(true)}>{t("notes.new")}</Button>)}
+    <div className="mx-auto w-full max-w-240">{editing ? editor(done) : children}</div>
+  </>;
+}
+export function SessionNotesContent({ view, actions, subject, kc, topicForKc, below }: { view: SessionNotesView; actions: SessionNotesActions;
+  /** The rest of the Notes view (the learner's own notes), shown with the list and not under an open note. */
+  below?: ReactNode;
+} & NoteNames) {
   const t = useT(), [confirming, setConfirming] = useState<string | null>(null), [referenceFailed, setReferenceFailed] = useState(false);
   const openTopic = useOpenTopic(), referenceRequest = useRef(0);
   const opened = view.opened === null ? null : readSessionNote(view.opened, true);
@@ -40,7 +59,7 @@ export function SessionNotesContent({ view, actions, subject, kc, topicForKc }: 
     try { ok = await actions.onReference(reference); } catch { /* Keep an unavailable source in the existing error state. */ }
     if (request === referenceRequest.current) setReferenceFailed(!ok);
   };
-  return <section aria-labelledby="session-notes-title" className="flex flex-col gap-4 p-6">
+  return <><section aria-labelledby="session-notes-title" className="flex flex-col gap-4 p-6">
     <h2 id="session-notes-title" className="text-heading text-ink">{t("notes.session_title")}</h2>
     <p className="text-ui text-muted">{t("notes.session_about")}</p>
     {view.status === "loading" && <Loader label={t("notes.loading")} />}
@@ -97,9 +116,9 @@ export function SessionNotesContent({ view, actions, subject, kc, topicForKc }: 
         </div>
       </article>
     </>}
-  </section>;
+  </section>{opened === null && below}</>;
 }
-export function SessionNotes({ controller, ...props }: { controller: SessionNotesController; onReference: SessionNotesActions["onReference"] } & NoteNames) {
+export function SessionNotes({ controller, ...props }: { controller: SessionNotesController; onReference: SessionNotesActions["onReference"]; below?: ReactNode } & NoteNames) {
   const view = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView);
   useEffect(() => { void controller.load(); }, [controller]);
   useEffect(() => {

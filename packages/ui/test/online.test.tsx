@@ -22,10 +22,9 @@ async function adultControls(setup: (core: FakeProfileCore) => void = () => unde
   expect(await profiles.unlock(BEN.profile_id)).toBe(true);
   render(
     <LocaleProvider locale="en">
-      <Settings profiles={profiles} />
+      <Settings profiles={profiles} section={{ id: "online_features", at: 1 }} />
     </LocaleProvider>,
   );
-  await screen.findByRole("checkbox", { name: "Easy-read text" });
   await screen.findByRole("checkbox", { name: "Downloads" });
   return { core, profiles };
 }

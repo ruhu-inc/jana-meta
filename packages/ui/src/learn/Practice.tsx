@@ -1,17 +1,19 @@
 // Practice (UXS-24, UXS-16, ASM-02; direction A "Studio"): one focused question at a time. The 56 px header names it
 // with the set's progress ("Question 1 of 3") and "End practice"; the question card carries the subject, the stem, the
-// answer (a number and its unit, or choices), "Check my answer" and "Help me", then the tries so far, each marked at
-// once in the UXS-16 words on its learning colour: Checked (verified), Not quite with the "look here" note of the
-// first error (misconception, never the word "wrong"), Equivalent but not simplified, Nearly there (hint), with the
-// mastery change after the item (LRN-34). A question the core has moved past offers "Next question" whatever its
-// verdict; units are typeset as on the board (the unit field's echo and each try). The first hint follows an attempt in
-// the tutor (PED-05), which the side panel says. Help comes before the answer (ASM-28, D120): the
-// help chips (Give me a hint, Walk me through it, Explain simply) open the tutor with the item loaded and ask for that
-// help (Alt+H is the hint); a first miss shows no answer and offers a second try; the worked answer, with each step's
-// check and the verified key, shows after the second miss or on "Don't know". States: loading, canonical, the tries
-// (verified, look here, second try), the worked answer, empty ("All caught up"), the set finished, error-retriable, and
-// practice sets not served by this computer's core.
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+// answer (a number and its unit, or choices) and two controls only: "Check my answer" and "Need help?" (W11, simpler
+// by default). "Need help?" discloses every kind of help in one place: the PED-05 line (hints follow a first attempt),
+// the help chips (Give me a hint, Walk me through it, Explain simply) and "Don't know"; nothing else about help sits on
+// the page. The newest try is marked at once in the UXS-16 words on its learning colour: Checked (verified), Not quite
+// with the "look here" note of the first error (misconception, never the word "wrong"), Equivalent but not simplified,
+// Nearly there (hint), with the mastery change after the item (LRN-34); tries before it fold into a collapsed "Earlier
+// attempts" disclosure so marks never stack down the page. A question the core has moved past offers "Next question"
+// whatever its verdict; units are typeset as on the board (the unit field's echo and each try). Help comes before the
+// answer (ASM-28, D120): the help chips open the tutor with the item loaded and ask for that help (Alt+H is the hint);
+// a first miss shows no answer and offers a second try; the worked answer, with each step's check and the verified
+// key, shows after the second miss or on "Don't know". States: loading, canonical, the tries (verified, look here,
+// second try), the worked answer, empty ("All caught up"), the set finished, error-retriable, and practice sets not
+// served by this computer's core.
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { BANDS, settled, unitLatexOf, type HelpKind, type MapBand, type PartAnswer, type PracticeController, type PracticeTry, type PracticeView } from "@jana/client-core";
 import type { api_commands } from "@jana/contracts-ts/client";
 import { BoardStep } from "../board/Board.js";
@@ -20,7 +22,7 @@ import { ScreenHeader } from "../frame/Frame.js";
 import { Icon } from "../icons.js";
 import { useT } from "../i18n.js";
 import { Tex } from "../maths/Tex.js";
-import { Button, Callout, Chip, ErrorState, Loader, ProgressBar, SubjectDot } from "../primitives/index.js";
+import { Button, Callout, Chip, Disclosure, ErrorState, Loader, ProgressBar, SubjectDot } from "../primitives/index.js";
 import { ItemVisual, PartInput, answerOf, type Draft } from "./items.js";
 import { BandBar } from "./Mastery.js";
 import { PackText } from "./PackText.js";
@@ -149,12 +151,18 @@ function Question({ view, actions, subjectLabel }: { view: PracticeView; actions
   const item = view.item;
   const [drafts, setDraftState] = useState<Record<string, Draft>>(() => (view.draft as Record<string, Draft> | null) ?? {});
   const [started, setStarted] = useState(() => Date.now());
+  // "Need help?" and "Earlier attempts" both start closed on every question (W11).
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [earlierOpen, setEarlierOpen] = useState(false);
+  const helpId = useId();
   const shown = useRef(item?.item_id);
   useEffect(() => {
     if (shown.current === item?.item_id) return;
     shown.current = item?.item_id;
     setDraftState({});
     setStarted(Date.now());
+    setHelpOpen(false);
+    setEarlierOpen(false);
   }, [item?.item_id]);
   const setDrafts = (change: (all: Record<string, Draft>) => Record<string, Draft>) => {
     const next = change(drafts);
@@ -167,8 +175,20 @@ function Question({ view, actions, subjectLabel }: { view: PracticeView; actions
     : p.input.kind === "ordering" ? p.input.elements.map((e) => [e.id, e.label] as [string, string]) : []));
   const done = view.closed || view.tries.some((x) => settled(x.marked));
   const finishing = view.next === null;
+  const busy = view.marking || view.revealing;
+  // Every kind of help lives behind "Need help?" (W11): the tutor's chips while the question is open, a try is still
+  // unsettled or the worked answer is up (ASM-28), and "Don't know" while the question is open.
+  const chipsOffered = actions.onHelp !== undefined && (!done || view.tries.some((attempt) => !settled(attempt.marked)) || view.worked !== null);
+  const revealOffered = actions.onDontKnow !== undefined && !done;
+  const helpOffered = chipsOffered || revealOffered;
+  const tried = view.tries.length > 0;
+  const latest = view.tries.at(-1);
+  const earlier = view.tries.slice(0, -1);
+  const tryMark = (attempt: PracticeTry, number: number, last: boolean) => (
+    <TryMark key={attempt.marked.attempt_id} attempt={attempt} number={number} labels={labels} last={last} closed={view.closed} onNext={actions.onNext} finishing={finishing} worked={view.worked !== null} />
+  );
   return (
-    <section aria-labelledby="practice-question" data-item-id={item.item_id} className="flex min-w-0 flex-1 basis-120 flex-col gap-5 rounded-card border border-line bg-canvas p-7">
+    <section aria-labelledby="practice-question" data-item-id={item.item_id} className="mx-auto flex w-full max-w-200 min-w-0 flex-col gap-5 rounded-card border border-line bg-canvas p-7">
       <div className="flex flex-wrap items-center gap-2 text-meta text-faint">
         {view.subject !== null && <Chip><SubjectDot subject={view.subject} />{subjectLabel}</Chip>}
         {item.marks !== undefined && <span>{t("check.marks", { marks: item.marks })}</span>}
@@ -180,23 +200,46 @@ function Question({ view, actions, subjectLabel }: { view: PracticeView; actions
           <PartInput part={part} itemId={item.item_id} draft={drafts[part.part_id] ?? {}} onDraft={(d) => setDrafts((all) => ({ ...all, [part.part_id]: d }))} prompt={item.parts.length > 1 || part.prompt !== item.stem} />
         </div>
       ))}
-      {!done && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Button tone="primary" disabled={answers.length === 0 || view.marking || view.revealing} onClick={() => actions.onAnswer(answers, Date.now() - started)}>{t(view.tries.length > 0 ? "practice.try_again" : "check.submit")}</Button>
-          {actions.onDontKnow !== undefined && <Button tone="ghost" disabled={view.marking || view.revealing} onClick={actions.onDontKnow}>{t("practice.dont_know")}</Button>}
-          {view.marking && <Loader label={t("check.checking")} />}
+      {(!done || helpOffered) && (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {!done && <Button tone="primary" disabled={answers.length === 0 || busy} onClick={() => actions.onAnswer(answers, Date.now() - started)}>{t(tried ? "practice.try_again" : "check.submit")}</Button>}
+            {helpOffered && (
+              <Button aria-expanded={helpOpen} aria-controls={helpId} disabled={busy} onClick={() => setHelpOpen((open) => !open)} data-need-help="">
+                <Icon name="stuck" size={16} />{t("practice.need_help")}
+              </Button>
+            )}
+            {view.marking && <Loader label={t("check.checking")} />}
+          </div>
+          {helpOffered && (
+            <div id={helpId} className="jana-disclosure" data-open={helpOpen}>
+              <div className="overflow-hidden" inert={!helpOpen} aria-hidden={!helpOpen}>
+                <div data-help-panel="" className="flex flex-col gap-3 rounded-card border border-line bg-panel p-4">
+                  {/* After a try the panel stops asking for one: hints are open now (PED-05). */}
+                  <Callout tone="hint" heading={t(tried ? "practice.stuck_heading_tried" : "practice.stuck_heading")}>
+                    <p>{t(tried ? "practice.stuck_body_tried" : "practice.stuck_body")}</p>
+                  </Callout>
+                  {chipsOffered && actions.onHelp !== undefined && <HelpChips disabled={busy} onHelp={actions.onHelp} hintKeys="Alt+H" />}
+                  {revealOffered && <div><Button tone="ghost" disabled={busy} onClick={actions.onDontKnow}>{t("practice.dont_know")}</Button></div>}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
-      {actions.onHelp !== undefined && (!done || view.tries.some((attempt) => !settled(attempt.marked)) || view.worked !== null) && (
-        <HelpChips disabled={view.marking || view.revealing} onHelp={actions.onHelp} hintKeys="Alt+H" />
-      )}
       {view.markFailed && <ErrorState message={t("check.failed")} />}
-      {view.tries.length > 0 && (
+      {latest !== undefined && (
         <div className="flex flex-col gap-3 border-t border-line pt-5">
-          <h2 className="text-label text-faint">{t("practice.tries")}</h2>
-          <ol className="flex flex-col gap-4" aria-live="polite">
-            {view.tries.map((x, i) => <TryMark key={x.marked.attempt_id} attempt={x} number={i + 1} labels={labels} last={i === view.tries.length - 1} closed={view.closed} onNext={actions.onNext} finishing={finishing} worked={view.worked !== null} />)}
+          <ol className="flex flex-col gap-4" aria-live="polite" data-latest-try="">
+            {tryMark(latest, view.tries.length, true)}
           </ol>
+          {earlier.length > 0 && (
+            <Disclosure summary={t("practice.earlier_attempts", { count: earlier.length })} open={earlierOpen} onToggle={() => setEarlierOpen((open) => !open)}>
+              <ol className="flex flex-col gap-4 pt-3" data-earlier-attempts="">
+                {earlier.map((attempt, i) => tryMark(attempt, i + 1, false))}
+              </ol>
+            </Disclosure>
+          )}
         </div>
       )}
       {actions.onWhyRight !== undefined && view.tries.at(-1)?.marked.verdict === "correct" && (
@@ -255,20 +298,7 @@ export function PracticeContent({ view, actions, subjectLabel = "" }: { view: Pr
           </div>
         );
       default:
-        return (
-          <div className="flex flex-wrap items-start justify-center gap-6">
-            <Question view={view} actions={actions} subjectLabel={subjectLabel} />
-            {help !== undefined && (
-              <aside aria-labelledby="practice-stuck" className="flex max-w-80 min-w-0 flex-1 basis-70 flex-col gap-3">
-                <h2 id="practice-stuck" className="px-1 text-heading text-ink">{t("practice.stuck_title")}</h2>
-                {/* After a try the panel stops asking for one: hints are open now (PED-05). */}
-                <Callout tone="hint" heading={t(view.tries.length > 0 ? "practice.stuck_heading_tried" : "practice.stuck_heading")}>
-                  <p>{t(view.tries.length > 0 ? "practice.stuck_body_tried" : "practice.stuck_body")}</p>
-                </Callout>
-              </aside>
-            )}
-          </div>
-        );
+        return <Question view={view} actions={actions} subjectLabel={subjectLabel} />;
     }
   };
   return (

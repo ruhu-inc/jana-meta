@@ -67,6 +67,7 @@ try {
       await chooseRadio("Other 1");
       await activate(button("Check my answer"));
       await page.locator('[data-verdict="incorrect"]').waitFor();
+      await activate(button("Need help?").first());
       await activate(button("Give me a hint").first());
       await activate(button("Back to practice question 1"));
       check(await page.getByRole("radio", { name: "Other 1", exact: true }).isChecked(), "Practice draft was lost");
@@ -74,7 +75,7 @@ try {
       check((await evidence()).helped.length === 1, "Help did not load the practice item");
     } else if (flow === "exam-rehearsal") {
       await page.keyboard.press("Control+4");
-      await activate(button("Choose this paper")); await activate(button("Start"));
+      await activate(button("Start").first()); await activate(button("Start"));
       await chooseRadio("Right 1");
       await page.keyboard.press("Alt+ArrowRight");
       await chooseRadio("Other 2");
@@ -90,7 +91,7 @@ try {
     } else {
       await page.keyboard.press("Control+2");
       await activate(page.locator("[data-topic-id]").first());
-      await activate(page.getByRole("dialog").getByRole("button", { name: /Start the lesson/ }));
+      await activate(page.getByRole("dialog").getByRole("button", { name: /about \d+ min/ }).first());
       for (let i = 0; i < 7; i++) await activate(button("Next"));
       await activate(button("Finish"));
       await activate(button("Practise this topic"));

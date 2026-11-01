@@ -164,6 +164,28 @@ it("dictated notes stay editable and unsaved until Save, then offer owned read-a
   await waitFor(() => expect(s.tools.deleteNote).toHaveBeenCalledWith("nt_saved"));
 });
 
+it("the notes list and the note editor show apart, and the editor hands back once the note is saved or given up", async () => {
+  const s = speech(), done = vi.fn();
+  const list = render(<LocaleProvider locale="en"><SpeechToolsProvider controller={s.controller}><StudyNotes embedded show="list" /></SpeechToolsProvider></LocaleProvider>);
+  await screen.findByText("Notes you write or dictate will appear here.");
+  expect(screen.getByRole("heading", { name: "Notes you write or dictate" })).toBeTruthy();
+  expect(screen.queryByRole("textbox", { name: "Note draft" })).toBeNull(); expect(screen.queryByRole("button", { name: "Save note" })).toBeNull();
+  list.unmount();
+  render(<LocaleProvider locale="en"><SpeechToolsProvider controller={s.controller}><StudyNotes embedded show="editor" onDone={done} /></SpeechToolsProvider></LocaleProvider>);
+  await screen.findByRole("textbox", { name: "Note draft" });
+  expect(screen.getByRole("heading", { name: "New note" })).toBeTruthy();
+  expect(screen.queryByRole("searchbox")).toBeNull();
+  const draft = { ...typedCapture("Revise circuits", { sessionId: SESSION, purpose: "question", confirmed: false }), source: "voice" as const, status: "awaiting_confirmation" as const };
+  act(() => s.set({ dictation: "review", draft }));
+  await waitFor(() => expect(screen.getByRole("textbox", { name: "Note draft" }).textContent).toContain(draft.text));
+  fireEvent.click(screen.getByRole("button", { name: "Save note" }));
+  await waitFor(() => expect(s.tools.saveNote).toHaveBeenCalledWith(draft.text, draft));
+  await waitFor(() => expect(done).toHaveBeenCalledOnce());
+  expect(screen.queryByText("Revise circuits")).toBeNull(); // the editor lists nothing: the list behind it does
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(s.tools.discardDraft).toHaveBeenCalled(); expect(done).toHaveBeenCalledTimes(2);
+});
+
 it("test_d102_private_note_opens_after_the_confirm_step: listed without its text, opened only after confirming", async () => {
   const s = speech();
   const hidden = { note_id: "nt_private", text: null, source: "typed", created_at: 0, updated_at: 0, private: true };
