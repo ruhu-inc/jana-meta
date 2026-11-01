@@ -1,0 +1,39 @@
+services/agent-core/agent_core/store/companion_summary.py
+  s_4f7244969beb72::t_0f66ac64341563 1-14
+services/agent-core/agent_core/engine/study_links.py
+  s_4f7244969beb72::t_8e76a69741d82f 9-13,27-28
+  s_4f7244969beb72::t_f92a9fea3ab7f9 23-26,29,102,107
+services/agent-core/agent_core/memory/visibility.py
+  s_4f7244969beb72::t_0f66ac64341563 6-8,10,12-15
+services/agent-core/agent_core/store/moments.py
+  s_4f7244969beb72::t_ce7b26106acc3a 13
+  s_4f7244969beb72::t_0f66ac64341563 1-12,14-56
+services/agent-core/agent_core/engine/companion_import.py
+  s_4f7244969beb72::t_0f66ac64341563 1-25
+services/agent-core/agent_core/api/exports.py
+  s_4f7244969beb72::t_f92a9fea3ab7f9 384,388,390,392
+services/agent-core/agent_core/store/memory_context.py
+  s_4f7244969beb72::t_0f66ac64341563 1-41
+services/agent-core/agent_core/store/companion_archive.py
+  s_4f7244969beb72::t_f92a9fea3ab7f9 10,12
+services/agent-core/agent_core/memory/write.py
+  s_4f7244969beb72::t_8e76a69741d82f 56
+services/agent-core/agent_core/memory/queries.py
+  s_4f7244969beb72::t_f92a9fea3ab7f9 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "17d87b8bf7fafdb3d4a8f310e190088abb7ec45b",
+  "prompts": {},
+  "sessions": {
+    "s_4f7244969beb72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "87ce7dee-9c38-41d9-9806-8b8fdffef4bb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
