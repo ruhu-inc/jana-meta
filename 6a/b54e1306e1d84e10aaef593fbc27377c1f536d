@@ -1,0 +1,39 @@
+HACKATHON_DEMO.md
+  s_a9af3ded92b7ee::t_48b63f63a59631 304-355
+packages/i18n/locales/en.json
+  s_a9af3ded92b7ee::t_64bbba8c1edbe1 2494,3180-3198
+packages/ui/src/learn/StudyGenerate.tsx
+  s_a9af3ded92b7ee::t_137581b7f67e30 22,25,29-34
+packages/ui/src/learn/StudyPdfReader.tsx
+  s_a9af3ded92b7ee::t_43ba1f52d375ed 1-33
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_a9af3ded92b7ee::t_46a9042af232f8 17,57-59,76,81,85-87,90-95,120,151,162-163,230,310,314-315,317-318,346-347,350,398,406,409-413,432-435,442,454,458,463,473,476
+packages/ui/test/companion-thread.test.tsx
+  s_a9af3ded92b7ee::t_f6a6c61049bf7b 238,240-244
+packages/ui/test/study-pdf-reader.test.tsx
+  s_a9af3ded92b7ee::t_e41ad487ae59a0 1-26
+packages/ui/test/study-workspace.test.tsx
+  s_a9af3ded92b7ee::t_f01ea90dd42da0 26,190,192-194,216,224
+services/agent-core/agent_core/engine/study.py
+  s_a9af3ded92b7ee::t_36f4a2299a20c1 1198-1209
+services/agent-core/tests/test_m45_study_generate.py
+  s_a9af3ded92b7ee::t_4d83a4620819eb 492-508
+services/cloud-gateway/cloud_gateway/study.py
+  s_a9af3ded92b7ee::t_a387af94e5b1e6 726-729,1263-1268
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6ab54e1306e1d84e10aaef593fbc27377c1f536d",
+  "prompts": {},
+  "sessions": {
+    "s_a9af3ded92b7ee": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a194f6-f25e-7bd2-aeff-63cbe26ba789",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
