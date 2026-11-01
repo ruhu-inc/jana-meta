@@ -1,0 +1,236 @@
+packages/i18n/locales/en.json
+  s_49ba057c5af1a1::t_33846e958e7e83 670,672,674
+  s_49ba057c5af1a1::t_00df357681e704 2283,2375,2512,2683-2695,3220-3227
+  s_49ba057c5af1a1::t_3fbce31c9dfc87 1579-1580
+  s_49ba057c5af1a1::t_54b4d01b86a0c3 1856,1858
+  s_49ba057c5af1a1::t_4242cd02ee2d40 660
+  s_49ba057c5af1a1::t_16a9a4ac42e6d1 1876-1878
+  s_49ba057c5af1a1::t_3eddd553093a12 1766-1768
+  s_49ba057c5af1a1::t_d785d20f252618 2018-2020
+  s_49ba057c5af1a1::t_24132e69c251d4 533-535,538
+packages/client-core/src/study-workspace.ts
+  s_49ba057c5af1a1::t_cb34c3978cfcca 307-308,310
+  s_49ba057c5af1a1::t_d7ce6b3a683983 898-901,903-905
+  s_49ba057c5af1a1::t_422b4770fe1389 13-25
+  s_49ba057c5af1a1::t_0e39260df58a06 280
+  s_49ba057c5af1a1::t_3d975e39e74cbf 379-383,386-389,392-404
+  s_49ba057c5af1a1::t_4bcb8c67209bc2 405,753-767
+  s_49ba057c5af1a1::t_62699d84a2857e 551-552
+  s_49ba057c5af1a1::t_5391d4c1862b09 785
+  s_49ba057c5af1a1::t_85c74a9efe3418 378
+packages/ui/test/frame.test.tsx
+  s_49ba057c5af1a1::t_08efb9f9b1805e 405
+packages/ui/test/ask-anything.test.tsx
+  s_49ba057c5af1a1::t_0aa44a021d3c29 107-117,119,121-125,129,131,136-145,147,154-157,159-175
+  s_49ba057c5af1a1::t_c0a880f8fab572 118,126-128,130,132-135,158
+packages/ui/src/learn/StudyQuiz.tsx
+  s_49ba057c5af1a1::t_1664025ee43ca9 114
+  s_49ba057c5af1a1::t_1697689f3fd59e 160
+  s_49ba057c5af1a1::t_6f58f130c39796 7
+  s_49ba057c5af1a1::t_65ef6564292567 1-6,8-113,115-159,161-193
+packages/ui/src/primitives/autogrow.ts
+  s_49ba057c5af1a1::t_a8ef0db6749625 1-13
+packages/ui/test/settings.test.tsx
+  s_49ba057c5af1a1::t_774a04ccb1826d 69-71,73-77
+  s_49ba057c5af1a1::t_0c447dd823bd6c 52-57
+  s_49ba057c5af1a1::t_d66745bad057ec 233
+  s_49ba057c5af1a1::t_e997affc293cc7 252
+  s_49ba057c5af1a1::t_8d4e62e6630868 287
+  s_49ba057c5af1a1::t_98bd9b1b4862d2 294,303
+  s_49ba057c5af1a1::t_e53e2bb61d24bb 324,329-375
+  s_49ba057c5af1a1::t_79e2235a54aed0 128-140
+  s_49ba057c5af1a1::t_22843bb9c3da11 197-198
+  s_49ba057c5af1a1::t_45f56eb80e4b6e 96
+  s_49ba057c5af1a1::t_6146c1d38a989b 210
+  s_49ba057c5af1a1::t_91e5b312aada3e 147-148,151-156,162,167,169,171,173,176-177
+  s_49ba057c5af1a1::t_b8541d570df923 223-225,227
+  s_49ba057c5af1a1::t_7e37e556df8b45 14-15,21-23,27,29,32-35
+packages/ui/test/connectivity.test.tsx
+  s_49ba057c5af1a1::t_ad62badfb9970b 339,343
+packages/ui/test/practice-help.test.tsx
+  s_49ba057c5af1a1::t_044ed88335a6d1 1-80
+packages/ui/test/theme.test.tsx
+  s_49ba057c5af1a1::t_e7229fa30b9408 49
+packages/ui/src/home/Home.tsx
+  s_49ba057c5af1a1::t_c072815802463c 161-163
+  s_49ba057c5af1a1::t_69fad573e278ea 191-194,196-201
+  s_49ba057c5af1a1::t_ebeba4dc918940 1-14,20,37-44,51-74,89,100,109,119,121,123,125,129,133,135,137,141-142,158-160,164-165,175-190,195,202-203,215-227
+packages/ui/test/health.test.tsx
+  s_49ba057c5af1a1::t_075207520ba7c5 75
+  s_49ba057c5af1a1::t_ee1834f30876ce 108
+  s_49ba057c5af1a1::t_f8b4d4b284530c 5
+  s_49ba057c5af1a1::t_4dc9cd9d7c1e1d 25
+  s_49ba057c5af1a1::t_5c687f1c38c95e 118-122,125-127
+packages/ui/src/home/CheckinCard.tsx
+  s_49ba057c5af1a1::t_acd9e063dc134b 4-6,11,15,18,21-22,26
+packages/ui/src/learn/StudyResearch.tsx
+  s_49ba057c5af1a1::t_e5ffd4ba31771b 87-93
+  s_49ba057c5af1a1::t_f322d2244206f8 218-226
+  s_49ba057c5af1a1::t_51be44a1f9aa9e 24,26-30
+packages/ui/gallery/GalleryView.tsx
+  s_49ba057c5af1a1::t_4d98eff0a55da3 10
+  s_49ba057c5af1a1::t_188cc497314e96 247-249,251-258
+evals/lock.json
+  s_49ba057c5af1a1::t_c543e219ee98dd 7451,7467,15418,15646,15651,15658,15957
+packages/ui/test/studies.test.tsx
+  s_49ba057c5af1a1::t_9ddde0fddb2796 23-25
+  s_49ba057c5af1a1::t_2a1dc2819b74c1 114-115
+packages/ui/gallery/inventory.json
+  s_49ba057c5af1a1::t_172fe198e82a4c 213
+apps/desktop/test/plan-progress.test.tsx
+  s_49ba057c5af1a1::t_699eb328855772 235
+  s_49ba057c5af1a1::t_188cc497314e96 308
+packages/ui/src/settings/Settings.tsx
+  s_49ba057c5af1a1::t_fe24c896e7bbd2 232-236
+  s_49ba057c5af1a1::t_6ef57634573661 355
+  s_49ba057c5af1a1::t_ebdeec3b68338d 30
+  s_49ba057c5af1a1::t_762efa854585a4 77
+  s_49ba057c5af1a1::t_962860f78c85b6 1-6
+  s_49ba057c5af1a1::t_0aa1380b567102 254-255,258-262,265,270
+  s_49ba057c5af1a1::t_cffdf8fbddcbe8 353-354,356-371
+packages/ui/test/speech.test.tsx
+  s_49ba057c5af1a1::t_3c15b16e367103 167-188
+packages/ui/src/progress/MapOverview.tsx
+  s_49ba057c5af1a1::t_b90d544637acb2 6-9,81-82,98-100,102-106
+packages/ui/test/map-overview.test.tsx
+  s_49ba057c5af1a1::t_7b677da9ea41d2 1-6,23,38-42,49,66-76,78-80,84-102,105,108,117
+packages/ui/gallery/states/mock-papers.canonical.json
+  s_49ba057c5af1a1::t_290eea53057450 98-100
+  s_49ba057c5af1a1::t_326522af0a53e4 5
+HACKATHON_DEMO.md
+  s_49ba057c5af1a1::t_7ad67870d81763 317,319-320
+packages/ui/src/learn/Practice.tsx
+  s_49ba057c5af1a1::t_7f5387c4293707 3-16
+  s_49ba057c5af1a1::t_02b75117a532ed 25
+  s_49ba057c5af1a1::t_8690ee73e2a15f 154-157,164-165
+  s_49ba057c5af1a1::t_5979473fd91893 178-189,191,203-227,231,233-234,236-242
+  s_49ba057c5af1a1::t_e9b187cc9a1e87 301
+packages/ui/src/learn/SessionNotes.tsx
+  s_49ba057c5af1a1::t_5d957ada33ee60 2
+  s_49ba057c5af1a1::t_cb66edc787c02d 22-41
+  s_49ba057c5af1a1::t_331177e0ffbe72 62
+  s_49ba057c5af1a1::t_af74256078155d 119,121
+packages/client-core/src/index.ts
+  s_49ba057c5af1a1::t_6530ad57916ad7 116
+evals/suites.toml
+  s_49ba057c5af1a1::t_c543e219ee98dd 23,44,128
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_49ba057c5af1a1::t_ec780b0ae8b1ee 3-7,9,12-13,15-16,27,34,44,47-49,101,111,117,121-122,125,144-145,164-165,193-195,233-234,236-245,247-248,294-300,302-307,341,344,350-352,362,389-391,471,473-478,485,516-521,523,526-528,530-531,533
+  s_49ba057c5af1a1::t_e471b4b036b52b 479
+scripts/ci/browser-keyboard-flows.mjs
+  s_49ba057c5af1a1::t_efc9c22707157f 70
+  s_49ba057c5af1a1::t_0b083ae28b5cd1 78
+  s_49ba057c5af1a1::t_a721cc276bd599 94
+packages/ui/src/voice/StudyNotes.tsx
+  s_49ba057c5af1a1::t_4ff681522b7537 6
+  s_49ba057c5af1a1::t_ea4cb1b69f17c9 87,90
+  s_49ba057c5af1a1::t_f2e476258b2be1 86
+  s_49ba057c5af1a1::t_8a4a823d197d91 12-19,22
+  s_49ba057c5af1a1::t_0ec49bcd17e23d 46-47,50,52,54-68,70-73
+packages/ui/test/checkin-card.test.tsx
+  s_49ba057c5af1a1::t_f29ece2a21f6e5 216
+  s_49ba057c5af1a1::t_b102f54589dcda 96,107-111
+packages/ui/gallery/states/study-workspace.empty.library.json
+  s_49ba057c5af1a1::t_172fe198e82a4c 21
+packages/ui/src/mock/MockExam.tsx
+  s_49ba057c5af1a1::t_a766d4c6ee5294 2-6
+  s_49ba057c5af1a1::t_e5deea0acca7df 201-216,218
+  s_49ba057c5af1a1::t_83fd984af31687 128-133,135-139,141-148,153-154,160,166-167,169
+  s_49ba057c5af1a1::t_30d28d5d2c30b3 31
+  s_49ba057c5af1a1::t_0a06dc73b23e40 24
+packages/ui/src/mock/PastPapers.tsx
+  s_49ba057c5af1a1::t_ccbb4ef9f2af2f 164,166-175,177
+packages/ui/test/last-time-card.test.tsx
+  s_49ba057c5af1a1::t_5dfc5e31fc606d 56-58,61,63-83
+  s_49ba057c5af1a1::t_6fda9a4fd092e0 3-4
+packages/ui/test/mock-catalogue.test.tsx
+  s_49ba057c5af1a1::t_9346e54cc81602 1-88
+packages/ui/test/companion-thread.test.tsx
+  s_49ba057c5af1a1::t_ead3f9fdad01db 247,250
+packages/ui/src/learn/StudyGenerate.tsx
+  s_49ba057c5af1a1::t_7426aa30ba525b 7,25,35
+  s_49ba057c5af1a1::t_b720a73397af82 122-125,129
+packages/ui/src/learn/CompanionThread.tsx
+  s_49ba057c5af1a1::t_7b05b3fb01c602 179
+  s_49ba057c5af1a1::t_f4f99f7bb4e40d 104
+  s_49ba057c5af1a1::t_c7af855f11c290 17
+  s_49ba057c5af1a1::t_ff57b61c8b7122 132,134
+SPEC.md
+  s_49ba057c5af1a1::t_bd946aa0bf5007 2605-2617
+packages/ui/test/progress.test.tsx
+  s_49ba057c5af1a1::t_7feb01ef99734c 165-170,174,180-185
+  s_49ba057c5af1a1::t_366c7efdbbe26a 172-173,175-178
+  s_49ba057c5af1a1::t_b80a8a76f21e61 242
+  s_49ba057c5af1a1::t_d0baec96a6e06a 4-5,154-164,171,179,186-241,243-244
+apps/desktop/test/gallery-inventory.test.tsx
+  s_49ba057c5af1a1::t_360a0800f56568 19-20
+packages/ui/test/session-notes.test.tsx
+  s_49ba057c5af1a1::t_c85a8e54fca47c 5,8-31
+apps/desktop/src/App.tsx
+  s_49ba057c5af1a1::t_10c57d1688d8ce 1219
+  s_49ba057c5af1a1::t_58ed9368f8e63a 1355
+  s_49ba057c5af1a1::t_c543e219ee98dd 43
+  s_49ba057c5af1a1::t_26868925f2c666 1405-1408
+  s_49ba057c5af1a1::t_6828f97a9b8cda 1456
+  s_49ba057c5af1a1::t_ba4afe8c1d599d 1285
+  s_49ba057c5af1a1::t_4d5096aa7635e8 1339-1341
+  s_49ba057c5af1a1::t_df00a3619b2049 1218,1220-1223
+packages/ui/src/progress/Progress.tsx
+  s_49ba057c5af1a1::t_de59cf67ebb0f2 300-303
+  s_49ba057c5af1a1::t_e92338c33cc213 10-15,22,175-194,198,202-205,219-230,246-249,251-255,263-265,268,270,280-294,312-313
+  s_49ba057c5af1a1::t_56907b75e1f7cc 250
+packages/ui/test/online.test.tsx
+  s_49ba057c5af1a1::t_e248859aaf9cc0 25
+packages/ui/src/home/PlanCard.tsx
+  s_49ba057c5af1a1::t_730969074256e5 108,112-114,121-123,125-130,132-144
+  s_49ba057c5af1a1::t_3b90111814e031 124,131
+  s_49ba057c5af1a1::t_7ac9ea42c02495 8-10,16
+apps/desktop/test/mock.test.tsx
+  s_49ba057c5af1a1::t_699eb328855772 59,178-179,191
+packages/ui/gallery/states/study-workspace.canonical.quiz.json
+  s_49ba057c5af1a1::t_172fe198e82a4c 161
+apps/desktop/test/knows.test.tsx
+  s_49ba057c5af1a1::t_3093d6340d5d39 23
+packages/ui/src/home/LastTimeCard.tsx
+  s_49ba057c5af1a1::t_5068ddbc38584f 1-6,11,15,19-27,33
+apps/desktop/test/practice.test.tsx
+  s_49ba057c5af1a1::t_a89dbe1846dfa1 138-139,188
+packages/ui/test/study-workspace.test.tsx
+  s_49ba057c5af1a1::t_ead3f9fdad01db 157-158,165,168,171-173,245-246,251-252,266-267,272,342,418-419,464-465,471-472,481,498-499,518
+  s_49ba057c5af1a1::t_08efb9f9b1805e 202-205
+packages/ui/test/learn.test.tsx
+  s_49ba057c5af1a1::t_83749d9bb36bbf 173-174,185-268
+  s_49ba057c5af1a1::t_ba05174881a45f 269
+packages/ui/gallery/states/subject-map.canonical.topic-sheet.json
+  s_49ba057c5af1a1::t_172fe198e82a4c 131
+apps/desktop/test/learning-journey.test.tsx
+  s_49ba057c5af1a1::t_188cc497314e96 60
+apps/desktop/test/ask-anything.test.tsx
+  s_49ba057c5af1a1::t_4f24d42b8686ec 55
+apps/desktop/test/learn.test.tsx
+  s_49ba057c5af1a1::t_42b33b863b13ab 79,100
+apps/desktop/test/session-notes.test.tsx
+  s_49ba057c5af1a1::t_f5417f543abc84 25
+packages/ui/gallery/states/home.canonical.json
+  s_49ba057c5af1a1::t_806cccdf0cf0e2 49
+packages/ui/gallery/states/home.empty.json
+  s_49ba057c5af1a1::t_b445deb801e670 21
+packages/ui/src/learn/SubjectMap.tsx
+  s_49ba057c5af1a1::t_004d290d66bd8b 3-19,57-58,66,73,75,77-80,82-85,87-88,94-130,153-171,261,263-264,338-339,356-360,384-388,431-442
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7844132a23666ebd3e4a7852d252ac6ffca8dead",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
