@@ -10,13 +10,38 @@ worker), and anything it could not check is labelled as such. It reads photos of
 the exact line that went wrong, listens and speaks, researches a topic into a cited study pack, and keeps teaching
 when the internet goes away.
 
+## What else Jana does: the Companion, YouTube lectures and the learner's map
+
+- **Your tutor, a Study companion.** One persistent conversation per learner in Study that opens with what happened
+  last time, searches the learner's own materials, reads their progress, plans, makes flashcards and quizzes and
+  starts research. Explicit commands (`Remember that I prefer short explanations.`, correct, forget) keep the learner
+  in control, and "What your tutor knows" shows where each claim came from. Every progress number comes from code, not
+  from the model. *Privacy:* the thread and its memory stay on the device by default; the tutor's notes leave it only
+  under a separate consent, Personal tutor memory online, which is off by default.
+- **A YouTube lecture as a Study source.** Paste a YouTube link and its transcript (copied from YouTube's panel) and
+  Jana returns a teaching outline: the lecture's objectives, worked examples and concepts, each citing a transcript
+  line, mapped to the syllabus skills and compared with what the learner already has ("what haven't I got yet?").
+  Every moment has an **Open at m:ss** link that opens your browser at that time; there is no embedded player in this
+  release. *Privacy:* nothing is downloaded and Jana opens no connection to YouTube; the transcript is your own
+  copy for private study, sent to the gateway only when you have allowed online Study materials.
+- **The learner's map.** Progress opens on a map of every installed subject, with Mastery, Freshness, Mistakes, Study
+  and Notes layers, marks for what moved since last time, and a time scrubber that replays your record to an earlier
+  date (up to 26 weeks), read-only. *Privacy:* it is drawn on the device from your own record, calls no model and sends
+  nothing anywhere.
+
+The demonstration subject is projectile motion, a subtopic of the O level Physics pack (PHY-O-01.09, pack 1.1.0).
+Their specification is sections 19 to 21 of `SPEC.md` in the development repository (the filtered submission tree
+does not include it).
+
 ## Hackathon contribution
 
 Jana existed before this event. Its tutoring engine, curriculum packs, desktop shell and deterministic checking
 foundation are prior work. The October 26–November 4, 2026 entry continues the Meta model integration and adds
 the personal Study companion: durable conversations, explicit remember/correct/forget commands,
-profile isolation, inspectable learning evidence and source-backed progress claims. The companion work is recorded
-in commits `7a92235d` and `aed35cbf` (October 29–30). These are implementation claims, not measured learning gains.
+profile isolation, inspectable learning evidence and source-backed progress claims; YouTube lectures as a Study
+source; and the learner's map. The companion work is recorded in commits `7a92235d` and `aed35cbf` (October 29–30),
+the lecture and map work in `b814436d` (October 31), and the demo build, with the projectile-motion Physics subtopic,
+in `4ccd5c4c` (tagged `demo-2026-11-01`). These are implementation claims, not measured learning gains.
 The demo should distinguish this new work from the existing product and identify every human contributor.
 
 ## The Meta models and what each does
@@ -92,7 +117,9 @@ uv run python -m cloud_gateway --config services/cloud-gateway/deploy/meta-dev.t
 `meta-dev.toml` is a local development configuration: a hard spending budget (per day, in total and an expiry date),
 a ledger kept in `~/.jana-meta/gateway` across restarts, and cloud voice switched on. Set its `[quotas]` to your own
 limits and dates before you use it with your own key; the ledger reserves each call's full cost before sending it and
-refuses once a limit is reached.
+refuses once a limit is reached. The browser host checks the gateway on its port before starting and refuses one that
+is not this repository's (it must answer `/v1/ping` with `jana-gateway-version: 1.2`); set `JANA_META_GATEWAY_PORT` if
+you do not use port 8081.
 
 ### 3. Start the app
 
