@@ -6113,7 +6113,7 @@
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0007.yaml": "4930943627730aa6afbda15ebf365786848951c58ad8f588ec4e0ff03de97601",
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0008.yaml": "e492e7f50bf6d2e8fc776786a433dcfdd6cc573a3ecfaf86264bec2e31801627",
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0009.yaml": "0710676db7338a0096f6e2ecf6dba9bd563859fe76e2047cef557417a76b43d4",
-    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0010.yaml": "d75c4c0ddb7df263bec375f54edb0c50689de0652ff1548d85bd9f92c90e730d",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0010.yaml": "796e1b2e32a46625ae03ee48d926ecd26be3a3ed2667246325c034fa961415d0",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0001.yaml": "06ceedf7d0fc7ee724c96be1c44a98c66a78b6008f0a289b7c80d1076c150699",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0002.yaml": "32b685eb4162ad9158697f7f06583195ec54273249fda3cce50ee0d3f15a316b",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0003.yaml": "4bb5268bab369eb2847eb20673ff35dca120c3e671c9c86d58ff2ef6ca2093cd",
@@ -7448,7 +7448,7 @@
     "content/curriculum/ref/phy-o/conventions.yaml": "0f38a9f6987826853749658a7752064d2bdf832b98babaee00423374a7d7db4b",
     "evals/held-out/answer_oracles.enc": "9f7e7dfeff0c79e496af67827a46300db8665a226e7bfdc9c58a4712057552a9"
    },
-   "version": "2026-10-31.1"
+   "version": "2026-11-01.1"
   },
   "classification": {
    "files": {},
@@ -13570,7 +13570,7 @@
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0007.yaml": "4930943627730aa6afbda15ebf365786848951c58ad8f588ec4e0ff03de97601",
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0008.yaml": "e492e7f50bf6d2e8fc776786a433dcfdd6cc573a3ecfaf86264bec2e31801627",
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0009.yaml": "0710676db7338a0096f6e2ecf6dba9bd563859fe76e2047cef557417a76b43d4",
-    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0010.yaml": "d75c4c0ddb7df263bec375f54edb0c50689de0652ff1548d85bd9f92c90e730d",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0010.yaml": "796e1b2e32a46625ae03ee48d926ecd26be3a3ed2667246325c034fa961415d0",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0001.yaml": "06ceedf7d0fc7ee724c96be1c44a98c66a78b6008f0a289b7c80d1076c150699",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0002.yaml": "32b685eb4162ad9158697f7f06583195ec54273249fda3cce50ee0d3f15a316b",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0003.yaml": "4bb5268bab369eb2847eb20673ff35dca120c3e671c9c86d58ff2ef6ca2093cd",
