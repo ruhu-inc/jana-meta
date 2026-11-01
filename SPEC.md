@@ -29,6 +29,7 @@ Work landed on `main` today, from this session and from parallel sessions merged
 | W8 Learning agent | **Specified 2026-10-29, reworked after review** (§19, `LEARNING_AGENT_REVIEW.md`): phases 1–3, decisions JM-D21–JM-D29 proposed for the owner; phase 1 built 2026-10-29; phases 2 and 3 follow at once (owner) | phases 2–3 |
 | W9 Video source | **Specified 2026-10-31, reworked after review; JM-D42 spike answered** (§20, `SPEC_W9_W10_REVIEW.md`, `SPIKE_JMD42.md`): a YouTube lecture as a Study source (link plus pasted transcript), Watch on YouTube at the moment (the embedded player does not play in the packaged app), a "What this video teaches" aid mapped to skills by code, moments from the thread, Ask about this moment; video files with board writing read as text; JM-D30–D34 agreed, JM-D40, D43, D44 proposed | all |
 | W10 Learner's map | **Specified 2026-10-31, reworked after review** (§21): Progress opens on the learner's map with freshness, mistakes, Study and notes layers and a read-only time scrubber replayed from the event log; JM-D35–D39, D45 proposed | all |
+| W11 Simpler by default | **Specified 2026-11-01, reviewed the same day** (§22, `contract-additions-ux.json`): one online choice at sign-up that records today's consents, switches and notices through the public routes (`--online-demo` retired when it lands); Study opens on one view with the rest behind More; Progress's map opens on Mastery; Settings in four groups, the parent summary gone; one entry point for asking deferred; JM-D46–D54 proposed | all |
 
 ## 1. What we are building
 
@@ -623,6 +624,7 @@ Workstreams that separate sessions can take (W1 first; W2–W4 after its adapter
 | W8 | The personal learning agent (Study companion) | 19 |
 | W9 | Video as a Study source: a YouTube lecture understood (link, transcript, embedded player, teaching outline, moments); video files with frames | 20 |
 | W10 | The learner's map: graph-first Progress with freshness, mistakes, Study and notes layers and a time scrubber | 21 |
+| W11 | Simpler by default: one online choice at sign-up, Study on one view, the map on Mastery, Settings in four groups; one entry point for asking deferred | 22 |
 
 | Day | Work |
 |---|---|
@@ -2597,3 +2599,416 @@ at 04:12, two cards due, the tutor's note, and **Ask your tutor about this**.
 | B14 freshness misses Study activity and skills without a mastery row | computed in `engine/learn.py` over both sources (§21.4) |
 | B15 `snapshot_as_of` needs a schema and copies | the `:memory:` schema, event and `profile` copies, `rebuild()`, checksum proofs (JM-D37) |
 | Non-blocking 10–16, 19 | `disputed`; "down" dropped; "topics your tutor is tracking"; cards reviewed at least once; states from `kc_views`; UXS-22a tiles; no hover-only words; a test per bullet |
+
+## 22. Simpler by default: one online choice, one Study view, four Settings groups (W11)
+
+Status: **specified 2026-11-01, reviewed the same day** (§22.12 maps the review's findings). Three simplifications
+of what a learner meets first, and one merger explicitly deferred (§22.11). No model call, no new data class, no new
+learner migration, no new consent: every consent, switch and notice that exists today is recorded exactly as today,
+only asked in fewer places. Decisions in §22.2 are **proposed, owner to confirm**. Paths are relative to this
+repository; line numbers were read on 2026-11-01 against `main` at `a662c300` plus the uncommitted W9 and W10
+live-run fixes.
+
+**What exists.** *Online.* An adult who wants the online tutor today walks five steps, in this order, before a
+cloud turn is sent (verified live, `HACKATHON_DEMO.md` "Consents"): Settings → Online features → **Cloud tutor** →
+Give consent (`OnlineFeatures.tsx` `Cloud`, line 27–53: `POST /v1/subscription` with `entitlement: {}` and the
+profile's consent, `api/connectivity.py` line 111–200, whose `switch_cloud` (line 78) turns the device row
+`online_features.cloud_tier` on with `enabled_by_role = 'subscription'` and grants the profile's `cloud_tier` consent
+as `student_18_plus`); then **Online study materials** → Review Study consent → Turn on, which asks twice: once for
+the profile (`PUT /v1/profiles/{id}/consents/study_materials {action: "on"}`, `api/profiles.py` line 330–381, which
+also records Study's first-use notice at line 374–381) and once for the computer (`PATCH /v1/connectivity
+{features: {study_materials: true}}`, `api/profiles.py` line 431–470, `enabled_by_role = 'user'`); then the cloud
+tutor's own first-use notice (ARC-10), a `confirm` card with purpose `egress` in a tutoring turn (`engine/turn.py`
+`_first_use_notice`, line 2356–2392, answered through `POST /v1/cards/{request_id}/answer`), or the same question
+asked by the research conversation (`api/research.py` `first_use_notice`, line 317; `ChatRequest.cloud_notice` read at line 353) or by **Your tutor**
+(`api/companion.py` line 43). The answer is kept per profile and feature in the device database's `app_settings`
+under `egress_first_use` (`store/egress.py` line 23; `first_use` line 160, `record_first_use` line 168), erased with the profile (`engine/assembly.py`
+`forget_profile_online`, line 1237, the `online` eraser). The cloud tier is in effect only when all of it holds: `cloud_tier_on()`
+(`engine/assembly.py` line 1281) is `cloud_effective` (the switch, a subscription that names the profile, an active
+unpaused consent; `net/layer.py` line 244–252) **and** the notice answered `accepted`. The 2026-11-01 live run
+failed at the last step ("The tutor stopped unexpectedly"; the fix is `test_w11_first_use_notice.py`, named before
+this workstream took the number), and the host flag `--online-demo` (`scripts/jana_tools/hackathon_dev.py` line
+103–115; `scripts/jana_tools/hackathon_app.py` `online_demo_grant`, line 262–297, hooked on `core.on_profile_created`
+at line 371) now records the whole set for a profile created on a demo host: the subscription's waiting consent, the
+two device rows, the two profile consents and the two notices, leaving `tutor_memory_online` and `cloud_voice` as
+they were. Sign-up (`packages/ui/src/setup/FirstRun.tsx`) asks a name and an age (`AgeField.tsx`), says "Everything
+stays on this computer unless you turn on online features later" (`first_run.privacy`), creates the profile with
+`firstRunProfile` (`packages/client-core/src/setup.ts` line 59) and opens it; the hand-off (`FirstRunTutor.tsx`)
+offers an **Online features** button that opens Settings (`apps/desktop/src/App.tsx` line 777). `CreateProfile`
+(`contracts/api/commands.schema.json`) carries no online field.
+
+*Study.* `packages/ui/src/learn/StudyWorkspace.tsx` has two shapes. With no material open, the library (line
+305–395): a header with **Add material**, **Activity** and **All study sets**, a tablist "Study workspace"
+(`study.library.navigation`, line 314) with **Materials**, **Your tutor** and **Explore**; Materials holds the Last
+time card, the add panel (file, paste, link, saved notes) and the library list (`StudyLibrary.tsx`); Explore holds the
+research agent (`StudyResearch.tsx`) and the typed-topic concept maps (`topicMaps`). With a material open (line
+398 on): a header with back, the title and state, **Show source** / **Hide source** (line 406) and the revision
+picker; then a split: the material pane (`StudyPdfReader.tsx` for a PDF, `StudyPlayer.tsx` for a recording, a video
+or a YouTube link, else the text through `StudyText.tsx`) beside an aside "study tools" with a tablist (line 456)
+of **Generate**, **Chat** and **Your tutor** (`TABS_WITH_COMPANION`, line 30). Generate holds the journey card
+(`StudyJourney.tsx`), the three tool cards with "More study tools" (`StudyGenerate.tsx` `GenerateTools`, line 23; the disclosure at line 34),
+My Sets, the suggested topics and the aid shown (the outline, `StudyOutline.tsx`; the concept map,
+`StudyConceptMap.tsx`; a summary, a deck, a quiz); Chat holds the material question (`chat` aid, grounded in the
+material's chunks through the Study service) with its composer docked at the foot; Your tutor holds the thread
+(`CompanionThread.tsx`). Below the `@4xl` container width the pane and the aside take turns (`sourceOpen`).
+Progress opens on **My map** with a three-layer switch above the tiles (`progress/MapOverview.tsx` line 94,
+`OVERVIEW_LAYERS` line 15), and the skill map shows the six-layer switch and the scrubber whenever a lens is given
+(`learn/ConceptMap.tsx` line 551–554); the lens lives in memory (`App.tsx` line 618; `runtime.conceptMap.setLayer`).
+
+*Settings.* The core lists the sections of this build's stage (`GET /v1/settings/sections`, `api/operations.py`
+line 38; `config/support.py` `settings_sections`, line 244–251: the twelve of `SECTIONS` from S2, plus `voice` from
+S3, and no parent summary or alerts); the client falls back to `STAGE_2_SECTIONS` (`packages/client-core/src/
+settings-sections.ts` line 14–17); `Settings.tsx` renders one flat list of thirteen section ids (`SETTINGS_SECTIONS`,
+line 55) beside the sections, in the core's order. Each id's body is drawn by the thirteen files of
+`packages/ui/src/settings`: `OnlineFeatures.tsx` and `Studies.tsx` (through `FamilyControls.tsx`'s
+`OnlineFeaturesSection`), `FamilyControls.tsx` (`ProfilesSection`, `DamagedPacks`, `FAMILY_GROUPS`),
+`Installations.tsx` with `ModelManager.tsx`, `TutorSection.tsx`, `ReportSchema.tsx` with the ledger, `DataExport.tsx`,
+`Help.tsx` with `HealthPanel.tsx`, `Support.tsx` (licence, crash review, about) and `Settings.tsx` itself.
+`ParentSummary.tsx` (the weekly summary and alerts) is exported from `packages/ui/src/index.ts` line 82 and tested by
+`parents.test.tsx`, but no screen renders it: the core serves no `parent_summary` or `alerts` section (JM-D15), and
+`App.tsx` does not import it. Its copy survives: `parents.*` (40 keys), `alerts.*` (16), `settings.section.
+parent_summary` and `settings.section.alerts`.
+
+### 22.1 What the learner gets
+
+| Part | What it is |
+|---|---|
+| **One online choice** | "Who's learning?" asks a name, an age and one more thing: **Use the online tutor?** with **Yes** and **Not now**, the plain words of what leaves under Yes. Yes records what the five Settings steps record today; Not now records nothing. Either way "Start learning" opens the profile and the hand-off follows as today. The same choice is offered where a feature needs the cloud ("This needs the online tutor"), and the full detail stays in Settings → Tutor and online. |
+| **Study opens on one view** | Study opens on the material last opened on this computer (else the library): the material itself (its text, or its transcript with **What this video teaches** when that aid is ready) and the one ask box at the foot (the material question). Everything else is behind **More**: Library, Research, Generate, Journey, Check my mastery, Concept map, Original pages, Your tutor. More remembers what the learner opened last. |
+| **The map opens on Mastery** | Progress's tiles and the skill map open on the Mastery layer with no switch in sight; **Layers** reveals the other layers, and **See the map as it was** reveals the scrubber. |
+| **Settings in four groups** | Tutor and online · Profiles · Data and privacy · Help and diagnostics. The same sections, grouped, in that order; the weekly parent summary and alerts are gone from the app. |
+
+Nothing moves off the device that did not move before, and nothing is recorded that was not recorded before.
+
+### 22.2 Decisions (proposed, owner to confirm)
+
+| # | Decision | Working assumption |
+|---|---|---|
+| JM-D46 | What does **Yes** to "Use the online tutor?" record? | **Exactly the set an adult records today through Settings, through the same public routes, in this order, after the profile is created and opened** (the consent routes need the open profile): (1) `POST /v1/subscription` with `entitlement: {}` and `consents: [{profile_id, notice_version}]` when `GET /v1/subscription` lists this profile as waiting (`profiles[].consent: "needed"`), skipped when it already covers the profile: the subscription's waiting consent, which turns `online_features.cloud_tier` on (`enabled_by_role = 'subscription'`) and grants the profile's `cloud_tier` consent **for a profile the subscription now covers, even while another profile on the computer still waits** (today `subscribe` runs `switch_cloud` only when the whole subscription is `active`, `api/connectivity.py` line 174; `covers()` already holds per profile, `store/subscription.py` line 154–161, so a second profile's Yes on a host whose first profile never answered would record a consent and no switch; the route changes, §22.4.1); (2) `PUT /v1/profiles/{id}/consents/cloud_tier {action: "on", notice_version, first_use: true}`: idempotent because the route skips `grant` on an active row and calls `resume` (`api/profiles.py` line 348 and 374; `store/consents.py` line 104 and 145) and, with the new `first_use` field, records the cloud tutor's first-use notice as `accepted`, as the `study_materials` branch already does for Study's notice (`api/profiles.py` line 374–381); (3) `PUT /v1/profiles/{id}/consents/study_materials {action: "on", notice_version}`: the Study consent and its notice; (4) `PATCH /v1/connectivity {features: {study_materials: true}}`: the computer's switch. The rows written are the rows `online_demo_grant` writes today (`hackathon_app.py` line 276–295), through the routes instead of the stores. **`tutor_memory_online` and `cloud_voice` are not touched**: each keeps its own switch, consent and notice (§19.6; VOC-28). |
+| JM-D47 | What does **Not now** record, and how does a Not-now learner get online later? | **Nothing**: no consent row, no switch, no notice answer; the profile is today's fresh profile. Where a feature needs the cloud the app shows one line, "This needs the online tutor", with **Turn on the online tutor**, which opens the same choice as a dialog (the same words, the same four calls) in three places: Ask anything's unavailable states (`home/AskAnswer.tsx` line 78, the `needs_online_plan`, `consent_required` and `notice_required` reasons, which today all read `ask.offline` or `ask.notice_required`), Study's access notice (`StudyWorkspace.tsx` line 275–276 and 414–415, where **Review Study access** opens Settings today, `App.tsx` line 1333) and the thread's no-model state (`CompanionThread.tsx` line 147, reached only when no model on this computer can serve, `api/companion.py` line 58; with a local model the thread simply answers locally and shows nothing new). A tutoring turn keeps its engine line (`engine/turn.py` `_notice_block`) and its card. |
+| JM-D48 | Is the sign-up text a first-use notice? | **Yes, for `cloud_tier` and `study_materials` only, in the words Settings shows.** Four wordings exist today for the same fact: the turn's card body, hard-coded (`engine/turn.py` line 2365–2371: "This question will be sent to the online tutor. Your name is not sent."), Settings' consent sentence (`settings.online.consent.cloud_tier`, `OnlineFeatures.tsx` line 229; `settings.online.consent.study_materials`, line 191), the shipped notice text (`notices.json`, `cloud_tier 2026-10.d1`) and the thread's (`study.companion.notice.body`, `CompanionThread.tsx` line 140). The choice shows the Settings sentence for each scope, which names what leaves as ARC-10 asks (`architecture.md` line 206), and the core records it against the shipped version (`CONSENT_NOTICE_VERSIONS`), exactly as Settings records the Study notice with the Study consent today (`api/profiles.py` line 374–381). The card's body is unchanged and still asked of a profile that answered Not now (`test_w11_first_use_notice.py` gains a fixture where the notice was recorded with the consent and no card is shown). `cloud_voice` and `tutor_memory_online` keep their own notice at their first use. No new notice version. |
+| JM-D49 | Is `--online-demo` kept? | **Retired in the same change that lands §22.8's online bullets**, not before: the flag, `JANA_ONLINE_DEMO`, `online_demo_grant`, its fixture and four tests in `scripts/tests/test_hackathon_app.py` (line 204–213, 261, 274, 302, 310; the last, "off by default and never inherited from the shell", is kept in spirit as a no-hidden-grant-path test after the flag goes) and the four `HACKATHON_DEMO.md` mentions (line 113, 161, 267, 312). A demo profile is created at sign-up anyway, so the choice records the identical set through the public routes, and one path that writes consents is one fewer to keep equal. Until then the flag stays as the 4 November fallback. |
+| JM-D50 | What does Study open on, and where does More's memory live? | **The last material opened on this computer for this profile, else the library.** Two device-local keys in `app_settings`, `study_opened:<profile>` (`{source_id, revision}`) and `study_more:<profile>` (the More panel last chosen), keyed by the **internal** profile id exactly as `map_opened_at:<profile>` is (`engine/learner_map.py` `OPENED_KEY`, line 52), read and written by module functions beside `learner_map.opened` and `write_opened` (line 360–383) over `core.stores.device` (the Study desk holds the learner connection only, `engine/study.py` line 314–321), and erased with the profile where `map_opened_at` is erased: the `lesson_positions` eraser (`engine/assembly.py` `drop_lesson_positions`, line 861–870; registered at `api/__main__.py` line 178), which has no `online` guard, unlike `forget_profile_online` (line 1239). `study_opened` is written by the existing material open (`POST /v1/study/sources/{source_id}/open`, `api/study.py` line 448) and read by the existing Study open (`POST /v1/study/session`, line 204, whose `StudyVisit` reply gains `view`); only `more` needs a write of its own (`PUT /v1/study/view`). Never a `Settings` key: that would append a synced `setting_change` learning event on every open (`store/settings.py` line 100–107; JM-D45's reason). |
+| JM-D51 | Where does the map's layer choice live? | **In memory, as today** (`App.tsx` line 618): the layer chosen on Progress opens the skill map on it, and the next launch opens on Mastery again. A dated map is a moment, not a setting; nothing is written by opening Layers or the scrubber (§21.5 still holds). |
+| JM-D52 | Who names the Settings groups? | **The core, with a client fallback.** `SettingsSections.sections[].group` (optional, one of four) is sent by `settings_sections` from one table; the client's `SETTINGS_GROUPS` gives the same table for a core that omits it. A section the core names in no group goes under Help and diagnostics. |
+| JM-D53 | What do Family Controls and Parent Summary become? | **Profiles management, with the family and parent names gone; the parent summary removed outright.** `FamilyControls.tsx` becomes `Profiles.tsx` (`ProfilesSection`: add a profile with the age field and the online choice, delete a profile); `OnlineFeaturesSection` moves into `OnlineFeatures.tsx`, `DamagedPacks` into `Installations.tsx`, `FAMILY_GROUPS` is deleted; client-core's `FamilySettings` is renamed `DeviceSettings` (about eighteen sites in ten files: `client-core/src/profiles.ts`, `index.ts`, `study-workspace.ts`, the four settings files, `setup/FirstRun.tsx`, `profiles/ProfilePicker.tsx` and two tests). `ParentSummary.tsx`, its exports, `packages/ui/test/parents.test.tsx`, client-core's `parents.ts` with its `test/parents.test.ts` and `test/parentcore.ts`, and the copy `parents.*`, `alerts.*`, `settings.section.parent_summary`, `settings.section.alerts` are removed. The core's digest and alert routes (`api/parents.py` line 41–50) and `engine/parents.py` stay: they are API-27a contract, `api/parents.py` also serves the session history Progress uses (line 60–65), and §8.2 already records them as not wired. |
+| JM-D54 | One entry point for the four ways of asking? | **Deferred** (§22.11). |
+
+### 22.3 Contracts
+
+Every addition goes first into **`contract-additions-ux.json`** at the repository root, in the form of
+`contract-additions-m45d.json`, and is adopted into `contracts/` with codegen in the same change as W8 to W10 were.
+No storage change: both Study keys live in the device database's existing `app_settings` table (JM-D50).
+
+- `contracts/api/commands.schema.json` `$defs/ConsentSwitch` gains optional `first_use: boolean`: with `action: "on"`
+  on a scope whose online feature has a first-use notice (`cloud_tier`, `study_materials`), the plain-words text shown
+  with this consent included that notice, and the core records it accepted (`OnlineLayer.record_notice`) in the same
+  request. Refused with `validation_failed` on any other action or scope. `study_materials` already behaves so without
+  the field (line 374–381); the field makes the rule explicit and extends it to `cloud_tier`.
+- `contracts/api/commands.schema.json` `$defs/SettingsSections` `sections[]` items gain optional
+  `group: "tutor_online" | "profiles" | "data_privacy" | "help_diagnostics"` (JM-D52). `required` is unchanged, so a
+  reply from a core before W11 still validates.
+- New `$defs/StudyMore` (the seven panels behind More: `library`, `research`, `generate`, `journey`, `concept_map`,
+  `pages`, `tutor`; **Check my mastery** is a link to another screen, so it is not remembered) and `$defs/StudyView`
+  `{source: {source_id, revision} | null, more: StudyMore | null}`. `$defs/StudyVisit` (the reply of `POST
+  /v1/study/session`) gains optional `view: StudyView`, so Study's existing open returns where to open (a core before
+  W11 omits it and the client opens the library); the existing `POST /v1/study/sources/{source_id}/open` writes
+  `study_opened`; one new TABLE API-27a row, `PUT /v1/study/view` with request `$defs/StudyViewPatch {more}` and
+  response `StudyView` (auth `launch` and `profile`, owner W11), writes `study_more`. The core answers `source: null`
+  when the source or its revision no longer exists.
+- No change to `CreateProfile`, `SetupState`, `SubscriptionApply`, `ConnectivityPatch` or any event.
+- Adopting `ConsentSwitch.first_use` touches what every contract change touches: the bundled copy the core validates
+  against (`services/agent-core/agent_core/contracts/schemas/api/commands.schema.json`, `ConsentSwitch` at line
+  4397), the generated bindings (`agent_core/contracts/api/commands.py` line 1255; `api_commands.ConsentSwitch` in
+  TypeScript, read by `packages/client-core/src/studies.ts` line 50), the contract fixtures
+  `evals/contracts/api/commands/ConsentSwitch/{valid/minimal, invalid/unknown_property}.json` and their hashes in
+  `scripts/governance/app-completion-acceptance.json` (line 7515–7516) and `app-completion-software-verification.json`
+  (line 7547–7548), regenerated by `jana_tools fixtures --write` as W10 did; `test_m10e_consent.py` line 103–105
+  reads the definition and asserts only that no school scope exists.
+- Copy (`packages/i18n/locales/en.json`), added: `first_run.online.question` ("Use the online tutor?"),
+  `first_run.online.yes`, `first_run.online.not_now`, `first_run.online.leaves` (the `cloud_tier` and
+  `study_materials` first lines of TABLE PRV-05a, one sentence each, the same words as `settings.online.consent.
+  cloud_tier` and `settings.online.consent.study_materials`), `first_run.online.attestation` (the words of
+  `settings.online.self_attestation`), `first_run.online.recorded` ("Online tutor: on"), `first_run.online.needs_plan`
+  ("The online tutor needs the online plan. Turn it on in Settings when you have one."), `online.needed.title`
+  ("This needs the online tutor"), `online.needed.turn_on` ("Turn on the online tutor"), `ask.needs_online` (the reason
+  `needs_online_plan` and `consent_required` show, which `AskAnswer.tsx` line 78 folds into `ask.offline` today);
+  `study.more` ("More"),
+  `study.more.library`, `study.more.research`, `study.more.generate`, `study.more.journey`, `study.more.assessment`
+  ("Check my mastery"), `study.more.concept_map`, `study.more.pages` ("Original pages"), `study.more.tutor` ("Your
+  tutor"); `map.layers.show` ("Layers"), `map.layers.hide`; `settings.group.tutor_online`, `settings.group.profiles`,
+  `settings.group.data_privacy`, `settings.group.help_diagnostics`. Removed: §22.4's lists.
+
+### 22.4 Changes
+
+#### 22.4.1 One online choice at sign-up
+
+| Where | Change |
+|---|---|
+| `packages/ui/src/setup/OnlineChoice.tsx` (new) | The choice: a labelled radio group **Yes** / **Not now** under the age field, nothing preselected; under Yes the two "What leaves" lines and the attestation line, always visible (PRV-05: shown in plain words before granting). Exposes `OnlineChoiceDialog` for JM-D47's three places: the same words in a `ConfirmDialog` with **Turn on** and **Not now**. |
+| `packages/ui/src/setup/FirstRun.tsx` | The choice below `AgeField` (line 81); `ready` (line 39) also needs a choice; `onStarted(name, choice)`. The privacy line (`first_run.privacy`) stays, worded for both answers: "Everything stays on this computer unless you say yes here, or turn online features on later." |
+| `packages/client-core/src/studies.ts` | `switchConsent` (line 50 builds the `ConsentSwitch` body) takes `firstUse?: true` and sends `first_use`. |
+| `packages/client-core/src/setup.ts` | New `chooseOnline(commands, device, profileId, notices)`: JM-D46's four calls in order, each checked against the command contract; step (1) runs when `GET /v1/subscription` lists the profile with `consent: "needed"` and is skipped when the subscription already covers it (an entitlement from a real checkout never lists an adult as waiting, `api/connectivity.py` line 149); steps (2) to (4) follow in both cases. Returns `"recorded"`, or `"needs_plan"` when the subscription neither covers nor waits for the profile (no checkout on this computer), having recorded nothing in that case. A failed call after the first leaves the earlier records in place and returns the step that failed; the hand-off says so and Settings shows the real state. |
+| `apps/desktop/src/App.tsx` | First run (line 738–757): after `unlock`, `chooseOnline` runs for Yes before the hand-off; `FirstRunStep.handoff` carries the outcome. The three JM-D47 places receive `onTurnOnline`, which opens `OnlineChoiceDialog` and runs the same function. |
+| `packages/ui/src/setup/FirstRunTutor.tsx` | One line under the greeting: `first_run.online.recorded` or `first_run.online.needs_plan`; nothing for Not now. The **Online features** button stays (it is the detail). |
+| `packages/ui/src/settings/Profiles.tsx` (was `FamilyControls.tsx`, JM-D53), `profiles/ProfilePicker.tsx` (line 45–52) | **Add a profile** in Settings and the picker's own add form (the second-profile path a shared computer hits first) carry the same `OnlineChoice`; after `addProfile` the app opens the new profile and runs `chooseOnline` as first run does, then returns where it was. |
+| `packages/ui/src/home/AskAnswer.tsx`, `learn/StudyWorkspace.tsx` (line 275–276, 414–415), `learn/CompanionThread.tsx` (line 147) | JM-D47's line and button in place of, or beside, today's pointer to Settings. Ask anything's `offline` and `allowance_exhausted` reasons keep their words; `needs_online_plan`, `consent_required` and `notice_required` get the button (for a profile that consented before W11 and never answered the card, the dialog records the notice). |
+| `services/agent-core/agent_core/api/connectivity.py` | `subscribe` (line 111–200): after `consent_given`, `switch_cloud(True, …)` runs for the profiles this request named that `covers()` now holds for (`store/subscription.py` line 154), whether the state is `active` or still `pending_consent` for others (line 174 tests `active` alone today); the device row is written once, the consent per named profile; `_switched(True)` follows as today. The Settings path gains the same behaviour for free. |
+| `services/agent-core/agent_core/api/profiles.py` | `ConsentSwitch.first_use` (line 330–381): with `action: "on"` on `cloud_tier` or `study_materials`, `online.record_notice(profile_id, scope, True)` after the grant or resume, inside the same request; `validation_failed` otherwise. |
+| `scripts/jana_tools/hackathon_dev.py`, `hackathon_app.py`, `scripts/tests/test_hackathon_app.py`, `HACKATHON_DEMO.md` | JM-D49: removed once §22.8's online bullets pass; until then unchanged. |
+| `packages/i18n/locales/en.json` | §22.3's keys; `first_run.privacy` reworded; `error.guardian_consent_required` ("Agree to this online feature in Settings before you use it.") reworded to name the choice. |
+
+#### 22.4.2 Study opens on one view
+
+| Where | Change |
+|---|---|
+| `packages/ui/src/learn/StudyWorkspace.tsx` | One shape: the header (back to the library, title, state, revision picker, **More**), the material pane full width, the ask box docked at the foot. `tab`, `TABS`, `TABS_WITH_COMPANION`, `libraryTab` and `sourceOpen` go; `more: StudyMore \| null` takes their place, hydrated from `study_more` and written through the controller. The More panel opens beside the material from `@4xl` and as a sheet over it below, and closes back to the material. The aid shown (an outline, a concept map, a quiz) renders inside the panel that made it (Generate, Concept map) or, for the outline of a video, in the material pane itself. A `StudyRequest` (line 34) opens its panel: `companion` → More → Your tutor; `add` → More → Library with the add panel open; `research` → More → Research; `flashcards` → More → Generate with the tool chosen; `target`, `source`, `moment` → the material. |
+| `packages/ui/src/learn/StudyMore.tsx` (new) | The `MenuButton` and its panel: **Library**, **Research**, **Generate**, **Journey**, **Check my mastery**, **Concept map**, **Original pages** (a PDF only), **Your tutor**: seven panels and one link; the current panel is marked. Opening a panel moves focus to its heading; its close, and Escape on the sheet, return focus to **More** (DSN-12, as the confirm dialog does). |
+| `packages/client-core/src/study-workspace.ts` | `load()` reads `StudyVisit.view` from the Study open it already sends and opens its source, else the library; `open` writes nothing new (the material open records it); `setMore(panel)` sends `PUT /v1/study/view {more}`; `initialAdd`, `initialJourney`, `initialSource` and `initialResearch` (`StudyWorkspace.tsx` line 57, 116, 129, 172, 348) open their panel as a `StudyRequest` does: `initialResearch` → More → Research. |
+| `services/agent-core/agent_core/engine/study_view.py` (new), `api/study.py`, `engine/assembly.py` | `study_view.read(device, profile)`, `write_opened(device, profile, source_id, revision)`, `write_more(device, profile, more)` over `app_settings` under JM-D50's keys, after `learner_map.opened` (line 360–383); `POST /v1/study/session` (line 204) fills `StudyVisit.view`, reading `null` for a source or revision that no longer exists; `POST /v1/study/sources/{source_id}/open` (line 448) writes `study_opened`; `PUT /v1/study/view` writes `study_more`. `drop_lesson_positions` (line 861–870) deletes both keys with `map_opened_at` and is renamed `drop_profile_view_state`. |
+| `packages/ui/src/learn/StudyGenerate.tsx` | `GenerateTools` lists every tool in one grid (the "More study tools" disclosure at line 34 goes: the panel is already the detail); `MySets` and the journey card follow it in the Generate panel. |
+| `packages/ui/src/learn/StudyJourney.tsx` | Unchanged; rendered by the Journey panel and, when a journey is in progress, as one line under the ask box ("Continue your learning: review flashcards"), which opens the panel. |
+| `packages/ui/src/learn/StudyResearch.tsx`, `StudyConceptMap.tsx` | Unchanged; the Research panel holds the research agent and the typed-topic maps (today's Explore), the Concept map panel the material's `concept_map` aid or its tool. |
+| `packages/ui/src/learn/StudyPdfReader.tsx` | Unchanged; the material pane shows the extracted text by default, **Original pages** opens the reader; a citation tap still opens the page (`cite`, line 227). |
+| `packages/ui/src/learn/StudyPlayer.tsx`, `StudyOutline.tsx` | Unchanged; for a video or a link the material pane is the transcript pane, with the outline above the transcript when a `teaching_outline` aid is ready (the aid's own heading stays). |
+| `packages/ui/src/learn/CompanionThread.tsx` | Unchanged; the Your tutor panel, and the library's panel when no material is open. |
+| `packages/ui/src/learn/Assessment.tsx` | Unchanged and not a Study panel: **Check my mastery** is a link to the assessment screen (`App.tsx` `openAssessment()`, line 972), as Home's chip and Learn's topic sheet open it. |
+| `packages/ui/src/learn/StudyLibrary.tsx`, `StudyLinkAdd.tsx` | Unchanged; the Library panel, and Study's whole screen when nothing is open or `study_opened` reads `null`. |
+| `apps/desktop/src/App.tsx` | `onTab` and `studyTab` (line 613 and 1337, which told the app that the voice conversation lived in Chat, VOC-53, D130) go: the voice bar belongs to the one ask box and is hidden with it under Your tutor. |
+| `packages/ui/src/progress/MapOverview.tsx`, `learn/ConceptMap.tsx` | JM-D51: the layer `SegmentedControl` (`MapOverview.tsx` line 94; `ConceptMap.tsx` line 553) sits behind a **Layers** button (`aria-expanded`), closed on open; the `Scrubber` (line 554; the function at line 399) behind a `Disclosure` whose summary is `map.scrubber.label`, closed on open; `lens` is unchanged. |
+| `packages/i18n/locales/en.json` | Added: `study.more.*`, `map.layers.*` (§22.3). Removed: `study.tab.generate`, `study.tab.chat`, `study.tab.companion`, `study.tab.flashcards`, `study.tab.quiz`, `study.tab.audio_overview`, `study.tab.summary` (the last four are read only through the template prefix at line 456, which goes), `study.library.navigation`, `study.library.materials`, `study.library.explore`, `study.more_tools`, `study.show_source`, `study.hide_source`. Kept: `study.aids` (the panel's label), `study.generate_heading`, `study.all_tools`, `study.all_sets`, `study.activity`, `study.library` and `study.library_*`, `study.journey.*`, `study.research.*`, `study.pdf.*`, `study.ask_placeholder`. `study-job-labels.test.tsx` keeps every `study.generate.*` label. |
+
+#### 22.4.3 Settings in four groups
+
+| Where | Change |
+|---|---|
+| `services/agent-core/agent_core/config/support.py` | `settings_sections` (line 244) sends `group` per section from one table: `tutor_online`: `online_features`, `tutor_models`, `content`, `tutor`, `voice`, `licence`; `profiles`: `profiles`, `accessibility_language`, `study`; `data_privacy`: `egress`, `data_export`; `help_diagnostics`: `help`, `about`. Order within a group is the table's. |
+| `packages/client-core/src/settings-sections.ts` | `SETTINGS_GROUPS` (the same table, for a core without `group`), `groupOf(section)`, and the reply check admits `group`. |
+| `packages/ui/src/settings/Settings.tsx` | The nav (line 343) shows four group headings with their sections under each; the page renders sections grouped, in group order; `go(id)` and `openSettingsAt` (`App.tsx` line 1155; the student menu's Language, Get help, plan and back-up at line 1445–1449) are unchanged because section ids are. |
+| `packages/ui/src/settings/Profiles.tsx` (renamed from `FamilyControls.tsx`) | `ProfilesSection` only (JM-D53): add a profile (name, age, level, subjects, the online choice), delete; the word "family" leaves its comments and identifiers. `OnlineFeaturesSection` moves into `OnlineFeatures.tsx`, `DamagedPacks` into `Installations.tsx`; `FAMILY_GROUPS` is deleted; `packages/ui/src/index.ts` line 36 and 82 follow. |
+| `packages/client-core/src/profiles.ts`, `index.ts` | `FamilySettings` → `DeviceSettings` (the controller of the device's online features, subscription and packs); `profiles.family` → `profiles.device`. Mechanical, about eighteen sites in ten files (JM-D53). |
+| `packages/ui/src/settings/ParentSummary.tsx`, `packages/ui/test/parents.test.tsx`, `packages/client-core/src/parents.ts` | Removed (JM-D53), with `index.ts`'s exports (`packages/ui/src/index.ts` line 82; `packages/client-core/src/index.ts` line 107–110). |
+| `packages/ui/src/settings/OnlineFeatures.tsx` | The guardian branches go (`adult === false` at line 171–172, 191, 229; the `adult === true` guards at line 134–135, 203, 214, 219 become plain): `settings.online.attestation` (a duplicate of `self_attestation`, also read by `online.test.tsx`), `study.access.settings_guardian` and `settings.online.cloud.pending` (names of others) are replaced by the self wording (`pending_self` stays), and a profile whose band does not read as 18 or over gets one line, `settings.online.needs_adult` ("Only learners aged 18 or over can turn this on."), since the core refuses it either way (`api/profiles.py` line 355–358). The Cloud tutor row keeps its subscription state and **Give consent** (the detail of JM-D46). |
+| `packages/i18n/locales/en.json` | Added: `settings.group.*`. Removed: `parents.*`, `alerts.*`, `settings.section.parent_summary`, `settings.section.alerts`, `settings.online.attestation`, `study.access.settings_guardian`, `study.access.guardian`, `settings.online.cloud.pending`. Kept: the S4 feature rows (`parent_remote_view` and the others), which the policy still names and the core lists only at their stage. |
+| `packages/ui/test/settings.test.tsx`, `health.test.tsx` (line 120–122 asserts `data-family-group` against `FAMILY_GROUPS`), `online.test.tsx`, `studies.test.tsx`, `installation-controls.test.tsx`, `connectivity.test.tsx` (line 357) | Follow the renames; `settings.test.tsx` asserts the four headings and that every id the core names appears once under its group, and its order assertions change: UXS-46a's single order becomes an order within each group (`licence` joins the first group, `egress` follows `study`). |
+
+### 22.5 Behaviour
+
+#### 22.5.1 Sign-up and the choice
+
+1. "Who's learning?": name, age, the choice. "Start learning" is enabled with a name, an adult age and an answer.
+2. The profile is created (`POST /v1/profiles`, as today) and opened (`unlock`). For **Yes**, `chooseOnline` runs:
+   `GET /v1/subscription`; a profile listed as waiting gets the four calls of JM-D46 in order, a profile the
+   subscription already covers gets calls (2) to (4), and a profile it neither covers nor waits for gets nothing and
+   the outcome `needs_plan`. For **Not now**, nothing runs.
+3. The hand-off (`FirstRunTutor`) says once what the tutor can do here and, for Yes, "Online tutor: on" or the
+   needs-plan line; then the tutor pick and the two questions, as today.
+4. Afterwards nothing asks again: a tutoring turn finds `cloud_tier_on()` true and sends no card; Ask anything,
+   Study and Your tutor run. Settings → Tutor and online shows the state the choice recorded, with every switch,
+   consent and **Withdraw** as today (D87): the choice is a shortcut, not a new setting (D53).
+5. A **Not now** learner meets the cloud three ways: a tutoring turn runs on this computer (and, with no local
+   model, the engine's line says what is missing, unchanged); Ask anything says "This needs the online tutor" with
+   **Turn on the online tutor**; Study's access notice and the thread say the same. The button opens the dialog
+   with the same words and runs the same calls; **Not now** there records nothing again. A tutoring turn sent on
+   the same screen after the dialog's **Turn on** needs no card: the notice was recorded with the consent.
+6. **Add a profile** in Settings → Profiles and in the profile picker asks the same choice and runs the same function
+   for the new profile.
+7. On a demo host the sponsor hook lists every new profile as waiting (`hackathon_app.py` line 357–361), so until a
+   profile answers Yes, `GET /v1/subscription` shows it `consent: "needed"` and Settings → Cloud tutor says "Your
+   consent is needed" (`settings.online.cloud.pending_self`); that is the subscription's record, not the profile's, and
+   a Not-now profile holds no consent row, switch or notice answer.
+
+#### 22.5.2 Study
+
+1. Study opens on `study_opened`'s material when it still exists, else the library. A material is one pane: a
+   PDF's extracted text, a document's text, a recording's or a video's transcript with its chapters, a YouTube link's
+   transcript with the outline above it when the aid is ready; citations open their passage in the pane as today.
+2. The ask box at the foot is the material question (the `chat` aid under `study_materials`, as today's Chat tab):
+   the reply and its citations appear above the box; previous questions are a disclosure above them. The box is the
+   one composer today's tabs share (`StudyWorkspace.tsx` line 561–568): while More → Generate shows a quiz it is the
+   quiz-help composer, with the help chips and the 1,000-character cap (STU-21, `requestQuizHelp`); it is hidden
+   while More → Your tutor is open, because the thread has its own composer; otherwise it asks the material.
+3. **More** opens a panel beside the material (a sheet over it on a narrow screen) with the seven panels and one link of
+   §22.4.2; choosing one writes `study_more`; opening Study later with that material opens that panel again. The
+   Library panel's open of another material closes the panel and writes `study_opened`.
+4. Jobs still run where they ran: a tool chosen in Generate, a research pack in Research, a concept map in
+   Concept map; their results open in their panel, with the material pane in view. The journey's one line under
+   the ask box opens Journey.
+5. The map (JM-D51): tiles and the skill map draw Mastery; **Layers** reveals the switch; the chosen layer paints
+   until the app closes; **See the map as it was** reveals the scrubber, read-only as §21.5 says.
+
+#### 22.5.3 Settings
+
+The nav shows **Tutor and online**, **Profiles**, **Data and privacy**, **Help and diagnostics** with their
+sections under each; a section the core lists is shown exactly once; one the app has no body for still says so
+(`settings.section.not_built`). Deep links by section id (Language, Get help, plan, back-up) land where they did.
+Profiles adds and deletes profiles, nothing else; no screen in the app names a family, a parent or a guardian, and
+no key is named for one (§22.9's rule and its exceptions).
+
+### 22.6 Privacy
+
+- **What each answer records.** Yes: the subscription's waiting consent for this profile; the device rows
+  `online_features.cloud_tier` (`subscription`) and `online_features.study_materials` (`user`); the profile's
+  `cloud_tier` and `study_materials` consents, `granted_by_role student_18_plus`, `method in_app_notice`, with the
+  shipped notice version and the DPIA reference (`store/consents.py` `grant`, line 104–139); the two first-use
+  answers under `egress_first_use`. Not now: nothing. These are the rows the five steps write today; the audit rows
+  (`online_feature.enable`) are written by the same routes.
+- **What leaves.** Nothing new. The cloud tutor's data classes (`question_text`, `board`, `image`,
+  `learner_summary`) and Study's (`document`, `image`, `audio`, `transcript`) are the policy's
+  (`net/policy.json`), under the same features, hosts and ledger (ARC-10). TABLE DAT-18a is unchanged.
+- **`tutor_memory_online` stays a separate opt-in** (JM-D21): its switch and consent are in Settings → Tutor and
+  online only, off by default, requiring the cloud tier (`memory_online_effective`, `net/layer.py` line 254); the
+  choice never names it. `cloud_voice` likewise keeps its own consent and its first-use card (VOC-28).
+- **Age.** The choice is offered only on a card that has already checked an adult age (JM-D15); the attestation
+  line is the one Settings shows. The core still refuses a grant for a band under 18 (`guardian_consent_required`),
+  so an older build's minor profile cannot be put online by the dialog.
+- **Withdrawal and pause** are unchanged (D87): Settings → Tutor and online → each row, one step. "Turn off all
+  online features" ends the subscription as today.
+- **Study's two keys** hold a source id, a revision and a panel name: device-local, keyed by the internal profile
+  id, never egress, never in an export or a learning event, erased with the profile by the `lesson_positions` eraser
+  (DAT-09). The map's lens is in memory.
+- **Removed copy** removes no data path: the digest routes stay, unwired, as §8.2 records.
+
+### 22.7 Budget
+
+$0: code only. One `GET /v1/subscription` and four local calls at sign-up; no model call anywhere in §22.
+
+### 22.8 Done when
+
+**Online.** On a host with a waiting subscription, a profile created with Yes has, with no Settings step: an
+active subscription naming it, `online_features.cloud_tier` and `study_materials` enabled, active `cloud_tier` and
+`study_materials` consents with the shipped notice version, both first-use answers `accepted`, and nothing under
+`tutor_memory_online` or `cloud_voice`; its first tutoring turn, Ask anything, a Study job and a thread turn send
+without a card; the rows equal those `online_demo_grant` writes in every column but the generated ids and times (`consent_id`,
+`granted_at`, `enabled_at`, `updated_at`; audit rows excluded, their `by` differs), on a two-profile fixture whose first
+profile answered Not now (the test that retires the flag). A profile created with Not now has no consent row, no enabled feature and no notice answer; Ask anything
+and Study show the line and the button; the dialog's Turn on records the same rows; its Not now records nothing. On a
+host with no subscription, Yes records nothing and the hand-off says so. `ConsentSwitch.first_use` on `pause`,
+`withdraw` or another scope is `validation_failed`. Add a profile in Settings and in the picker behaves as sign-up. No notice, card or
+copy text says "guardian", "parent or guardian" or "under 18" outside §22.9's three exceptions (`test_adult_notices.py`
+extended to en.json).
+
+**Study.** Study opens on the material last opened and on the library when none or when it was deleted; the
+material pane shows text, transcript or transcript-with-outline by kind; the ask box asks the material and the
+reply cites; More lists seven panels and one link, the chosen panel is restored on the next open, and choosing writes no learning
+event (the event log's newest `seq` is unchanged); every `StudyRequest` kind lands where §22.4.2 says; a tool, a
+research pack and a concept map still run and open in their panel; Original pages opens the PDF reader and a
+citation still opens its page; the voice bar works in the one ask box; the removed keys have no reader (the copy
+lint passes). Progress and the skill map open on Mastery with the switch and the scrubber hidden; Layers and
+the disclosure reveal them; the layer chosen on Progress paints the skill map; nothing is written by any of it.
+
+**Settings.** The nav shows four headings; every section the core names appears once, under the group the core
+sent, or the client's table for a core that sends none; a section in no group is under Help and diagnostics; the
+four deep links land; `Profiles.tsx` holds profiles only; no file, export, key or test under `packages/` names
+`FamilyControls`, `ParentSummary`, `FAMILY_GROUPS`, `FamilySettings`, `parents.` or `alerts.`; `GET /v1/digests/
+latest` and `GET /v1/alerts` still answer (unwired, contract kept); every gate green.
+
+### 22.9 Tests
+
+- `services/agent-core/tests/test_w11_online_choice.py`: `test_first_use_on_the_cloud_tier_consent_records_the_notice`,
+  `test_first_use_on_pause_withdraw_or_another_scope_is_refused`, `test_the_four_calls_equal_online_demo_grant_row_for_row`
+  (the retiring test: both paths on one fixture, every row of `online_features`, `consents` and `egress_first_use`
+  compared), `test_not_now_records_nothing`, `test_a_second_profiles_yes_turns_the_switch_on_while_another_still_waits`,
+  `test_a_minor_band_is_refused_by_the_dialog_path`, `test_sections_carry_a_group_from_one_table`,
+  `test_study_view_keys_are_device_local_and_erased_with_the_profile`, `test_study_view_reads_null_for_a_deleted_source_or_revision`,
+  `test_opening_or_choosing_a_panel_appends_no_learning_event`.
+- `scripts/tests/test_hackathon_app.py`: the `--online-demo` fixture and its four tests are deleted with the flag
+  (JM-D49) once the row-for-row test above passes; the "never inherited from the shell" test is replaced by one that
+  asserts no code path but the public routes writes a consent.
+- `services/agent-core/tests/test_adult_notices.py`: extended to `packages/i18n/locales/en.json` on **text only**,
+  word-bounded: no copy says "guardian", "parent or guardian" or "under 18", except `first_run.age_help`,
+  `first_run.under_18` and `settings.study.needs_guardian` (who the product is for) and the keys ending
+  `.parent_remote_view` and `.parent_view` (an S4 feature the policy still names, listed at its stage only). Keys are
+  not matched (`licence.kind.family`, `help.article.family_controls.*`, `ledger.schema.*.os_family` and
+  `study.safety.tpl.distress` are fine as they are). Separately, no key is named `parents.*`, `alerts.*` or
+  `*_guardian`: `study.saved_pending_guardian` (read at `StudyWorkspace.tsx` line 414) is renamed
+  `study.saved_pending_consent` with its words kept, and `error.guardian_consent_required` keeps its key (the API
+  error code) with new words.
+- `packages/client-core/test/setup.test.ts` (new; `setup.ts` has no test of its own today): `chooseOnline` against the fake core: the order of the four calls,
+  `needs_plan` with nothing recorded, a failure after the first call reported by step.
+- `packages/ui/test/first-run.test.tsx` (new in `packages/ui`; the app's `apps/desktop/test/first-run.test.tsx`
+  extends): the choice is required, nothing preselected, the leaves lines always visible, Not now enables Start;
+  the hand-off's outcome line. `apps/desktop/test/first-run.test.tsx`: Yes runs the function after unlock and before
+  the hand-off; Not now runs nothing. `apps/desktop/test/online-and-entitlements.test.tsx`: after Yes, Settings shows
+  the recorded state. `ask-anything.test.tsx` (both), `study-workspace.test.tsx`, `companion-thread.test.tsx`: the
+  line and the button, the dialog's two answers.
+- `packages/ui/test/study-workspace.test.tsx`: one shape; the material pane by kind; the ask box; More's entries
+  and the restored panel; every `StudyRequest`; the outline above the transcript; `study-more.test.tsx` (new).
+  `study-pdf-reader.test.tsx`: Original pages and the citation path. `map-overview.test.tsx`,
+  `concept-map-layers.test.tsx`, `concept-map-scrubber.test.tsx`: open on Mastery with the controls hidden, then
+  reveal; nothing written. `study-job-labels.test.tsx` unchanged.
+- `packages/ui/test/settings.test.tsx`: the four headings, each id once under its group, the fallback table, the
+  deep links; `online.test.tsx` without the guardian branches; `installation-controls.test.tsx` with `DamagedPacks`
+  in its new home. `packages/ui/test/governance.test.ts` (the copy lint) with the removed keys.
+
+### 22.10 Demo
+
+Ada signs up: a name, an age, **Use the online tutor? Yes**, and the two lines under it say what leaves. "Start
+learning" opens her profile and the hand-off says "Online tutor: on". Nothing else is asked all demo long: the
+guided question, the practice hint, the research pack and **What haven't I got yet?** all run on the first try, and
+Settings → Tutor and online shows the subscription, the two consents and **Withdraw** for each. She opens Study and
+is already in the projectile-motion lecture: the outline above the transcript, the ask box at the foot; **More**
+shows Generate with her flashcards, which is where she left it. Progress is tiles on Mastery; **Layers** shows the
+Freshness she saw yesterday, and the scrubber is one disclosure away. The whole thing is four screens shorter than
+the 1 November run, and no consent is recorded that was not recorded then.
+
+### 22.11 Deferred: one entry point for asking (JM-D54)
+
+There are four ways to ask today, and they are four different things. Home's one input routes by code
+(`POST /v1/ask/route` → `engine/ask_route.py` `route_input`, line 136: a problem or a subject question to the guided
+tutor, material to Study, anything else to Ask anything, decided lexically against the installed packs' vocabulary).
+The guided tutor (`TutorScreen.tsx`) is a session of mode `guided` whose turns run Diagnoser, Solver, Checker and
+Coach with the gates of `engine/gates.py` and a working board, and never simply answers homework (PED-01). **Your
+tutor** (`CompanionThread.tsx`) is a session of mode `study_companion` (§19.3.3) whose turns run the `companion`
+role with the memory and study tools, route homework back to the guided tutor by the same `ask_route`, and are
+gated by **fact binding**: every number in a reply must appear in a tool result or the status line beside the same
+label (`engine/companion.py` `labelled_numbers`, line 94–112), and personal progress or schedule facts are selected
+by `fact_refs` and rendered with their source by code (`gate_results`, line 196–218, §19 stage 4). Study's ask box is the material
+question, a Study job (`chat` aid) grounded in the material's chunks under `study_materials`, with **Ask about this
+moment** handing a moment to the thread as a pending context (§20.4). Ask anything is a gateway search whose
+statements are labelled general knowledge, never checked (STU-20).
+
+**Why it waits.** (1) *Routing.* A single entry point needs one router that knows the Study material in view, the
+day's episode and whether a tutoring session is open, and a fourth destination (the material); today's router is a
+lexical function with no view of any of that, and the companion runs it again inside its own turn. (2) *Sessions are
+typed.* A session's mode is fixed at creation (`CreateSession.mode`), and mode decides the engine loop, the gates,
+retention (a companion episode ends daily; a tutoring session ends on close), what counts as Reflector evidence
+(companion turns do not, §19.5.1 step 6) and the egress rule (a tutoring turn's board and working under
+`cloud_tier`; a companion's history through the provenance filter of §19 stage 1; a material question under
+`study_materials`). One conversation that switches among them needs per-turn mode, provenance and egress class on
+`turns` (a migration) and retention per turn. (3) *Fact binding and checking are different promises.* The guided
+tutor's numbers are checked by code in the Solver and Checker; the companion's are bound to tool results; Ask
+anything's are labelled unchecked; Study's are cited. In one thread the learner could not tell which promise a
+sentence carries unless the reply contract says it per statement, and no such contract exists. (4) *Consent.* Each
+way has its own notice; JM-D46 unifies what is asked, not what each turn may carry.
+
+**What would have to be true.** One router, code not model, that classifies into the four with the Study context
+as an input and a held-out set with a measured error rate; one session kind carrying turns of more than one mode with
+per-turn mode, provenance and egress class, and retention and Reflector evidence rules per turn; one reply contract
+with per-statement provenance (`checked` by the Solver, `fact` by code, `grounded` by a citation, `general`) and one
+renderer for it; the companion's gates and the tutor's gates chained so a reply passes the stricter of the two for
+the kind of sentence it is; and §22's choice landed, so one entry point can show one notice. Then a section of its
+own, with its own review.
+
+### 22.12 What the review changed
+
+Two passes on 2026-11-01: the author's own against the code, then an independent review in the form of
+`SPEC_W9_W10_REVIEW.md` (six blocking findings, sixteen non-blocking, a reference table); every finding was checked
+in the file named before it was taken. Each and where this version answers it:
+
+| Finding | Answer |
+|---|---|
+| B1 (both passes) `POST /v1/subscription {}` switches and grants only when the whole subscription turns `active` (`api/connectivity.py` line 174); the demo host lists every new profile as waiting, so after one Not now every later Yes recorded a consent and no switch; a real checkout never lists an adult as waiting, so a covered adult read `needs_plan` | `subscribe` switches and grants per named, now-covered profile (`covers()`, not `active`); `chooseOnline` runs step (1) only when the profile is listed as waiting and skips it when already covered; `api/connectivity.py` in the change table; a two-profile fixture for the row-for-row test (JM-D46, §22.4.1, §22.8, §22.9) |
+| B2 "the same sentences the card and the Study agreement show" is false: four wordings exist | JM-D48 names the four and records the Settings sentence against the shipped version; the card's body stays for a Not-now profile; a fixture in `test_w11_first_use_notice.py` |
+| B3 the keys' eraser and id form: `forget_profile_online` is `online`-guarded and public-id keyed; `map_opened_at` is erased in `drop_lesson_positions` by the internal id; the Study desk holds no device connection | Internal id, module functions beside `learner_map.opened`, erased in `drop_lesson_positions` (renamed), the route over `core.stores.device` (JM-D50, §22.4.2, §22.6) |
+| B4 the adult-copy test cannot pass with the allowlist as written (61 keys match `guardian|parent|family|under 18`, among them keys §22 keeps) | Text only, word-bounded, three phrases, the S4 feature keys excluded; `study.saved_pending_guardian` renamed (§22.9) |
+| B5 §22.3 omitted half of the proposal file; "eight entries" | Every pointer and the endpoint row listed (§22.3); seven panels and one link (§22.4.2, §22.8) |
+| B6 the one ask box dropped quiz help (the composer is shared, `StudyWorkspace.tsx` line 561–568) and the thread's own composer | The box is the quiz-help composer while Generate shows a quiz, hidden under Your tutor (§22.5.2) |
+| Review 8 (owner question 3): a new `GET` duplicated two existing seams | `StudyVisit.view` on the existing Study open, `study_opened` written by the existing material open, one `PUT /v1/study/view {more}` (§22.3; the proposal file reworked) |
+| Review 1, 2, 10, 11, 12, 13 | Not now and the sponsor's waiting list said plainly (§22.5.1 step 7); the route's idempotency, not `grant`'s; "every column but ids and times, audit excluded"; `ask.needs_online` and the reason surfaced; the thread's button only in the no-model state; the guardian sites by line and `pending_self` kept |
+| Review 3, 4, 5, 6, 7, 9, 14, 15, 16 | The adoption list for `first_use`; `health.test.tsx`; about eighteen `FamilySettings` sites; the picker's add form gets the choice; the `initial*` props; four tests and four mentions for the flag; the section order named as changed; `gate_results` line 196–218; one design per row and the sheet's focus rule |
+| Wrong references (both passes) | `research.py` 317 and 353; `egress.py` 160 and 168; the library 305–395 and the material 398; `GenerateTools` 23; `ConceptMap.tsx` 551–554 and 399; `App.tsx` 618; `Settings.tsx` 55 and 343; `FirstRun.tsx` 39 and 81; `OnlineFeatures.tsx` 27; `switch_cloud` 78; `grant` 104; `profiles.py` 355–358; `StudyRequest` 34; `_first_use_notice` 2356–2392 |
+
+Not changed on review: JM-D47's required choice with nothing preselected (the review did not question it); JM-D49's
+timing; the four-group table; the deferral (review 15 confirmed its facts). Open for the owner: none of the review's
+seven questions was left unanswered; its recommended answers are the working assumptions above.
