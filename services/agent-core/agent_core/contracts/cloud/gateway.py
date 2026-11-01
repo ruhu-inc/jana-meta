@@ -828,6 +828,7 @@ class StudyWorkspaceProcessingResponse(BaseModel):
     chapters: Annotated[list[StudyWorkspaceChapter] | None, Field(max_length=60, min_length=1)] = None
     concept_map: StudyWorkspaceDraftConceptMap | None = None
     outline: StudyWorkspaceTeachingOutline | None = None
+    model: Annotated[str | None, Field(max_length=80, min_length=1)] = None
 
 
 type StudyProcessingResponse = Annotated[StudyWorkspaceProcessingResponse, Field(title="StudyProcessingResponse")]

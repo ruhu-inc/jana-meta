@@ -6,7 +6,7 @@
 // sets wait in a More menu, and Explore asks for one topic before the learner chooses research or a concept map
 // (the crowding review of 2026-11-01).
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { followUps, isQuizHelpPrompt, type GenerateTool, type StudyContracts as W, type StudyWorkspaceController } from "@jana/client-core";
+import { followUps, isQuizHelpPrompt, modelNameKey, type GenerateTool, type StudyContracts as W, type StudyWorkspaceController } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
 import { Button, Dialog, EmptyState, ErrorState, FIELD_LOOK, IconButton, Loader, MenuButton, Notice, ProgressBar } from "../primitives/index.js";
@@ -349,6 +349,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
   const teach = () => { void controller.generate("chat", 10, readableConfirmed, preferCloud, t("study.journey.teach_prompt"), undefined, undefined, "lesson"); };
   // The conversation's history is what the learner asked; coaching made for a quiz question stays with that question.
   const chats = view.aids.filter((aid) => aid.kind === "chat" && !isQuizHelpPrompt(aid.prompt));
+  const madeBy = (by: NonNullable<W.Aid["made_by"]>) => { const key = modelNameKey(by.model); const model = key ? t(key) : by.model; return model ? t(`study.made_by.${by.runtime}`, { model }) : t(`study.made_by.${by.runtime}_unnamed`); };
   const helpAids = view.aids.filter((aid) => aid.kind === "chat" && isQuizHelpPrompt(aid.prompt));
   const shown = view.aid !== null && view.aid !== undefined && tabOf(view.aid.kind) === tab ? view.aid : null;
   const sourceAliases = new Map(materialFamily.map((s) => [s.source_id, source.source_id]));
@@ -483,6 +484,8 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
           {view.deck && <p role="status" className="text-meta text-muted">{t("study.cards_in_review", { count: view.deck.cards.filter((c) => !c.suspended).length })}</p>}
           {view.quiz && <p role="status" className="text-meta text-muted">{t("study.quiz_questions", { count: view.quiz.items.length })}</p>}
           {shown.prompt && <p data-said="student" className="self-end whitespace-pre-wrap rounded-card border border-line px-4 py-3 text-ui text-ink">{shown.prompt}</p>}
+          {/* Which model made it and where, from the record (SPEC §22): never a guess by the client. */}
+          {shown.made_by && <p className="text-meta text-muted" data-aid-made-by={shown.made_by.runtime}>{madeBy(shown.made_by)}</p>}
           {shown.kind === "audio_overview" && <><div className="flex flex-wrap gap-2">{view.reading ? <>
             {view.podcastVoice?.enabled && <Button tone="primary" onClick={() => view.audioPaused ? controller.resumeOverview() : controller.pauseOverview()}>{t(view.audioPaused ? "study.resume_audio" : "study.pause_audio")}</Button>}
             <Button onClick={() => controller.stopReading()}>{t("study.stop_audio")}</Button>

@@ -559,3 +559,8 @@ test("a failed outline job is labelled in words, never by its copy key", () => {
   expect(history.getAllByRole("status").map((el) => el.textContent).join(" ")).toContain("Could not finish");
   expect(document.body.textContent).not.toMatch(/study\.(generate|job|tool)\./);
 });
+
+test("a study aid says which model made it and where, from its record", () => {
+  show({ source, aid: { aid_id: `aid_${"7".repeat(26)}`, job_id: `stj_${"7".repeat(26)}`, kind: "notes", title: "Biology", sources: [{ source_id: sid, revision: 1 }], claims: [cited("DNA stores genetic information.")], status: "ready", created_at: now, made_by: { runtime: "online", model: "muse-spark-1.3" } } });
+  expect(screen.getByText("Made online with Muse Spark, then checked against your material.")).toBeTruthy();
+});

@@ -714,6 +714,7 @@ def test_study_uses_actual_local_router_for_generation_and_independent_support(t
             draft, local = await model.study_generate(job["job_id"], {"kind": "notes"}, chunks)
             supported, local_support = await model.study_support({}, chunks, draft)
             assert local and local_support and supported == [True]
+            assert draft.pop("model")  # the local model that served it, for the aid's provenance line
             assert draft == output
         finally:
             await close(engine)
@@ -1554,3 +1555,21 @@ def test_due_again_cards_return_before_untouched_cards_without_rescheduling(tmp_
     assert d.deck(did)["cards"][0]["card_id"] == returning["card_id"]
     assert d.conn.execute("SELECT * FROM study_flashcards ORDER BY card_id").fetchall() == stored
     assert d.conn.total_changes == changes
+
+
+def test_an_aid_records_where_and_by_which_model_it_was_made(tmp_path):
+    d, s = seeded(tmp_path)
+    chunks = d.chunks(s["source_id"], 1)["items"]
+    sources = [{"source_id": s["source_id"], "revision": 1}]
+    for execution, runtime, model in (("local", "device", "muse-glimmer-30b"), ("prefer_cloud", "online", "muse-spark-1.3")):
+        job = d.create_job({"kind": "notes", "execution": execution, "sources": sources})
+        job["state"] = "running"
+        d.save_job(job)
+        aid = d.commit_aid(job, {"request_id": job["job_id"], "kind": "notes", "claims": [claim(chunks[0])], "model": model}, [True])
+        assert aid["made_by"] == {"runtime": runtime, "model": model}
+        assert d.aid(aid["aid_id"])["made_by"] == {"runtime": runtime, "model": model}
+    job = d.create_job({"kind": "summary", "execution": "local", "sources": sources})
+    job["state"] = "running"
+    d.save_job(job)
+    aid = d.commit_aid(job, {"request_id": job["job_id"], "kind": "summary", "claims": [claim(chunks[0])]}, [True])
+    assert aid["made_by"] == {"runtime": "device"}  # an older runtime that names no model

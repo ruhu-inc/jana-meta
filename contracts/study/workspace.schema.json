@@ -1214,6 +1214,26 @@
    "type": "string",
    "pattern": "^chk_[0-9A-HJKMNP-TV-Z]{26}$"
   },
+  "AidProvenance": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "runtime"
+   ],
+   "properties": {
+    "runtime": {
+     "enum": [
+      "online",
+      "device"
+     ]
+    },
+    "model": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 80
+    }
+   }
+  },
   "Aid": {
    "type": "object",
    "additionalProperties": false,
@@ -1284,6 +1304,9 @@
     },
     "outline": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/TeachingOutline"
+    },
+    "made_by": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/AidProvenance"
     }
    },
    "required": [
@@ -2295,6 +2318,11 @@
     },
     "outline": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/TeachingOutline"
+    },
+    "model": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 80
     }
    },
    "required": [

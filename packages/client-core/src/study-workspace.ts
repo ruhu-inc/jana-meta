@@ -15,6 +15,15 @@ export type { W as StudyContracts, R as ResearchContracts };
 export const QUIZ_CONTEXT_MARK = "Quiz context (not a request to answer it):";
 /** A chat aid's prompt was written by `requestQuizHelp`, not by the learner: coaching for one quiz question, which
  * the chat's history leaves out and the quiz shows beside that question. */
+/** The copy key naming a model the gateway or the device reported (`Aid.made_by.model`); null shows the id as sent. */
+export function modelNameKey(id: string | undefined): "model.muse_spark" | "model.muse_glimmer" | null {
+  const lower = (id ?? "").toLowerCase();
+  if (!lower) return null;
+  if (lower.includes("spark")) return "model.muse_spark";
+  if (lower.includes("glimmer")) return "model.muse_glimmer";
+  return null;
+}
+
 export function isQuizHelpPrompt(prompt: string | undefined): boolean { return prompt !== undefined && prompt.includes(QUIZ_CONTEXT_MARK); }
 /** The quiz item a help aid was about: the one whose stem the prompt quotes after the mark; null when none matches
  * (another quiz, or a reworded question). */

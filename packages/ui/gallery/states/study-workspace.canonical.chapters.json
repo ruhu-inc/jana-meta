@@ -197,7 +197,11 @@
                 }
               ]
             }
-          ]
+          ],
+          "made_by": {
+            "runtime": "online",
+            "model": "muse-spark-1.3"
+          }
         }
       ],
       "aid": null,

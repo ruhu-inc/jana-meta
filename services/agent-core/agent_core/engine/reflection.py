@@ -227,7 +227,7 @@ class ReflectorModel:
 
     async def _study_call(self, task: str, schema: dict[str, Any], check: Any,
                           repair: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-                          ) -> tuple[dict[str, Any], bool]:  # fmt: skip
+                          name_model: bool = False) -> tuple[dict[str, Any], bool]:  # fmt: skip
         trace = TraceBuilder("study-materials", "local", kind="job", build=default_build())
         date = datetime.datetime.now(datetime.UTC).date().isoformat()
         with job_scope(trace.trace_id):
@@ -253,6 +253,8 @@ class ReflectorModel:
         if structured is None:
             raise ValueError("invalid_study_output")
         calls = result.record.model_calls()
+        if name_model and calls and isinstance(calls[-1].get("model_served"), str) and calls[-1]["model_served"]:
+            structured["model"] = calls[-1]["model_served"][:80]  # the aid says which model made it
         return structured, bool(calls) and all(c.get("provider_kind") == "local" for c in calls)
 
     async def study_generate(
@@ -300,6 +302,7 @@ class ReflectorModel:
             schema,
             validator("study/workspace#/$defs/ProcessingResponse"),
             repair=lambda draft: _only_requested(draft, str(request.get("kind"))),
+            name_model=True,
         )
 
     async def study_grade(

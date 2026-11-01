@@ -848,7 +848,8 @@ def test_processing_support_once_cleanup_and_no_body_storage(tmp_path):
         h.stubs["meta"].say(Output(text=json.dumps(draft)), Output(text='{"supported":true}'))
         result = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert result.status_code == 200, result.text
-        assert {k: v for k, v in result.json().items() if k != "usage"} == draft
+        assert {k: v for k, v in result.json().items() if k not in ("usage", "model")} == draft
+        assert result.json()["model"]  # the model that drafted it, for the aid's provenance line
         again = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
         assert again.status_code == 200 and again.json() == result.json()
         assert len(h.stubs["meta"].seen) == 2

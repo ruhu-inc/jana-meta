@@ -1921,6 +1921,7 @@ class StudyService:
             if len(json.dumps(result).encode()) > 4_000_000:
                 raise Refused("source_too_large", 413)
             b.result = result
+            result["model"] = model.id  # the aid says which model made it (shown beside it)
             result["usage"] = {
                 "receipt_id": key,
                 "cost_usd": cost_usd(self.gw.config.prices.get(model.id), usage),

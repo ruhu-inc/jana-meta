@@ -126,3 +126,19 @@ describe("SPEC §18 research agent", () => {
     expect(screen.getByRole("heading", { name: "Make a study pack" })).toBeTruthy();
   });
 });
+
+test("one failed poll is retried, and a pack that reads again clears the error it showed", async () => {
+  const { fake, as } = controller([], [record("ready")]);
+  fake.researchPacks.mockResolvedValueOnce([record("researching")]);
+  fake.researchPack.mockRejectedValueOnce(Object.assign(new Error("down"), { code: "model_unavailable" }));
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const view = show(as);
+  fireEvent.click(await screen.findByRole("button", { name: /Researching/ }));
+  await screen.findByText("The research planner isn't available right now. Check you're online and try again.");
+  await vi.advanceTimersByTimeAsync(3100);
+  await screen.findByText("Your pack is ready, made from 3 pages.");
+  expect(screen.queryByText("The research planner isn't available right now. Check you're online and try again.")).toBeNull();
+  expect(fake.researchPack).toHaveBeenCalledTimes(2);
+  view.unmount();
+  vi.useRealTimers();
+});

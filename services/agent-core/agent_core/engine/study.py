@@ -1434,7 +1434,11 @@ class StudyDesk:
             "claims": filtered,
             "status": "ready",
             "created_at": stamp(self.clock()),
+            # Where it was made and by which model, shown beside the aid; the client never infers it.
+            "made_by": {"runtime": "online" if request["execution"] == "prefer_cloud" else "device"},
         }
+        if isinstance(output.get("model"), str) and output["model"]:
+            aid["made_by"]["model"] = output["model"][:80]
         if job["kind"] == "chat":
             aid["prompt"] = request["prompt"]
         if settings:
@@ -2322,10 +2326,12 @@ class StudyQueue:
                     job["completed_units"] = len(checkpoint["completed_chunk_ids"]) + 2 * len(saved)
                     desk.save_job(job)
             outputs.append(output)
+        named = [o["model"] for o in outputs if isinstance(o.get("model"), str) and o["model"]]
         combined: dict[str, Any] = {
             "request_id": jid,
             "kind": request["kind"],
             "claims": [c for output in outputs for c in output["claims"]],
+            **({"model": named[0]} if named else {}),
         }
         if synthesize:
             prompt = request.get("prompt", "").casefold()

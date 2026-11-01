@@ -107,10 +107,12 @@ export function StudyResearch({ controller, initialCapture, topicRequest, start:
     const read = () => {
       void controller.researchPack(shownId).then((record) => {
         if (!alive.current) return;
+        setError(null); // a pack that reads again clears an earlier poll's failure
         setPacks((all) => [record, ...all.filter((p) => p.research_id !== record.research_id)]);
         if (LIVE.includes(record.status)) timer = setTimeout(read, POLL_MS);
-      }).catch(failed);
+      }).catch((err) => { failed(err); if (alive.current && ++misses < 5) timer = setTimeout(read, POLL_MS); }); // one failed poll never ends the watch
     };
+    let misses = 0;
     read();
     return () => { if (timer !== null) clearTimeout(timer); };
   }, [controller, shownId]);
@@ -198,6 +200,7 @@ export function StudyResearch({ controller, initialCapture, topicRequest, start:
     const pack = shown;
     return <section className="flex flex-col gap-3" aria-labelledby="study-research-pack" data-research-pack={pack.research_id} data-status={pack.status}>
       <h2 id="study-research-pack" className="text-ui font-semibold text-ink">{pack.brief.title}</h2>
+      <p className="text-meta text-muted" data-research-made-by>{t("study.research.made_by")}</p>
       <p role="status" className="text-ui">{t(`study.research.status.${pack.status}`, { pages: pack.pages })}</p>
       {pack.failure !== null && <ErrorState message={t(`study.research.failure.${pack.failure}`)} />}
       {["sending", "waiting_online", "researching"].includes(pack.status) && <ol className="flex flex-col gap-1">{pack.sub_questions.map((q, i) => <li key={i} className="flex justify-between gap-2 text-ui" data-state={q.state}>

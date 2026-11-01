@@ -1,6 +1,6 @@
 # Jana: three-minute learning-agent demo
 
-Draft for rehearsal, updated 1 November 2026 for the build tagged `demo-2026-11-01` (commit `4ccd5c4c`). This is a
+Draft for rehearsal. The recording script is now the section "Storyboard, 2 November build" below, walked live on the night of 1 November on the build after commit `7844132a` (the one that adds the provenance line). The 1 November storyboard that follows it was written for the build tagged `demo-2026-11-01` (commit `4ccd5c4c`). This is a
 recording script, not a completed video. It was walked once live on 1 November, through every beat except the time
 scrubber, which has no earlier date on a new profile; see “Live walk-through, 1 November” below, which also corrects
 the screen names and steps.
@@ -29,7 +29,70 @@ product; `HACKATHON_SUBMISSION.md` lists the event work in full. Caption each be
 Muse Glimmer as the tutor, the Projectile motion subtopic, the Companion, the YouTube lecture outline and the learner's
 map. Existing foundation: the checking worker, the hint ladder and the Study desk the new features sit in.
 
-## Storyboard
+## Storyboard, 2 November build: one lecture, fully learned
+
+This replaces the 1 November storyboard below as the recording script. It was walked live, beat by beat, on the night
+of 1 November against this repository's gateway (version 1.2, port 8081, restarted on the current code) and the
+stable host on port 5197 with the Demo Ada profile in `/tmp/jana-demo`. Every count, time and sentence below is what
+the screen showed; the model was Muse Spark (`muse-spark-1.3`) through the gateway for every generated piece.
+
+What is new in this build and why it matters for the judges: **every generated study aid now says which model made it
+and where.** The aid record carries `made_by` (`online` or `device`, plus the model id the gateway or the device
+reported), and the screen shows one line under the aid's title: "Made online with Muse Spark, then checked against
+your material." A research pack says "Researched online with Muse Spark: a web search, then every statement checked
+against the page it cites." Aids made before this build have no line. Nothing is inferred by the client; a gateway
+that does not name a model gives "Made online, then checked against your material."
+
+| Time | Beat | Screen | Muse Spark at work |
+| --- | --- | --- | --- |
+| 0:00–0:15 | Opening: Home leads with Continue learning, "Find the time of flight of a projectile from the vertical motion", Learn · Practise · Check | Home | none, code |
+| 0:15–0:50 | The lecture, understood: open the projectile lecture, then the saved **What it teaches** | My materials → YouTube video → My Sets | the outline, drafted and verified (observed: about 20 s when made) |
+| 0:50–1:15 | Its ideas: the saved **Concept map**, 7 concepts, 5 marked "Matches a syllabus skill" | My Sets → Concept map | drafted and verified (observed: about 25 s when made) |
+| 1:15–1:45 | Research the weak idea: Explore, the saved pack **Time of Flight of a Projectile**, "Your pack is ready, made from 25 pages", then **Open the pack**: the cited pages and its Quiz · 9 questions | Explore | the research agent: two questions, a six-question plan, web search, verification (minutes; made before recording) |
+| 1:45–2:30 | Practise from the lecture: **Quiz · 3 questions**. Swap the components on question 1: "Incorrect. Not quite yet. Try a hint, then have another go." (no answer shown). Correct it: "Correct · Judged, not checked" with the cited explanation at 0:48. Next question twice, **Finish quiz**: "2 of 3 correct" | My Sets → Quiz · 3 questions | drafting and the support check; the marking is judged by the model against the cited line |
+| 2:30–2:50 | Your tutor: `What haven't I got yet?` → one sentence from Muse Spark, then two facts bound by code: "not started (YouTube video teaches it at 1:02 / 4:12). Source: teaching outline (2026-11-01)", with **See what your tutor knows** | Your tutor | the companion turn (observed: about 25 s) |
+| 2:50–3:00 | Close: Progress → My map, the Projectile motion tile; the line "cited online with Muse Spark, private on this computer with Glimmer" | Progress | none |
+
+**Captions.** Read the provenance line aloud once, on the outline, and let it stay on screen for the map, the quiz
+and the pack. Caption the tutor's two facts as code, the sentence above them as Muse Spark.
+
+### Seen live on 1 November (night), and what to do about it
+
+- **What it teaches** makes a new outline on every press, even when one exists (the earlier one moves under "Earlier
+  What it teaches sets"). During the recording open the saved one from My Sets; press the button only if the narration
+  wants to show generation, and then wait the 20 s on camera or cut with an elapsed-time caption.
+- **The outline** gave 4 objectives (opening at 0:21, 0:29, 0:35, 0:41), 2 worked examples at 9:40, 10 concepts of
+  which 7 map to the pack's projectile skills and 3 ("projectile motion", "projectile", "weight") are outside the
+  packs, "Assumes you know: how to resolve a vector", one skill not covered (the trajectory graphs), and "For you":
+  resolve **learning**, the other four **not started**.
+- **The concept map** drew projectile motion, launch velocity components, horizontal motion, vertical motion, time of
+  flight, range and maximum height; time of flight sits between range and vertical motion.
+- **Start learning journey** on the time-of-flight objective hands off to the curriculum lesson "Two motions at once"
+  (about 12 min, 8 parts); its first check, "a ball thrown straight up at 12 m/s, how long to the top", marked 1.2 s
+  "Correct, 3 of 3 marks" by code. Not in the three minutes; it is where **Continue learning** on Home now points.
+- **The quiz settings.** The rehearsal quiz came out as one multiple-choice, one fill-in-the-blank and one true-or-false
+  item although Multiple choice alone was meant: check the question-type boxes by eye before pressing Generate. The
+  formula typed into the blank ("2u sin theta / g") was marked "Could not verify", so a blank that wants a formula is a
+  poor demo item; the 3-question set saved in My Sets is the one to use (question 1 is the components, question 3 is
+  "range greatest at 45°", true).
+- **Need help? on question 1** returned the general strategy twice ("the tailored explanation could not be verified")
+  for both "Give me a hint" and "Walk me through it": the question is pure recall of the two components, so any
+  tailored hint names the answer and the verifier refuses it. That is the safe behaviour; caption it as the fallback,
+  or skip the hint and show the follow-up box instead. Do not promise a tailored hint on this question.
+- **The research pack** asked two questions ("what feels tricky?", "what should I put in your pack, 5 or 20 minutes?"),
+  proposed six sub-questions, and after Start research reported "Found 25 pages. Making your pack…", then Key concepts
+  and Quiz ready. One poll failed while it was making and the line "The research planner isn't available right now"
+  stayed on the pack until the page was reopened; fixed in this build (a failed poll is retried and a successful read
+  clears the line). The pack's quiz carries the provenance line too.
+- **The profile closed itself** after about twenty minutes of the walk-through (the profile chooser came back, the
+  draft answers and sets were kept). Unlock the profile just before recording; three minutes is well inside the limit.
+- **Hosts.** The provenance line needs the gateway and the host's engine on this build: the gateway on 8081 was
+  restarted at 22:50 for it. The pair on 8082/8083 and the ML Demo host on 5199 still run the earlier code and show
+  "Made online, then checked against your material" with no model name until restarted.
+- **Spend.** The gateway's ledger for 1 November stood at about $0.73 for the whole day after this preparation (the
+  outline, the map, the quiz, two hint attempts, one companion turn and the 25-page research), within the $10 daily cap.
+
+## Earlier storyboard (1 November: practice, Companion, lecture, map)
 
 | Time | Beat | Screen |
 | --- | --- | --- |

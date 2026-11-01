@@ -20,7 +20,7 @@ files = ["evals/safety/*.yaml", "evals/safety/scripts/*.yaml"]
 owner = "Subject leads"
 cadence = "nightly; every change"
 stage = "S1"
-version = "2026-11-01.2"
+version = "2026-11-01.3"
 files = ["content/curriculum/*/*/*.yaml", "content/curriculum/*/*/*/*.yaml", "content/curriculum/ref/*/*.yaml"]
 
 [suites.marking]

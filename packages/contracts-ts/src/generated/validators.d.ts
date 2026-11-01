@@ -927,3 +927,4 @@ export declare const v921: ValidateFunction;
 export declare const v922: ValidateFunction;
 export declare const v923: ValidateFunction;
 export declare const v924: ValidateFunction;
+export declare const v925: ValidateFunction;

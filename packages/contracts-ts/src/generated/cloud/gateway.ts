@@ -462,6 +462,7 @@ export interface StudyProcessingResponse1 {
   chapters?: StudyWorkspaceChapter[];
   concept_map?: StudyWorkspaceDraftConceptMap;
   outline?: StudyWorkspaceTeachingOutline;
+  model?: string;
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema
@@ -956,6 +957,7 @@ export interface StudyWorkspace__ProcessingResponse {
   chapters?: StudyWorkspaceChapter[];
   concept_map?: StudyWorkspaceDraftConceptMap;
   outline?: StudyWorkspaceTeachingOutline;
+  model?: string;
 }
 /**
  * This interface was referenced by `CloudGateway`'s JSON-Schema

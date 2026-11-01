@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 85aa9591d2ac036d2c1704f35c6d9da479ef4ae30580de31e6c5328caeac58e0; do not edit",
+ "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 41dba64061a66285324d0ad5a3d5a5fc9fcff6109dc6b7e1c8fa97ee2700eca0; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/study/workspace",
  "$defs": {
@@ -1207,6 +1207,26 @@
    "type": "string",
    "pattern": "^chk_[0-9A-HJKMNP-TV-Z]{26}$"
   },
+  "AidProvenance": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "runtime"
+   ],
+   "properties": {
+    "runtime": {
+     "enum": [
+      "online",
+      "device"
+     ]
+    },
+    "model": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 80
+    }
+   }
+  },
   "Aid": {
    "type": "object",
    "additionalProperties": false,
@@ -1277,6 +1297,9 @@
     },
     "outline": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/TeachingOutline"
+    },
+    "made_by": {
+     "$ref": "https://jana.dev/contracts/study/workspace#/$defs/AidProvenance"
     }
    },
    "required": [
@@ -2286,6 +2309,11 @@
     },
     "outline": {
      "$ref": "https://jana.dev/contracts/study/workspace#/$defs/TeachingOutline"
+    },
+    "model": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 80
     }
    },
    "required": [
