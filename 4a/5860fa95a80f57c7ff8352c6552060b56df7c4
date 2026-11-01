@@ -1,0 +1,21 @@
+evals/lock.json
+  s_49ba057c5af1a1::t_71748257923dee 6116,7451,13573
+evals/suites.toml
+  s_49ba057c5af1a1::t_71748257923dee 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4a5860fa95a80f57c7ff8352c6552060b56df7c4",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
