@@ -1,0 +1,33 @@
+id: mc.phy.o.flight_time_is_time_to_top
+kc_ids:
+- kc.phy.o.projectiles.time_of_flight
+student_name: Stopping the clock at the top
+description: Gives the time to reach the highest point when asked for the time of flight, forgetting that the projectile takes as long again to come back down to the level it was launched from.
+signatures:
+- kind: answer_transform
+  expression: u*sin(theta)/g
+fix:
+  strategy: rule_restatement
+  text:
+    en: The time of flight is the whole trip, up and back down to the launch level. Going up takes u sin θ ÷ g, and coming down takes exactly the same again, so double it.
+probe_item_ids:
+- itm.phy.o.projectiles.0003
+- itm.phy.o.projectiles.0005
+severity: medium
+version: 0.1.0
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

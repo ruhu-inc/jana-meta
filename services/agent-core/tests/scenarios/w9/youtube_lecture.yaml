@@ -3,7 +3,8 @@ case: youtube_lecture
 rubric: >-
   Ada pastes a YouTube lecture on projectile motion with its panel transcript: the source is ready at once with six
   chapters and timed lines, nothing uploaded. What this video teaches lists four cited objectives with moments, two
-  worked examples, four concepts mapped to the seeded projectile skills (the range at 4:12), "assumes you know"
+  worked examples, five concepts, four mapped to the seeded projectile skills (the range at 4:12) and the graph one
+  outside them (the seeded fixture has no graphs skill; live-run fix 2026-11-01), "assumes you know"
   resolving vectors, "not covered here" drag, and for Ada the range secure and the rest not started; the outline's
   cloud request carries transcript chunks and nothing else. "Where did she derive the range equation?" yields
   open_moment at 4:12 from a study_search hit, and "04:12" binds as a moment.
@@ -16,7 +17,7 @@ expect:
   uploads: 0
   objectives: 4
   examples: 2
-  concepts: ["Range", "Time of flight", "Maximum height", "Resolving the velocity"]
+  concepts: ["Range", "Time of flight", "Maximum height", "Resolving the velocity", "Displacement time graph"]
   range_kc: kc.phy.o.projectiles.range
   range_at_ms: 252000
   assumes: "Resolving a vector into perpendicular components"

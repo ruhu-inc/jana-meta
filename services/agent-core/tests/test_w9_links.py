@@ -122,15 +122,43 @@ def test_merged_lines_stay_under_the_chunk_bound_and_every_line_keeps_its_moment
     assert line_text("[4:12] the range equation") == "the range equation"
 
 
-def test_a_gap_over_twenty_seconds_starts_a_chapter_titled_by_its_first_words() -> None:
+def test_a_gap_of_a_minute_or_more_starts_a_chapter_titled_by_its_first_words() -> None:
     parsed = parse_transcript(
-        "0:00\nfirst part of the talk\n0:10\nstill the first part\n0:45\nnow a new idea begins here\n0:50\nand goes on"
+        "0:00\nfirst part of the talk\n0:10\nstill the first part\n1:10\nnow a new idea begins here\n1:15\nand goes on"
     )
     assert [(c["start_ms"], c["title"]) for c in parsed.chapters] == [
         (0, "First part of the talk"),
-        (45_000, "Now a new idea begins here"),
+        (70_000, "Now a new idea begins here"),
     ]
-    assert [c["start_ms"] for c in parsed.chunks] == [0, 45_000]
+    assert [c["start_ms"] for c in parsed.chunks] == [0, 70_000]
+    # A gap short of a minute is not a chapter (the old 20 s rule made one of every line of a sparse paste).
+    assert parse_transcript("0:00\nfirst\n0:59\nstill the same chapter").chapters == []
+
+
+def test_a_sparse_transcript_with_a_line_every_half_minute_is_not_a_chapter_a_line() -> None:
+    """Live-run fix 2026-11-01: a panel paste with one line every 30 to 40 s made a chapter of every line."""
+    sparse = "\n".join(f"{(i * 35) // 60}:{(i * 35) % 60:02d}\nline {i} of a slow lecture" for i in range(20))
+    parsed = parse_transcript(sparse)
+    assert parsed.chapters == [] and len(parsed.lines) == 20
+    assert len(parsed.chunks) == 1
+
+
+def test_gap_made_chapters_are_capped_at_twelve_keeping_the_largest_gaps() -> None:
+    # Twenty gaps, every one a minute or more, growing by five seconds: only the twelve largest start chapters.
+    moments, at = [0], 0
+    for i in range(20):
+        at += 60 + i * 5
+        moments.append(at)
+    paste = "\n".join(f"{m // 60}:{m % 60:02d}\nwords at {m}" for m in moments)
+    parsed = parse_transcript(paste)
+    kept = {c["start_ms"] for c in parsed.chapters}
+    assert kept == {0, *(m * 1000 for m in moments[9:])}  # the opening chapter and the twelve widest gaps
+    assert len(parsed.chapters) == 13
+    # A heading always starts a chapter, over and above the twelve.
+    stamp = f"\n{moments[3] // 60}:{moments[3] % 60:02d}\n"
+    headed = parse_transcript(paste.replace(stamp, "\nA heading" + stamp))
+    assert ("A heading", moments[3] * 1000) in {(c["title"], c["start_ms"]) for c in headed.chapters}
+    assert len(headed.chapters) == 14
 
 
 def test_a_paste_past_two_hours_is_refused_with_the_limit_named() -> None:

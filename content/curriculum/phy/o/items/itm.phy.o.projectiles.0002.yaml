@@ -1,0 +1,95 @@
+id: itm.phy.o.projectiles.0002
+version: 0.1.0
+type: mcq
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.components_change
+stem: A stone is thrown up at an angle and lands further along level ground. Ignore air resistance.
+parts:
+- id: a
+  prompt: Which statement about the stone's velocity in flight is correct?
+  marks: 1
+  answer:
+    kind: mcq
+    diagnostic: false
+    shuffle: false
+    options:
+    - id: A
+      text: Its horizontal velocity gets smaller all the way to the ground
+      correct: false
+      misconception_id: mc.phy.o.horizontal_velocity_slows
+      feedback: Nothing acts on the stone sideways once it has left the hand, so there is nothing to slow its horizontal motion.
+    - id: B
+      text: Its horizontal velocity stays the same for the whole flight
+      correct: true
+    - id: C
+      text: Its vertical velocity stays the same for the whole flight
+      correct: false
+      feedback: Gravity pulls down the whole time, so the vertical velocity changes by g every second.
+    - id: D
+      text: Both parts of its velocity stay the same for the whole flight
+      correct: false
+      feedback: If nothing changed, the stone would move in a straight line. Gravity changes the vertical part.
+  show_working: false
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: 'Think about the two directions one at a time: sideways, and up and down.'
+  - rung: 2
+    name: concept
+    text:
+      en: A velocity only changes if a force acts in that direction.
+  - rung: 3
+    name: first_step
+    text:
+      en: Ask which direction gravity pulls in.
+  - rung: 4
+    name: worked_step
+    text:
+      en: Gravity pulls straight down, so only the up-and-down part of the velocity changes.
+  - rung: 5
+    name: full_step
+    text:
+      en: 'The answer is: its horizontal velocity stays the same for the whole flight.'
+  misconception_ids:
+  - mc.phy.o.horizontal_velocity_slows
+solution:
+  steps:
+  - n: 1
+    latex: F_x = 0 \Rightarrow a_x = 0
+    reason: No force acts sideways once the stone is in the air
+  - n: 2
+    latex: a_y = -g
+    reason: Gravity acts downwards for the whole flight
+  - n: 3
+    latex: v_x = \text{constant}, \quad v_y \text{ changes}
+    reason: Only the vertical velocity changes
+difficulty:
+  prior: -0.3
+  band: core
+estimated_seconds: 60
+exam_style:
+  paper_style: objective
+  total_marks: 1
+  calculator: false
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks: {}
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

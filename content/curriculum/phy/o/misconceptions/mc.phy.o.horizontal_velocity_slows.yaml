@@ -1,0 +1,36 @@
+id: mc.phy.o.horizontal_velocity_slows
+kc_ids:
+- kc.phy.o.projectiles.components_change
+- kc.phy.o.projectiles.trajectory_graphs
+- kc.phy.o.projectiles.range
+student_name: The horizontal velocity dies away
+description: Thinks the horizontal velocity of a projectile falls off during the flight, as if something were pulling it back, so the range comes out short; with no air resistance nothing acts sideways and the horizontal velocity stays constant from launch to landing.
+signatures:
+- kind: answer_transform
+  expression: u*cos(theta)*T/2
+fix:
+  strategy: counterexample
+  text:
+    en: Picture the ball from above. Nothing pushes or pulls it sideways, so there is nothing to slow it down. Only gravity acts, and gravity pulls straight down. The horizontal velocity at landing is the same as it was at launch.
+probe_item_ids:
+- itm.phy.o.projectiles.0002
+- itm.phy.o.projectiles.0008
+- itm.phy.o.projectiles.0009
+severity: medium
+version: 0.1.0
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

@@ -32,6 +32,7 @@ from agent_core.net.voice_cloud import CloudRealtimeConnection, CloudVoice
 from agent_core.router.hardware import TutorPath
 from agent_core.store import subscription as subscriptions
 from agent_core.store.keystore import FileKeyStore, KeyStore, MemoryKeyStore
+from cloud_gateway.app import VERSION as GATEWAY_VERSION
 from cloud_gateway.config import GatewayConfig, load_config
 from cloud_gateway.store import GatewayStore
 from cloud_gateway.tier import monthly_allowance_tokens
@@ -231,12 +232,28 @@ async def upstream_probe(port: int, _host: str) -> ProbeOutcome:
     return "ok" if reply.status_code == 204 else "failed"
 
 
-async def check_gateway(port: int) -> None:
-    """Fail closed unless the already-running gateway advertises its persistent cap."""
-    async with httpx.AsyncClient(trust_env=False) as probe:
-        reply = await probe.get(f"http://127.0.0.1:{port}/v1/ping", timeout=3)
-        if reply.status_code != 204 or reply.headers.get("x-jana-inference-budget") != "enabled":
-            raise ValueError("Start the approved budgeted gateway before the browser host")
+async def check_gateway(port: int, transport: httpx.AsyncBaseTransport | None = None) -> None:
+    """Fail closed unless the already-running gateway on `port` is this repository's (its `jana-gateway-version`
+    header equals `cloud_gateway.app.VERSION`) and advertises its persistent cap. A gateway from another project on
+    the shared port answers the ping but knows none of this repository's kinds, so every job failed with
+    `processing_failed` (live-run fix 2026-11-01); the message names the port and the version found."""
+    async with httpx.AsyncClient(trust_env=False, transport=transport) as probe:
+        try:
+            reply = await probe.get(f"http://127.0.0.1:{port}/v1/ping", timeout=3)
+        except httpx.HTTPError as error:
+            raise ValueError(
+                f"No gateway answered on port {port}: start this repository's gateway (version {GATEWAY_VERSION})"
+                " before the browser host"
+            ) from error
+        version = reply.headers.get("jana-gateway-version")
+        if reply.status_code != 204 or version != GATEWAY_VERSION:
+            raise ValueError(
+                f"The gateway on port {port} is not this repository's: it serves version {version or 'none'}"
+                f" (status {reply.status_code}) and this repository's gateway serves {GATEWAY_VERSION}."
+                f" Stop it and start this repository's gateway on port {port} before the browser host"
+            )
+        if reply.headers.get("x-jana-inference-budget") != "enabled":
+            raise ValueError(f"Start the approved budgeted gateway on port {port} before the browser host")
 
 
 async def connect(runtime: AppRuntime, core: CoreService) -> None:

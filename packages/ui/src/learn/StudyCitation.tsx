@@ -13,21 +13,24 @@ const timestamp = (ms: number) => {
   return minutes >= 60 ? `${Math.floor(minutes / 60)}:${tail}` : tail;
 };
 
-/** Quiet location badges keep the prose readable without losing the exact verified passage. */
-export function StudyCitation({ citation, locator, sourceTitle, number, disabled, onOpen, passages = [citation] }: {
+/** Quiet location badges keep the prose readable without losing the exact verified passage. `numbered` shows the
+ * reference number as the badge (the location stays in its name and tooltip): for a row whose Open-at button already
+ * carries the moment, so a time is never shown twice (live-run fix 2026-11-01). */
+export function StudyCitation({ citation, locator, sourceTitle, number, disabled, onOpen, passages = [citation], numbered = false }: {
   citation: W.Citation; locator?: W.Locator | undefined; sourceTitle?: string | undefined; number: number;
-  disabled?: boolean | undefined; onOpen: (citation: W.Citation) => void; passages?: readonly W.Citation[];
+  disabled?: boolean | undefined; onOpen: (citation: W.Citation) => void; passages?: readonly W.Citation[]; numbered?: boolean;
 }) {
   const t = useT();
   const trigger = useRef<HTMLButtonElement | null>(null);
-  const label = locator?.kind === "page" ? t("study.ref.page", { page: locator.page })
+  const label = numbered ? `[${number}]`
+    : locator?.kind === "page" ? t("study.ref.page", { page: locator.page })
     : locator?.kind === "slide" ? t("study.ref.slide", { slide: locator.slide })
     : locator?.kind === "time" ? timestamp(locator.start_ms)
     : locator?.kind === "frame" ? t("study.ref.frame", { time: timestamp(locator.at_ms) })  // SPEC §20.4: "04:12 · on screen"
     : locator?.kind === "note" || locator?.kind === "text" ? t("study.ref.paragraph", { paragraph: locator.paragraph })
     : `[${number}]`;
   const location = locator?.kind === "page" ? t("study.source_page", { page: locator.page })
-    : locator?.kind === "time" ? t("study.ref.time", { time: label })
+    : locator?.kind === "time" ? t("study.ref.time", { time: timestamp(locator.start_ms) })
     : locator?.kind === "frame" ? t("study.ref.frame_full", { time: timestamp(locator.at_ms) })
     : locator?.kind === "slide" ? t("study.ref.slide_full", { slide: locator.slide })
     : locator?.kind === "note" || locator?.kind === "text" ? t("study.ref.paragraph_full", { paragraph: locator.paragraph })
@@ -51,9 +54,11 @@ export function StudyCitation({ citation, locator, sourceTitle, number, disabled
 }
 
 /** Group within one point, and only within the same material and revision. Every passage remains selectable. */
-export function StudyCitations({ citations, locate, title, disabled, onOpen }: {
+export function StudyCitations({ citations, locate, title, disabled, onOpen, numbered = false }: {
   citations: readonly W.Citation[]; locate: (ref: W.Citation) => W.Locator | undefined;
   title: (ref: W.Citation) => string | undefined; disabled?: boolean; onOpen: (ref: W.Citation) => void;
+  /** Badges as reference numbers (the time is shown once, by the row's Open-at button). */
+  numbered?: boolean;
 }) {
   const groups = new Map<string, { refs: [W.Citation, ...W.Citation[]]; locator: W.Locator | undefined; number: number }>();
   citations.forEach((ref, i) => {
@@ -65,5 +70,5 @@ export function StudyCitations({ citations, locate, title, disabled, onOpen }: {
   });
   return <div className="flex flex-wrap gap-2">{Array.from(groups, ([key, group]) => <StudyCitation key={key}
     citation={group.refs[0]} passages={group.refs} locator={group.locator} sourceTitle={title(group.refs[0])}
-    number={group.number} disabled={disabled} onOpen={onOpen} />)}</div>;
+    number={group.number} disabled={disabled} onOpen={onOpen} numbered={numbered} />)}</div>;
 }

@@ -1,0 +1,184 @@
+- id: kc.phy.o.projectiles.resolve
+  code: PHY-O-01.09.K01
+  node_id: cur.phy.o.motion_forces_and_energy.projectiles
+  statement: Find the horizontal component and the vertical component of a launch velocity
+  kind: procedural
+  tools:
+  - math_evaluate
+  exam_weight: 0.05
+  prerequisites:
+  - kc_id: kc.phy.o.measurement.scalars_and_vectors
+    strength: required
+  - kc_id: kc.phy.o.motion.distance_or_displacement
+    strength: helpful
+  misconception_ids:
+  - mc.phy.o.components_swapped
+  skill_ids:
+  - phy-o-projectiles
+  glossary:
+  - projectile
+  - component
+  - components
+  - horizontal
+  - vertical
+  - launch velocity
+  - launch angle
+  - resolve
+  - velocity
+  difficulty_prior: 0.2
+  version: 0.1.0
+  status: active
+- id: kc.phy.o.projectiles.components_change
+  code: PHY-O-01.09.K02
+  node_id: cur.phy.o.motion_forces_and_energy.projectiles
+  statement: Explain why the horizontal velocity of a projectile stays constant while gravity changes its vertical velocity
+  kind: conceptual
+  tools:
+  - math_evaluate
+  exam_weight: 0.04
+  prerequisites:
+  - kc_id: kc.phy.o.projectiles.resolve
+    strength: required
+  - kc_id: kc.phy.o.motion.free_fall
+    strength: required
+  - kc_id: kc.phy.o.motion.acceleration_from_change
+    strength: helpful
+  misconception_ids:
+  - mc.phy.o.horizontal_velocity_slows
+  skill_ids:
+  - phy-o-projectiles
+  glossary:
+  - projectile
+  - horizontal
+  - vertical
+  - velocity
+  - gravity
+  - constant
+  - air resistance
+  - acceleration
+  difficulty_prior: 0.3
+  version: 0.1.0
+  status: active
+- id: kc.phy.o.projectiles.trajectory_graphs
+  code: PHY-O-01.09.K03
+  node_id: cur.phy.o.motion_forces_and_energy.projectiles
+  statement: Sketch the trajectory of a projectile and the displacement-time and velocity-time graphs for each component
+  kind: conceptual
+  tools:
+  - math_evaluate
+  exam_weight: 0.04
+  prerequisites:
+  - kc_id: kc.phy.o.projectiles.components_change
+    strength: required
+  - kc_id: kc.phy.o.motion.distance_time_gradient
+    strength: helpful
+  - kc_id: kc.phy.o.motion.velocity_time_gradient
+    strength: helpful
+  misconception_ids:
+  - mc.phy.o.horizontal_velocity_slows
+  skill_ids:
+  - phy-o-projectiles
+  glossary:
+  - projectile
+  - trajectory
+  - parabola
+  - displacement-time graph
+  - velocity-time graph
+  - component
+  - horizontal
+  - vertical
+  - displacement
+  - velocity
+  difficulty_prior: 0.4
+  version: 0.1.0
+  status: active
+- id: kc.phy.o.projectiles.time_of_flight
+  code: PHY-O-01.09.K04
+  node_id: cur.phy.o.motion_forces_and_energy.projectiles
+  statement: Find the time of flight of a projectile from the vertical motion
+  kind: procedural
+  tools:
+  - math_evaluate
+  - phys_projectile
+  exam_weight: 0.05
+  prerequisites:
+  - kc_id: kc.phy.o.projectiles.resolve
+    strength: required
+  - kc_id: kc.phy.o.motion.free_fall
+    strength: required
+  misconception_ids:
+  - mc.phy.o.flight_time_is_time_to_top
+  skill_ids:
+  - phy-o-projectiles
+  glossary:
+  - projectile
+  - time of flight
+  - vertical component
+  - vertical
+  - launch
+  - gravity
+  difficulty_prior: 0.5
+  version: 0.1.0
+  status: active
+- id: kc.phy.o.projectiles.max_height
+  code: PHY-O-01.09.K05
+  node_id: cur.phy.o.motion_forces_and_energy.projectiles
+  statement: Find the maximum height a projectile reaches and the time it takes to get there
+  kind: procedural
+  tools:
+  - math_evaluate
+  - phys_projectile
+  exam_weight: 0.05
+  prerequisites:
+  - kc_id: kc.phy.o.projectiles.resolve
+    strength: required
+  - kc_id: kc.phy.o.motion.free_fall
+    strength: required
+  misconception_ids:
+  - mc.phy.o.range_taken_as_height
+  skill_ids:
+  - phy-o-projectiles
+  glossary:
+  - projectile
+  - maximum height
+  - vertical component
+  - vertical
+  - gravity
+  difficulty_prior: 0.5
+  version: 0.1.0
+  status: active
+- id: kc.phy.o.projectiles.range
+  code: PHY-O-01.09.K06
+  node_id: cur.phy.o.motion_forces_and_energy.projectiles
+  statement: Calculate the range of a projectile launched from level ground and relate it to the launch angle
+  kind: procedural
+  tools:
+  - math_evaluate
+  - phys_projectile
+  exam_weight: 0.06
+  prerequisites:
+  - kc_id: kc.phy.o.projectiles.time_of_flight
+    strength: required
+  - kc_id: kc.phy.o.projectiles.resolve
+    strength: required
+  - kc_id: kc.phy.o.projectiles.components_change
+    strength: helpful
+  confusable_with:
+  - kc.phy.o.projectiles.max_height
+  misconception_ids:
+  - mc.phy.o.horizontal_velocity_slows
+  - mc.phy.o.range_taken_as_height
+  - mc.phy.o.steeper_launch_goes_further
+  skill_ids:
+  - phy-o-projectiles
+  glossary:
+  - projectile
+  - range
+  - launch angle
+  - time of flight
+  - level ground
+  - horizontal
+  - velocity
+  difficulty_prior: 0.7
+  version: 0.1.0
+  status: active

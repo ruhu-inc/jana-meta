@@ -69,7 +69,7 @@ from cloud_gateway.providers.base import ProviderAdapter, ProviderRequest, Strea
 from cloud_gateway.quotas import AlertSink, Quotas, cost_usd, log_alert
 from cloud_gateway.store import GatewayStore, RequestRecord
 
-VERSION = "1.1"
+VERSION = "1.2"  # W9: the teaching_outline kind and video uploads (2026-10-31); the dev host checks this header
 FEATURE = "cloud_tier"
 PSEUDONYM_HEADER = "x-session-pseudonym"
 CONTRACT = "cloud/gateway#/$defs/"

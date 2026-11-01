@@ -134,6 +134,20 @@
     code: '1.8'
     coverage: full
   status: active
+- id: cur.phy.o.motion_forces_and_energy.projectiles
+  code: PHY-O-01.09
+  kind: subtopic
+  parent_id: cur.phy.o.motion_forces_and_energy
+  title: Projectile motion
+  description: 'Objects thrown or kicked at an angle: splitting the launch velocity into horizontal and vertical components, how gravity acts on each, and finding the time of flight, maximum height and range.'
+  order: 9
+  subject: phy
+  level: o
+  external_mappings:
+  - scheme: cambridge_5054
+    code: '1.2'
+    coverage: partial
+  status: active
 - id: cur.phy.o.thermal_physics
   code: PHY-O-02
   kind: topic

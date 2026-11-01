@@ -2,7 +2,9 @@
 result that gave it; a `study_search` hit from a lecture carries its locator and moment, and `open_moment` resolves
 to the hit's source and time; Ask about this moment puts the ±30 s lines in the next turn's fence under
 `study_materials` only (the moment itself as a labelled fact either way) and the context is discarded after one
-turn; "what haven't I got yet" is a code fact set from the outline's skills and the learner's bands. Synthetic data."""
+turn; "what haven't I got yet" is a code fact set from the outline's skills and the learner's bands, with labelled
+counts a reply can name, and a reply the gates refuse twice falls back to a code-built line from that fact set, never
+the canned line (live-run fix 2026-11-01). Synthetic data."""
 
 from __future__ import annotations
 
@@ -27,7 +29,8 @@ from agent_core.engine.study import StudyDesk
 from agent_core.store.ids import new_ulid
 from memory_harness import PROFILE_A, store
 from test_w8_companion import _Context, _user
-from w8_companion_harness import run, stop_core, thread, turn
+from test_w8_companion_followups import _companion_traces
+from w8_companion_harness import Thread, run, stop_core, thread, turn
 
 PANEL = (Path(__file__).parent / "fixtures" / "w9" / "youtube_panel_projectile.txt").read_text()
 URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -149,32 +152,41 @@ def test_ask_about_this_moment_puts_the_lines_in_the_next_turn_only(tmp_path: Pa
     run(go())
 
 
+NOT_YET = "Apply the equations of uniform acceleration to motion under gravity"  # the pack's free-fall statement
+
+
+def _ready_outline(t: Thread) -> None:
+    """A ready teaching outline on a lecture: two skills, the range secure and free fall not started."""
+    desk = t.r.core.study.desk()
+    source = video(desk)
+    aid_id, job_id = "aid_" + new_ulid(), "stj_" + new_ulid()
+    cite = [{"source_id": source["source_id"], "revision": 1, "chunk_id": "sck_" + "0" * 26, "start": 0,
+             "end": 1, "quote": "x"}]  # fmt: skip
+    outline = {
+        "objectives": [], "examples": [], "assumes": [],
+        "concepts": [
+            {"name": "Range", "citations": cite, "at_ms": 252_000, "kc_ids": [RANGE], "outside_packs": False},
+            {"name": "Time of flight", "citations": cite, "at_ms": 400_000, "kc_ids": [FLIGHT],
+             "outside_packs": False},
+        ],
+        "skips": [], "for_you": [{"kc_id": RANGE, "band": "secure"}, {"kc_id": FLIGHT, "band": "not_started"}],
+    }  # fmt: skip
+    aid = {"aid_id": aid_id, "job_id": job_id, "kind": "teaching_outline", "title": "Projectile motion",
+           "sources": [{"source_id": source["source_id"], "revision": 1}], "status": "ready",
+           "created_at": "2026-10-31T10:00:00.000Z", "claims": [{"text": "Range", "citations": cite}],
+           "outline": outline}  # fmt: skip
+    desk.conn.execute("INSERT INTO study_aids VALUES (?,?,?)", (aid_id, json.dumps(aid), 1))
+    desk.conn.execute("INSERT INTO study_aid_sources VALUES (?,?,?)", (aid_id, source["source_id"], 1))
+
+
 def test_what_i_have_not_got_yet_is_a_code_fact_set_from_the_outline_and_the_learners_bands(tmp_path: Path) -> None:
-    script = {"companion": [turn("Want five minutes on it?")]}
+    # The reply names the labelled counts the fact set carries: they bind, so the reply stands (fix 2026-11-01).
+    script = {"companion": [turn("Of this video's 2 skills, 1 is not yet secure. Shall we start there?")]}
 
     async def go() -> None:
         t = await thread(tmp_path, script)
         try:
-            desk = t.r.core.study.desk()
-            source = video(desk)
-            aid_id, job_id = "aid_" + new_ulid(), "stj_" + new_ulid()
-            cite = [{"source_id": source["source_id"], "revision": 1, "chunk_id": "sck_" + "0" * 26, "start": 0,
-                     "end": 1, "quote": "x"}]  # fmt: skip
-            outline = {
-                "objectives": [], "examples": [], "assumes": [],
-                "concepts": [
-                    {"name": "Range", "citations": cite, "at_ms": 252_000, "kc_ids": [RANGE], "outside_packs": False},
-                    {"name": "Time of flight", "citations": cite, "at_ms": 400_000, "kc_ids": [FLIGHT],
-                     "outside_packs": False},
-                ],
-                "skips": [], "for_you": [{"kc_id": RANGE, "band": "secure"}, {"kc_id": FLIGHT, "band": "not_started"}],
-            }  # fmt: skip
-            aid = {"aid_id": aid_id, "job_id": job_id, "kind": "teaching_outline", "title": "Projectile motion",
-                   "sources": [{"source_id": source["source_id"], "revision": 1}], "status": "ready",
-                   "created_at": "2026-10-31T10:00:00.000Z", "claims": [{"text": "Range", "citations": cite}],
-                   "outline": outline}  # fmt: skip
-            desk.conn.execute("INSERT INTO study_aids VALUES (?,?,?)", (aid_id, json.dumps(aid), 1))
-            desk.conn.execute("INSERT INTO study_aid_sources VALUES (?,?,?)", (aid_id, source["source_id"], 1))
+            _ready_outline(t)
             opened = await t.open()
             await t.say(opened["session_id"], "What does this video teach that I haven't got yet?")
             user = _user(t.companion_requests()[0])
@@ -184,17 +196,65 @@ def test_what_i_have_not_got_yet_is_a_code_fact_set_from_the_outline_and_the_lea
                 )[0]
             )
             outline_facts = [f for f in facts if f["source"] == "teaching outline"]
-            assert [(f["value"], f["unit"]) for f in outline_facts] == [("not_started", "band"), ("secure", "band")]
-            assert outline_facts[0]["statement"].startswith(
-                "Recorded practice band for Apply the equations of uniform acceleration to motion under gravity: "
-                "not_started"
-            )
+            # The skills not yet secure first, then the labelled counts: skills 2, not yet secure 1.
+            assert [(f["value"], f["unit"]) for f in outline_facts] == [
+                ("not_started", "band"), ("secure", "band"), (2, "skills"), (1, "skills")]  # fmt: skip
+            assert outline_facts[0]["statement"].startswith(f"Recorded practice band for {NOT_YET}: not_started")
             assert "Projectile motion teaches it at 6:40" in outline_facts[0]["statement"]
+            assert [f["metric"] for f in outline_facts[2:]] == ["outline_skills", "outline_skills_not_yet_secure"]
+            assert outline_facts[2]["statement"] == "Projectile motion teaches 2 skills."
+            assert outline_facts[3]["statement"].endswith("not yet secure: 1 skills.")
             # The model selects a fact; code renders it: the words come from the record, never the model.
             engine_facts = t.r.core.sessions[opened["session_id"]].engine.companion.facts  # type: ignore[union-attr]
             rendered = companion_facts.selected_text(engine_facts, [outline_facts[0]["ref"]])
             assert "not_started" in rendered and "teaching outline" in rendered and "6:40" in rendered
+            snapshot = await t.snapshot(opened["session_id"])
+            assert "Of this video's 2 skills, 1 is not yet secure." in json.dumps(snapshot)
+            (trace,) = _companion_traces(t)
+            assert trace["degraded_reason"] is None
+            assert not any(g["fired"] for g in trace["gates"])
         finally:
             await stop_core(t.r)
 
     run(go())
+
+
+def test_a_reply_refused_twice_with_an_outline_in_hand_falls_back_to_the_code_built_line(tmp_path: Path) -> None:
+    """Live-run fix 2026-11-01: the model answered with an unlabelled number, fact binding exhausted its nudge, and
+    the learner saw the canned line although the code fact set held the answer."""
+    wrong = turn("There is 1 left for you: motion under gravity.")  # an unlabelled number, as in the live run
+    script = {"companion": [wrong, wrong]}
+
+    async def go() -> None:
+        t = await thread(tmp_path, script)
+        try:
+            _ready_outline(t)
+            opened = await t.open()
+            await t.say(opened["session_id"], "What does this video teach that I haven't got yet?")
+            said = json.dumps(await t.snapshot(opened["session_id"]))
+            assert f"Of this video's 2 skills, 1 is not yet secure: {NOT_YET}." in said
+            assert "couldn't put that together" not in said and "1 left for you" not in said
+            (trace,) = _companion_traces(t)
+            gates = {g["gate"]: g for g in trace["gates"]}
+            assert (gates["fact_binding"]["fired"], gates["fact_binding"]["outcome"],
+                    gates["fact_binding"]["detail"]) == (True, "exhausted_canned", "number:1:unit:none")  # fmt: skip
+            assert trace["degraded_reason"] == "companion_canned"  # still a refused reply, said honestly
+        finally:
+            await stop_core(t.r)
+
+    run(go())
+
+
+def test_the_outline_line_names_at_most_six_skills_and_the_counts() -> None:
+    from agent_core.engine.companion import OutlineFacts, outline_line
+    from agent_core.engine.companion_opener import load_templates
+
+    templates = load_templates()
+    many = OutlineFacts("Projectile motion", 9, [f"Skill {i}" for i in range(8)], [])
+    line = outline_line(templates, many)
+    assert line is not None and line.startswith("Of this video's 9 skills, 8 are not yet secure: Skill 0; Skill 1;")
+    assert line.endswith("Skill 5.") and "Skill 6" not in line
+    assert (
+        outline_line(templates, OutlineFacts("x", 3, [], [])) == "All 3 skills this video teaches are secure for you."
+    )
+    assert outline_line(templates, OutlineFacts("x", 0, [], [])) is None

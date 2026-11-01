@@ -50,6 +50,23 @@ test("a YouTube video has no player: every line and chapter opens the moment thr
   expect(props.onMakeOutline).toHaveBeenCalledTimes(1);
 });
 
+test("a transcript line's text takes the full width; Open at and Ask sit on their own row under it", () => {
+  // Live-run fix 2026-11-01: beside its two buttons the line's text was squeezed to a word or two a line.
+  show(link);
+  const text = screen.getByText("substituting gives the range equation");
+  const button = text.closest("button") as HTMLButtonElement;
+  const row = button.closest("li") as HTMLLIElement;
+  const classes = (el: Element) => el.className.split(/\s+/);
+  expect(classes(row)).toContain("flex-col"); // the text row and the actions row stack
+  expect(classes(button)).toContain("w-full"); // the text row is the pane's whole width
+  expect(classes(button)).not.toContain("flex-1"); // never a column shared with the buttons
+  expect(classes(text)).toEqual(expect.arrayContaining(["flex-1", "min-w-0"])); // the words fill it past the moment
+  const actions = row.querySelector("[data-line-actions]") as HTMLElement;
+  expect(actions.previousElementSibling).toBe(button);
+  expect(within(actions).getByRole("button", { name: "Open the video at 4:12 on YouTube" })).toBeTruthy();
+  expect(within(actions).getByRole("button", { name: "Ask your tutor about the moment at 4:12" })).toBeTruthy();
+});
+
 test("a chapters aid's summaries show over the code chapters, and a plain transcript shows no moments", () => {
   const aidChapters: W.Chapter[] = [{ start_ms: 0, end_ms: 275000, title: "All of it", summary: [{ text: "The lecture derives the range.", citations: [{ source_id: sid, revision: 1, chunk_id: chunks[1]!.chunk_id, start: 7, end: 19, quote: "substituting" }] }] }];
   show(link, { chapters: aidChapters });

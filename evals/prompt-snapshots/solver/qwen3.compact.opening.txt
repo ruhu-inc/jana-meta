@@ -42,11 +42,6 @@ Return one JSON solution plan: steps with values, units and check ids, and the f
 Use only numbers that come from a tool check, the question or the student's own line.
 List the source of each number in `numbers_from`; a number with no source is removed before the student sees it.
 
-Batch independent tool calls in one round.
-Solve equations with `math_solve`; never rearrange in your head.
-Compare two forms with `math_check_equivalence` instead of judging by eye.
-Never repeat an unchanged failing call: read the error and fix the arguments.
-
 Skills you can load with `skill`:
 agent-plan-solution — Plan a solution in which every value is computed by a tool
 

@@ -105,7 +105,7 @@ def labelled_numbers(text: str) -> list[tuple[str, frozenset[str]]]:
         after_text = re.split(r"[;.!?]", lowered[match.end() : match.end() + 40])[0]
         before = _WORD.findall(before_text)[-2:]
         after = _WORD.findall(after_text)[:2]
-        units = {"card", "flashcard", "day", "question", "answer", "review", "percent", "pack"}
+        units = {"card", "flashcard", "day", "question", "answer", "review", "percent", "pack", "skill"}
         if after and _singular(after[0]) in units:
             before = [w for w in before if _singular(w) not in units]
             after = after[:1]
@@ -158,7 +158,9 @@ def search_claim_errors(text: str, searched: bool) -> list[str]:
     return []
 
 
-FACT_UNITS = frozenset({"card", "flashcard", "day", "question", "answer", "review", "percent", "pack", "moment"})
+FACT_UNITS = frozenset(
+    {"card", "flashcard", "day", "question", "answer", "review", "percent", "pack", "moment", "skill"}
+)
 
 
 def fact_binding_findings(text: str, sources: Sequence[Any]) -> list[tuple[str, str]]:
@@ -765,8 +767,13 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
                 f"About {label} in {title}.")])  # fmt: skip
             moment_line = f"About {label} in {title}."
     # What this video teaches that the learner has not got yet (SPEC §20.4, review B6): a code fact set from the
-    # outline's skills joined to the learner's bands, offered as labelled records the model selects by fact_refs.
-    companion_facts.add_facts(context.facts, _outline_facts(engine, desk, now))
+    # outline's skills joined to the learner's bands, offered as labelled records the model selects by fact_refs,
+    # with its counts ("skills: 6", "not yet secure: 6") labelled for fact binding (live-run fix 2026-11-01).
+    outline = _outline_facts(engine, desk, now)
+    if outline is not None:
+        companion_facts.add_facts(context.facts, outline.facts)
+        context.sources.append({"outline": {"title": outline.title, "skills": outline.skills,
+                                            "skills_not_yet_secure": len(outline.not_yet_secure)}})  # fmt: skip
     fence = records_fence(notes, excerpts)
     parts = [p for p in (fence, moment_line, f"Status: {line}" if key != context.status_key else "") if p]
     context.status_key = key
@@ -851,8 +858,10 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     turn.extra_gates.extend(decisions.values())
     if reply is None:
         # A reply the gates refused twice: when this turn already did something (an aid started), say that, by code;
-        # otherwise the canned line (§19 fix, 2026-10-30).
-        made = made_line(templates, context.sources)
+        # else, with a teaching outline's fact set in hand, what it teaches that is not yet secure, by code (live-run
+        # fix 2026-11-01); otherwise the canned line (§19 fix, 2026-10-30).
+        made = made_line(templates, context.sources) or (
+            outline_line(templates, outline) if outline is not None else None)  # fmt: skip
         return _finish(engine, turn, made or canned(templates), context.actions, user=text, stop="degraded")
     actions = list(context.actions)
     tools = getattr(engine, "study_tools", None)
@@ -898,15 +907,43 @@ def _moment_context(engine: Any, moment: Mapping[str, Any]) -> tuple[str | None,
     return label, escape_note(title)[:80], lines
 
 
-def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> list[companion_facts.Fact]:
+@dataclass(frozen=True)
+class OutlineFacts:
+    """The newest ready teaching outline as the companion holds it: its material's title, how many skills it
+    teaches, the statements of those not yet secure for this learner (not yet secure first) and the typed facts."""
+
+    title: str
+    skills: int
+    not_yet_secure: list[str]
+    facts: list[companion_facts.Fact]
+
+
+OUTLINE_LINE_MAX = 6  # skills named in the code-built "not yet secure" line
+
+
+def outline_line(templates: Any, outline: OutlineFacts) -> str | None:
+    """What this video teaches that is not yet secure, in the engine's words from the outline's fact set (live-run
+    fix 2026-11-01): the counts and at most `OUTLINE_LINE_MAX` skill statements, never the model's text."""
+    if outline.skills <= 0:
+        return None
+    count = len(outline.not_yet_secure)
+    if count == 0:
+        return str(templates.text("outline.all_secure", skills=outline.skills))
+    statements = "; ".join(outline.not_yet_secure[:OUTLINE_LINE_MAX])
+    key = "outline.not_yet_one" if count == 1 else "outline.not_yet"
+    return str(templates.text(key, skills=outline.skills, count=count, statements=statements))
+
+
+def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> OutlineFacts | None:
     """The newest ready teaching outline's skills with the learner's bands and the moment each is taught at, as
-    typed facts (SPEC §20.4): skills not yet secure first, at most twelve. Nothing is phrased here."""
+    typed facts (SPEC §20.4): skills not yet secure first, at most twelve, then the labelled counts (how many skills
+    the outline names, how many are not yet secure). Nothing is phrased here. None without such an outline."""
     from agent_core.engine.study_links import moment_label
 
     memory = getattr(engine, "memory", None)
     source = memory.source() if memory is not None else None
     if source is None:
-        return []
+        return None
     try:
         row = source.conn.execute(
             "SELECT a.body, s.body FROM study_aids a JOIN study_aid_sources x ON x.aid_id = a.aid_id"
@@ -915,9 +952,9 @@ def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> list[companion
             " AND json_extract(a.body, '$.status') = 'ready' AND s.private = 0 ORDER BY a.created_at DESC LIMIT 1"
         ).fetchone()
     except sqlite3.Error:
-        return []
+        return None
     if row is None:
-        return []
+        return None
     aid, material = json.loads(row[0]), json.loads(row[1])
     outline = aid.get("outline") or {}
     title = escape_note(str(material.get("title") or ""))[:80]
@@ -925,15 +962,27 @@ def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> list[companion
     content = source.content
     facts = []
     rows = sorted(outline.get("for_you", []), key=lambda f: 0 if f.get("band") != "secure" else 1)
-    for entry in rows[:12]:
+    not_yet: list[str] = []
+    for i, entry in enumerate(rows):
         kc, band = str(entry.get("kc_id")), str(entry.get("band"))
         statement = (content.kc_statement(kc) if content is not None else None) or kc
+        if band != "secure":
+            not_yet.append(statement[:100])
+        if i >= 12:
+            continue
         when = taught_at.get(kc)
         where = f" ({title} teaches it at {moment_label(when)})" if type(when) is int else f" ({title})"
         facts.append(companion_facts.Fact(
             "outline:" + kc, "skill_band", band, "band", statement[:100], desk.day(now), "teaching outline",
             f"Recorded practice band for {statement[:100]}: {band}{where}."))  # fmt: skip
-    return facts
+    day = desk.day(now)
+    facts.append(companion_facts.Fact(
+        "outline:skills", "outline_skills", len(rows), "skills", title, day, "teaching outline",
+        f"{title} teaches {len(rows)} skills."))  # fmt: skip
+    facts.append(companion_facts.Fact(
+        "outline:not_yet_secure", "outline_skills_not_yet_secure", len(not_yet), "skills", title, day,
+        "teaching outline", f"Of the skills {title} teaches, not yet secure: {len(not_yet)} skills."))  # fmt: skip
+    return OutlineFacts(title, len(rows), not_yet, facts)
 
 
 def _fact_prompt(context: CompanionContext) -> str:

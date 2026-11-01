@@ -18,6 +18,11 @@ SECTIONS = ("objectives", "examples", "concepts", "assumes")
 LIMITS = {"objectives": 12, "examples": 8, "concepts": 16, "assumes": 6}
 SKIPS_MAX = 6
 FOR_YOU_MAX = 48
+# A concept maps to a skill only when their words overlap enough (its name counts twice: one name word and one cited
+# word, or two name words), and to a second skill only when that one scores within a tenth of the best (live-run fix
+# 2026-11-01: "displacement time graph" mapped to three skills that say "time" and not to the graphs skill).
+CONCEPT_MIN_OVERLAP = 3
+CONCEPT_CLOSE = 0.10
 
 
 def flatten(outline: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -91,13 +96,13 @@ def fill(
     tagged: list[str] = []
     whole = "\n".join(str(c["text"]) for c in chunks)
     # The topics the whole transcript names (study_topics.matching_topics): a concept is scored within them by its
-    # name and cited text, keeping only skills whose statement shares a content word with it (review non-blocking 7).
+    # name (twice) and cited text, keeping the best skill and any within a tenth of it, none under the least overlap.
     named = matching_topics(content, whole)["items"] if content is not None else []
     for concept in out["concepts"]:
         quotes = " ".join(str(c.get("quote", "")) for c in concept.get("citations", []))
-        text = f"{concept.get('name', '')}\n{quotes}"
-        tags = kc_tags(content, text, within=named, require_overlap=True) if named else (
-            kc_tags(content, text) if content is not None else [])  # fmt: skip
+        name = str(concept.get("name", ""))
+        tags = kc_tags(content, quotes, focus=name, within=named or None, min_overlap=CONCEPT_MIN_OVERLAP,
+                       close=CONCEPT_CLOSE) if content is not None else []  # fmt: skip
         concept["kc_ids"] = [t["kc_id"] for t in tags][:3]
         concept["outside_packs"] = not concept["kc_ids"]
         tagged += [k for k in concept["kc_ids"] if k not in tagged]

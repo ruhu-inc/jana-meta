@@ -2051,7 +2051,9 @@ through the generalised loader, suite `companion`), the gateway's `test_w9_teach
 `study-workspace.test.ts` and `companion.test.ts`. The parser is `engine/study_links.py`; the outline's device half is
 `engine/study_outline.py`; the frames are `study_worker/media.py` and `cloud_gateway/study_recording.py`; the panes
 are `learn/StudyPlayer.tsx`, `StudyOutline.tsx` and `StudyLinkAdd.tsx`. `contract-additions-w9.json` records the
-additions, applied to `contracts/` with codegen; the learner migration is v23 (W10 needed none). Where the build
+additions, applied to `contracts/` with codegen; the learner migration is v23 (W10 needed none). The O-level physics pack gained a projectile-motion subtopic on
+2026-10-31 (`content/curriculum/phy/o/kcs/projectiles.yaml`, pack 1.1.0, skill `phy-o-projectiles`), so the §20.10
+demo's concepts map to its skills with the shipped pack, not only with the seeded fixture. Where the build
 departs from the text above, and why:
 
 - **Pieces §20.3 does not list, needed by the build** (each marked "Needed by the build" in the additions file):
@@ -2114,6 +2116,55 @@ departs from the text above, and why:
   companion suites, and W9 does not touch that order). `pnpm test` passes but for `dsn25_brand_placements`, which flags
   `settings.export.desktop_required`, another session's uncommitted export copy. The browser preview was not run: the
   app needs a running core and profile, which the pane does not have.
+
+**Live-run fixes 2026-11-01** (a live run of W9 and W10 in the browser host on 2026-10-31; each fix has a test
+that would have caught it; nothing committed):
+
+- **Transcript layout.** In the material pane of a `video_link` source each transcript line was a wrapping row with
+  the text column `flex-1` beside **Open at** and **Ask about this moment**, so in the pane's width the words were
+  squeezed to one or two a line. Each line is now a column: the text row takes the full width (`w-full`, the words
+  `flex-1 min-w-0` past the moment) and the two buttons sit on their own row under it (`learn/StudyPlayer.tsx`;
+  `study-player.test.tsx` asserts the layout classes, since jsdom measures nothing).
+- **Raw copy key.** A failed `teaching_outline` job showed `study.generate.teaching_outline` as its label: W9 added
+  the job kind without its `study.generate.*` label, and `concept_map` (W8) had none either. Both keys exist now, as
+  does `study.tool.chat`; `study-job-labels.test.tsx` reads `JobKind` and `AidKind` from the contract and asserts a
+  label for every kind, and `study-workspace.test.tsx` renders a failed outline job in words.
+- **Duplicate time.** An outline row showed "Open at 4:12" and a citation badge "04:12" for the same moment. The
+  badge beside an Open-at button is now the reference number (`[1]`); its name and tooltip keep the location
+  ("Projectile motion · At 04:12"), so the passage still opens (`StudyCitation.numbered`, set by `StudyOutline.tsx`
+  for timed rows; `study-outline.test.tsx` asserts the time appears once a row).
+- **Chapters on sparse transcripts.** A pasted transcript with one line every 30 to 40 s became a chapter a line under
+  the 20 s gap rule. The rule is now: a heading always starts a chapter; otherwise a gap of 60 s or more does; and
+  never more than 12 gap-made chapters a source, the smallest gaps merging first (`study_links.GAP_MS`,
+  `GAP_CHAPTERS_MAX`; `test_w9_links.py` covers the sparse paste, the cap and a heading past the cap; the panel
+  fixture is unchanged, its chapters being headings).
+- **"What haven't I got yet".** With the pack's projectile skills the code fact set was built, but the model's reply
+  used an unlabelled number ("1"), fact binding exhausted its nudge and the learner saw the canned line (trace:
+  `fact_binding` `number:1:unit:none`, then `model_claims`, `exhausted_canned`). As §19 does for a made aid, a reply
+  refused twice with an outline fact set in hand now falls back to a code-built line from it ("Of this video's 6
+  skills, 6 are not yet secure: …" with at most six statements; `companion.outline_line`,
+  `companion.turn.outline.*` in `engine.en.yaml`), never the canned line. The fact set also carries labelled counts
+  (`outline_skills`, `outline_skills_not_yet_secure`, unit `skills`) and the counts join the binding sources, with
+  `skill` a fact unit, so a reply naming "2 skills" or "1 is not yet secure" binds (`test_w9_companion_moment.py`).
+- **Wrong gateway on the shared port.** The dev host accepted a gateway from another project on its port (it answered
+  the ping with the budget header) and every new kind failed with `processing_failed`. `hackathon_app.check_gateway`
+  now also requires the `jana-gateway-version` header to equal `cloud_gateway.app.VERSION` and fails closed naming
+  the port and the version found (or `none`), before the budget check; it takes a transport for its test
+  (`scripts/tests/test_hackathon_app.py`). Because the parent project's gateway also served `1.1`, this repository's
+  gateway version is now **1.2** (the W9 kinds are an API addition; `test_m19_gw_auth.py` reads 1.2).
+- **Outline mapping looseness.** "Displacement time graph" mapped to three skills that merely say "time" or
+  "vertical" (time of flight, components, resolve) and not to the trajectory-and-graphs skill. `kc_tags` gained
+  `focus` (the concept's name, whose words count twice; plain plurals folded on this path only), `min_overlap` and
+  `close`; `study_outline.fill` scores a concept by its name and cited text within the transcript's topics with a
+  least overlap of 3 (one name word and one cited word, or two name words) and keeps a second skill only within 10%
+  of the best (`CONCEPT_MIN_OVERLAP`, `CONCEPT_CLOSE`). Study-activity tagging is unchanged.
+  `test_w9_teaching_outline.py` adds the graph concept: on the installed pack it maps to `trajectory_graphs` alone,
+  on the seeded fixture (no graphs skill) it is outside the packs, and every other concept maps to exactly one skill;
+  `scenarios/w9/youtube_lecture.yaml` lists it (suite `companion` 2026-11-01.1, lock rewritten).
+- **Gates on 2026-11-01:** codegen check, `pnpm lint`, mypy, `pnpm test` and `uv run pytest services` (four shards)
+  pass, but for `test_w10_overview.py::test_tiles_equal_the_subject_map_and_the_skill_map` ("UI fixture is stale"):
+  the uncommitted projectiles pack adds a topic the committed `packages/ui/test/fixtures/curriculum-overview.json`
+  lacks; regenerate it with `JANA_WRITE_CONCEPT_FIXTURES=1` when that pack lands (not this session's to touch).
 
 **What exists.** A recording is already a Study source (STU-22): the file goes to the gateway whole under
 `study_materials` (`engine/study.py` line 2362: a recording waits for the cloud), the sandboxed worker decodes the

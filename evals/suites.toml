@@ -20,7 +20,7 @@ files = ["evals/safety/*.yaml", "evals/safety/scripts/*.yaml"]
 owner = "Subject leads"
 cadence = "nightly; every change"
 stage = "S1"
-version = "2026-10-26.1"
+version = "2026-10-31.1"
 files = ["content/curriculum/*/*/*.yaml", "content/curriculum/*/*/*/*.yaml", "content/curriculum/ref/*/*.yaml"]
 
 [suites.marking]
@@ -34,7 +34,7 @@ files = ["services/tool-worker/tool_worker/golden/*.yaml", "services/tool-worker
 owner = "Engine engineer"
 cadence = "every commit"
 stage = "S1"
-version = "2026-10-27.1"
+version = "2026-10-31.1"
 files = ["evals/prompt-snapshots/*/*.txt"]
 
 [suites.ui_gallery]
@@ -72,7 +72,7 @@ needs_model = true
 owner = "Curriculum lead"
 cadence = "on skill change"
 stage = "S2"
-version = "2026-10-13.2"
+version = "2026-10-31.1"
 files = ["skills/*/*/evals/*.yaml", "skills/teaching/*/*/evals/*.yaml"]
 
 [suites.memory_recall]
@@ -100,7 +100,7 @@ files = []
 owner = "Curriculum lead"
 cadence = "every pack build"
 stage = "S1"
-version = "2026-10-26.1"
+version = "2026-10-31.1"
 files = ["content/curriculum/*/*/*.yaml", "content/curriculum/*/*/*/*.yaml", "content/curriculum/ref/*/*.yaml"]
 
 [suites.mastery_model]
@@ -125,7 +125,7 @@ files = []
 owner = "Engine engineer"
 cadence = "every commit touching engine, memory or study"
 stage = "S2"
-version = "2026-10-31.2"
+version = "2026-11-01.1"
 files = ["services/agent-core/tests/scenarios/w8/*.yaml", "services/agent-core/tests/scenarios/w9/*.yaml"]
 
 [suites.learner_map]

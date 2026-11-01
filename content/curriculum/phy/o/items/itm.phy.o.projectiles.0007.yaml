@@ -1,0 +1,110 @@
+id: itm.phy.o.projectiles.0007
+version: 0.1.0
+type: numeric
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.range
+stem: A stone is thrown from level ground at 15 m/s at 40° above the horizontal. Ignore air resistance.
+parts:
+- id: a
+  prompt: How far from the thrower does the stone land? Give your answer to 3 significant figures.
+  marks: 3
+  answer:
+    kind: numeric
+    value: '22.6'
+    unit: m
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0007_rng
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: 'The question wants the range: the distance along the ground to where the stone lands.'
+  - rung: 2
+    name: concept
+    text:
+      en: On level ground the range is u² sin 2θ ÷ g.
+  - rung: 3
+    name: first_step
+    text:
+      en: Work out 2θ first.
+  - rung: 4
+    name: worked_step
+    text:
+      en: 2θ = 80°. Now put u = 15 m/s and g = 9.8 m/s² into the formula.
+  - rung: 5
+    name: full_step
+    text:
+      en: R = 15² × sin 80° ÷ 9.8 = 22.6 m.
+  misconception_ids:
+  - mc.phy.o.range_taken_as_height
+solution:
+  steps:
+  - n: 1
+    latex: R = \frac{u^2 \sin 2\theta}{g}
+    reason: The range of a launch from level ground
+  - n: 2
+    latex: 2\theta = 80^\circ
+    reason: Double the launch angle
+    check_id: chk_build_phy_proj_0007_two_theta
+  - n: 3
+    latex: R = \frac{15^2 \sin 80^\circ}{9.8}
+    reason: Substitute with the pack's value of g
+    check_id: chk_build_phy_proj_0007_sim
+  - n: 4
+    latex: R = 22.6\ \text{m}
+    reason: Evaluate to 3 significant figures
+    check_id: chk_build_phy_proj_0007_rng
+difficulty:
+  prior: 0.6
+  band: stretch
+estimated_seconds: 150
+exam_style:
+  paper_style: structured
+  total_marks: 3
+  calculator: true
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks:
+  chk_build_phy_proj_0007_two_theta:
+    args:
+      expression: 2*40
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0007_rng:
+    args:
+      expression: 15^2*sin(80)/9.8
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0007_sim:
+    args:
+      motion: angled
+      speed: 15
+      angle: 40
+      constants:
+      - symbol: g
+        source: pack
+    tool: phys_projectile
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

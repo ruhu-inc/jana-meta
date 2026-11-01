@@ -1,0 +1,119 @@
+id: itm.phy.o.projectiles.0003
+version: 0.1.0
+type: numeric
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.time_of_flight
+stem: A ball is kicked from level ground at 30 m/s at 30° above the horizontal. Take g = 10 m/s^2 and ignore air resistance.
+parts:
+- id: a
+  prompt: How long is the ball in the air before it lands?
+  marks: 3
+  answer:
+    kind: numeric
+    value: '3.0'
+    unit: s
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0003_tof
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: 'The question asks for the time of flight: the whole trip, up and back down to the ground.'
+  - rung: 2
+    name: concept
+    text:
+      en: Only the vertical motion sets the time. Use the vertical component of the velocity and g.
+  - rung: 3
+    name: first_step
+    text:
+      en: 'Find the vertical component first: u_y = 30 sin 30°.'
+  - rung: 4
+    name: worked_step
+    text:
+      en: u_y = 15 m/s. Going up takes u_y ÷ g, and coming down takes as long again.
+  - rung: 5
+    name: full_step
+    text:
+      en: T = 2 × 15 ÷ 10 = 3.0 s.
+  misconception_ids:
+  - mc.phy.o.flight_time_is_time_to_top
+conventions_override:
+- key: phy.g
+  value: '10'
+solution:
+  steps:
+  - n: 1
+    latex: u_y = u \sin\theta
+    reason: The vertical component of the launch velocity
+  - n: 2
+    latex: u_y = 30 \sin 30^\circ = 15\ \text{m/s}
+    reason: Substitute
+    check_id: chk_build_phy_proj_0003_uy
+  - n: 3
+    latex: t_{\text{up}} = \frac{u_y}{g} = \frac{15}{10} = 1.5\ \text{s}
+    reason: The vertical velocity falls to zero at the top
+    check_id: chk_build_phy_proj_0003_tup
+  - n: 4
+    latex: T = 2 t_{\text{up}} = 3.0\ \text{s}
+    reason: The way down takes as long as the way up
+    check_id: chk_build_phy_proj_0003_sim
+difficulty:
+  prior: 0.3
+  band: core
+estimated_seconds: 120
+exam_style:
+  paper_style: structured
+  total_marks: 3
+  calculator: true
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks:
+  chk_build_phy_proj_0003_uy:
+    args:
+      expression: 30*sin(30)
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0003_tup:
+    args:
+      expression: 30*sin(30)/10
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0003_tof:
+    args:
+      expression: 2*30*sin(30)/10
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0003_sim:
+    args:
+      motion: angled
+      speed: 30
+      angle: 30
+      constants:
+      - symbol: g
+        source: pack
+    tool: phys_projectile
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

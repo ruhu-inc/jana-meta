@@ -6,6 +6,7 @@ knows view, never which skills an item tests, so never mastery evidence (JM-D26)
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from typing import Any
 
 
@@ -55,7 +56,14 @@ KC_TAGS_MAX = 3
 
 
 def kc_tags(
-    content: Any, text: str, *, within: list[dict[str, Any]] | None = None, require_overlap: bool = False
+    content: Any,
+    text: str,
+    *,
+    within: list[dict[str, Any]] | None = None,
+    require_overlap: bool = False,
+    focus: str | None = None,
+    min_overlap: int = 0,
+    close: float | None = None,
 ) -> list[dict[str, Any]]:
     """At most three `{kc_id, weight}` for a Study activity, the weights summing to 1 (none when no topic matches):
     the topics `matching_topics` finds in the text share the weight equally, and each topic's share goes to its KCs,
@@ -63,23 +71,34 @@ def kc_tags(
 
     `within` names the topics to score instead of finding them in `text` (SPEC §20.4: a lecture's concept is scored
     within the topics the whole transcript names); `require_overlap` keeps only KCs whose statement shares a content
-    word with the text, so a concept that names no skill tags none."""
-    if content is None or not text.strip():
+    word with the text, so a concept that names no skill tags none. For a concept (live-run fix 2026-11-01):
+    `focus` is its name, whose words count twice (a cited word once), plain plurals folded; `min_overlap` is the
+    least overlap score a KC needs; `close` keeps, beside the best KC, only those scoring within that fraction of it,
+    so "displacement time graph" maps to the trajectory-and-graphs skill alone, not to every skill that says "time"."""
+    if content is None or not (text.strip() or (focus or "").strip()):
         return []
-    found = within if within is not None else matching_topics(content, text)["items"]
+    found = within if within is not None else matching_topics(content, f"{focus or ''}\n{text}")["items"]
     if not found:
         return []
-    words = set(re.findall(r"[a-z0-9]+", text.lower()))
+    fold = _fold if focus is not None else _same
+    named = {fold(w) for w in re.findall(r"[a-z0-9]+", (focus or "").lower())}
+    words = {fold(w) for w in re.findall(r"[a-z0-9]+", text.lower())}
+    least = max(min_overlap, 1 if require_overlap else 0)
     share = 1 / len(found)
     scores: dict[str, float] = {}
     for topic in found:
-        overlap = {kc: len(_terms(str(content.kc_statement(kc) or "")) & words) for kc in topic["kc_ids"]}
-        if require_overlap:
-            overlap = {kc: n for kc, n in overlap.items() if n > 0}
+        overlap = {}
+        for kc in topic["kc_ids"]:
+            terms = _terms(str(content.kc_statement(kc) or ""), fold)
+            overlap[kc] = len(terms & words) + 2 * len(terms & named)
+        overlap = {kc: n for kc, n in overlap.items() if n >= least}
         total = sum(1 + n for n in overlap.values())
         for kc, n in overlap.items():
             scores[kc] = scores.get(kc, 0.0) + share * (1 + n) / total
-    top = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))[:KC_TAGS_MAX]
+    ranked = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))
+    if close is not None and ranked:
+        ranked = [kv for kv in ranked if kv[1] >= ranked[0][1] * (1 - close)]
+    top = ranked[:KC_TAGS_MAX]
     if not top:
         return []
     whole = sum(w for _, w in top)
@@ -88,8 +107,19 @@ def kc_tags(
     return [{"kc_id": kc, "weight": w} for (kc, _), w in zip(top, weights, strict=True) if w > 0]
 
 
-def _terms(statement: str) -> set[str]:
-    return {w for w in re.findall(r"[a-z0-9]+", statement.lower()) if len(w) >= 4 and w not in _STOP}
+def _terms(statement: str, fold: Callable[[str], str] = lambda w: w) -> set[str]:
+    return {fold(w) for w in re.findall(r"[a-z0-9]+", statement.lower()) if len(w) >= 4 and w not in _STOP}
+
+
+def _same(word: str) -> str:
+    return word
+
+
+def _fold(word: str) -> str:
+    """A plain plural folded to its singular ("graphs" and "graph" are one word; "mass", "radius" stay)."""
+    if len(word) > 4 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
+        return word[:-1]
+    return word
 
 
 # --- STU-21: topics from the material itself --------------------------------------------------------------------

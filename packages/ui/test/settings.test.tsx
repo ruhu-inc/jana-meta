@@ -167,7 +167,7 @@ describe("UXS-46", () => {
   test("browser export explains the missing desktop picker", async () => {
     const { core } = await unlocked();
     const archive = document.querySelector<HTMLElement>("[data-profile-archive]")!;
-    expect(within(archive).getByText(/Open Jana's desktop app to save a profile archive/)).toBeTruthy();
+    expect(within(archive).getByText(/Open the desktop app to save a profile archive/)).toBeTruthy();
     fireEvent.change(within(archive).getByLabelText("Passphrase for the archive"), { target: { value: "synthetic passphrase" } });
     expect((within(archive).getByRole("button", { name: "Save a profile archive" }) as HTMLButtonElement).disabled).toBe(true);
     expect(core.exports).toHaveLength(0);

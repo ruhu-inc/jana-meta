@@ -1,0 +1,33 @@
+id: mc.phy.o.components_swapped
+kc_ids:
+- kc.phy.o.projectiles.resolve
+student_name: Sine and cosine swapped round
+description: Uses u sin θ for the horizontal component and u cos θ for the vertical one, so the two parts of the launch velocity come out the wrong way round.
+signatures:
+- kind: answer_transform
+  expression: u*sin(theta)
+  applies_to_part: a
+fix:
+  strategy: contrast_example
+  text:
+    en: Draw the launch velocity as the slanted side of a right-angled triangle. The side next to the angle is the horizontal part, u cos θ; the side opposite the angle is the vertical part, u sin θ. A ball kicked at a small angle goes mostly sideways, so its horizontal part must be the bigger one.
+probe_item_ids:
+- itm.phy.o.projectiles.0001
+severity: medium
+version: 0.1.0
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

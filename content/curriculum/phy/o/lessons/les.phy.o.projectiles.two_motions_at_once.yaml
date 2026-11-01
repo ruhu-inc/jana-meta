@@ -1,0 +1,55 @@
+id: les.phy.o.projectiles.two_motions_at_once
+node_id: cur.phy.o.motion_forces_and_energy.projectiles
+kc_ids:
+- kc.phy.o.projectiles.resolve
+- kc.phy.o.projectiles.components_change
+- kc.phy.o.projectiles.time_of_flight
+- kc.phy.o.projectiles.range
+title: Two motions at once
+estimated_minutes: 12
+blocks:
+- type: prior_knowledge
+  item_ids:
+  - itm.phy.o.motion.0139
+- type: idea
+  text:
+    en: 'A kicked ball moves in two directions at the same time. Split its launch velocity into a horizontal part, u cos θ, and a vertical part, u sin θ. Sideways, nothing pushes or pulls on the ball, so the horizontal part stays the same for the whole flight. Up and down, gravity acts: the vertical part shrinks by g every second until the top, then grows again on the way down. Treat the two directions one at a time. The vertical motion tells you how long the flight lasts. Multiply that time by the horizontal velocity and you have the range.'
+- type: worked_example
+  worked_example_id: wex.phy.o.projectiles.0001
+- type: guided_step
+  item_id: itm.phy.o.projectiles.0005
+- type: quick_check
+  item_ids:
+  - itm.phy.o.projectiles.0003
+  - itm.phy.o.projectiles.0001
+- type: common_mistakes
+  text:
+    en: 'Do not let the horizontal velocity slow down in your head: with no air resistance it stays constant. And do not stop the clock at the top: the time of flight is the whole trip, up and back down.'
+  misconception_ids:
+  - mc.phy.o.horizontal_velocity_slows
+  - mc.phy.o.flight_time_is_time_to_top
+- type: exit_check
+  item_ids:
+  - itm.phy.o.projectiles.0009
+  - itm.phy.o.projectiles.0007
+  - itm.phy.o.projectiles.0004
+- type: summary
+  text:
+    en: Split the launch velocity into two parts. Gravity changes only the vertical part; the horizontal part stays constant. The time of flight comes from the vertical motion, and the range is the horizontal velocity times the time of flight.
+version: 0.1.0
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

@@ -1,0 +1,217 @@
+id: itm.phy.o.projectiles.0009
+version: 0.1.0
+type: numeric
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.components_change
+- kc.phy.o.projectiles.resolve
+stem: A ball is kicked from the ground at 24 m/s at 30° above the horizontal. Take g = 10 m/s^2 and ignore air resistance.
+parts:
+- id: a
+  prompt: Find the vertical component of the velocity at launch.
+  marks: 1
+  answer:
+    kind: numeric
+    value: '12'
+    unit: m/s
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0009_uy
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: Split the launch velocity into an up part and a sideways part.
+  - rung: 2
+    name: concept
+    text:
+      en: The vertical component is u sin θ.
+  - rung: 3
+    name: first_step
+    text:
+      en: Write u_y = 24 sin 30°.
+  - rung: 4
+    name: worked_step
+    text:
+      en: sin 30° is 0.5.
+  - rung: 5
+    name: full_step
+    text:
+      en: u_y = 24 × 0.5 = 12 m/s.
+  misconception_ids:
+  - mc.phy.o.components_swapped
+- id: b
+  prompt: Find the vertical component of the velocity 0.5 s after launch.
+  marks: 2
+  answer:
+    kind: numeric
+    value: '7.0'
+    unit: m/s
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0009_vy
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: Gravity changes only the vertical velocity.
+  - rung: 2
+    name: concept
+    text:
+      en: Each second, g takes 10 m/s off the upward velocity.
+  - rung: 3
+    name: first_step
+    text:
+      en: Work out how much velocity is lost in 0.5 s.
+  - rung: 4
+    name: worked_step
+    text:
+      en: The loss is 10 × 0.5 = 5.0 m/s. Take it off the vertical component from part a.
+  - rung: 5
+    name: full_step
+    text:
+      en: v_y = 12 − 5.0 = 7.0 m/s.
+- id: c
+  prompt: Find the horizontal component of the velocity 0.5 s after launch.
+  marks: 2
+  answer:
+    kind: numeric
+    value: '20.8'
+    unit: m/s
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0009_ux
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: Think about what acts on the ball sideways once it has left the foot.
+  - rung: 2
+    name: concept
+    text:
+      en: Nothing acts sideways, so the horizontal velocity does not change.
+  - rung: 3
+    name: first_step
+    text:
+      en: 'So find the horizontal component at launch: u_x = 24 cos 30°.'
+  - rung: 4
+    name: worked_step
+    text:
+      en: cos 30° is about 0.866, and the value is the same at 0.5 s as at launch.
+  - rung: 5
+    name: full_step
+    text:
+      en: v_x = 24 × 0.866 = 20.8 m/s, the same as at launch.
+  misconception_ids:
+  - mc.phy.o.horizontal_velocity_slows
+conventions_override:
+- key: phy.g
+  value: '10'
+solution:
+  steps:
+  - n: 1
+    latex: u_y = u \sin\theta
+    reason: The vertical component at launch
+  - n: 2
+    latex: \sin 30^\circ = 0.5, \quad \cos 30^\circ = 0.866
+    reason: The two ratios for the launch angle
+    check_id: chk_build_phy_proj_0009_sin
+  - n: 3
+    latex: \cos 30^\circ = 0.866
+    reason: The horizontal ratio
+    check_id: chk_build_phy_proj_0009_cos
+  - n: 4
+    latex: u_y = 24 \sin 30^\circ = 24 \times 0.5 = 12\ \text{m/s}
+    reason: Substitute
+    check_id: chk_build_phy_proj_0009_uy
+  - n: 5
+    latex: v_y = u_y - gt = 12 - 10 \times 0.5
+    reason: Gravity takes g off the vertical velocity each second
+  - n: 6
+    latex: gt = 10 \times 0.5 = 5.0\ \text{m/s}
+    reason: The vertical velocity lost in half a second
+    check_id: chk_build_phy_proj_0009_drop
+  - n: 7
+    latex: v_y = 7.0\ \text{m/s}
+    reason: Evaluate
+    check_id: chk_build_phy_proj_0009_vy
+  - n: 8
+    latex: u_x = 24 \cos 30^\circ = 24 \times 0.866 = 20.8\ \text{m/s}
+    reason: The horizontal component at launch
+    check_id: chk_build_phy_proj_0009_ux
+  - n: 9
+    latex: v_x = u_x = 20.8\ \text{m/s}
+    reason: No horizontal force, so no change
+difficulty:
+  prior: 0.3
+  band: core
+estimated_seconds: 180
+exam_style:
+  paper_style: structured
+  total_marks: 5
+  calculator: true
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks:
+  chk_build_phy_proj_0009_sin:
+    args:
+      expression: sin(30)
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0009_uy:
+    args:
+      expression: 24*sin(30)
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0009_drop:
+    args:
+      expression: 10*0.5
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0009_vy:
+    args:
+      expression: 24*sin(30)-10*0.5
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0009_cos:
+    args:
+      expression: cos(30)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0009_ux:
+    args:
+      expression: 24*cos(30)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

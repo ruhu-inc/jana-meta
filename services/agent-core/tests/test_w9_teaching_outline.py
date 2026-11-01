@@ -1,9 +1,9 @@
 """SPEC §20.9 `test_w9_teaching_outline.py` (W9): `teaching_outline` is a job and aid kind; its cloud request carries
 transcript chunks and nothing else (no learner block, no syllabus, no frame text: extends `test_dat18_egress.py`'s
 rule for Study egress); the engine fills `at_ms`, `kc_ids`, `outside_packs`, `skips` and `for_you` by code on the
-seeded projectile-motion fixture (and records that the shipped O-level physics pack has no projectile skill, so the
-same concepts are outside the packs there); an item whose citation is not the transcript's words is refused; a
-dropped item rebuilds the outline. The gateway's verifier is covered in the gateway's own tests. Synthetic data."""
+seeded projectile-motion fixture (and, with the shipped O-level physics pack's own projectile-motion subtopic, maps the
+same concepts to its skills); an item whose citation is not the transcript's words is refused; a dropped item
+rebuilds the outline. The gateway's verifier is covered in the gateway's own tests. Synthetic data."""
 
 from __future__ import annotations
 
@@ -22,12 +22,13 @@ from test_w8_study_activity import World, world
 
 PANEL = (Path(__file__).parent / "fixtures" / "w9" / "youtube_panel_projectile.txt").read_text()
 URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-RANGE, FLIGHT, HEIGHT, RESOLVE, DRAG = (
+RANGE, FLIGHT, HEIGHT, RESOLVE, DRAG, GRAPHS = (
     "kc.phy.o.projectiles.range",
     "kc.phy.o.projectiles.time_of_flight",
     "kc.phy.o.projectiles.max_height",
     "kc.phy.o.projectiles.resolve",
     "kc.phy.o.projectiles.drag",
+    "kc.phy.o.projectiles.trajectory_graphs",
 )
 NODE = "cur.phy.o.motion_forces_and_energy.projectiles"
 
@@ -97,6 +98,9 @@ class Cloud:
                 named(chunks, "Time of flight", "T equals two u sin theta over g"),
                 named(chunks, "Maximum height", "the maximum height H equals u squared sin squared theta over two g"),
                 named(chunks, "Resolving the velocity", "the horizontal component of the velocity is u cos theta"),
+                # Live-run fix 2026-11-01: a concept that shares only "time" with three skills maps to none of them.
+                named(chunks, "Displacement time graph",
+                      "vertically the ball decelerates at g on the way up and accelerates at g on the way down"),
             ],
             "assumes": [span(chunks, "how to resolve a vector into perpendicular components",
                              "Resolving a vector into perpendicular components")],
@@ -187,6 +191,11 @@ def test_kc_ids_skips_and_for_you_are_filled_by_code_on_the_seeded_fixture(tmp_p
     assert concepts["Time of flight"]["kc_ids"][0] == FLIGHT
     assert concepts["Maximum height"]["kc_ids"][0] == HEIGHT
     assert concepts["Resolving the velocity"]["kc_ids"][0] == RESOLVE
+    # Each concept maps to its one skill: a second skill only when it scores within a tenth of the best.
+    assert all(len(concepts[n]["kc_ids"]) == 1 for n in ("Range", "Time of flight", "Maximum height",
+                                                          "Resolving the velocity"))  # fmt: skip
+    # The seeded pack has no graphs skill: sharing "time" with the time-of-flight skill is not enough to map there.
+    assert concepts["Displacement time graph"]["kc_ids"] == [] and concepts["Displacement time graph"]["outside_packs"]
     # One skipped skill of the matched topic: drag, which the lecture never reaches ("not covered here").
     assert outline["skips"] == [{"kc_id": DRAG, "statement": "Describe the effect of drag on a projectile's path"}]
     # For this learner: the range secure, the rest not started (bands joined on the device, never sent).
@@ -202,17 +211,31 @@ def test_kc_ids_skips_and_for_you_are_filled_by_code_on_the_seeded_fixture(tmp_p
     assert made and made[-1]["aid_kind"] == "teaching_outline"
 
 
-def test_with_the_installed_physics_pack_the_concepts_are_outside_the_packs(tmp_path: Path) -> None:
-    """The shipped O-level physics pack has no projectile-motion skill and no statement with the word range, so
-    `kc_tags` cannot map the range concept to a skill there (recorded in SPEC §20's status note)."""
-    assert not any("range" in (PACK.kc_statement(k) or "").lower() for k in PACK.kcs if ".motion." in k)
+def test_with_the_installed_physics_pack_the_concepts_map_to_its_projectile_skills(tmp_path: Path) -> None:
+    """The shipped O-level physics pack has a projectile-motion subtopic (`kcs/projectiles.yaml`) whose statements
+    use the lecture's words, so `kc_tags` maps every demo concept to one of its skills (SPEC §20.10, §20.4)."""
+    assert NODE in PACK.nodes and {RANGE, FLIGHT, HEIGHT, RESOLVE} <= set(PACK.kcs)
+    assert "range" in (PACK.kc_statement(RANGE) or "").lower()
     w = world(tmp_path)
     w.visits.open()
     done = outline_job(w, video(w), Cloud(), PACK)
     assert done["state"] == "completed", done
     outline = w.desk.aid(done["result_ids"][0])["outline"]
-    assert all(c["outside_packs"] and c["kc_ids"] == [] for c in outline["concepts"])
-    assert outline["skips"] == [] and outline["for_you"] == []
+    concepts = {c["name"]: c for c in outline["concepts"]}
+    assert not any(c["outside_packs"] for c in outline["concepts"])
+    assert concepts["Range"]["kc_ids"][0] == RANGE
+    assert concepts["Time of flight"]["kc_ids"][0] == FLIGHT
+    assert concepts["Maximum height"]["kc_ids"][0] == HEIGHT
+    assert concepts["Resolving the velocity"]["kc_ids"][0] == RESOLVE
+    # Tight mapping (live-run fix 2026-11-01): the graph concept maps to the trajectory-and-graphs skill alone, not
+    # to the time-of-flight, components and resolving skills that merely say "time" or "vertical"; the others too.
+    assert concepts["Displacement time graph"]["kc_ids"] == [GRAPHS]
+    assert concepts["Resolving the velocity"]["kc_ids"] == [RESOLVE]
+    assert concepts["Time of flight"]["kc_ids"] == [FLIGHT] and concepts["Range"]["kc_ids"] == [RANGE]
+    # The skipped skills are the subtopic's own skills the lecture never reaches; the learner has started none.
+    assert all(s["kc_id"].startswith("kc.phy.o.projectiles.") for s in outline["skips"])
+    assert {f["kc_id"] for f in outline["for_you"]} >= {RANGE, FLIGHT, HEIGHT, RESOLVE, GRAPHS}
+    assert all(f["band"] == "not_started" for f in outline["for_you"])
 
 
 def test_an_outline_item_whose_citation_is_not_the_transcripts_words_is_refused(tmp_path: Path) -> None:

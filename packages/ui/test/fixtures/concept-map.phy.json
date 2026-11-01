@@ -1791,6 +1791,138 @@
    "tracked": false
   },
   {
+   "kc_id": "kc.phy.o.projectiles.components_change",
+   "code": "PHY-O-01.09.K02",
+   "statement": "Explain why the horizontal velocity of a projectile stays constant while gravity changes its vertical velocity",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.projectiles",
+   "topic_title": "Projectile motion",
+   "exam_weight": 0.04,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
+  },
+  {
+   "kc_id": "kc.phy.o.projectiles.max_height",
+   "code": "PHY-O-01.09.K05",
+   "statement": "Find the maximum height a projectile reaches and the time it takes to get there",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.projectiles",
+   "topic_title": "Projectile motion",
+   "exam_weight": 0.05,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
+  },
+  {
+   "kc_id": "kc.phy.o.projectiles.range",
+   "code": "PHY-O-01.09.K06",
+   "statement": "Calculate the range of a projectile launched from level ground and relate it to the launch angle",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.projectiles",
+   "topic_title": "Projectile motion",
+   "exam_weight": 0.06,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
+  },
+  {
+   "kc_id": "kc.phy.o.projectiles.resolve",
+   "code": "PHY-O-01.09.K01",
+   "statement": "Find the horizontal component and the vertical component of a launch velocity",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.projectiles",
+   "topic_title": "Projectile motion",
+   "exam_weight": 0.05,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
+  },
+  {
+   "kc_id": "kc.phy.o.projectiles.time_of_flight",
+   "code": "PHY-O-01.09.K04",
+   "statement": "Find the time of flight of a projectile from the vertical motion",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.projectiles",
+   "topic_title": "Projectile motion",
+   "exam_weight": 0.05,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
+  },
+  {
+   "kc_id": "kc.phy.o.projectiles.trajectory_graphs",
+   "code": "PHY-O-01.09.K03",
+   "statement": "Sketch the trajectory of a projectile and the displacement-time and velocity-time graphs for each component",
+   "subject_id": "cur.phy.o",
+   "topic_id": "cur.phy.o.motion_forces_and_energy.projectiles",
+   "topic_title": "Projectile motion",
+   "exam_weight": 0.04,
+   "state": "not_started",
+   "band": "not_started",
+   "linked": false,
+   "freshness": "never",
+   "refresh_due": false,
+   "changed_since": null,
+   "study": {
+    "materials": 0,
+    "moments": 0,
+    "cards_due": 0
+   },
+   "notes": 0,
+   "tracked": false
+  },
+  {
    "kc_id": "kc.phy.o.radioactivity.background_radiation",
    "code": "PHY-O-05.02.K04",
    "statement": "Calculate a count rate corrected for background radiation and recall the main background sources",
@@ -2767,6 +2899,12 @@
    "strength": "helpful"
   },
   {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.projectiles.resolve",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
    "from": "kc.phy.o.measurement.si_prefixes",
    "to": "kc.phy.o.density.density_calculation",
    "kind": "prerequisite",
@@ -2833,6 +2971,12 @@
    "strength": "required"
   },
   {
+   "from": "kc.phy.o.motion.acceleration_from_change",
+   "to": "kc.phy.o.projectiles.components_change",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
    "from": "kc.phy.o.motion.average_speed",
    "to": "kc.phy.o.energy.kinetic_energy",
    "kind": "prerequisite",
@@ -2893,10 +3037,46 @@
    "strength": "helpful"
   },
   {
+   "from": "kc.phy.o.motion.distance_or_displacement",
+   "to": "kc.phy.o.projectiles.resolve",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.distance_time_gradient",
+   "to": "kc.phy.o.projectiles.trajectory_graphs",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.motion.free_fall",
+   "to": "kc.phy.o.projectiles.components_change",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.free_fall",
+   "to": "kc.phy.o.projectiles.max_height",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.free_fall",
+   "to": "kc.phy.o.projectiles.time_of_flight",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
    "from": "kc.phy.o.motion.solve_with_equation",
    "to": "kc.phy.o.motion.free_fall",
    "kind": "prerequisite",
    "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.motion.velocity_time_gradient",
+   "to": "kc.phy.o.projectiles.trajectory_graphs",
+   "kind": "prerequisite",
+   "strength": "helpful"
   },
   {
    "from": "kc.phy.o.oscilloscope.time_base",
@@ -2979,6 +3159,48 @@
   {
    "from": "kc.phy.o.pressure.pressure_on_surfaces",
    "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.projectiles.components_change",
+   "to": "kc.phy.o.projectiles.range",
+   "kind": "prerequisite",
+   "strength": "helpful"
+  },
+  {
+   "from": "kc.phy.o.projectiles.components_change",
+   "to": "kc.phy.o.projectiles.trajectory_graphs",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.projectiles.resolve",
+   "to": "kc.phy.o.projectiles.components_change",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.projectiles.resolve",
+   "to": "kc.phy.o.projectiles.max_height",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.projectiles.resolve",
+   "to": "kc.phy.o.projectiles.range",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.projectiles.resolve",
+   "to": "kc.phy.o.projectiles.time_of_flight",
+   "kind": "prerequisite",
+   "strength": "required"
+  },
+  {
+   "from": "kc.phy.o.projectiles.time_of_flight",
+   "to": "kc.phy.o.projectiles.range",
    "kind": "prerequisite",
    "strength": "required"
   },

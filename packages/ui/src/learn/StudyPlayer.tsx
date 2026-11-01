@@ -88,12 +88,14 @@ export function StudyPlayer({ source, chunks, chapters, playhead, loadMedia, onS
     <section className="flex flex-col gap-2" aria-labelledby="study-transcript">
       <div className="flex items-center gap-3"><h2 id="study-transcript" className="text-ui font-semibold text-ink">{t("study.recording.transcript")}</h2><span className="flex-1" />{!link && <Switch label={t("study.recording.auto_scroll")} checked={follow} onChange={setFollow} />}</div>
       {lines.length === 0 && video && <p className="text-meta text-muted">{t("study.video.no_audio")}</p>}
-      <ol ref={transcript} className="flex max-h-96 flex-col gap-1 overflow-y-auto">{lines.map((line, i) => <li key={line.key} data-line={i} className="flex flex-wrap items-start gap-2">
+      {/* Each line is a column: the text row takes the pane's full width, the buttons sit on their own row under it
+          (live-run fix 2026-11-01: beside the buttons the text was squeezed to a word or two a line). */}
+      <ol ref={transcript} className="flex max-h-96 flex-col gap-1 overflow-y-auto">{lines.map((line, i) => <li key={line.key} data-line={i} className="flex flex-col gap-1">
         <button type="button" aria-current={i === current || undefined} onClick={() => open(line.ms)}
-          className="flex min-w-0 flex-1 gap-3 rounded-control px-2 py-1 text-start hover:bg-wash aria-[current]:bg-highlight-soft">
-          <span className="shrink-0 text-meta text-faint">{label(line.ms)}</span><span className="text-body text-ink">{line.text}</span>
+          className="flex w-full gap-3 rounded-control px-2 py-1 text-start hover:bg-wash aria-[current]:bg-highlight-soft">
+          <span className="shrink-0 text-meta text-faint">{label(line.ms)}</span><span className="min-w-0 flex-1 text-body text-ink">{line.text}</span>
         </button>
-        {link && <span className="flex shrink-0 items-center gap-1">{openAt(line.ms)}{ask(line.ms)}</span>}
+        {link && <span data-line-actions="" className="flex flex-wrap items-center gap-1 ps-2">{openAt(line.ms)}{ask(line.ms)}</span>}
       </li>)}</ol>
     </section>
   </section>;

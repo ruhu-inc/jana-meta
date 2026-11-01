@@ -1,0 +1,156 @@
+id: itm.phy.o.projectiles.0001
+version: 0.1.0
+type: numeric
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.resolve
+stem: A ball is kicked from level ground at 12 m/s at 60° above the horizontal. Ignore air resistance.
+parts:
+- id: a
+  prompt: Find the horizontal component of the launch velocity.
+  marks: 2
+  answer:
+    kind: numeric
+    value: '6.0'
+    unit: m/s
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0001_a
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: The launch velocity points up a slope. You need the part of it that points along the ground.
+  - rung: 2
+    name: concept
+    text:
+      en: The horizontal component is the launch speed times the cosine of the launch angle.
+  - rung: 3
+    name: first_step
+    text:
+      en: Write u_x = 12 cos 60°.
+  - rung: 4
+    name: worked_step
+    text:
+      en: cos 60° is 0.5, so multiply 12 by 0.5.
+  - rung: 5
+    name: full_step
+    text:
+      en: u_x = 12 × 0.5 = 6.0 m/s.
+  misconception_ids:
+  - mc.phy.o.components_swapped
+- id: b
+  prompt: Find the vertical component of the launch velocity.
+  marks: 2
+  answer:
+    kind: numeric
+    value: '10.4'
+    unit: m/s
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0001_b
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: Now you need the part of the launch velocity that points straight up.
+  - rung: 2
+    name: concept
+    text:
+      en: The vertical component is the launch speed times the sine of the launch angle.
+  - rung: 3
+    name: first_step
+    text:
+      en: Write u_y = 12 sin 60°.
+  - rung: 4
+    name: worked_step
+    text:
+      en: sin 60° is about 0.866, so multiply 12 by 0.866.
+  - rung: 5
+    name: full_step
+    text:
+      en: u_y = 12 × 0.866 = 10.4 m/s.
+  misconception_ids:
+  - mc.phy.o.components_swapped
+solution:
+  steps:
+  - n: 1
+    latex: u_x = u \cos\theta
+    reason: The side of the velocity triangle next to the angle
+  - n: 2
+    latex: u_x = 12 \cos 60^\circ = 12 \times 0.5
+    reason: Substitute
+    check_id: chk_build_phy_proj_0001_cos
+  - n: 3
+    latex: u_x = 6.0\ \text{m/s}
+    reason: Evaluate
+    check_id: chk_build_phy_proj_0001_a
+  - n: 4
+    latex: u_y = 12 \sin 60^\circ = 12 \times 0.866
+    reason: The side opposite the angle
+    check_id: chk_build_phy_proj_0001_sin
+  - n: 5
+    latex: u_y = 10.4\ \text{m/s}
+    reason: Evaluate
+    check_id: chk_build_phy_proj_0001_b
+difficulty:
+  prior: -0.2
+  band: core
+estimated_seconds: 120
+exam_style:
+  paper_style: structured
+  total_marks: 4
+  calculator: true
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+quantities:
+  theta: '60'
+  u: '12'
+checks:
+  chk_build_phy_proj_0001_cos:
+    args:
+      expression: cos(60)
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0001_a:
+    args:
+      expression: 12*cos(60)
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0001_sin:
+    args:
+      expression: sin(60)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0001_b:
+    args:
+      expression: 12*sin(60)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

@@ -532,3 +532,13 @@ test("revealed rating buttons show native interval previews without recording a 
   fireEvent.click(screen.getByRole("button", { name: "Good · 2 days" }));
   expect(controller.rate).toHaveBeenCalledWith(card, "good");
 });
+test("a failed outline job is labelled in words, never by its copy key", () => {
+  // Live-run fix 2026-11-01: a failed `teaching_outline` job showed "study.generate.teaching_outline".
+  const failed = { job_id: `stj_${"7".repeat(26)}`, kind: "teaching_outline", sources: [{ source_id: sid, revision: 1 }], state: "failed", completed_units: 0, total_units: 1, result_ids: [], error: "processing_failed", created_at: now, updated_at: now } as const;
+  show({ source, jobs: [failed] });
+  fireEvent.click(screen.getByRole("button", { name: "Activity" }));
+  const history = within(screen.getByRole("dialog", { name: "Activity" }));
+  expect(history.getByText("What this video teaches")).toBeTruthy();
+  expect(history.getAllByRole("status").map((el) => el.textContent).join(" ")).toContain("Could not finish");
+  expect(document.body.textContent).not.toMatch(/study\.(generate|job|tool)\./);
+});

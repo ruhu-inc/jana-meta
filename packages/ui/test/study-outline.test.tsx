@@ -49,9 +49,16 @@ test("the outline shows what the video teaches, mapped to skills, skips and the 
   expect(forYou.textContent).toContain("Derive and use the range equation· secure");
   expect(forYou.textContent).toContain("Find the time of flight of a projectile· not started");
   expect(screen.queryByText(/%|0\.\d/)).toBeNull(); // bands as words, never a probability
-  // A citation badge opens the cited passage.
-  fireEvent.click(screen.getAllByRole("button", { name: "Projectile motion · At 00:00" })[0]!);
+  // A citation badge opens the cited passage; beside an Open-at button it is a reference number, so the time shows
+  // once a row (live-run fix 2026-11-01: "Open at 0:29" beside "00:29").
+  const badge = objectives.getAllByRole("button", { name: "Projectile motion · At 00:00" })[0]!;
+  expect(badge.textContent).toBe("[1]");
+  fireEvent.click(badge);
   expect(onCite).toHaveBeenCalled();
+  expect(objectives.getAllByText(/0:29/).map((el) => el.textContent)).toEqual(["Open at 0:29"]);
+  expect(concepts.getAllByText(/4:12/).map((el) => el.textContent)).toEqual(["Open at 4:12"]);
+  // A row without a moment keeps the located badge.
+  expect(within(screen.getByRole("region", { name: "Assumes you know" })).getByRole("button", { name: "Projectile motion · At 00:00" }).textContent).toBe("00:00");
 });
 
 test("without a map or skill names the chips still name the skill and cannot be pressed", () => {

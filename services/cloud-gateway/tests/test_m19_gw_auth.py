@@ -148,7 +148,7 @@ def test_ping_and_status(tmp_path: Path) -> None:
     async def main() -> None:
         h = harness(gateway_config(tmp_path))
         ping = await h.client.get("/v1/ping")
-        assert ping.status_code == 204 and ping.headers["Jana-Gateway-Version"] == "1.1"
+        assert ping.status_code == 204 and ping.headers["Jana-Gateway-Version"] == "1.2"
         assert (await h.client.get("/v1/status")).json() == {"status": "ok"}
         device = Device()
         await device.login(h.client)

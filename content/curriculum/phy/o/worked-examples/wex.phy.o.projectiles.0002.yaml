@@ -1,0 +1,92 @@
+id: wex.phy.o.projectiles.0002
+kc_ids:
+- kc.phy.o.projectiles.max_height
+- kc.phy.o.projectiles.resolve
+problem: A stone is thrown from the ground at 14 m/s at 45° above the horizontal. Take g = 9.8 m/s^2 and ignore air resistance. How high does it rise, and how long does it take to get there?
+steps:
+- n: 1
+  latex: u_y = 14 \sin 45^\circ = 9.90\ \text{m/s}
+  reason: The vertical component of the launch velocity
+  check_id: chk_build_phy_proj_w0002_uy
+- n: 2
+  latex: t = \frac{u_y}{g} = \frac{9.90}{9.8} = 1.01\ \text{s}
+  reason: The vertical velocity falls to zero at the top
+  check_id: chk_build_phy_proj_w0002_t
+- n: 3
+  latex: 2g = 19.6\ \text{m/s}^2
+  reason: Twice the acceleration of free fall
+  check_id: chk_build_phy_proj_w0002_twog
+- n: 4
+  latex: h = \frac{u_y^2}{2g} = \frac{98.0}{19.6}
+  reason: From v² = u² − 2gh with v = 0 at the top
+  check_id: chk_build_phy_proj_w0002_uy2
+- n: 5
+  latex: h = 5.00\ \text{m}
+  reason: Evaluate
+  check_id: chk_build_phy_proj_w0002_sim
+final_answer:
+  latex: 5.00\ \text{m}
+  check_id: chk_build_phy_proj_w0002_hgt
+fading_order:
+- 5
+- 4
+- 3
+- 2
+- 1
+version: 0.1.0
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks:
+  chk_build_phy_proj_w0002_uy:
+    args:
+      expression: 14*sin(45)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_w0002_t:
+    args:
+      expression: 14*sin(45)/9.8
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_w0002_uy2:
+    args:
+      expression: (14*sin(45))^2
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_w0002_twog:
+    args:
+      expression: 2*9.8
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_w0002_hgt:
+    args:
+      expression: (14*sin(45))^2/(2*9.8)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_w0002_sim:
+    args:
+      motion: angled
+      speed: 14
+      angle: 45
+      constants:
+      - symbol: g
+        source: pack
+    tool: phys_projectile
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

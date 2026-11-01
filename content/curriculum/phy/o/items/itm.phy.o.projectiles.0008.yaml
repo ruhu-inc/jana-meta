@@ -1,0 +1,92 @@
+id: itm.phy.o.projectiles.0008
+version: 0.1.0
+type: mcq
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.trajectory_graphs
+stem: A ball is thrown at an angle and lands on level ground. Ignore air resistance.
+parts:
+- id: a
+  prompt: Which graph shows the ball's horizontal displacement against time?
+  marks: 1
+  answer:
+    kind: mcq
+    diagnostic: false
+    shuffle: false
+    options:
+    - id: A
+      text: A straight line sloping up from the origin
+      correct: true
+    - id: B
+      text: A curve that gets steeper and steeper
+      correct: false
+      feedback: A curve that gets steeper means the horizontal velocity is growing. Nothing pushes the ball forward.
+    - id: C
+      text: A curve that rises and then levels off
+      correct: false
+      misconception_id: mc.phy.o.horizontal_velocity_slows
+      feedback: Levelling off would mean the horizontal velocity dies away. With no air resistance nothing slows it.
+    - id: D
+      text: A flat line at a fixed height
+      correct: false
+      feedback: A flat line means the ball never moves sideways, but it does land further along the ground.
+  show_working: false
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: Horizontal displacement is how far the ball has moved sideways.
+  - rung: 2
+    name: concept
+    text:
+      en: The gradient of a displacement-time graph is the velocity.
+  - rung: 3
+    name: first_step
+    text:
+      en: Ask what happens to the horizontal velocity during the flight.
+  - rung: 4
+    name: worked_step
+    text:
+      en: It stays constant, so the gradient of the graph never changes.
+  - rung: 5
+    name: full_step
+    text:
+      en: 'The answer is: a straight line sloping up from the origin.'
+  misconception_ids:
+  - mc.phy.o.horizontal_velocity_slows
+solution:
+  steps:
+  - n: 1
+    latex: v_x = \text{constant}
+    reason: No horizontal force, so no horizontal acceleration
+  - n: 2
+    latex: x = v_x t
+    reason: 'A constant velocity gives a displacement proportional to time: a straight line through the origin'
+difficulty:
+  prior: 0.1
+  band: core
+estimated_seconds: 60
+exam_style:
+  paper_style: objective
+  total_marks: 1
+  calculator: false
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks: {}
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

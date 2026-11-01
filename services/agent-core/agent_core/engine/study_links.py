@@ -4,8 +4,9 @@ Jana fetches nothing (JM-D30): the learner pastes the transcript YouTube's own p
 it into timed chunks and chapters on the device. Two pastes are read: the panel's **alternating** form (a timestamp
 line, then the text line; chapter headings interleaved when the video has them) and the **same-line** form
 (`[m:ss] text` or `m:ss text`). Timestamps are `m:ss`, `mm:ss` or `h:mm:ss`. A line with no timestamp between two
-timestamped blocks is a chapter heading, kept as a chapter and never as a chunk; a gap over 20 s starts a chapter
-too. Lines merge into chunks of at most 4,000 code points, each line keeping its own moment as a `[m:ss]` prefix, so
+timestamped blocks is a chapter heading, kept as a chapter and never as a chunk; a gap of 60 s or more starts a
+chapter too, but never more than 12 such chapters a source (the largest gaps win: a panel paste with one line every
+30 to 40 s is one chapter, not one a line; live-run fix 2026-11-01). Lines merge into chunks of at most 4,000 code points, each line keeping its own moment as a `[m:ss]` prefix, so
 every line, citation and companion excerpt can name and open its moment. A paste whose last timestamp passes 2:00:00
 (the `Locator.time` bound) is refused; a paste with no timestamp at all is one plain text unit (no moments)."""
 
@@ -20,7 +21,8 @@ from urllib.parse import parse_qs, urlsplit
 VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
 MAX_MS = 7_200_000  # Locator.time's bound: two hours
 CHUNK_CODE_POINTS = 4_000
-GAP_MS = 20_000
+GAP_MS = 60_000  # a gap of this or more between two lines starts a chapter (was 20 s until 2026-11-01)
+GAP_CHAPTERS_MAX = 12  # gap-made chapters a source may have: the smallest gaps merge into their predecessor
 TAIL_MS = 5_000  # the last chunk's end past its last line's start (a locator needs end > start)
 HEADING_MAX = 120
 _TS = r"(?:(\d{1,2}):)?(\d{1,2}):(\d{2})"
@@ -179,9 +181,11 @@ def parse_transcript(text: str) -> Transcript:
     for index, title in headings:
         if index < len(lines):
             starts.setdefault(index, title)
-    for i in range(1, len(lines)):
-        if lines[i][0] - lines[i - 1][0] > GAP_MS and i not in starts:
-            starts[i] = _title_from(lines[i][1])
+    # Headings always start a chapter; a gap of `GAP_MS` or more does too, the largest `GAP_CHAPTERS_MAX` of them.
+    gaps = [(lines[i][0] - lines[i - 1][0], i) for i in range(1, len(lines)) if i not in starts]
+    wide = sorted((g for g in gaps if g[0] >= GAP_MS), key=lambda g: (-g[0], g[1]))[:GAP_CHAPTERS_MAX]
+    for _, i in wide:
+        starts[i] = _title_from(lines[i][1])
     if starts and 0 not in starts:
         starts[0] = _title_from(lines[0][1])
     chunks: list[dict[str, Any]] = []

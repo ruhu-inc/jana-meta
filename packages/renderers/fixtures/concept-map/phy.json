@@ -407,6 +407,36 @@
    "linked": false
   },
   {
+   "id": "kc.phy.o.projectiles.components_change",
+   "code": "PHY-O-01.09.K02",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.projectiles.max_height",
+   "code": "PHY-O-01.09.K05",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.projectiles.range",
+   "code": "PHY-O-01.09.K06",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.projectiles.resolve",
+   "code": "PHY-O-01.09.K01",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.projectiles.time_of_flight",
+   "code": "PHY-O-01.09.K04",
+   "linked": false
+  },
+  {
+   "id": "kc.phy.o.projectiles.trajectory_graphs",
+   "code": "PHY-O-01.09.K03",
+   "linked": false
+  },
+  {
    "id": "kc.phy.o.radioactivity.background_radiation",
    "code": "PHY-O-05.02.K04",
    "linked": false
@@ -874,6 +904,11 @@
    "kind": "prerequisite"
   },
   {
+   "from": "kc.phy.o.measurement.scalars_and_vectors",
+   "to": "kc.phy.o.projectiles.resolve",
+   "kind": "prerequisite"
+  },
+  {
    "from": "kc.phy.o.measurement.si_prefixes",
    "to": "kc.phy.o.density.density_calculation",
    "kind": "prerequisite"
@@ -929,6 +964,11 @@
    "kind": "prerequisite"
   },
   {
+   "from": "kc.phy.o.motion.acceleration_from_change",
+   "to": "kc.phy.o.projectiles.components_change",
+   "kind": "prerequisite"
+  },
+  {
    "from": "kc.phy.o.motion.average_speed",
    "to": "kc.phy.o.energy.kinetic_energy",
    "kind": "prerequisite"
@@ -979,8 +1019,38 @@
    "kind": "prerequisite"
   },
   {
+   "from": "kc.phy.o.motion.distance_or_displacement",
+   "to": "kc.phy.o.projectiles.resolve",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.distance_time_gradient",
+   "to": "kc.phy.o.projectiles.trajectory_graphs",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.free_fall",
+   "to": "kc.phy.o.projectiles.components_change",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.free_fall",
+   "to": "kc.phy.o.projectiles.max_height",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.free_fall",
+   "to": "kc.phy.o.projectiles.time_of_flight",
+   "kind": "prerequisite"
+  },
+  {
    "from": "kc.phy.o.motion.solve_with_equation",
    "to": "kc.phy.o.motion.free_fall",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.motion.velocity_time_gradient",
+   "to": "kc.phy.o.projectiles.trajectory_graphs",
    "kind": "prerequisite"
   },
   {
@@ -1051,6 +1121,41 @@
   {
    "from": "kc.phy.o.pressure.pressure_on_surfaces",
    "to": "kc.phy.o.pressure.liquid_pressure",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.projectiles.components_change",
+   "to": "kc.phy.o.projectiles.range",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.projectiles.components_change",
+   "to": "kc.phy.o.projectiles.trajectory_graphs",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.projectiles.resolve",
+   "to": "kc.phy.o.projectiles.components_change",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.projectiles.resolve",
+   "to": "kc.phy.o.projectiles.max_height",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.projectiles.resolve",
+   "to": "kc.phy.o.projectiles.range",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.projectiles.resolve",
+   "to": "kc.phy.o.projectiles.time_of_flight",
+   "kind": "prerequisite"
+  },
+  {
+   "from": "kc.phy.o.projectiles.time_of_flight",
+   "to": "kc.phy.o.projectiles.range",
    "kind": "prerequisite"
   },
   {

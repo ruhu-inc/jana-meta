@@ -1,0 +1,35 @@
+id: mc.phy.o.range_taken_as_height
+kc_ids:
+- kc.phy.o.projectiles.range
+- kc.phy.o.projectiles.max_height
+student_name: Range and maximum height mixed up
+description: Gives the maximum height when asked for the range, or the range when asked for the height, treating the distance along the ground to the landing point and the highest point of the path as the same quantity.
+signatures:
+- kind: answer_transform
+  expression: u^2*sin(theta)^2/(2*g)
+fix:
+  strategy: contrast_example
+  text:
+    en: The range is measured along the ground, from the launch point to the landing point. The maximum height is measured straight up, from the ground to the top of the path. The range needs the horizontal velocity and the whole flight time; the height needs only the vertical component.
+probe_item_ids:
+- itm.phy.o.projectiles.0004
+- itm.phy.o.projectiles.0005
+- itm.phy.o.projectiles.0010
+severity: medium
+version: 0.1.0
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

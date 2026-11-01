@@ -1,0 +1,78 @@
+id: wex.phy.o.projectiles.0001
+kc_ids:
+- kc.phy.o.projectiles.range
+- kc.phy.o.projectiles.time_of_flight
+- kc.phy.o.projectiles.resolve
+problem: A ball is kicked from level ground at 20 m/s at 30° above the horizontal. Take g = 10 m/s^2 and ignore air resistance. How far away does it land?
+steps:
+- n: 1
+  latex: u_x = 20 \cos 30^\circ = 17.3\ \text{m/s}
+  reason: The horizontal component, which stays constant
+  check_id: chk_build_phy_proj_w0001_ux
+- n: 2
+  latex: u_y = 20 \sin 30^\circ = 10\ \text{m/s}
+  reason: The vertical component, which gravity changes
+  check_id: chk_build_phy_proj_w0001_uy
+- n: 3
+  latex: T = \frac{2 u_y}{g} = \frac{2 \times 10}{10} = 2.0\ \text{s}
+  reason: Up takes u_y ÷ g; down takes the same again
+  check_id: chk_build_phy_proj_w0001_sim
+- n: 4
+  latex: R = u_x T = 17.3 \times 2.0 = 34.6\ \text{m}
+  reason: Range is horizontal velocity times time of flight
+  check_id: chk_build_phy_proj_w0001_rng
+final_answer:
+  latex: 34.6\ \text{m}
+  check_id: chk_build_phy_proj_w0001_rng
+fading_order:
+- 4
+- 3
+- 2
+- 1
+version: 0.1.0
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks:
+  chk_build_phy_proj_w0001_ux:
+    args:
+      expression: 20*cos(30)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_w0001_uy:
+    args:
+      expression: 20*sin(30)
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_w0001_sim:
+    args:
+      motion: angled
+      speed: 20
+      angle: 30
+      constants:
+      - symbol: g
+        source: item
+        value: '10'
+        unit: m/s^2
+    tool: phys_projectile
+  chk_build_phy_proj_w0001_rng:
+    args:
+      expression: 20*cos(30)*(2*20*sin(30)/10)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

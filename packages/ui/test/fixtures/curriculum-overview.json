@@ -1168,6 +1168,21 @@
      "changed": 0
     },
     {
+     "topic_id": "cur.phy.o.motion_forces_and_energy.projectiles",
+     "title": "Projectile motion",
+     "kcs": 6,
+     "bands": {
+      "not_started": 6,
+      "learning": 0,
+      "secure": 0
+     },
+     "rule": "not_started",
+     "freshness": "never",
+     "refresh_due": false,
+     "mistakes": 0,
+     "changed": 0
+    },
+    {
      "topic_id": "cur.phy.o.thermal_physics.kinetic_particle_model_of_matter",
      "title": "Particles in solids, liquids and gases",
      "kcs": 4,

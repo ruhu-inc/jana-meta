@@ -105,6 +105,34 @@ def test_local_model_pin_keeps_cloud_candidates() -> None:
     assert data["tiers"]["strong"] == ["local:muse-glimmer", "cloud:primary/strong-model"]
 
 
+def _gateway(version: str | None, budget: str = "enabled") -> httpx.MockTransport:
+    """A gateway answering the host's ping with these headers."""
+    headers = {"x-jana-inference-budget": budget}
+    if version is not None:
+        headers["jana-gateway-version"] = version
+    return httpx.MockTransport(lambda request: httpx.Response(204, headers=headers))
+
+
+def test_the_host_refuses_a_gateway_that_is_not_this_repositorys_on_the_port() -> None:
+    """Live-run fix 2026-11-01: a gateway from another project on the shared port answered the ping and knew none
+    of this repository's kinds; the host must fail closed, naming the port and the version it found."""
+    from cloud_gateway.app import VERSION
+
+    asyncio.run(host.check_gateway(8083, transport=_gateway(VERSION)))  # this repository's gateway passes
+    with pytest.raises(ValueError, match=r"port 8083.*serves version 1\.0 .*serves " + VERSION.replace(".", r"\.")):
+        asyncio.run(host.check_gateway(8083, transport=_gateway("1.0")))
+    with pytest.raises(ValueError, match=r"port 8083.*serves version none"):
+        asyncio.run(host.check_gateway(8083, transport=_gateway(None)))
+    with pytest.raises(ValueError, match=r"budgeted gateway on port 8083"):
+        asyncio.run(host.check_gateway(8083, transport=_gateway(VERSION, budget="disabled")))
+
+    def refused(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("connection refused", request=request)
+
+    with pytest.raises(ValueError, match=r"No gateway answered on port 8083"):
+        asyncio.run(host.check_gateway(8083, transport=httpx.MockTransport(refused)))
+
+
 def test_sponsor_never_grants_consent_and_restart_keeps_credential(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -1,0 +1,184 @@
+id: itm.phy.o.projectiles.0005
+version: 0.1.0
+type: numeric
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.range
+- kc.phy.o.projectiles.time_of_flight
+stem: A footballer kicks a ball from level ground at 20 m/s at 30° above the horizontal. Take g = 10 m/s^2 and ignore air resistance.
+parts:
+- id: a
+  prompt: How long is the ball in the air?
+  marks: 2
+  answer:
+    kind: numeric
+    value: '2.0'
+    unit: s
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0005_tof
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: Time in the air comes from the up-and-down motion only.
+  - rung: 2
+    name: concept
+    text:
+      en: Find the vertical component, then use g to see how long the ball takes to stop rising.
+  - rung: 3
+    name: first_step
+    text:
+      en: u_y = 20 sin 30°.
+  - rung: 4
+    name: worked_step
+    text:
+      en: u_y = 10 m/s, so the way up takes 10 ÷ 10 seconds, and the way down the same again.
+  - rung: 5
+    name: full_step
+    text:
+      en: T = 2 × 10 ÷ 10 = 2.0 s.
+  misconception_ids:
+  - mc.phy.o.flight_time_is_time_to_top
+- id: b
+  prompt: How far along the ground from the kick does the ball land?
+  marks: 2
+  answer:
+    kind: numeric
+    value: '34.6'
+    unit: m
+    unit_policy: equivalent
+    tolerance:
+      mode: relative
+      value: 0.005
+    check_id: chk_build_phy_proj_0005_rng
+  show_working: true
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: The range is how far the ball moves sideways while it is in the air.
+  - rung: 2
+    name: concept
+    text:
+      en: Sideways nothing slows the ball, so range = horizontal velocity × time of flight.
+  - rung: 3
+    name: first_step
+    text:
+      en: u_x = 20 cos 30°.
+  - rung: 4
+    name: worked_step
+    text:
+      en: u_x = 17.3 m/s. Multiply it by the time of flight from part a.
+  - rung: 5
+    name: full_step
+    text:
+      en: R = 17.3 × 2.0 = 34.6 m.
+  misconception_ids:
+  - mc.phy.o.range_taken_as_height
+  - mc.phy.o.horizontal_velocity_slows
+conventions_override:
+- key: phy.g
+  value: '10'
+solution:
+  steps:
+  - n: 1
+    latex: u_x = u \cos\theta
+    reason: The horizontal component, which stays constant
+  - n: 2
+    latex: u_x = 20 \cos 30^\circ = 17.3\ \text{m/s}
+    reason: Substitute
+    check_id: chk_build_phy_proj_0005_ux
+  - n: 3
+    latex: u_y = u \sin\theta
+    reason: The vertical component, which gravity changes
+  - n: 4
+    latex: u_y = 20 \sin 30^\circ = 10\ \text{m/s}
+    reason: Substitute
+    check_id: chk_build_phy_proj_0005_uy
+  - n: 5
+    latex: T = \frac{2 u_y}{g} = \frac{2 \times 10}{10} = 2.0\ \text{s}
+    reason: Up takes u_y ÷ g; down takes the same again
+    check_id: chk_build_phy_proj_0005_tof
+  - n: 6
+    latex: R = u_x T = 17.3 \times 2.0 = 34.6\ \text{m}
+    reason: Range is horizontal velocity times time of flight
+    check_id: chk_build_phy_proj_0005_rng
+  - n: 7
+    latex: 2\theta = 60^\circ
+    reason: Double the launch angle for the range formula
+    check_id: chk_build_phy_proj_0005_two_theta
+  - n: 8
+    latex: R = \frac{u^2 \sin 2\theta}{g} = \frac{20^2 \sin 60^\circ}{10} = 34.6\ \text{m}
+    reason: The same answer from the range formula
+    check_id: chk_build_phy_proj_0005_sim
+difficulty:
+  prior: 0.5
+  band: core
+estimated_seconds: 180
+exam_style:
+  paper_style: structured
+  total_marks: 4
+  calculator: true
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks:
+  chk_build_phy_proj_0005_ux:
+    args:
+      expression: 20*cos(30)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0005_uy:
+    args:
+      expression: 20*sin(30)
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0005_tof:
+    args:
+      expression: 2*20*sin(30)/10
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0005_rng:
+    args:
+      expression: 20*cos(30)*(2*20*sin(30)/10)
+      sf: 3
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0005_two_theta:
+    args:
+      expression: 2*30
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0005_sim:
+    args:
+      motion: angled
+      speed: 20
+      angle: 30
+      constants:
+      - symbol: g
+        source: pack
+    tool: phys_projectile
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

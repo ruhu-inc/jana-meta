@@ -1,0 +1,109 @@
+id: itm.phy.o.projectiles.0006
+version: 0.1.0
+type: mcq
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.range
+stem: A player can throw a ball at the same speed whatever the angle. The ball lands on level ground. Ignore air resistance.
+parts:
+- id: a
+  prompt: Which launch angle gives the greatest range?
+  marks: 1
+  answer:
+    kind: mcq
+    diagnostic: false
+    shuffle: false
+    options:
+    - id: A
+      text: 30°
+      correct: false
+      feedback: A flat throw moves forward quickly but comes down too soon.
+    - id: B
+      text: 45°
+      correct: true
+    - id: C
+      text: 60°
+      correct: false
+      misconception_id: mc.phy.o.steeper_launch_goes_further
+      feedback: A steep throw stays up longer but moves forward slowly. It lands in the same place as a 30° throw.
+    - id: D
+      text: 75°
+      correct: false
+      feedback: Most of this throw's velocity points upwards, so it does not travel far along the ground.
+  show_working: false
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: 'Range needs two things: a good sideways speed and enough time in the air.'
+  - rung: 2
+    name: concept
+    text:
+      en: A flat throw has sideways speed but little time; a steep throw has time but little sideways speed.
+  - rung: 3
+    name: first_step
+    text:
+      en: Think about which angle balances the two.
+  - rung: 4
+    name: worked_step
+    text:
+      en: Angles that add up to 90° give the same range, so the best angle is the one that pairs with itself.
+  - rung: 5
+    name: full_step
+    text:
+      en: 'The answer is: 45°.'
+  misconception_ids:
+  - mc.phy.o.steeper_launch_goes_further
+solution:
+  steps:
+  - n: 1
+    latex: R = \frac{u^2 \sin 2\theta}{g}
+    reason: The range of a launch from level ground
+  - n: 2
+    latex: \sin 2\theta \le 1, \text{ with equality when } 2\theta = 90^\circ
+    reason: The sine is largest at a right angle
+    check_id: chk_build_phy_proj_0006_ninety
+  - n: 3
+    latex: \theta = 45^\circ
+    reason: Halve it for the launch angle
+    check_id: chk_build_phy_proj_0006_angle
+difficulty:
+  prior: 0.2
+  band: core
+estimated_seconds: 60
+exam_style:
+  paper_style: objective
+  total_marks: 1
+  calculator: false
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-fable-5-1
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks:
+  chk_build_phy_proj_0006_ninety:
+    args:
+      expression: 2*45
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+  chk_build_phy_proj_0006_angle:
+    args:
+      expression: 90/2
+      sf: 2
+      angle_unit: degrees
+    tool: math_evaluate
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

@@ -1,6 +1,7 @@
 id: mc.phy.o.steeper_launch_goes_further
 kc_ids:
 - kc.phy.o.motion.free_fall
+- kc.phy.o.projectiles.range
 student_name: A steeper launch always goes further
 description: Thinks a steeper launch angle always sends an object further at the same speed, so a 60° launch must land beyond a 30° one; on level ground they land the same distance away.
 signatures:
@@ -12,8 +13,9 @@ fix:
     en: A steeper launch stays up longer but moves forward more slowly. At the same speed, 30° and 60° balance out and land in the same place; 45° goes furthest.
 probe_item_ids:
 - itm.phy.o.motion.0371
+- itm.phy.o.projectiles.0006
 severity: medium
-version: 0.1.0
+version: 0.1.1
 provenance:
   origin: original
   licence: LicenseRef-Own
