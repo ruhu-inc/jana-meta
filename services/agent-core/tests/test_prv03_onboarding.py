@@ -1,4 +1,5 @@
-"""PRV-03: onboarding asks for and stores no name other than a display name and no birth date. The inventory half
+"""PRV-03: onboarding asks for and stores no name other than a display name, and no birth date or age (sign-up checks
+an age typed into the form on the device and never sends it). The inventory half
 (prv03_inventory_covers_schema) is in scripts/tests/test_prv03_data_minimisation.py. Synthetic profile only."""
 
 import json
@@ -48,19 +49,21 @@ def _row(path: Path, table: str, profile_id: str) -> dict[str, object]:
 
 def prv03_onboarding_minimal_fields(tmp_path: Path):
     # The contract: CreateProfile asks for nothing personal beyond a display name of at most 40 characters and an
-    # age band (never a birth date), and refuses any field it does not name.
+    # age band (never a birth date or an age), and refuses any field it does not name.
     schema = json.loads(COMMANDS.read_text())["$defs"]["CreateProfile"]
     assert set(schema["properties"]) == set(CreateProfile.model_fields) == ONBOARDING_FIELDS
     assert schema["additionalProperties"] is False
     assert schema["properties"]["display_name"]["maxLength"] == 40
     assert set(schema["required"]) == {"display_name", "avatar", "age_band", "level", "subjects"}
     assert _personal(ONBOARDING_FIELDS) == set()
+    assert not {"age", "date_of_birth", "birth_date"} & set(schema["properties"])  # the age band is all that is kept
 
-    # The stores: the learner `profile` table and the device's `profiles_index` hold no name, birth date, address,
+    # The stores: the learner `profile` table and the device's `profiles_index` hold no name, birth date, age, address,
     # phone or e-mail column; the display name is capped at 40 characters in both.
     profile_columns, index_columns = _columns("learner", "profile"), _columns("device", "profiles_index")
     assert {"display_name", "age_band", "level", "subjects", "exam_date"} <= profile_columns
     assert _personal(profile_columns) == set() and _personal(index_columns) == set()
+    assert not {"age", "date_of_birth", "birth_date"} & (profile_columns | index_columns)
     for kind in ("learner", "device"):
         assert "CHECK (length(display_name) BETWEEN 1 AND 40)" in DATABASES[kind]
 
@@ -69,7 +72,13 @@ def prv03_onboarding_minimal_fields(tmp_path: Path):
         r = await start_core(tmp_path, worker=False)
         try:
             api = Api(r)
-            for extra in ({"surname": "Mensah"}, {"date_of_birth": "2011-03-04"}, {"email": "a@example.org"}):
+            for extra in (
+                {"surname": "Mensah"},
+                {"date_of_birth": "2011-03-04"},
+                {"age": 34},
+                {"age": 17},
+                {"email": "a@example.org"},
+            ):
                 refused = await api.call("POST", "/v1/profiles", {**student(DISPLAY_NAME), **extra})
                 assert refused.status_code in (400, 422), (extra, refused.status_code)
             too_long = await api.call("POST", "/v1/profiles", student("x" * 41))

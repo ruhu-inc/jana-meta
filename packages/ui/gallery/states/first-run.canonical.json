@@ -2,7 +2,7 @@
   "id": "first-run.canonical",
   "title": "First run, who's learning",
   "component": "FirstRun",
-  "note": "First run's one step (UXS-10 step 1, TABLE PLT-17a, JM-D15): a first name or nickname, a date of birth that only confirms the learner is 18 or over, the line that everything stays on this computer, and \"Start learning\". Nothing else is asked.",
+  "note": "First run's one step (UXS-10 step 1, TABLE PLT-17a, JM-D15): a first name or nickname, an age that only confirms the learner is 18 or over, the line that everything stays on this computer, and \"Start learning\". Nothing else is asked.",
   "state": "canonical",
   "payload": {},
   "payloadContract": null,
@@ -14,7 +14,7 @@
   ],
   "expectText": [
     "Who's learning?",
-    "Date of birth",
+    "Age",
     "Everything stays on this computer unless you turn on online features later.",
     "Start learning"
   ]

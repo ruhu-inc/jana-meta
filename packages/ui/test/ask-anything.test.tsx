@@ -78,6 +78,15 @@ describe("STU-20", () => {
     expect(offline).toEqual(["tutor", "study"]);
   });
 
+  test("an Ask whose first-use notice is unanswered says what is missing, not that the plan is off (demo fix 2026-11-01)", () => {
+    const calls: string[] = [];
+    view({ ...EMPTY_ASK, status: "unavailable", question: "Why?", reason: "notice_required" }, calls);
+    expect(document.body.textContent).toContain("Ask anything needs your OK to use the online tutor first.");
+    expect(document.body.textContent).not.toContain("need the online plan");
+    fireEvent.click(screen.getByRole("button", { name: "Ask the tutor" }));
+    expect(calls).toEqual(["tutor"]);
+  });
+
   test("a subject question spoken here shows the tutor's spoken reply with Continue in the tutor (VOC-53, D130)", () => {
     const calls: string[] = [];
     view({ ...EMPTY_ASK, status: "spoken", question: "What is the formula for kinetic energy?", route: "tutor", spoken: "What do you already know about kinetic energy?" }, calls);

@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { StudyContracts as W } from "@jana/client-core";
+import { momentLabel, type StudyContracts as W } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Button, MenuButton, Tooltip } from "../primitives/index.js";
 import { pdfFormulaPreview, StudySourceText } from "./StudyText.js";
@@ -7,11 +7,8 @@ import { pdfFormulaPreview, StudySourceText } from "./StudyText.js";
 /** Match the source and revision too: chunk ids alone must never identify another material's location. */
 export const citationKey = (ref: Pick<W.Citation, "source_id" | "revision" | "chunk_id">) => `${ref.source_id}:${ref.revision}:${ref.chunk_id}`;
 
-const timestamp = (ms: number) => {
-  const seconds = Math.floor(ms / 1000), minutes = Math.floor(seconds / 60);
-  const tail = `${String(minutes % 60).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-  return minutes >= 60 ? `${Math.floor(minutes / 60)}:${tail}` : tail;
-};
+/** One time format across the app: `m:ss`, `h:mm:ss` from an hour, as the Open-at buttons and the thread write it. */
+const timestamp = momentLabel;
 
 /** Quiet location badges keep the prose readable without losing the exact verified passage. `numbered` shows the
  * reference number as the badge (the location stays in its name and tooltip): for a row whose Open-at button already

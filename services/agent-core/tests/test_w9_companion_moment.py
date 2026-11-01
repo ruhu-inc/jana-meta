@@ -199,7 +199,7 @@ def test_what_i_have_not_got_yet_is_a_code_fact_set_from_the_outline_and_the_lea
             # The skills not yet secure first, then the labelled counts: skills 2, not yet secure 1.
             assert [(f["value"], f["unit"]) for f in outline_facts] == [
                 ("not_started", "band"), ("secure", "band"), (2, "skills"), (1, "skills")]  # fmt: skip
-            assert outline_facts[0]["statement"].startswith(f"Recorded practice band for {NOT_YET}: not_started")
+            assert outline_facts[0]["statement"].startswith(f"Recorded practice band for {NOT_YET}: not started")
             assert "Projectile motion teaches it at 6:40" in outline_facts[0]["statement"]
             assert [f["metric"] for f in outline_facts[2:]] == ["outline_skills", "outline_skills_not_yet_secure"]
             assert outline_facts[2]["statement"] == "Projectile motion teaches 2 skills."
@@ -207,7 +207,8 @@ def test_what_i_have_not_got_yet_is_a_code_fact_set_from_the_outline_and_the_lea
             # The model selects a fact; code renders it: the words come from the record, never the model.
             engine_facts = t.r.core.sessions[opened["session_id"]].engine.companion.facts  # type: ignore[union-attr]
             rendered = companion_facts.selected_text(engine_facts, [outline_facts[0]["ref"]])
-            assert "not_started" in rendered and "teaching outline" in rendered and "6:40" in rendered
+            assert "not started" in rendered and "not_started" not in rendered
+            assert "teaching outline" in rendered and "6:40" in rendered
             snapshot = await t.snapshot(opened["session_id"])
             assert "Of this video's 2 skills, 1 is not yet secure." in json.dumps(snapshot)
             (trace,) = _companion_traces(t)
@@ -258,3 +259,116 @@ def test_the_outline_line_names_at_most_six_skills_and_the_counts() -> None:
         outline_line(templates, OutlineFacts("x", 3, [], [])) == "All 3 skills this video teaches are secure for you."
     )
     assert outline_line(templates, OutlineFacts("x", 0, [], [])) is None
+
+
+def test_a_reply_refused_twice_with_only_progress_read_falls_back_to_the_bands_in_words(tmp_path: Path) -> None:
+    """Live-run fix 2026-11-01 (second pass): "What haven't I got yet?" before any lecture ended in the canned line
+    (fact binding, `number:1:unit:none`, `exhausted_canned`) though `progress_read` had given the bands. The line is
+    now built by code from those facts, bands in words, each with its source, and never shows a band's code."""
+    from w8_companion_harness import calls
+
+    wrong = turn("There is 1 left for you: motion under gravity.")
+    script = {"companion": [calls(("progress_read", {})), wrong, wrong]}
+
+    async def go() -> None:
+        t = await thread(tmp_path, script)
+        try:
+            conn = t.r.core.records.learner.conn  # type: ignore[union-attr]
+            for kc, status, p, checked in ((FLIGHT, "learning", 0.4, "none"), (RANGE, "mastered", 0.97, "passed")):
+                conn.execute(
+                    "INSERT INTO kc_mastery (kc_id, status, p_mastery, n_eff, attempts, correct, mastery_check_state,"
+                    " last_seen_at, last_event_seq) VALUES (?, ?, ?, 6, 6, 5, ?, 1, 1)",
+                    (kc, status, p, checked),
+                )
+            opened = await t.open()
+            await t.say(opened["session_id"], "What haven't I got yet?")
+            snapshot = await t.snapshot(opened["session_id"])
+            said = " ".join(p.get("text", "") for p in snapshot["parts"].values() if p.get("kind") == "text")
+            assert "where your checked practice records stand" in said
+            assert f"Recorded practice band for {NOT_YET}: learning." in said and ": secure." in said
+            assert said.index(": learning.") < said.index(": secure.")  # not yet secure first
+            assert "Source: checked practice records (" in said
+            assert (
+                "not_started" not in said and "couldn't put that together" not in said and "1 left for you" not in said
+            )
+            assert said.count("Recorded practice band for ") <= 6
+            assert [a["action"] for a in snapshot["actions"].values()] == ["open_knows"]  # "See what your tutor knows"
+            (trace,) = _companion_traces(t)
+            gates = {g["gate"]: g for g in trace["gates"]}
+            assert (gates["fact_binding"]["outcome"], gates["fact_binding"]["detail"]) == (
+                "exhausted_canned", "number:1:unit:none")  # fmt: skip
+            assert trace["degraded_reason"] == "companion_canned"
+        finally:
+            await stop_core(t.r)
+
+    run(go())
+
+
+def test_the_progress_line_puts_skills_not_yet_secure_first_names_six_and_says_bands_in_words() -> None:
+    from agent_core.engine.companion import progress_line
+    from agent_core.engine.companion_opener import load_templates
+
+    facts = companion_facts.from_progress(
+        {"bands": [{"ref": i, "skill": f"Skill {i}", "band": band} for i, band in
+                   enumerate(["secure", "learning", "not_started", "secure", "not_started", "learning", "secure",
+                              "not_started", "learning", "not_started"], 1)]},
+        period="2026-11-01")  # fmt: skip
+    line, refs = progress_line(load_templates(), facts)  # type: ignore[misc]
+    assert len(refs) == 6 and all(facts[r - 1].value != "secure" for r in refs)  # six of the seven not yet secure
+    assert "Skill 2: learning." in line and "Skill 3: not started." in line and "Skill 1:" not in line
+    assert "not_started" not in line and line.count("Source: checked practice records (2026-11-01).") == 6
+    assert progress_line(load_templates(), []) is None
+    assert (
+        progress_line(load_templates(), [companion_facts.Fact("a", "due_cards", 2, "cards", "x", "p", "s", "t")])
+        is None
+    )
+
+
+EXPLAIN = (
+    "The range equation has sin two theta in it, and sin two theta is greatest when two theta is ninety "
+    "degrees, which is at forty five degrees, as she says at 4:30."
+)
+
+
+def test_ask_about_this_moment_may_explain_from_the_lines_it_was_given(tmp_path: Path) -> None:
+    """Live-run fix 2026-11-01: "Why does the range depend on sin two theta?" at 4:12 was answered with an offer to
+    open the video. An explanation from the cited lines says "two", "ninety" and "forty five", figures that are the
+    lecture's own words, and fact binding refused each (`number:2:unit:none`), so the reply was nudged into saying
+    nothing. A figure the given lines say, with no unit of progress beside it, binds to them."""
+    script = {"companion": [turn(EXPLAIN)]}
+
+    async def go() -> None:
+        t = await thread(tmp_path, script)
+        try:
+            source = video(t.r.core.study.desk())
+            body = {"context": {"source_id": source["source_id"], "at_ms": 252_000}}
+            opened = await t.api.call("POST", "/v1/companion", body, profile=t.token)
+            session_id = opened.json()["session_id"]
+            await t.say(session_id, "Why does the range depend on sin two theta?")
+            assert len(t.companion_requests()) == 1  # accepted at once: no nudge, no second pass
+            # The role tells the model to explain from the lines, not to offer the video instead.
+            assert "never offering the video instead" in json.dumps(
+                t.companion_requests()[0]["messages"][0])  # fmt: skip
+            snapshot = await t.snapshot(session_id)
+            said = [p["text"] for p in snapshot["parts"].values() if p.get("kind") == "text"][-1]
+            assert said == EXPLAIN
+            (trace,) = _companion_traces(t)
+            assert not any(g["fired"] for g in trace["gates"]) and trace["degraded_reason"] is None
+            assert not snapshot.get("actions")  # it explained; it did not send them away
+        finally:
+            await stop_core(t.r)
+
+    run(go())
+
+
+def test_a_figure_the_lecture_did_not_say_still_fails_fact_binding_and_a_unit_still_needs_its_source() -> None:
+    lines = ["[1] Projectile motion (at 4:30): and the range is greatest when two theta is ninety degrees"]
+    said = companion_facts.figures(lines)
+    assert said == {"2", "90", "4:30"}
+    assert fact_binding_errors("It peaks when two theta is ninety degrees.", [], said) == []
+    assert fact_binding_errors("It peaks at seventy degrees.", [], said) == ["70 has no matching source metric"]
+    # A figure the lines say, but beside a progress unit, is still a progress claim that needs a source.
+    assert fact_binding_errors("You have 90 cards due.", [], said) == ["90 has no matching source metric"]
+    assert fact_binding_errors("It peaks at 90.", [], frozenset()) == ["90 has no matching source metric"]
+    assert fact_binding_errors("She says it at 04:30.", [], said) == []  # a moment the given lines carry
+    assert fact_binding_errors("She says it at 6:40.", [], said) == ["6:40 has no matching source metric"]

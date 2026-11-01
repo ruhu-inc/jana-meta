@@ -5,7 +5,7 @@ configured (`muse-spark-1.3`): Contributor mode is a separate id and Meta trains
 checked against https://dev.meta.ai/docs on 2026-10-26:
 
 - `tool_choice` accepts only `"auto"`; `"required"`, `"none"` and a named function are 400s.
-- `reasoning_effort` accepts minimal, low, medium, high and xhigh; Muse Spark always reasons, so `"none"` is a 400.
+- `reasoning_effort` accepts minimal, low, medium, high, xhigh and max; Muse Spark always reasons, so `"none"` is a 400.
 - `response_format: json_schema` is decoded under constraint, so no schema copy in the prompt is needed. `strict: true`
   additionally demands that every property be required at every level, which the engine's contracts (with optional
   fields) do not meet; `strict: false` is still decoded under the schema, so strict is sent as false (verify day 1).
@@ -26,7 +26,7 @@ UNSUPPORTED = frozenset({
     "stop", "n", "logprobs", "top_logprobs", "logit_bias", "modalities", "audio", "prediction", "verbosity",
     "web_search_options", "max_output_tokens", "chat_template_kwargs",
 })  # fmt: skip
-EFFORTS = frozenset({"minimal", "low", "medium", "high", "xhigh"})
+EFFORTS = frozenset({"minimal", "low", "medium", "high", "xhigh", "max"})
 REASONING_FIELDS = ("reasoning_content", "reasoning")
 
 

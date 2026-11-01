@@ -288,3 +288,49 @@ def test_a_local_run_cannot_make_an_outline(tmp_path: Path) -> None:
     with pytest.raises(StudyError, match="invalid_study_request"):  # a text source has no moments to outline
         w.desk.create_job({"kind": "teaching_outline", "execution": "prefer_cloud",
                            "sources": [{"source_id": w.source["source_id"], "revision": 1}]})  # fmt: skip
+
+
+class LiveShapedCloud(Cloud):
+    """The outline as Muse Spark wrote it in the live run (1 November): each objective cites the whole passage it sits
+    in, from its first line, and two concepts name the lecture's subject or what it sets aside, not a skill."""
+
+    async def process(self, conn: Any, jid: str, request: dict[str, Any], chunks: list[dict[str, Any]],
+                      attempt: int, batch_index: int = 0) -> dict[str, Any]:  # fmt: skip
+        done = await super().process(conn, jid, request, chunks, attempt, batch_index)
+        outline = done["outline"]
+        for objective in outline["objectives"][:3]:  # the fourth cites its own line, as in the live run
+            chunk = next(c for c in chunks if c["chunk_id"] == objective["citations"][0]["chunk_id"])
+            quote = chunk["text"][:490]  # a citation's quote is at most 500 characters
+            objective["citations"] = [{**objective["citations"][0], "start": 0, "end": len(quote), "quote": quote}]
+        outline["concepts"] += [
+            named(chunks, "projectile motion", "in this lecture we look at projectile motion"),
+            named(chunks, "air resistance", "we will ignore air resistance throughout"),
+        ]
+        return {**done, "claims": study_outline.flatten(outline)}
+
+
+def test_an_objective_whose_citation_spans_the_passage_opens_at_its_own_line(tmp_path: Path) -> None:
+    """Live-run fix 2026-11-01: the first three objectives showed "Open at 0:00" because their citations began at the
+    passage's first line; the moment is the cited line that says the objective, by code (SPEC §20 "Lines keep their
+    moments")."""
+    w = world(tmp_path)
+    w.visits.open()
+    done = outline_job(w, video(w), LiveShapedCloud(), seeded_pack())
+    assert done["state"] == "completed", done
+    outline = w.desk.aid(done["result_ids"][0])["outline"]
+    assert [o["at_ms"] for o in outline["objectives"]] == [21_000, 29_000, 35_000, 41_000]
+
+
+def test_concepts_that_name_the_subject_or_what_is_set_aside_map_to_no_skill(tmp_path: Path) -> None:
+    """Live-run fix 2026-11-01: "projectile motion" and "air resistance" were tagged to the time-of-flight skill
+    because every skill of the subtopic says "projectile"; a concept maps through a word that tells skills apart."""
+    for content in (seeded_pack(), PACK):
+        (tmp_path / ("seeded" if content is not PACK else "installed")).mkdir()
+        w = world(tmp_path / ("seeded" if content is not PACK else "installed"))
+        w.visits.open()
+        done = outline_job(w, video(w), LiveShapedCloud(), content)
+        outline = w.desk.aid(done["result_ids"][0])["outline"]
+        by_name = {c["name"]: c for c in outline["concepts"]}
+        for generic in ("projectile motion", "air resistance"):
+            assert by_name[generic]["kc_ids"] == [] and by_name[generic]["outside_packs"] is True, generic
+        assert by_name["Time of flight"]["kc_ids"] == [FLIGHT]  # the skills the lecture does teach still map

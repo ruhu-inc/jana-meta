@@ -198,3 +198,120 @@ def test_sponsor_never_grants_consent_and_restart_keeps_credential(
         assert isinstance(host.SponsoredRuntime(Settings(), Path(), Path(), tmp_path / "app").key_store(), FileKeyStore)
 
     asyncio.run(run())
+
+
+def _demo_host(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, online_demo: bool
+) -> tuple[host.SponsoredRuntime, SimpleNamespace]:
+    """The host as `hackathon_dev` starts it, before any profile exists; `online_demo` is the flag's environment."""
+    config = tmp_path / "gateway.toml"
+    original = (REPO_ROOT / "services/cloud-gateway/deploy/meta-dev.toml").read_text()
+    config.write_text(original.replace('"~/.jana-meta/gateway"', json.dumps(str(tmp_path / "gateway"))))
+    monkeypatch.setenv("JANA_META_GATEWAY_CONFIG", str(config))
+    monkeypatch.delenv(host.ONLINE_DEMO, raising=False)
+    if online_demo:
+        monkeypatch.setenv(host.ONLINE_DEMO, "1")
+
+    async def available(_port: int) -> None:
+        pass
+
+    monkeypatch.setattr(host, "check_gateway", available)
+    runtime = host.SponsoredRuntime(
+        host.settings_for_browser(Settings()), REPO_ROOT / "content/agent", REPO_ROOT / "skills", tmp_path / "app"
+    )
+    runtime.open_stores("0.0.0")
+    online = runtime.attach_online()
+    core = SimpleNamespace(
+        clock_ms=online.clock_ms,
+        on_profile_created=[],
+        closers=[],
+        components={},
+        settings=host.settings_for_browser(Settings()),
+        notices={"cloud_tier": ["2026-10-20"], "study_materials": ["2026-10-20"]},
+    )
+    asyncio.run(host.connect(runtime, cast(CoreService, core)))
+    return runtime, core
+
+
+def _create(runtime: host.SponsoredRuntime, core: SimpleNamespace, name: str, age_band: str) -> str:
+    """What `POST /v1/profiles` does: create the profile, then run the hooks."""
+    assert runtime.directory is not None
+    created = runtime.directory.create(
+        {"display_name": name, "avatar": "disc-teal", "level": "O", "subjects": ["physics"], "age_band": age_band}
+    )
+    for hook in core.on_profile_created:
+        hook(created["profile_id"])
+    return str(created["profile_id"])
+
+
+def _learner_state(runtime: host.SponsoredRuntime, profile_id: str) -> dict[str, object]:
+    assert runtime.directory is not None and runtime.online is not None
+    with runtime.directory.open_learner(profile_id) as conn:
+        scopes = {r[0] for r in conn.execute("SELECT scope FROM consents WHERE withdrawn_at IS NULL")}
+        return {
+            "scopes": scopes,
+            "cloud": runtime.online.cloud_effective(profile_id, conn),
+            "notices": runtime.online.notice_answer(profile_id),
+            "study_notice": runtime.online.notice_answer(profile_id, "study_materials"),
+            "memory_online": runtime.online.memory_online_effective(profile_id, conn),
+            "features": runtime.online.features_on(),
+        }
+
+
+def test_online_demo_records_the_cloud_tutor_study_and_first_use_notice_for_an_adult(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Demo-host fix 2026-11-01: with the flag, an adult profile created on the host needs no Settings steps."""
+    runtime, core = _demo_host(tmp_path, monkeypatch, online_demo=True)
+    state = _learner_state(runtime, _create(runtime, core, "Demo Ada", "18_plus"))
+    assert state["cloud"] is True and state["notices"] == "accepted" and state["study_notice"] == "accepted"
+    assert state["scopes"] == {"cloud_tier", "study_materials"}  # the profile's own consents and no others
+    assert state["features"] == {"cloud_tier", "study_materials"}
+    assert state["memory_online"] is False  # Personal tutor memory online stays off
+    assert state["scopes"].isdisjoint({"tutor_memory_online", "cloud_voice"})  # type: ignore[union-attr]
+
+
+def test_online_demo_refuses_a_profile_under_18_and_records_nothing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The directory creates adult profiles only (W5), so a minor can be here only from an older build: the band is
+    changed under it, as such a build would have stored it, and the grant must refuse."""
+    runtime, core = _demo_host(tmp_path, monkeypatch, online_demo=True)
+    assert runtime.directory is not None and runtime.online is not None
+    created = runtime.directory.create(
+        {
+            "display_name": "Old Build",
+            "avatar": "disc-teal",
+            "level": "O",
+            "subjects": ["physics"],
+            "age_band": "18_plus",
+        }
+    )
+    profile_id = created["profile_id"]
+    for band in ("under_13", "13_15", "16_17"):
+        with runtime.directory.open_learner(profile_id) as conn:
+            conn.execute("UPDATE profile SET age_band = ?", (band,))
+            conn.commit()
+        with pytest.raises(ValueError, match="adult aged 18 or over"):
+            core.on_profile_created[-1](profile_id)  # the hook the flag installed
+    assert not runtime.online.features_on()
+    state = _learner_state(runtime, profile_id)
+    assert state["scopes"] == set() and state["cloud"] is False and state["notices"] is None
+
+
+def test_without_the_flag_a_new_profile_records_no_consent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The product's consent model is unchanged: nothing is granted unless the host was started with the flag."""
+    runtime, core = _demo_host(tmp_path, monkeypatch, online_demo=False)
+    state = _learner_state(runtime, _create(runtime, core, "Demo Ada", "18_plus"))
+    assert state["scopes"] == set() and state["cloud"] is False and state["notices"] is None
+    assert state["features"] == set()
+
+
+def test_the_flag_is_off_by_default_and_never_inherited_from_the_shell() -> None:
+    from jana_tools import hackathon_dev as dev
+
+    shell = {"PATH": "/bin", "META_API_KEY": "x", host.ONLINE_DEMO: "1"}
+    plain = dev.host_environment(shell, Path("demo-folder"), 5197, online_demo=False)
+    assert host.ONLINE_DEMO not in plain and "META_API_KEY" not in plain
+    flagged = dev.host_environment(shell, Path("demo-folder"), 5197, online_demo=True)
+    assert flagged[host.ONLINE_DEMO] == "1" and flagged["JANA_DEV_DATA_DIR"] == str(Path("demo-folder").resolve())

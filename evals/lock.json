@@ -15353,7 +15353,7 @@
     "packages/ui/gallery/states/first-run-tutor.canonical.json": "e8ee324dd3ef94ee70dda680d31a93a7e95705b1e491cb738b4ad6eedcbdbd3a",
     "packages/ui/gallery/states/first-run-tutor.canonical.no-model.json": "7dca4ec2e546603b2cda41fe1129558020c76bdf5f87023937c173a42cd5e09f",
     "packages/ui/gallery/states/first-run-tutor.loading.json": "0ba0dea36744f316d5e489c26bbc5abc3025a86c57c666b2143144ad9b36a0cf",
-    "packages/ui/gallery/states/first-run.canonical.json": "c891cf782f392c04d9374e2efe25a068ed4e480d90fba0972d1b800c42379dd3",
+    "packages/ui/gallery/states/first-run.canonical.json": "5e10fc5ecc95c06cc93b397540edd1c8a6d3956338848dca0f56027ea47fccb3",
     "packages/ui/gallery/states/function-graph.canonical.json": "32359029d07017da34b573c937f54d6243ba530aa13c413a192ec63f49146f47",
     "packages/ui/gallery/states/function-graph.error-final.json": "86e839ee7bd2607242833ba7f9379be7ca698b3d6674b4a6fe67d30734aa3907",
     "packages/ui/gallery/states/function-graph.reduced-motion.json": "51012495e595f6a2767a64bdbda3f3441739334c391726617723f2472af2600a",
@@ -15954,7 +15954,7 @@
     "packages/ui/gallery/states/worked-search.loading.json": "3169dc86db4254501b1e351e1a18a97c583e6da512a3b4a38cdf6b43177581da",
     "packages/ui/gallery/states/your-turn-line.canonical.json": "c83e03d83ea0aaabeda7e7a1c693c170920c5b8246ef25d45637a6c6a86e9a7a"
    },
-   "version": "2026-10-28.1"
+   "version": "2026-11-01.1"
   }
  },
  "version": 1

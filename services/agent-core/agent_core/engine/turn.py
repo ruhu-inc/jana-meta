@@ -251,6 +251,15 @@ class EngineDeps:
             self.stage = self.settings.build_stage
 
 
+class TurnNeedsNotice(Exception):
+    """A turn the cloud tutor's unanswered first-use notice stops before any model call (ARC-10). The turn has ended
+    with a plain line; the exception only stops the flow that began it, and carries the turn's result."""
+
+    def __init__(self, reason: str, result: TurnResult) -> None:
+        super().__init__(reason)
+        self.reason, self.result = reason, result
+
+
 @dataclass
 class TurnResult:
     turn_id: str
@@ -2381,6 +2390,32 @@ class Engine(Coordination, Offers, Predictions):
         self._persist(turn, part, "card", body)
         self._egress_cards[request_id] = feature
 
+    def _notice_block(self) -> str | None:
+        """Why no tutor can answer until the cloud tutor's first-use notice is settled (ARC-10), or None. It holds
+        only when the cloud tier is the one way to a model, that is when no model on this computer can serve: a
+        computer with its own model answers locally meanwhile, as `_first_use_notice` says. `cloud_notice_declined`:
+        the learner answered "Keep it on this computer", `cloud_notice_required`: not answered yet."""
+        if self.cloud_possible is None or self.cloud_notice is None or self.deps.router.serves_on_device():
+            return None
+        if not self.cloud_possible():
+            return None
+        given = self.cloud_notice()
+        return (
+            None if given == "accepted" else "cloud_notice_declined" if given == "declined" else "cloud_notice_required"
+        )
+
+    def _refuse_until_notice(self, turn: _Turn, template: str) -> TurnNeedsNotice:
+        """End the turn the notice blocks with a plain line (the card was shown by `_first_use_notice` when it was
+        due), a complete turn that made no model call, and give back the exception that stops the flow."""
+        result = self._finish_template(turn, f"tpl.{template}", "completed")
+        return TurnNeedsNotice(template, result)
+
+    def _connectivity_state(self) -> str:
+        """The connectivity layer's state for a trace (ARC-08); "off" when no layer is attached to read."""
+        network = self.deps.router.network
+        state = network() if network is not None else None
+        return state if state in ("offline", "limited", "metered", "online") else "off"
+
     def answer_egress(self, request_id: str, answer: dict[str, Any]) -> bool:
         """The answer to a first-use notice card; False when the card is not one."""
         feature = self._egress_cards.get(request_id)
@@ -3328,6 +3363,7 @@ class Engine(Coordination, Offers, Predictions):
             subject=self.state.subject,
             level=self.state.level,
             build=default_build(self.state.hardware_class if self.state.hardware_class != "cloud" else "mid"),
+            connectivity=self._connectivity_state(),
             assets={
                 "config_sha256": sha256_of(self.deps.settings.model_dump(mode="json")),
                 "agent_bundle_id": "dev",
@@ -3345,6 +3381,9 @@ class Engine(Coordination, Offers, Predictions):
         self._current = _Turn(turn_id, trace, gates, tools, time.monotonic(), rung_at_start=self.state.rung,
                               fork=fork)  # fmt: skip
         self._first_use_notice(self._current)
+        waiting = self._notice_block()
+        if waiting is not None:
+            raise self._refuse_until_notice(self._current, waiting)
         self.deliver_remark_notice()
         self._status("preparing")
         self._log("info", "engine", "turn.start", turn_id=turn_id, intent=intent)

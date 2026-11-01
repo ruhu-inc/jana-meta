@@ -36,6 +36,25 @@ def normalise_numbers(text: str) -> str:
     return _WORD_NUMBER.sub(lambda m: str(NUMBER_WORDS[m[0].lower()]), text)
 
 
+_LINE_HEAD = re.compile(r"^\[\d+\][^:]*?(?:\(at [^)]*\))?:\s*")
+_CLOCK = re.compile(r"(?<![\w:.])(\d{1,2}:)?(\d{1,2}):(\d{2})(?![\w:])(?!\.\d)")
+_FIGURE = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)(?![\w.]*\d)")
+
+
+def figures(lines: list[str]) -> frozenset[str]:
+    """What the learner's own material says in these lines (`[ref] label (at m:ss): text` records) that a reply
+    explaining from them may say back: their numbers, spelled-out ones too, and their moments ("4:30", no leading zero),
+    never a ref. Where a number stands beside a unit of progress (cards, days, ...) it still needs a source (Ask about
+    this moment, live-run fix 2026-11-01)."""
+    found: set[str] = set()
+    for line in lines:
+        for hours, minutes, seconds in (m.groups() for m in _CLOCK.finditer(line)):
+            found.add(f"{int(hours.rstrip(':'))}:{minutes}:{seconds}" if hours else f"{int(minutes)}:{seconds}")
+        body = _CLOCK.sub(" ", _LINE_HEAD.sub("", line, count=1))
+        found.update(m.group(1) for m in _FIGURE.finditer(normalise_numbers(body.lower())))
+    return frozenset(found)
+
+
 def model_claim_errors(text: str) -> list[str]:
     """Progress assertions must come from selected facts, not unconstrained generated prose."""
     normalized = normalise_numbers(text)
@@ -46,6 +65,15 @@ def model_claim_errors(text: str) -> list[str]:
     ):
         return ["select fact_refs for progress or schedule claims; do not rewrite the fact in text"]
     return []
+
+
+PROGRESS_SOURCE = "checked practice records"
+BAND_WORDS = {"not_started": "not started", "learning": "learning", "secure": "secure"}
+
+
+def band_words(band: object) -> str:
+    """A practice band as the learner reads it elsewhere in the app, never its stored code (live-run fix 2026-11-01)."""
+    return BAND_WORDS.get(str(band), str(band).replace("_", " "))
 
 
 @dataclass(frozen=True)
@@ -111,8 +139,8 @@ def from_progress(data: dict[str, Any], *, period: str) -> list[Fact]:
                 "band",
                 skill,
                 period,
-                "checked practice records",
-                f"Recorded practice band for {skill}: {band['band']}.",
+                PROGRESS_SOURCE,
+                f"Recorded practice band for {skill}: {band_words(band['band'])}.",
             )
         )
     return facts

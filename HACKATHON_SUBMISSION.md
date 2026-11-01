@@ -26,7 +26,8 @@ learner's own knowledge and Meta model integrations. A learner can state a prefe
 restarting, continue an agreement and inspect why the tutor personalizes its response. Explicit remember, correct
 and forget commands keep the learner in control of saved memory.
 
-Three features were built during the event (SPEC §19 to §21):
+The demo centres on three Study features built in the last days of the event (SPEC §19 to §21); the rest of the event
+work, from 26 October, is listed under Contribution boundary.
 
 - **The Companion.** One persistent conversation per learner, **Your tutor**, that remembers the last session,
   searches the learner's own materials, reads their progress, plans, makes Study aids and starts research. Code
@@ -60,11 +61,27 @@ not yet claim measured learning gains or a longitudinal learner study.
 ## Contribution boundary
 
 Prior work: Jana's core tutoring engine, authored curriculum, desktop shell, checking worker and underlying learning
-tools. Event work: Meta adaptation and the Study learning agent, including persistence, memory controls, isolation,
-evidence binding and restoration (W8, SPEC §19), a YouTube lecture as a Study source (W9, §20) and the learner's map
-(W10, §21). Commits `7a92235d` and `aed35cbf` document the October 29–30 Companion work; `b814436d` (merged in
-`f1578e33`) is W9 and W10 of October 31; `4ccd5c4c` (1 November) adds the Projectile motion pack subtopic and the
-live-run fixes, and is tagged `demo-2026-11-01`. Physics pack 1.1.0 is new content written during the event.
+tools. The baseline is `7cf6c6ed` (25 October, the prior source imported without history); the hackathon ran from
+26 October and event work starts with the next commits. Event work, by the workstreams of `SPEC.md` (the spec's own
+status table, 28 October, and the later sections; each is built unless noted):
+
+| Dates | Workstream | What was built |
+| --- | --- | --- |
+| 26–28 Oct | W1 Muse Spark | A Meta adapter in the gateway; the cloud tutor (Diagnoser, Solver, Checker, Coach, input guard) and Study run on Muse Spark in Standard mode; reasoning effort set per model alias; spending budget holds released only for calls that were not billed. |
+| 26 Oct | W2 Vision | SAM 3.1 behind the gateway at `/v1/vision/segment`; photos of working read in the cloud, outlined while the learner confirms, with Jana pointing at the line on the learner's own photo; photographed sketches checked; a diagram drill. |
+| 27 Oct | W3 Muse Glimmer | Offline tutoring on Muse Glimmer 30B from the browser host, with its vision projector and DFlash draft; a fall back to the local model within seconds of a power cut and a return to the cloud after it; authored hints shown at once offline. Open at the spec's last status: a typed question's first words were 30–48 s offline on a loaded machine against an 8 s target. |
+| 27–28 Oct | W4 Speech | Muse Voice Transcribe online through the gateway; Kokoro-82M as the only voice; a voice bar in the tutor (JM-D20) where every spoken word still comes from an accepted, checked turn. Offline speech to text was not finished at the spec's last status. |
+| 26–27 Oct | W5 Adult product | Age at sign-up (a whole number of years, changed from a date of birth on 1 Nov) and an 18-and-over check in the engine and API (Meta's terms), adult copy, parent sections removed. |
+| 27 Oct | W7 Research agent | A conversation and plan on the device, a gateway job that searches, fetches safe pages, checkpoints and resumes, and import into Study as one cited material with a concept map. |
+| 26–28 Oct | Teaching features | Checked figures on items and lessons, tracing a misconception to the earlier skill it comes from, explain-it-back before a skill is marked mastered, predict-before-you-see simulations; every learner-visible number held to a code check; hardening of the maths worker against huge powers. |
+| 28 Oct | Meta-only entry | Nebius, Nemotron, Tavily web search, the Google/Gemini stack and NVIDIA's trial voice removed (JM-D14); only Muse Glimmer recommended offline; identifiers and key references renamed for jana-meta. |
+| 27 Oct | Packaging | `scripts/build-submission.sh` builds the submission tree from one commit; README rewritten for Meta's models. |
+| 29–30 Oct | W8 Companion | `7a92235d`, `aed35cbf`: the personal Study companion (SPEC §19). |
+| 31 Oct | W9, W10 | `b814436d`, merged in `f1578e33`: a YouTube lecture as a Study source (§20) and the learner's map (§21). |
+| 1 Nov | Demo build | `4ccd5c4c`, tagged `demo-2026-11-01`: Projectile motion in the Physics pack (1.1.0) and the W9/W10 live-run fixes. |
+
+Several of the 26–28 October workstreams were built in parallel sessions and merged; confirm the dates and the list
+against the history before it goes into the form. Physics pack 1.1.0 is new content written during the event.
 Keep the original private history as provenance; the submission builder intentionally creates a history-free tree.
 Have the owner review the exact contribution list and human contributor names before publishing.
 

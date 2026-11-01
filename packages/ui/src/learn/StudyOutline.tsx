@@ -5,6 +5,7 @@
 // this learner each skill's band as a word (never a probability). Every moment opens the video there.
 import { momentLabel, type StudyContracts as W } from "@jana/client-core";
 import { citationKey, StudyCitations } from "./StudyCitation.js";
+import { StudyInline } from "./StudyText.js";
 import { useT } from "../i18n.js";
 import { Button } from "../primitives/index.js";
 
@@ -29,7 +30,7 @@ export function StudyOutline({ outline, sourceTitle, chunks, busy, onOpenMoment,
   // once (live-run fix 2026-11-01: "Open at 4:12" beside "04:12").
   const timed = (item: Timed) => typeof item.at_ms === "number";
   const row = (item: Timed, key: string) => <li key={key} className="flex flex-wrap items-baseline gap-2">
-    <span className="text-body text-ink">{item.text ?? item.name}</span>
+    <span className="text-body text-ink"><StudyInline text={item.text ?? item.name ?? ""} /></span>
     {moment(item)}
     <StudyCitations citations={item.citations} locate={locate} title={() => sourceTitle} disabled={busy} onOpen={onCite} numbered={timed(item)} />
   </li>;
@@ -46,7 +47,7 @@ export function StudyOutline({ outline, sourceTitle, chunks, busy, onOpenMoment,
     <section className="flex flex-col gap-2" aria-labelledby="outline-concepts">
       <h3 id="outline-concepts" className="text-ui font-semibold text-ink">{t("study.outline.concepts")}</h3>
       {outline.concepts.length === 0 ? <p className="text-meta text-muted">{t("study.outline.none")}</p> : <ul className="flex flex-col gap-3">{outline.concepts.map((c, i) => <li key={`c${i}`} data-outline-concept={c.name} className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-baseline gap-2"><span className="text-body font-medium text-ink">{c.name}</span>{moment(c)}<StudyCitations citations={c.citations} locate={locate} title={() => sourceTitle} disabled={busy} onOpen={onCite} numbered={timed(c)} /></div>
+        <div className="flex flex-wrap items-baseline gap-2"><span className="text-body font-medium text-ink"><StudyInline text={c.name} /></span>{moment(c)}<StudyCitations citations={c.citations} locate={locate} title={() => sourceTitle} disabled={busy} onOpen={onCite} numbered={timed(c)} /></div>
         <div className="flex flex-wrap gap-2">
           {(c.kc_ids ?? []).map((kc) => <Button key={kc} size="xs" tone="secondary" data-skill={kc} aria-label={t("study.outline.skill_full", { skill: name(kc), band: t(`study.outline.band.${bands.get(kc) ?? "not_started"}`) })} disabled={!onSkill} onClick={() => onSkill?.(kc)}>{name(kc)}</Button>)}
           {c.outside_packs && <span data-outside-packs="" className="text-meta text-muted">{t("study.outline.outside_packs")}</span>}

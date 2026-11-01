@@ -79,6 +79,37 @@ describe("UXS-29", () => {
   });
 });
 
+describe("JM-D15", () => {
+  test("jm_d15_settings_add_a_profile_asks_for_an_adult_age", async () => {
+    const { core } = await unlocked();
+    const posted = () => core.log.filter((r) => r.method === "POST" && r.path === "/v1/profiles").map((r) => r.body as Record<string, unknown>);
+    fireEvent.click(await screen.findByRole("button", { name: "Add a profile" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Name" }), { target: { value: "Dee" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Physics" }));
+    const create = screen.getByRole("button", { name: "Add profile" }) as HTMLButtonElement;
+    const age = screen.getByLabelText("Age") as HTMLInputElement;
+    // The same one numeric field as first run, and no date of birth anywhere.
+    expect(age.type).toBe("number");
+    expect(age.step).toBe("1");
+    expect(screen.queryByLabelText("Date of birth")).toBeNull();
+    expect(create.disabled).toBe(true); // no age yet
+    for (const [value, said] of [["17", /so a profile cannot be made/], ["0", /whole number of years/], ["121", /whole number of years/], ["17.5", /whole number of years/], ["1e2", /whole number of years/]] as const) {
+      fireEvent.change(age, { target: { value } });
+      expect(screen.getByText(said), value).toBeTruthy();
+      expect(create.disabled, value).toBe(true);
+      fireEvent.submit(create.closest("form")!);
+    }
+    expect(posted()).toEqual([]); // nothing was created for an age under 18 or one that is not a whole number
+    fireEvent.change(age, { target: { value: "18" } });
+    expect(create.disabled).toBe(false);
+    fireEvent.click(create);
+    await waitFor(() => expect(posted()).toHaveLength(1));
+    expect(posted()[0]).toMatchObject({ display_name: "Dee", level: "O", subjects: ["physics"], age_band: "18_plus" });
+    expect(Object.keys(posted()[0]!)).not.toContain("age"); // the age is checked here and never sent
+    await waitFor(() => expect((screen.getByLabelText("Age") as HTMLInputElement).value).toBe("")); // and not kept
+  });
+});
+
 describe("UXS-46", () => {
   test.each(["S2", "S3"] as const)("installed voice controls are reachable once with a %s core", async (stage) => {
     const { profiles, view } = await unlocked((core) => { core.sectionsStage = stage; });

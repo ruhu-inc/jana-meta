@@ -77,7 +77,7 @@ export { drillParts, drillOrder, markTap, partAt, inside, area, EDGE_SLACK, MIN_
 
 export { checkPhotoHeader } from "./photo-header.js";
 
-export { ADULT_BAND, SUBJECT_CODES, SUBJECT_NAMES, firstRunProfile, installedSubjects, isAdult, subjectName, type InstalledSubject, type SubjectName } from "./setup.js";
+export { ADULT_AGE, ADULT_BAND, MAX_AGE, SUBJECT_CODES, SUBJECT_NAMES, firstRunProfile, installedSubjects, isAdultAge, subjectName, type InstalledSubject, type SubjectName } from "./setup.js";
 export { ProblemReports, type NewProblemReport, type ProblemReport } from "./reports.js";
 export { STAGE_2_SECTIONS, SettingsSections, readSettingsSections, type SettingsSection, type SettingsSectionsReply } from "./settings-sections.js";
 export { ARTICLE_KEY_PREFIX, OfflineHelp, issueArticle, readHelp, searchHelp, type HelpArticle, type KnownIssue, type OfflineHelpReply } from "./help.js";

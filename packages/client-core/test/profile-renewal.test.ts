@@ -6,7 +6,7 @@
 import { describe, expect, test } from "vitest";
 import { ProfileController, type ProfileTimers } from "../src/profiles.js";
 import { SessionController, StoreHolder } from "../src/session.js";
-import { firstRunProfile, installedSubjects, isAdult, subjectName } from "../src/setup.js";
+import { firstRunProfile, installedSubjects, isAdultAge, subjectName } from "../src/setup.js";
 import { tutorAnswers, unverifiedSubjects } from "../src/health.js";
 import { FakeProfileCore, PROFILES } from "./profilecore.js";
 
@@ -182,16 +182,23 @@ describe("PLT-29", () => {
 });
 
 describe("JM-D15", () => {
-  test("only a real date of birth 18 or more years ago counts as adult", () => {
-    const today = new Date(2026, 9, 26);
-    expect(isAdult("2008-10-26", today)).toBe(true); // the 18th birthday is today
-    expect(isAdult("2008-10-27", today)).toBe(false); // the 18th birthday is tomorrow
-    expect(isAdult("1990-02-28", today)).toBe(true);
-    expect(isAdult("2012-01-01", today)).toBe(false);
-    expect(isAdult("2027-01-01", today)).toBeNull(); // in the future
-    expect(isAdult("2008-02-30", today)).toBeNull(); // not a date
-    expect(isAdult("1890-01-01", today)).toBeNull();
-    expect(isAdult("", today)).toBeNull();
-    expect(isAdult("26/10/2000", today)).toBeNull();
+  test("only a whole-number age of 18 or more counts as adult", () => {
+    expect(isAdultAge("18")).toBe(true); // the youngest adult
+    expect(isAdultAge("17")).toBe(false); // one year short
+    expect(isAdultAge("34")).toBe(true);
+    expect(isAdultAge("120")).toBe(true); // the oldest accepted
+    expect(isAdultAge("1")).toBe(false);
+    expect(isAdultAge("0")).toBeNull();
+    expect(isAdultAge("121")).toBeNull(); // out of range
+    expect(isAdultAge("1000")).toBeNull();
+    expect(isAdultAge("-20")).toBeNull();
+    expect(isAdultAge("17.9")).toBeNull(); // not a whole number
+    expect(isAdultAge("18.0")).toBeNull();
+    expect(isAdultAge("1e2")).toBeNull();
+    expect(isAdultAge("+30")).toBeNull();
+    expect(isAdultAge(" 30")).toBeNull();
+    expect(isAdultAge("thirty")).toBeNull();
+    expect(isAdultAge("1990-05-14")).toBeNull(); // a date of birth is no longer what is asked
+    expect(isAdultAge("")).toBeNull();
   });
 });

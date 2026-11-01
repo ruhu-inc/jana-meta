@@ -263,6 +263,14 @@ class Router:
     def _cloud_allowed(self, role: str) -> bool:
         return self._cloud_block(role) is None
 
+    def serves_on_device(self) -> bool:
+        """A model on this computer (or a school server) exists to serve a call at all, whatever the cloud decides:
+        there is a local provider, and the class is not the content-only one that runs no model here (PLT-29)."""
+        local = self.providers.get("local")
+        if local is None:
+            return False
+        return not (self.hardware_class == "content_only" and getattr(local, "kind", "local") == "local")
+
     def serves_locally(self, role: str) -> bool:
         """The role's call would go to the device's own runtime now: there is one, and no cloud candidate may serve."""
         return "local" in self.providers and not self._cloud_allowed(role)

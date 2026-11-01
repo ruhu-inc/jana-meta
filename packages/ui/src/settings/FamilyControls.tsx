@@ -7,7 +7,7 @@ import { useT } from "../i18n.js";
 import { Button, ConfirmDialog, Disclosure, ErrorState, Notice, useToggle } from "../primitives/index.js";
 import { discOf } from "../profiles/Avatar.js";
 import { useProfiles } from "../profiles/ProfilePicker.js";
-import { BirthDateField, birthDateCheck } from "../setup/BirthDate.js";
+import { AgeField, ageCheck } from "../setup/AgeField.js";
 import { OnlineFeatures } from "./OnlineFeatures.js";
 import { Studies } from "./Studies.js";
 
@@ -22,11 +22,11 @@ function AddStudent({ profiles, run }: { profiles: ProfileController; run: Run }
   const t = useT();
   const [open, toggle] = useToggle(false);
   const [name, setName] = useState("");
-  const [birthDate, setBirthDate] = useState("");
+  const [age, setAge] = useState("");
   const [level, setLevel] = useState<CreateProfile["level"]>("O");
   const [subjects, setSubjects] = useState<string[]>([]);
   const count = useProfiles(profiles).profiles.length;
-  const ready = name.trim() !== "" && subjects.length > 0 && birthDateCheck(birthDate) === "adult";
+  const ready = name.trim() !== "" && subjects.length > 0 && ageCheck(age) === "adult";
   const field = "min-h-8 rounded-control border border-line-strong bg-canvas px-3 text-body text-ink";
   return (
     <Disclosure summary={t("settings.profiles.add")} open={open} onToggle={toggle}>
@@ -39,7 +39,7 @@ function AddStudent({ profiles, run }: { profiles: ProfileController; run: Run }
           run(async () => {
             await profiles.family.addProfile(body);
             setName("");
-            setBirthDate("");
+            setAge("");
             setSubjects([]);
           });
         }}
@@ -48,7 +48,7 @@ function AddStudent({ profiles, run }: { profiles: ProfileController; run: Run }
           {t("settings.profiles.name")}
           <input className={field} value={name} maxLength={40} onChange={(event) => setName(event.target.value)} />
         </label>
-        <BirthDateField value={birthDate} onChange={setBirthDate} labelClass="flex flex-col gap-1 text-ui text-ink" />
+        <AgeField value={age} onChange={setAge} labelClass="flex flex-col gap-1 text-ui text-ink" />
         <label className="flex flex-col gap-1 text-ui text-ink">
           {t("settings.profiles.level")}
           <select className={field} value={level} onChange={(event) => setLevel(event.target.value as CreateProfile["level"])}>

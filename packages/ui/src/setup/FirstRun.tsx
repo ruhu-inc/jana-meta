@@ -1,5 +1,5 @@
 // First run's one step, "Who's learning?" (UXS-10 step 1, TABLE PLT-17a, D84, D86; direction A "Studio"): on paper
-// with the lockup (DSN-25), a first name or nickname and a date of birth, the line that everything stays on this
+// with the lockup (DSN-25), a first name or nickname and an age, the line that everything stays on this
 // computer, and "Start learning". Jana is for learners aged 18 and over (JM-D15): the date is checked here and dropped,
 // and someone under 18 is told so and no profile is made. Nothing else is asked: no PIN, code, licence or account;
 // level, subjects and the tutor model take TABLE PLT-17b's defaults, the subjects from the packs installed on this
@@ -13,7 +13,7 @@ import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
 import { Button, ErrorState, FIELD_LOOK } from "../primitives/index.js";
 import { Avatar, discOf } from "../profiles/Avatar.js";
-import { BirthDateField, birthDateCheck } from "./BirthDate.js";
+import { AgeField, ageCheck } from "./AgeField.js";
 import { WelcomeCard } from "./Welcome.js";
 
 export function FirstRun({ profiles, packs, existing = [], onStarted, onRestore }: {
@@ -30,13 +30,13 @@ export function FirstRun({ profiles, packs, existing = [], onStarted, onRestore 
   const id = useId();
   const heading = useRef<HTMLHeadingElement>(null);
   const [name, setName] = useState("");
-  const [birthDate, setBirthDate] = useState("");
+  const [age, setAge] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const added = useRef<string | null>(null); // the profile made from the form, so a retry does not add it twice
   useEffect(() => heading.current?.focus(), []);
   const asking = existing.length === 0;
-  const ready = !asking || (name.trim() !== "" && birthDateCheck(birthDate) === "adult");
+  const ready = !asking || (name.trim() !== "" && ageCheck(age) === "adult");
   const start = async () => {
     setPending(true);
     setError(null);
@@ -78,7 +78,7 @@ export function FirstRun({ profiles, packs, existing = [], onStarted, onRestore 
               {t("first_run.name")}
               <input className={FIELD_LOOK} autoComplete="off" maxLength={40} value={name} disabled={added.current !== null} onChange={(event) => setName(event.target.value)} />
             </label>
-            <BirthDateField value={birthDate} onChange={setBirthDate} disabled={pending || added.current !== null} />
+            <AgeField value={age} onChange={setAge} disabled={pending || added.current !== null} />
           </>
         )}
         <Button type="submit" tone="primary" disabled={pending || !ready}>{t("first_run.start")}<Icon name="go-next" size={16} /></Button>

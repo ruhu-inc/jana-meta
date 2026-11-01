@@ -1,7 +1,9 @@
 # Jana: three-minute learning-agent demo
 
 Draft for rehearsal, updated 1 November 2026 for the build tagged `demo-2026-11-01` (commit `4ccd5c4c`). This is a
-recording script, not a completed video, and the whole storyboard below has not yet been rehearsed end to end.
+recording script, not a completed video. It was walked once live on 1 November, through every beat except the time
+scrubber, which has no earlier date on a new profile; see “Live walk-through, 1 November” below, which also corrects
+the screen names and steps.
 Use a synthetic adult learner and the stable build. Show only the app window. Keep credentials and real profiles
 out of the recording. Retain the original recording so any cuts and elapsed-time captions can be checked.
 
@@ -22,14 +24,19 @@ Which model does what, as the spec states it (the README table has the full list
 | Kokoro-82M | Local speech pack | Not used: the storyboard is typed, with no spoken reply |
 | No model | The device | Answer checking (the sandboxed maths worker), the lecture's mapping to skills and Ada's bands, the whole learner's map and its time scrubber (§21.7: $0, nothing leaves the device) |
 
+The event requires the demo to distinguish what was built during the hackathon (from 26 October) from the existing
+product; `HACKATHON_SUBMISSION.md` lists the event work in full. Caption each beat. New in the event: Muse Spark and
+Muse Glimmer as the tutor, the Projectile motion subtopic, the Companion, the YouTube lecture outline and the learner's
+map. Existing foundation: the checking worker, the hint ladder and the Study desk the new features sit in.
+
 ## Storyboard
 
 | Time | Beat | Screen |
 | --- | --- | --- |
 | 0:00–0:15 | Opening | Home, Demo Ada |
-| 0:15–0:55 | A short practice run | Learn, Physics, Projectile motion |
-| 0:55–1:25 | The Companion: what haven't I got yet | Study, Your tutor |
-| 1:25–2:15 | A YouTube lecture, understood | Study, Add a YouTube video |
+| 0:15–0:55 | A short practice run | Lessons, Physics, Projectile motion |
+| 0:55–1:25 | The Companion: what haven't I got yet | My materials (Study), Your tutor |
+| 1:25–2:15 | A YouTube lecture, understood | My materials (Study), Add a YouTube video |
 | 2:15–2:50 | The learner's map | Progress, My map |
 | 2:50–3:00 | Close | Progress or Your tutor |
 
@@ -39,15 +46,15 @@ sees the first-time card. *Model:* none; the card is code, every number beside i
 returning to exam preparation need a tutor that knows what they have and have not got. We extended Jana during this
 hackathon with a Study companion, lectures from YouTube, and a map of the learner's own knowledge, built on Meta models.”
 
-**0:15–0:55, a short practice run.** *Screen:* Learn, then Physics, then Projectile motion. *Learner action:* start
-practice on the subtopic and answer one checked question, for example item 0007 (a stone thrown at 15 m/s at 40°; how
-far does it land; the pack's answer is 22.6 m) by giving the maximum height, about 4.74 m, in place of the range; then
-ask for a hint and correct it. *Tutor shows:* the answer marked by code, the hint ladder (authored hints; with cloud
-tutoring on, the guided tutor asks where she is stuck), and the pack's “Range and maximum height mixed up”
-misconception named as a watched mistake only if the engine recorded it. *Model:* the marking is the sandboxed maths
+**0:15–0:55, a short practice run.** *Screen:* Lessons, then the Physics tab, then the Projectile motion card, then **Practise
+this**. *Learner action:* practice opens on the first skill, resolving a launch velocity (seen live: a ball kicked at
+12 m/s at 60°, find both components, 4 marks). Answer with the components swapped, 10.4 and 6 m/s, then ask for a hint
+(this needs the cloud tutor, see the setup list). *Tutor shows:* “Not quite”, 0 of 4 marks and “This idea moved from Not started to Learning”, marked by code; the hint
+ladder (“Hint 2 of 5” and so on); and on the map the Projectile motion tile reads “1 mistake being watched”. The
+feedback line itself does not name the mistake. *Model:* the marking is the sandboxed maths
 worker, not a model; with consent on, the guided tutor's Diagnoser and Coach run on Muse Spark through the gateway,
 and on Muse Glimmer with `--local-model` when the cloud is off. *Narration:* “Every number is checked by code before
-the tutor says it. A wrong answer here is the classic one: range mixed up with maximum height.”
+the tutor says it. A wrong answer here is the classic one: the two components swapped.”
 
 **0:55–1:25, the Companion.** *Screen:* Study, then **Your tutor**. *Learner action:* type `What haven't I got yet?`.
 *Tutor shows:* an answer built from Ada's own record (SPEC §19.5, §19.3.3): the Companion reads progress with its
@@ -100,6 +107,16 @@ outline → map, and cut the Open-at tap, the follow-up question and the skill s
 
 ### Things the setup must provide
 
+- **First run.** A new profile goes through “Choose your tutor” and two skippable questions, then lands on Home with
+  Mathematics' “Index laws with letters” as Next up and no subject chosen. Create Demo Ada, finish these, and pick
+  Physics before recording. The dev host also lists Accounting; the submission tree does not ship it.
+- **Consents.** Either start the host with `--online-demo` (below), which records them for the profile it creates, or
+  do them by hand, in this order (verified live): Settings → Online features: *Cloud tutor* → Give consent → Turn on;
+  *Online study materials* → Review Study consent → Turn on (it asks twice, once for the computer and once for the
+  profile). Then open **My materials** and answer **OK** on “Talk with the online tutor?” in **Your tutor**, or answer
+  **OK** on the “Use the cloud tutor?” card that a hint, an Ask or a guided question now shows. Until that notice is
+  answered no tutor turn is sent (see the walk-through's re-check).
+
 - **The pack.** Pack 1.1.0 (with Projectile motion) must be the one installed in the demo profile's data folder. A
   folder seeded earlier has an older Physics pack and the lecture's concepts will show “outside the packs”. Check that
   Learn lists Projectile motion before recording.
@@ -108,7 +125,7 @@ outline → map, and cut the Open-at tap, the follow-up question and the skill s
   map beat.
 - **Dates for the scrubber.** It offers weekly dates from the profile's first learning event, at most 26 weeks. A
   profile created for the recording has no date four weeks back, and the machine clock must not be changed to
-  manufacture one. Either use a profile that genuinely has older history, or show the control and describe the
+  manufacture one. Seen live on a new profile: the scrubber is not on the page at all. Either use a profile that genuinely has older history, or show the control and describe the
   four-weeks-ago view from the labelled simulated regression (`services/agent-core/tests/scenarios/w10/map_month_later.yaml`, suite `learner_map`). Decide before recording; do not caption a short replay as a month.
 - **The lecture.** Choose one YouTube lecture on projectile motion with a transcript and rehearse it; its link is not
   stored in the repository. The transcript is the learner's own private copy and is never fetched by Jana (JM-D43). A
@@ -140,9 +157,14 @@ is recorded. See `LEARNING_AGENT_REVIEW.md` for the earlier Companion evidence a
    `curl -i http://127.0.0.1:<port>/v1/ping`. If the check fails, the error names the port and the version found
    (“none” if the header is missing) or says no gateway answered; stop the other process, start this repository's
    gateway on that port, and relaunch the host. Do not work around it by editing the check.
-3. Launch `uv run python -m jana_tools.hackathon_dev --stable --port 5197 --data-dir /tmp/jana-demo`.
+3. Launch `uv run python -m jana_tools.hackathon_dev --stable --port 5197 --data-dir /tmp/jana-demo`. For a demo
+   with no Settings steps add `--online-demo` and a new, empty `--data-dir`: an adult profile created on that host starts
+   with the cloud tutor, online Study materials and the cloud tutor's first-use notice already recorded (the same
+   stores Settings and the cards write). It is off by default, needs an explicit `--data-dir`, leaves Personal tutor
+   memory online off, never touches a profile that existed before the host started, and refuses a profile of under 18.
    For local inference add `--local-model /path/to/Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf`.
-4. Create only invented adult profiles. Preinstall packs and models; do not spend the video downloading them.
+4. Create only invented adult profiles. Sign-up asks for a first name and an age (a whole number, 18 or over; a
+   younger age creates nothing). Preinstall packs and models; do not spend the video downloading them.
 5. Run the storyboard without recording. Confirm every reply finishes, every button works, and every personalized
    statement has the right source. Confirm the Companion's answer in beat 3 is the model's phrasing of code facts, not
    the canned line. Restart the actual core as well as the browser during the supporting rehearsal.
@@ -187,6 +209,69 @@ The earlier Companion rehearsal (30–31 October) used the isolated Demo Ada pro
 `/tmp/jana-learning-agent-live-demo-20261030`, and real Muse Spark Study and guided tutor calls completed. Saved content
 still works offline. An agreement made locally is not automatically available to the online tutor under the current
 permissions; use an agreement made during the online conversation for an online continuity demonstration.
+
+## Live walk-through, 1 November
+
+Run against this repository's gateway (version 1.2, port 8081) and the stable host on port 5197 with a new data
+folder, invented profile Demo Ada, cloud tutor and online Study materials on, tutor memory online off. The two
+gateways already listening on 8082 and 8083 both answered version 1.1 (8082 belongs to the parent project), exactly
+the wrong-gateway case above, so a new one was started on 8081. The lecture used the synthetic fixture transcript
+under a made-up video id; no link was opened. Muse Spark answered through the gateway (`POST /v1/chat/completions`
+and `/v1/study/process`, both 200). What happened, beat by beat:
+
+- **Opening.** Home shows the first-time Last time card (“When you've studied here, this card will say where you left
+  off.”). Works as the spec says.
+- **Practice.** The swapped answer was marked by code (“Not quite”, 0 of 4, Not started → Learning). The hint ladder
+  advanced, but the tutor turn behind it failed until the consent card above was answered (cause found in
+  `turn.py`'s first-use notice; the trace's `connectivity.state_at_start: "off"` was a hardcoded default, not a
+  reading). *Now:* with the cloud tutor allowed, no model on the computer and the notice unanswered, every tutoring
+  turn (hint, Ask, guided question) shows the “Use the cloud tutor?” card once and says “I need your OK before I can
+  use the online tutor, so nothing has been sent. Choose OK on the card above, then ask again.” (after “Keep it on this
+  computer”: that there is no tutor on this computer and the online tutor can be allowed in Settings). Ask anything on
+  Home names the missing OK in its own words instead of “need the online plan”. The trace records the connectivity
+  state the turn started in and whether the cloud tier served it.
+- **Companion, before any lecture.** The first “What haven't I got yet?” returned the canned line (“Sorry, I couldn't
+  put that together just now”); the trace gate was `fact_binding`, detail `number:1:unit:none`, `exhausted_canned`.
+  The code-built fallback of 1 November covered only the case where an outline already exists. The same question
+  asked again worked: it named two not-started projectile skills, each “Source: checked practice records
+  (2026-11-01)”, with **See what your tutor knows**. The wording showed the raw band code `not_started`, and it did
+  not mention the skill Ada had practised. *Now:* a reply refused twice with only `progress_read` in hand becomes a
+  line built by code (“I couldn't put a fuller answer together, so here is where your checked practice records
+  stand:”, then up to six skills, those not yet secure first, each with its source and date and **See what your tutor
+  knows**), and a band is always said in words (“not started”, “learning”, “secure”).
+- **Lecture.** The source was ready at once, with six chapters and an **Open at m:ss** on every chapter and line; the
+  transcript lines are full width. **What this video teaches** took about 20 s and gave 4 objectives, 2 worked
+  examples, 10 concepts mapped to the pack's skills, “Assumes you know: How to resolve a vector…”, one “Not
+  covered here” skill (the trajectory graphs), and “For you” with five skills: resolve **learning**, the other four
+  not started. Rough edges seen: the first three objectives show **Open at 0:00** (their lines are at 0:21, 0:29 and
+  0:35); the assumed-knowledge moment prints “00:48” where the buttons print “0:48”; some generic concepts (“projectile
+  motion”, “air resistance”) are tagged to the time-of-flight skill; the fixture has no air-resistance concept.
+  *Now (re-run on a new data folder, 1 November):* the objectives open at 0:21, 0:29, 0:35 and 0:41 (a citation that
+  spans several lines is read at the line that says the objective), every time reads “0:48” style, and “projectile
+  motion” and “projectile” are marked outside the packs (a test covers “air resistance” too), while “time of flight”,
+  “range equation”, “maximum height” and the two components still map to their own skills.
+- **Ask about this moment (4:12).** The thread showed “About 4:12 in YouTube video”. The reply to “Why does the range
+  depend on sin two theta?” offered to open that part of the video instead of explaining, with **Open the moment,
+  4:12**. *Now:* the same question is
+  explained from the ±30 s lines (the model may say the lecture's own figures, “two theta”, “ninety degrees”, “4:30”,
+  which fact binding used to refuse, and the role no longer offers the video in place of an answer); **Open the moment**
+  appears only when asked for. “What does this video teach that I haven't got yet?” was answered from the outline and Ada's bands: time of
+  flight “(YouTube video teaches it at 6:40)” and the horizontal-velocity skill at 0:48, each “Source: teaching
+  outline (2026-11-01)”.
+- **Map.** Progress opens on **My map** with Mastery, Freshness and Mistakes; the Physics tile for Projectile motion
+  read “Learning · 0 of 6 secure · 1 mistake being watched”. **Open the Physics map** opens the skill map inside
+  Lessons, with layers Mastery, Freshness, Mistakes, Study, Notes and Tutor's topics, a legend, a table option and the
+  node PHY-O-01.09.K01 “Learning … Asked 3 times · 1 mistake”. The scrubber, the Freshness and Study layers' contents
+  and the skill sheet were not checked.
+
+*Re-check, 1 November (host started with `--online-demo` on `/tmp/jana-demo-online`, new profile Demo Ada, no
+Settings steps):* a guided question, a practice hint (wrong answer first), the Companion's “What haven't I got yet?”,
+the lecture outline and “Ask about this moment” at 4:12 all reached Muse Spark through the gateway and finished. A copy
+of the earlier folder with the cloud tutor's notice cleared, on a host without the flag, showed the card and the plain
+sentence above and sent nothing, then worked after **OK**. Not re-run live: the Companion's canned-line fallback (it
+needs the model to fail; covered by `test_w9_companion_moment.py`).
+
+Not covered: voice, photos, Glimmer offline, the Open-at link in a real browser, tutor-memory online.
 
 ## Supporting acceptance walkthrough
 

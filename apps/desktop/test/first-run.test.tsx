@@ -46,10 +46,10 @@ function start(fake: FakeProfileCore) {
 
 const posts = (fake: FakeProfileCore, path: string) => fake.log.filter((r) => r.method === "POST" && r.path === path).map((r) => r.body as Record<string, unknown>);
 
-async function firstRun(name: string, birthDate = "1990-05-14") {
+async function firstRun(name: string, age = "34") {
   await screen.findByRole("heading", { name: "Who's learning?" });
   fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: name } });
-  fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: birthDate } });
+  fireEvent.change(screen.getByLabelText("Age"), { target: { value: age } });
   fireEvent.click(screen.getByRole("button", { name: "Start learning" }));
   return screen.findByRole("region", { name: `You're ready, ${name}.` });
 }
@@ -67,7 +67,7 @@ describe("UXS-10 and PLT-17", () => {
     const fake = core((c) => c.profiles.splice(0));
     start(fake);
     await screen.findByRole("heading", { name: "Who's learning?" });
-    // One step: a name, a date of birth, the privacy line and "Start learning". Nothing else is asked.
+    // One step: a name, an age, the privacy line and "Start learning". Nothing else is asked.
     expect(screen.getAllByRole("textbox")).toHaveLength(1);
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
@@ -80,7 +80,7 @@ describe("UXS-10 and PLT-17", () => {
     expect(area.contains(screen.getByRole("complementary", { name: "Status" }))).toBe(false);
     const handoff = await firstRun("Ada");
     // The learner is added with TABLE PLT-17b's defaults (the installed subjects at their level) and the adult band;
-    // the date of birth itself is not sent.
+    // the age itself is not sent.
     expect(posts(fake, "/v1/profiles")).toEqual([
       { display_name: "Ada", avatar: "avatar-1", level: "O", subjects: ["physics", "accounting"], age_band: "18_plus" },
     ]);
@@ -103,16 +103,56 @@ describe("UXS-10 and PLT-17", () => {
     await screen.findByRole("heading", { name: "Who's learning?" });
     fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: "Tobi" } });
     const begin = screen.getByRole("button", { name: "Start learning" });
-    expect(begin.hasAttribute("disabled")).toBe(true); // no date of birth yet
-    const now = new Date(), year = now.getFullYear() - 16;
-    fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: `${year}-01-01` } });
+    const age = screen.getByLabelText("Age");
+    expect(begin.hasAttribute("disabled")).toBe(true); // no age yet
+    fireEvent.change(age, { target: { value: "17" } }); // one year short
     expect(screen.getByText(/this app is for learners aged 18 and over, so a profile cannot be made/)).toBeTruthy();
     expect(begin.hasAttribute("disabled")).toBe(true);
     fireEvent.submit(begin.closest("form")!);
-    fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: `${now.getFullYear() + 1}-01-01` } });
-    expect(screen.getByText("Enter your date of birth as it appears on your documents.")).toBeTruthy();
-    expect(begin.hasAttribute("disabled")).toBe(true);
     expect(posts(fake, "/v1/profiles")).toEqual([]);
+    fireEvent.change(age, { target: { value: "16" } });
+    expect(screen.getByText(/so a profile cannot be made/)).toBeTruthy();
+    fireEvent.submit(begin.closest("form")!);
+    expect(posts(fake, "/v1/profiles")).toEqual([]);
+  });
+
+  test("jm_d15_first_run_asks_for_a_whole_number_age_and_nothing_else_counts", async () => {
+    const fake = core((c) => c.profiles.splice(0));
+    start(fake);
+    await screen.findByRole("heading", { name: "Who's learning?" });
+    fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: "Tobi" } });
+    const begin = screen.getByRole("button", { name: "Start learning" });
+    const age = screen.getByLabelText("Age") as HTMLInputElement;
+    // One numeric field in whole years: no browser date picker, and the one-line reason beside it.
+    expect(age.type).toBe("number");
+    expect(age.step).toBe("1");
+    expect(age.min).toBe("1");
+    expect(age.max).toBe("120");
+    expect(screen.queryByLabelText("Date of birth")).toBeNull();
+    expect(document.querySelector('input[type="date"]')).toBeNull();
+    expect(screen.getByText("This app is for learners aged 18 and over. Your age is only used for this check and is not saved.")).toBeTruthy();
+    // Out of range, fractions, signs and exponents are refused with the "whole number" message and nothing is added.
+    for (const value of ["0", "121", "1000", "-30", "17.5", "18.5", "1e2"]) {
+      fireEvent.change(age, { target: { value } });
+      expect(screen.getByText("Enter your age as a whole number of years, for example 34."), value).toBeTruthy();
+      expect(begin.hasAttribute("disabled"), value).toBe(true);
+      fireEvent.submit(begin.closest("form")!);
+    }
+    // Letters never reach the field: the browser reads them as empty, which also allows nothing.
+    fireEvent.change(age, { target: { value: "abc" } });
+    expect(age.value).toBe("");
+    expect(begin.hasAttribute("disabled")).toBe(true);
+    fireEvent.submit(begin.closest("form")!);
+    expect(posts(fake, "/v1/profiles")).toEqual([]);
+    // 18 is the youngest adult: the profile is made with the adult band and the age is not sent.
+    fireEvent.change(age, { target: { value: "18" } });
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(begin.hasAttribute("disabled")).toBe(false);
+    fireEvent.click(begin);
+    await screen.findByRole("region", { name: "You're ready, Tobi." });
+    expect(posts(fake, "/v1/profiles")).toEqual([
+      { display_name: "Tobi", avatar: "avatar-1", level: "O", subjects: ["physics", "accounting"], age_band: "18_plus" },
+    ]);
   });
 
   test("uxs10_below_minimum_laptop_state", async () => {
@@ -260,10 +300,16 @@ describe("UXS-09", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add profile" }));
     fireEvent.change(screen.getByRole("textbox", { name: "First name or nickname" }), { target: { value: "Dee" } });
     const add = screen.getAllByRole("button", { name: "Add profile" }).at(-1)!;
-    fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "2015-03-01" } });
+    fireEvent.change(screen.getByLabelText("Age"), { target: { value: "17" } });
     expect(add.hasAttribute("disabled")).toBe(true); // under 18: nothing is added
     expect(screen.getByText(/this app is for learners aged 18 and over, so a profile cannot be made/)).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "1988-11-02" } });
+    fireEvent.submit(add.closest("form")!);
+    fireEvent.change(screen.getByLabelText("Age"), { target: { value: "17.5" } });
+    expect(add.hasAttribute("disabled")).toBe(true); // not a whole number
+    expect(screen.getByText("Enter your age as a whole number of years, for example 34.")).toBeTruthy();
+    expect(posts(fake, "/v1/profiles")).toEqual([]);
+    expect((screen.getByLabelText("Age") as HTMLInputElement).type).toBe("number");
+    fireEvent.change(screen.getByLabelText("Age"), { target: { value: "37" } });
     fireEvent.click(add);
     await screen.findByRole("button", { name: /^Dee/ });
     expect(posts(fake, "/v1/profiles").at(-1)).toEqual({ display_name: "Dee", avatar: "avatar-4", level: "O", subjects: ["physics", "accounting"], age_band: "18_plus" });

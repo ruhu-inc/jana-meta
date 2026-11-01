@@ -163,9 +163,11 @@ FACT_UNITS = frozenset(
 )
 
 
-def fact_binding_findings(text: str, sources: Sequence[Any]) -> list[tuple[str, str]]:
+def fact_binding_findings(text: str, sources: Sequence[Any],
+                          figures: frozenset[str] = frozenset()) -> list[tuple[str, str]]:  # fmt: skip
     """Each number in the reply that no tool result or status line gives beside the same unit, as (number, unit kind:
-    the unit words said beside it, or `none`). A personal progress claim is ("progress", "claim")."""
+    the unit words said beside it, or `none`). A personal progress claim is ("progress", "claim"). A number with no
+    unit of progress beside it that the learner's own lines for this turn say (`figures`) is theirs, not a claim."""
     if companion_facts.PERSONAL_PROGRESS.search(text):
         return [("progress", "claim")]
     allowed = allowed_numbers(sources)
@@ -174,18 +176,20 @@ def fact_binding_findings(text: str, sources: Sequence[Any]) -> list[tuple[str, 
         words = allowed.get(number)
         # Only unit words establish a numeric relationship. Generic words such as 'in' or 'your' prove nothing.
         said_units = label & FACT_UNITS
+        if number in figures and not said_units - {"moment"}:
+            continue
         if words is None or not said_units or not (said_units & words):
             found.append((number, "_".join(sorted(said_units)) or "none"))
     return found
 
 
-def fact_binding_errors(text: str, sources: Sequence[Any]) -> list[str]:
+def fact_binding_errors(text: str, sources: Sequence[Any], figures: frozenset[str] = frozenset()) -> list[str]:
     """Numbers bind to their own metric/unit, never a neighbouring clause's unrelated word."""
     return [
         "personal progress claims require a typed fact reference"
         if number == "progress"
         else f"{number} has no matching source metric"
-        for number, _ in fact_binding_findings(text, sources)
+        for number, _ in fact_binding_findings(text, sources, figures)
     ]
 
 
@@ -193,10 +197,10 @@ def gate_results(engine: Any, context: Any, reply: Mapping[str, Any]) -> list[tu
     """Every gate a companion reply passes or fails, in order, as (gate, problems, detail code). The detail never
     holds the reply's text: for fact binding it is the first failing number and the unit said beside it."""
     text = str(reply.get("text") or "")
-    binding = fact_binding_findings(text, context.sources)
+    binding = fact_binding_findings(text, context.sources, context.figures)
     out: list[tuple[str, list[str], str | None]] = [
         ("one_ask", one_ask_errors(text), None),
-        ("fact_binding", fact_binding_errors(text, context.sources),
+        ("fact_binding", fact_binding_errors(text, context.sources, context.figures),
          f"number:{binding[0][0]}:unit:{binding[0][1]}"[:64] if binding else None),
         ("search_claim", search_claim_errors(text, context.searched), None),
         ("model_claims", companion_facts.model_claim_errors(text), None),
@@ -574,6 +578,7 @@ class CompanionContext:
     failure: dict[str, Any] | None = None  # the last failed model call's diagnosis, by code (`_traced`)
     turn_history: list[Any] = field(default_factory=list)  # the messages this turn's final call saw
     searched: bool = False  # a search of the student's materials ran this turn (by code, or study_search)
+    figures: frozenset[str] = frozenset()  # numbers this turn's excerpts and moment lines say (fact binding)
     correct_memory: Callable[[str, str, str, str], bool] = lambda *_: False
     memory_changed: Callable[[], None] = lambda: None
     note_forgotten: Callable[[str], None] = lambda _: None
@@ -717,6 +722,7 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     context.failure = None
     context.turn_history = []
     context.searched = False
+    context.figures = frozenset()
     context.egress = {}
     context.facts = []
     context.recall_revision = memory_revision(context.scope.learner.conn)
@@ -774,6 +780,7 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
         companion_facts.add_facts(context.facts, outline.facts)
         context.sources.append({"outline": {"title": outline.title, "skills": outline.skills,
                                             "skills_not_yet_secure": len(outline.not_yet_secure)}})  # fmt: skip
+    context.figures = companion_facts.figures(excerpts)  # the lecture's own words, moment lines included
     fence = records_fence(notes, excerpts)
     parts = [p for p in (fence, moment_line, f"Status: {line}" if key != context.status_key else "") if p]
     context.status_key = key
@@ -862,6 +869,11 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
         # fix 2026-11-01); otherwise the canned line (§19 fix, 2026-10-30).
         made = made_line(templates, context.sources) or (
             outline_line(templates, outline) if outline is not None else None)  # fmt: skip
+        if made is None and (shown := progress_line(templates, context.facts)) is not None:
+            # No outline, but `progress_read` gave the bands this turn: they are the answer to "what haven't I got
+            # yet", in words and with their sources, by code (live-run fix 2026-11-01, second pass).
+            actions = [*context.actions, action_event("open_knows", {})]
+            return _finish(engine, turn, shown[0], actions, user=text, stop="degraded")
         return _finish(engine, turn, made or canned(templates), context.actions, user=text, stop="degraded")
     actions = list(context.actions)
     tools = getattr(engine, "study_tools", None)
@@ -934,6 +946,25 @@ def outline_line(templates: Any, outline: OutlineFacts) -> str | None:
     return str(templates.text(key, skills=outline.skills, count=count, statements=statements))
 
 
+PROGRESS_LINE_MAX = 6  # skills named in the code-built progress line
+
+
+def progress_line(templates: Any, facts: list[companion_facts.Fact]) -> tuple[str, list[int]] | None:
+    """The bands `progress_read` gave this turn, as the engine's own words and the records' own statements, for a
+    reply refused twice when no outline is in hand: skills not yet secure first, at most `PROGRESS_LINE_MAX`, each
+    with its source and date as a selected fact renders it. None when the turn read no band."""
+    bands = [
+        (i, f)
+        for i, f in enumerate(facts, 1)
+        if f.metric == "skill_band" and f.source == companion_facts.PROGRESS_SOURCE
+    ]
+    if not bands:
+        return None
+    bands.sort(key=lambda pair: pair[1].value == "secure")  # stable: the records' own order within a band
+    refs = [i for i, _ in bands[:PROGRESS_LINE_MAX]]
+    return "\n\n".join([str(templates.text("progress.intro")), companion_facts.selected_text(facts, refs)]), refs
+
+
 def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> OutlineFacts | None:
     """The newest ready teaching outline's skills with the learner's bands and the moment each is taught at, as
     typed facts (SPEC §20.4): skills not yet secure first, at most twelve, then the labelled counts (how many skills
@@ -974,7 +1005,7 @@ def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> OutlineFacts |
         where = f" ({title} teaches it at {moment_label(when)})" if type(when) is int else f" ({title})"
         facts.append(companion_facts.Fact(
             "outline:" + kc, "skill_band", band, "band", statement[:100], desk.day(now), "teaching outline",
-            f"Recorded practice band for {statement[:100]}: {band}{where}."))  # fmt: skip
+            f"Recorded practice band for {statement[:100]}: {companion_facts.band_words(band)}{where}."))  # fmt: skip
     day = desk.day(now)
     facts.append(companion_facts.Fact(
         "outline:skills", "outline_skills", len(rows), "skills", title, day, "teaching outline",

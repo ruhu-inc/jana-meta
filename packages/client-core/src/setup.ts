@@ -38,21 +38,22 @@ export function installedSubjects(packs: PackList["packs"]): InstalledSubject[] 
 /** Jana is for learners aged 18 and over (JM-D1, JM-D15): every profile the app creates has this band. */
 export const ADULT_BAND = "18_plus" as const;
 
-/** Whether a date of birth (`yyyy-mm-dd`, as a date field gives it) is 18 or more years before `today`, or null when
- * it is not a real date in the past. The date is only checked here: it is never stored or sent. */
-export function isAdult(birthDate: string, today: Date = new Date()): boolean | null {
-  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
-  if (parts === null) return null;
-  const [year, month, day] = [Number(parts[1]), Number(parts[2]), Number(parts[3])];
-  const born = new Date(year, month - 1, day);
-  if (born.getFullYear() !== year || born.getMonth() !== month - 1 || born.getDate() !== day) return null;
-  if (year < 1900 || born > today) return null;
-  const birthdayPassed = today.getMonth() > month - 1 || (today.getMonth() === month - 1 && today.getDate() >= day);
-  return today.getFullYear() - year - (birthdayPassed ? 0 : 1) >= 18;
+/** The youngest age a learner may give: Jana is for learners aged 18 and over (JM-D1, JM-D15). */
+export const ADULT_AGE = 18;
+/** The oldest age the sign-up field accepts; anything above it is a mistake, not a learner. */
+export const MAX_AGE = 120;
+
+/** Whether an age typed as a whole number of years (`"34"`, as a number field gives it) is 18 or more, or null when it
+ * is not a whole number from 1 to 120. The age is only checked here: it is never stored or sent. */
+export function isAdultAge(age: string): boolean | null {
+  if (!/^\d{1,3}$/.test(age)) return null;
+  const years = Number(age);
+  if (years < 1 || years > MAX_AGE) return null;
+  return years >= ADULT_AGE;
 }
 
-/** A new learner as first run adds them (TABLE PLT-17b): the name is asked, and the date of birth only to confirm
- * they are 18 or over; the band is always the adult band; level and subjects are every installed subject at the level
+/** A new learner as first run adds them (TABLE PLT-17b): the name is asked, and the age only to confirm they
+ * are 18 or over; the band is always the adult band; level and subjects are every installed subject at the level
  * of the installed packs (O level when both are installed). With no pack installed yet, every subject at O level, so
  * content added later fits. The disc follows the order of creation (DSN-24). */
 export function firstRunProfile(name: string, packs: PackList["packs"], order: number): CreateProfile {

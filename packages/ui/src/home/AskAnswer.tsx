@@ -75,7 +75,7 @@ export function AskAnswer({ view, actions, followUps }: { view: AskView; actions
   }
   if (view.status !== "answered" || view.answer === null) {
     const message = view.status === "unavailable"
-      ? t(view.reason === "allowance_exhausted" ? "ask.allowance_used" : "ask.offline")
+      ? t(view.reason === "allowance_exhausted" ? "ask.allowance_used" : view.reason === "notice_required" ? "ask.notice_required" : "ask.offline")
       : t(view.status === "blocked" ? "ask.blocked" : "ask.failed");
     return (
       <section aria-label={t("ask.title")} data-ask={view.status} className="flex flex-col gap-3">

@@ -36,12 +36,24 @@ does not include it).
 ## Hackathon contribution
 
 Jana existed before this event. Its tutoring engine, curriculum packs, desktop shell and deterministic checking
-foundation are prior work. The October 26–November 4, 2026 entry continues the Meta model integration and adds
-the personal Study companion: durable conversations, explicit remember/correct/forget commands,
-profile isolation, inspectable learning evidence and source-backed progress claims; YouTube lectures as a Study
-source; and the learner's map. The companion work is recorded in commits `7a92235d` and `aed35cbf` (October 29–30),
-the lecture and map work in `b814436d` (October 31), and the demo build, with the projectile-motion Physics subtopic,
-in `4ccd5c4c` (tagged `demo-2026-11-01`). These are implementation claims, not measured learning gains.
+foundation are prior work, imported as the baseline commit `7cf6c6ed` on October 25. The October 26–November 4, 2026
+entry built, on top of it:
+
+- **Muse Spark as the cloud tutor** (from October 26), with a budgeted gateway that holds the Meta key, in place of the
+  previous cloud models and web search, which were removed.
+- **SAM 3.1 photo outlines**: Jana points at the exact line of working on the learner's own photo and drills labelled
+  diagrams.
+- **Offline tutoring on Muse Glimmer 30B**, with a fall back within seconds when the network drops.
+- **Voice**: Muse Voice Transcribe to hear the learner and Kokoro-82M to speak accepted replies.
+- **An adult-only product** (18 and over, as Meta's terms require), with an age at sign-up.
+- **A research agent** that talks a topic through, then builds a cited study pack from the web.
+- **New teaching features**: checked figures on items and lessons, tracing a misconception to the earlier skill it
+  comes from, explain-it-back before a skill counts as mastered, and predict-before-you-see simulations.
+- **The Study companion, YouTube lectures and the learner's map** described above, in commits `7a92235d` and
+  `aed35cbf` (October 29–30) and `b814436d` (October 31).
+- **The demo build**, with the projectile-motion Physics subtopic, in `4ccd5c4c` (tagged `demo-2026-11-01`).
+
+These are implementation claims, not measured learning gains.
 The demo should distinguish this new work from the existing product and identify every human contributor.
 
 ## The Meta models and what each does
@@ -54,7 +66,7 @@ The demo should distinguish this new work from the existing product and identify
 | **Muse Glimmer 30B** | On the laptop (open weights, Apache-2.0), with llama.cpp | The tutor offline: when the network drops, the same engine falls back to Glimmer within seconds, with its vision projector for photos and its DFlash draft model for faster generation. Machines with 32 GB of memory or more. |
 
 Muse Spark is used in Standard mode only; Contributor mode is never configured. Meta's Model API terms require every
-end user to be 18 or over, so Jana asks for a date of birth at sign-up and creates adult profiles only.
+end user to be 18 or over, so Jana asks for an age at sign-up and creates adult profiles only.
 
 Meta offers no text-to-speech model licensed for commercial use, so spoken replies and study-pack podcasts are read by
 Kokoro-82M (Apache-2.0).

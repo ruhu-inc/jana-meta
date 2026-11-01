@@ -121,6 +121,10 @@ companion:
       other: "I've started your {kind} from {source}. Open it below."
       pack: "your study pack"
       own: "your material"
+    # When the reply was refused and no outline is in hand but `progress_read` gave the learner's bands (live-run fix
+    # 2026-11-01, second pass): this line, then the records' own statements, each with its source; no numbers.
+    progress:
+      intro: "I couldn't put a fuller answer together, so here is where your checked practice records stand:"
     # When the reply was refused and a teaching outline is ready (live-run fix 2026-11-01): what the video teaches
     # that is not yet secure, by code from the outline's skills and the learner's bands; never the canned line then.
     outline:

@@ -88,10 +88,17 @@ def kc_tags(
     scores: dict[str, float] = {}
     for topic in found:
         overlap = {}
-        for kc in topic["kc_ids"]:
-            terms = _terms(str(content.kc_statement(kc) or ""), fold)
-            overlap[kc] = len(terms & words) + 2 * len(terms & named)
-        overlap = {kc: n for kc, n in overlap.items() if n >= least}
+        statements = {kc: _terms(str(content.kc_statement(kc) or ""), fold) for kc in topic["kc_ids"]}
+        # A concept's name has to name a skill, not the topic: words the topic's own title or most of its skills say
+        # ("projectile") say nothing of which skill, so they score nothing and a concept naming only such words
+        # ("projectile motion", "air resistance") maps to none (live-run fix 2026-11-01).
+        general = _topic_words(topic, statements, fold) if focus is not None else set()
+        for kc, terms in statements.items():
+            specific = terms - general
+            overlap[kc] = len(specific & words) + 2 * len(specific & named)
+            if focus is not None and not specific & named:
+                overlap[kc] = 0
+        overlap = {kc: n for kc, n in overlap.items() if n >= max(least, 1 if focus is not None else 0)}
         total = sum(1 + n for n in overlap.values())
         for kc, n in overlap.items():
             scores[kc] = scores.get(kc, 0.0) + share * (1 + n) / total
@@ -105,6 +112,22 @@ def kc_tags(
     weights = [round(w / whole, 4) for _, w in top]
     weights[-1] = round(1 - sum(weights[:-1]), 4)  # the rounding never moves the sum
     return [{"kc_id": kc, "weight": w} for (kc, _), w in zip(top, weights, strict=True) if w > 0]
+
+
+GENERAL_SHARE = 0.5  # a word in more than this share of a topic's skill statements is general to the topic
+
+
+def _topic_words(topic: dict[str, Any], statements: dict[str, set[str]], fold: Callable[[str], str]) -> set[str]:
+    """The content words that describe the topic as a whole: those of its title, and those most of its skills'
+    statements say (when it has at least three skills, so a small topic's every word is not general)."""
+    general = {fold(w) for w in re.findall(r"[a-z0-9]+", str(topic.get("title", "")).lower()) if len(w) >= 4}
+    if len(statements) >= 3:
+        counts: dict[str, int] = {}
+        for terms in statements.values():
+            for term in terms:
+                counts[term] = counts.get(term, 0) + 1
+        general |= {term for term, n in counts.items() if n > GENERAL_SHARE * len(statements)}
+    return general
 
 
 def _terms(statement: str, fold: Callable[[str], str] = lambda w: w) -> set[str]:

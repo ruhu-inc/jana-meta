@@ -51,14 +51,17 @@ test("the outline shows what the video teaches, mapped to skills, skips and the 
   expect(screen.queryByText(/%|0\.\d/)).toBeNull(); // bands as words, never a probability
   // A citation badge opens the cited passage; beside an Open-at button it is a reference number, so the time shows
   // once a row (live-run fix 2026-11-01: "Open at 0:29" beside "00:29").
-  const badge = objectives.getAllByRole("button", { name: "Projectile motion · At 00:00" })[0]!;
+  const badge = objectives.getAllByRole("button", { name: "Projectile motion · At 0:00" })[0]!;
   expect(badge.textContent).toBe("[1]");
   fireEvent.click(badge);
   expect(onCite).toHaveBeenCalled();
   expect(objectives.getAllByText(/0:29/).map((el) => el.textContent)).toEqual(["Open at 0:29"]);
   expect(concepts.getAllByText(/4:12/).map((el) => el.textContent)).toEqual(["Open at 4:12"]);
   // A row without a moment keeps the located badge.
-  expect(within(screen.getByRole("region", { name: "Assumes you know" })).getByRole("button", { name: "Projectile motion · At 00:00" }).textContent).toBe("00:00");
+  const assumed = within(screen.getByRole("region", { name: "Assumes you know" })).getByRole("button", { name: "Projectile motion · At 0:00" });
+  expect(assumed.textContent).toBe("0:00");
+  // One time format on the page (live-run fix 2026-11-01: "Assumes you know" printed 00:48 where the buttons print 0:48).
+  expect(screen.getByRole("article").textContent).not.toMatch(/(^|\D)0\d:\d\d/);
 });
 
 test("without a map or skill names the chips still name the skill and cannot be pressed", () => {
@@ -66,4 +69,29 @@ test("without a map or skill names the chips still name the skill and cannot be 
   const chip = screen.getByRole("button", { name: "range: secure" });
   expect(chip.hasAttribute("disabled")).toBe(true);
   expect(screen.queryByRole("button", { name: "On the map" })).toBeNull();
+});
+
+test("saved outline maths renders in every generated section without changing its citations", () => {
+  const math = String.raw`Use \(R = \frac{u^2 \sin 2\theta}{g}\).`, references = cite(math);
+  const saved = { ...outline,
+    objectives: [{ text: math, at_ms: 29000, citations: references }],
+    examples: [{ text: String.raw`Find $$T = 2u \sin\theta/g$$.`, citations: references }],
+    concepts: [{ name: String.raw`Height $H = u^2/(2g)$`, citations: references }],
+    assumes: [{ text: String.raw`Resolve \[u\cos\theta\]. Budget $20 and $35.`, citations: references }],
+  };
+  const before = JSON.stringify(saved), onCite = vi.fn(), onOpenMoment = vi.fn();
+  render(<LocaleProvider locale="en"><StudyOutline outline={saved} sourceTitle="Projectile motion" chunks={[chunk]} busy={false} onOpenMoment={onOpenMoment} onCite={onCite} /></LocaleProvider>);
+  for (const name of ["Objectives", "Worked examples", "Concepts", "Assumes you know"]) {
+    const section = screen.getByRole("region", { name });
+    expect(section.querySelector(".katex math")).not.toBeNull();
+    expect(section.textContent).not.toContain(String.raw`\(`);
+    expect(section.querySelector(".katex-error")).toBeNull();
+  }
+  expect(screen.getByRole("region", { name: "Assumes you know" }).textContent).toContain("Budget $20 and $35.");
+  const objectives = within(screen.getByRole("region", { name: "Objectives" }));
+  fireEvent.click(objectives.getByRole("button", { name: "Open the video at 0:29 on YouTube" }));
+  expect(onOpenMoment).toHaveBeenCalledWith(29000);
+  fireEvent.click(objectives.getByRole("button", { name: "Projectile motion · At 0:00" }));
+  expect(onCite).toHaveBeenCalledWith(references[0]);
+  expect(JSON.stringify(saved)).toBe(before);
 });

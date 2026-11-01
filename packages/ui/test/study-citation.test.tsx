@@ -70,7 +70,7 @@ test("page badges expose the filename and preserve the exact verified reference"
   fireEvent.click(button);
   expect(onOpen).toHaveBeenCalledWith(citation);
 });
-test.each([[155000, "02:35"], [3725000, "1:02:05"]])("timestamp %i is readable and keyboard operable", (start_ms, label) => {
+test.each([[155000, "2:35"], [3725000, "1:02:05"]])("timestamp %i is readable and keyboard operable", (start_ms, label) => {
   const onOpen = vi.fn();
   render(<StudyCitation citation={citation} locator={{ kind: "time", start_ms, end_ms: start_ms + 1000 }} sourceTitle="Lecture" number={1} onOpen={onOpen} />);
   const button = screen.getByRole("button", { name: `Lecture · At ${label}` });
@@ -94,8 +94,8 @@ test("w9 a frame citation reads 'm:ss · on screen' and groups by its frame (SPE
   const frame = { kind: "frame" as const, at_ms: 252000, frame_id: `frm_${"A".repeat(26)}` };
   const second = { ...citation, start: 4, end: 7, quote: "RNA" };
   render(<StudyCitations citations={[citation, second]} locate={() => frame} title={() => "lecture.mp4"} onOpen={onOpen} />);
-  const badge = screen.getByRole("button", { name: "lecture.mp4 · On screen at 04:12 · 2 supporting passages" });
-  expect(badge.textContent).toBe("04:12 · on screen");
+  const badge = screen.getByRole("button", { name: "lecture.mp4 · On screen at 4:12 · 2 supporting passages" });
+  expect(badge.textContent).toBe("4:12 · on screen");
   fireEvent.click(badge);
   fireEvent.click(screen.getByRole("menuitem", { name: /Passage 1/ }));
   expect(onOpen).toHaveBeenLastCalledWith(citation);

@@ -30,6 +30,19 @@ def test_api_refuses_to_create_a_profile_under_18(tmp_path: Path, band: str):
     with_api(tmp_path, scenario)
 
 
+@pytest.mark.parametrize("extra", [{"age": 34}, {"age": 17}, {"age": "34"}, {"date_of_birth": "1990-05-14"}])
+def test_api_takes_no_age_or_birth_date_only_the_band(tmp_path: Path, extra: dict[str, object]):
+    """Sign-up checks the age typed into the form on the device; the create request carries only `age_band`, so an
+    age (or a date of birth) sent with it is refused and nothing is created."""
+
+    async def scenario(api: Api, r):
+        refused = await api.call("POST", "/v1/profiles", {**student("Ama"), **extra})
+        assert refused.status_code == 422 and code(refused) == "validation_failed"
+        assert (await api.call("GET", "/v1/profiles")).json()["profiles"] == []
+
+    with_api(tmp_path, scenario)
+
+
 def test_api_creates_and_opens_an_adult_profile(tmp_path: Path):
     async def scenario(api: Api, r):
         adult = await api.add(student("Esi"))

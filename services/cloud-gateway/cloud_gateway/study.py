@@ -217,6 +217,11 @@ CREATE TABLE IF NOT EXISTS study_reconciliations (
   identity BLOB PRIMARY KEY REFERENCES study_receipts(identity), evidence_sha256 TEXT NOT NULL,
   reserved_usd REAL NOT NULL, actual_usd REAL NOT NULL, at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS study_media_usage (
+  identity TEXT PRIMARY KEY, account BLOB NOT NULL, month_start REAL NOT NULL, month_end REAL NOT NULL,
+  duration_ms INTEGER NOT NULL, video_ms INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS study_media_account_month ON study_media_usage(account, month_start);
 """
 
 
@@ -853,6 +858,8 @@ class StudyService:
         )
         self.gw.store._db.execute("DELETE FROM study_receipts WHERE at<? AND state!='reserved'", (cutoff,))
         self.gw.store._db.execute("DELETE FROM study_deletions WHERE at<?", (cutoff,))
+        # Keep active monthly usage even if the general metadata retention period is shorter.
+        self.gw.store._db.execute("DELETE FROM study_media_usage WHERE month_end<=?", (self.gw.clock(),))
 
     def drop(self, key: str) -> None:
         b = self.buffers.pop(key, None)
@@ -895,6 +902,56 @@ class StudyService:
         if errors(PREFIX + model, value):
             raise Refused("invalid_request", 400)
         return dict(value)
+
+    def reserve_media(self, key: str, session: Any, duration_ms: int, *, video: bool) -> None:
+        """Admit a file once, before transcription or frame work. Recordings and videos share the recording pool;
+        videos also obey their own ceiling. Milliseconds avoid rounding away small clips. Authenticated seats
+        share the pool across devices, never client-selected pseudonyms. Like inference holds, admitted work
+        remains counted on failure/cancellation/restart: an unknown or partial outcome must not mint headroom.
+        """
+        if type(duration_ms) is not int or not 0 < duration_ms <= self.gw.config.study_recording_max_minutes * 60000:
+            raise Refused("source_too_large", 413)
+        now = self.gw.clock()
+        if session.period_start is None:
+            from datetime import UTC, datetime
+
+            calendar_start = datetime.fromtimestamp(now, UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            start = calendar_start.timestamp()
+        else:
+            start = session.period_start
+        month, end = allowance_window(start, now)
+        account = hashlib.sha256(session.account.encode()).digest()
+        video_ms = duration_ms if video else 0
+
+        def cap(field: str, unit_ms: int) -> int | None:
+            # Credentials carry seats, not plan ids. As with companion limits, use the lowest configured paid
+            # limit (all paid plans currently grant the same limits); None means no duration ceiling.
+            values = [getattr(plan.limits, field) for plan in self.gw.config.plans.paid.values()]
+            named = [value for value in values if value is not None]
+            return min(named) * unit_ms * (session.seats or 1) if named else None
+
+        total_cap = cap("recording_hours_per_month", 3600000)
+        video_cap = cap("video_minutes_per_month", 60000)
+        with self.gw.store._tx() as db:
+            prior = db.execute(
+                "SELECT account,duration_ms,video_ms FROM study_media_usage WHERE identity=?", (key,)
+            ).fetchone()
+            if prior is not None:
+                if prior != (account, duration_ms, video_ms):
+                    raise Refused("request_conflict", 409)
+                return
+            total, videos = db.execute(
+                "SELECT coalesce(sum(duration_ms),0),coalesce(sum(video_ms),0) FROM study_media_usage "
+                "WHERE account=? AND month_start=?",
+                (account, month),
+            ).fetchone()
+            if (total_cap is not None and total + duration_ms > total_cap) or (
+                video and video_cap is not None and videos + video_ms > video_cap
+            ):
+                raise Refused("allowance_exhausted", 429)
+            db.execute(
+                "INSERT INTO study_media_usage VALUES (?,?,?,?,?,?)", (key, account, month, end, duration_ms, video_ms)
+            )
 
     def reserve(self, key: str, session: Any, payload: dict[str, Any], usd: float, operation: str = "process") -> bool:
         """A crash leaves the upper bound held; uncertain attempts never automatically call or charge again."""
@@ -1980,6 +2037,9 @@ class StudyService:
             b.task = asyncio.current_task()
             try:
                 info = await worker(self, b.data, "recording_info")
+                self.reserve_media(
+                    key, session, info["duration_ms"], video=b.request["kind"] == "video" or bool(info.get("has_video"))
+                )
                 units, minutes = await transcribe(self, key, b, session, info)
                 frames: list[dict[str, Any]] = []
                 has_video = bool(info.get("has_video"))

@@ -36,9 +36,21 @@ def test_only_auto_tool_choice_reaches_spark_without_mutating_the_caller() -> No
     assert {"tools", "tool_choice", "parallel_tool_calls"}.isdisjoint(no_tools)
 
 
-@pytest.mark.parametrize(("asked", "sent"), [("none", "minimal"), ("low", "low"), ("high", "high")])
+@pytest.mark.parametrize(
+    ("asked", "sent"), [("none", "minimal"), ("low", "low"), ("high", "high"), ("xhigh", "xhigh"), ("max", "max")]
+)
 def test_reasoning_effort_maps_none_to_minimal(asked: str, sent: str) -> None:
     assert prepare_body({"messages": [], "reasoning_effort": asked})["reasoning_effort"] == sent
+
+
+def test_alias_can_map_high_effort_to_max_without_downgrading_it() -> None:
+    spec = load_config().providers["meta"]
+    model = ModelSpec(id="muse-spark-1.3", thinking={"kind": "level", "high": "max"})
+    adapter = MetaAdapter(spec, Secret("synthetic-meta-key"), httpx.AsyncClient())
+    body = {"messages": [], "reasoning_effort": "high"}
+    assert adapter._body(ProviderRequest(model, body, "synthetic"), False)["reasoning_effort"] == "max"
+    assert body["reasoning_effort"] == "high"
+    asyncio.run(adapter.aclose())
 
 
 def test_refused_fields_and_history_reasoning_are_dropped_and_completions_not_stored() -> None:

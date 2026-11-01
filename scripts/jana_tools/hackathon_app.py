@@ -30,14 +30,17 @@ from agent_core.net.voice_cloud import PATH as VOICE_PATH
 from agent_core.net.voice_cloud import PAYLOAD as VOICE_PAYLOAD
 from agent_core.net.voice_cloud import CloudRealtimeConnection, CloudVoice
 from agent_core.router.hardware import TutorPath
+from agent_core.store import consents
 from agent_core.store import subscription as subscriptions
 from agent_core.store.keystore import FileKeyStore, KeyStore, MemoryKeyStore
+from agent_core.store.sqlite import transaction
 from cloud_gateway.app import VERSION as GATEWAY_VERSION
 from cloud_gateway.config import GatewayConfig, load_config
 from cloud_gateway.store import GatewayStore
 from cloud_gateway.tier import monthly_allowance_tokens
 
 HOST = "localhost"
+ONLINE_DEMO = "JANA_ONLINE_DEMO"  # "1" from `hackathon_dev --online-demo`; anything else leaves consent to the learner
 log = logging.getLogger(__name__)
 
 
@@ -256,6 +259,44 @@ async def check_gateway(port: int, transport: httpx.AsyncBaseTransport | None = 
             raise ValueError(f"Start the approved budgeted gateway on port {port} before the browser host")
 
 
+def online_demo_grant(runtime: AppRuntime, core: CoreService, profile_id: str) -> None:
+    """`--online-demo`: record, for this one profile, what Settings and the first-use cards record when an adult of 18
+    or over turns the cloud tutor and online Study materials on, so a demo needs no Settings steps. The same stores and
+    calls the routes use: the subscription's waiting consent, the computer's two switches (`PATCH /v1/connectivity`,
+    `POST /v1/subscription`), the profile's own `cloud_tier` and `study_materials` consents
+    (`PUT /v1/profiles/{id}/consents/{scope}`) and the cloud tutor's and Study's first-use notices. Personal tutor
+    memory online and cloud voice stay as they were. A profile that is not an adult who gives their own consent
+    (PRV-06, Meta's terms) is refused, whatever the flag says; the consent model is not changed for anyone else."""
+    directory, online = runtime.directory, runtime.online
+    if directory is None or online is None:
+        raise ValueError("The online demo needs the host's own local runtime")
+    if not directory.self_consents(profile_id):
+        raise ValueError("--online-demo records consent only for a profile of an adult aged 18 or over")
+    now = core.clock_ms()
+    stored = subscriptions.consent_given(subscriptions.load(online.device), [profile_id])
+    subscriptions.save(online.device, stored, now)
+    with transaction(directory.device):
+        for feature, role in (("cloud_tier", "subscription"), ("study_materials", "user")):
+            directory.device.execute(
+                "INSERT INTO online_features (feature, enabled, enabled_by_role, enabled_at, disabled_at)"
+                " VALUES (?, 1, ?, ?, NULL) ON CONFLICT (feature) DO UPDATE SET enabled = 1,"
+                " enabled_at = coalesce(excluded.enabled_at, enabled_at)",
+                (feature, role, now),
+            )
+            directory.audit("online_feature.enable", None, {"feature": feature, "by": "online_demo"})
+    notices = getattr(core, "notices", {})
+    with directory.open_learner(profile_id) as conn, transaction(conn):
+        for scope in ("cloud_tier", "study_materials"):
+            versions = notices.get(scope, [])
+            consents.grant(conn, scope, "student_18_plus", "Student", versions[-1] if versions else "unversioned",
+                           core.settings.consent_dpia_ref, now, include_study=True)  # fmt: skip
+    for feature in ("cloud_tier", "study_materials"):
+        online.record_notice(profile_id, feature, True)
+    online.connectivity.features_changed()
+    online.announce()
+    log.warning("online demo: cloud tutor and online Study materials recorded for %s", profile_id)
+
+
 async def connect(runtime: AppRuntime, core: CoreService) -> None:
     if not isinstance(runtime, SponsoredRuntime) or runtime.online is None or runtime.directory is None:
         raise ValueError("The hackathon host requires its own local runtime")
@@ -324,6 +365,10 @@ async def connect(runtime: AppRuntime, core: CoreService) -> None:
 
     sponsor()
     core.on_profile_created.append(sponsor)
+    if os.environ.get(ONLINE_DEMO) == "1":
+        # Only a profile created while the flag is on: one that exists already was never offered this, and is left as
+        # its owner set it. A minor's profile is refused when it is created (the grant raises).
+        core.on_profile_created.append(lambda profile_id: online_demo_grant(runtime, core, profile_id))
     # No scripted model stands in for live cloud calls. A local Muse Glimmer runtime the launcher started arrives after
     # ready (control.runtime_endpoint) and serves when the cloud cannot: the power cut (W3, SPEC §7).
     runtime.providers.pop("local", None)

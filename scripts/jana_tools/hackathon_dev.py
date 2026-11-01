@@ -18,6 +18,7 @@ import socket
 import subprocess
 import tempfile
 import time
+from collections.abc import Mapping
 from pathlib import Path
 
 import httpx
@@ -77,24 +78,44 @@ def stop(child: subprocess.Popen[bytes]) -> None:
             child.wait()
 
 
+def host_environment(base: Mapping[str, str], data_dir: Path, port: int, online_demo: bool) -> dict[str, str]:
+    """The environment the browser host runs in. Only the gateway may hold a provider key: none reaches the app, its
+    core or the local model runtime, so every `*_API_KEY` in the shell (META_API_KEY, Meta's MODEL_API_KEY,
+    NVIDIA_API_KEY, any other) is left out. `JANA_ONLINE_DEMO` is set only by `--online-demo`, never inherited."""
+    env = {key: value for key, value in base.items() if not key.upper().endswith("_API_KEY")}
+    env.pop("JANA_ONLINE_DEMO", None)
+    env.update(
+        JANA_META_GATEWAY_CONFIG="services/cloud-gateway/deploy/meta-dev.toml",
+        JANA_DEV_DATA_DIR=str(data_dir.resolve()),
+        JANA_DEV_HOST="127.0.0.1",
+        PORT=str(port),
+    )
+    if online_demo:
+        env["JANA_ONLINE_DEMO"] = "1"
+    return env
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--local-model", type=Path)
     parser.add_argument("--port", type=int, default=5187)
     parser.add_argument("--stable", action="store_true", help="Serve a built preview without source-triggered reloads")
-    parser.add_argument("--data-dir", type=Path, default=Path(tempfile.gettempdir()) / "jana-meta-browser")
+    parser.add_argument(
+        "--online-demo",
+        action="store_true",
+        help="Demo only, off by default: a profile created on this host (adult, 18 or over) starts with the cloud"
+        " tutor, online Study materials and the cloud tutor's first-use notice already recorded, so the demo needs no"
+        " Settings steps. Tutor memory online stays off; a profile under 18 is refused. Needs --data-dir.",
+    )
+    parser.add_argument("--data-dir", type=Path)
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port must be between 1 and 65535")
-    # Only the gateway may hold a provider key: none reaches the app, its core or the local model runtime, so every
-    # `*_API_KEY` in the shell (META_API_KEY, Meta's MODEL_API_KEY, NVIDIA_API_KEY, any other) is left out.
-    env = {key: value for key, value in os.environ.items() if not key.upper().endswith("_API_KEY")}
-    env.update(
-        JANA_META_GATEWAY_CONFIG="services/cloud-gateway/deploy/meta-dev.toml",
-        JANA_DEV_DATA_DIR=str(args.data_dir.resolve()),
-        JANA_DEV_HOST="127.0.0.1",
-        PORT=str(args.port),
-    )
+    if args.online_demo and args.data_dir is None:
+        parser.error("--online-demo needs an explicit --data-dir for its own demo profile")
+    if args.data_dir is None:
+        args.data_dir = Path(tempfile.gettempdir()) / "jana-meta-browser"
+    env = host_environment(os.environ, args.data_dir, args.port, args.online_demo)
     pnpm = shutil.which("pnpm")
     if not pnpm:
         parser.error("pnpm is not installed")

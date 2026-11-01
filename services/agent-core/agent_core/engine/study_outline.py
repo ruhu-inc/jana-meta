@@ -8,10 +8,11 @@ never tags, and `for_you` as the learner's bands joined from the learner databas
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
-from agent_core.engine.study_links import moment_at
+from agent_core.engine.study_links import line_moment, line_text, moment_at
 from agent_core.engine.study_topics import kc_tags, matching_topics
 
 SECTIONS = ("objectives", "examples", "concepts", "assumes")
@@ -57,12 +58,37 @@ def merge(outlines: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     return merged
 
 
+_WORD = re.compile(r"[a-z0-9]{4,}")
+
+
+def _cited_line_start(text: str, start: int, end: int, said: str) -> int:
+    """Where, in a citation's span, the line this item is about begins. A citation that spans several timed lines (the
+    model quoted a whole passage for an item that one line of it states) is read at the line sharing most content words
+    with the item, the earliest on a tie; a span of one line, or words that match none, keeps the line `start` is in
+    (live-run fix 2026-11-01: three objectives at 0:21, 0:29 and 0:35 opened at 0:00)."""
+    lines, at = [], text.rfind("\n", 0, start) + 1
+    while at < min(end, len(text)):
+        stop = text.find("\n", at)
+        stop = len(text) if stop < 0 else stop
+        if line_moment(text[at:stop]) is not None:
+            lines.append((at, text[at:stop]))
+        at = stop + 1
+    wanted = set(_WORD.findall(said.lower()))
+    scored = [
+        (len(wanted & set(_WORD.findall(line_text(line).lower()))), -n, pos) for n, (pos, line) in enumerate(lines)
+    ]
+    best = max(scored, default=None)
+    return start if best is None or best[0] == 0 else best[2]
+
+
 def _moment(item: Mapping[str, Any], chunks: Mapping[str, Mapping[str, Any]]) -> int | None:
+    said = str(item.get("text") or item.get("name") or "")
     for citation in item.get("citations", []):
         chunk = chunks.get(citation["chunk_id"])
         if chunk is None:
             continue
-        found = moment_at(str(chunk["text"]), int(citation["start"]))
+        text, start = str(chunk["text"]), int(citation["start"])
+        found = moment_at(text, _cited_line_start(text, start, int(citation["end"]), said))
         if found is not None:
             return found
         locator = chunk["locator"]

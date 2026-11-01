@@ -287,7 +287,7 @@ test("stu22_chapters_and_seek: chapters and transcript lines seek the player; th
   fireEvent.click(line("Enzymes are catalysts."));
   expect(controller.seek).toHaveBeenLastCalledWith(0);
   expect(line("Enzymes are catalysts.").getAttribute("aria-current")).toBe("true");
-  fireEvent.click(screen.getAllByRole("button", { name: "Biology · At 00:00" })[0]!);
+  fireEvent.click(screen.getAllByRole("button", { name: "Biology · At 0:00" })[0]!);
   expect(controller.readCitation).toHaveBeenCalled();
 });
 

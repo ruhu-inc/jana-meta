@@ -8,7 +8,7 @@ kc_ids:
 stem: A ball is thrown from the ground at 20 m/s at 45° above the horizontal. Take g = 10 m/s^2 and ignore air resistance.
 parts:
 - id: a
-  prompt: How long does the ball take to reach its highest point?
+  prompt: Find the time taken for the ball to reach the top of its flight.
   marks: 2
   answer:
     kind: numeric

@@ -20,7 +20,7 @@ Work landed on `main` today, from this session and from parallel sessions merged
 | W2 Vision | **Done**: SAM 3.1 at `/v1/vision/segment`, photos of working read in the cloud, outlines while the student confirms, `photo_region` pointing on the photo, photographed sketches checked, base64 false positive fixed (parallel session); the diagram drill (§5.2, 2026-10-26) | Read time of a diagram (~15–20 s) |
 | W3 Glimmer | **Built 2026-10-27** (§7): launcher with projector and DFlash, router and recommendations entries, reasoning strength per request, lean offline turns, authored hints offline, power-cut fallback in seconds and return to the cloud; practice and mock papers measured offline | A typed question's first words in ≤ 8 s (now 30–48 s on a loaded machine; needs the owner's call on streaming before the gates, §7); the Wi-Fi-off run on the demo laptop |
 | W4 Speech | **Online done**: Muse Voice Transcribe in the gateway (paced, silence between turns, budgeted, per-turn re-checks; branch `claude/bold-bardeen-60a405`), Kokoro served by the gateway (the only online voice; NVIDIA's trial voice retired 2026-10-28), a 600 ms end-of-speech hold, subject-first keywords, the voice bar in the tutor (JM-D20), a spoken checked turn in the browser host (§12) | The engine turn (the 4 s target), the browser's filler at 2.6 s, offline (§6.3), spoken unit names |
-| W5 Adult | Sign-up with date of birth, adult copy, parent sections removed, safety wording | Engine-side band check, remaining guardian copy (§17) |
+| W5 Adult | Sign-up with age, adult copy, parent sections removed, safety wording | Engine-side band check, remaining guardian copy (§17) |
 | W6 Bugs | #1, #4, #6 done; #5 partly (parallel session) | #2, #3, #7 |
 | W7 Research agent | **Built 2026-10-27, end-to-end check next**: the conversation and plan on the device (§18.1a), the gateway job (search, safe fetch, checkpoints, source steering; 4 questions → 16 s, 22 pages, $0.04), import into Study as one cited material with Study's verified parts, the Study UI and "Make a study pack" from the diagram drill | A full pack from the browser, timed; the podcast read by Kokoro on the device |
 | Standout features (parallel session) | Checked figures, gap tracing, explain-back, predict-before-you-see sims merged | — |
@@ -65,7 +65,7 @@ for schools once it has a public link.
 | JM-D12 | **Speech to text is Meta.** Online: Muse Voice Transcribe (realtime). Offline: Meta **Omnilingual ASR** (Apache-2.0) if it passes the latency gate in §6.3; otherwise faster-whisper stays as the offline fallback. English only (JM-D18). Speech out is Kokoro-82M (JM-D13): the NVIDIA trial voice was retired 2026-10-28 and its code removed. |
 | JM-D13 | **Text to speech is not Meta**, because Meta has no commercially usable TTS (MMS-TTS is CC-BY-NC and not streaming). Online and offline: **Kokoro-82M** (Apache-2.0, already in the speech pack), served by the gateway online and read on the device offline. Study Podcasts are read online by the gateway's Kokoro through the podcast route (`podcast_speech.py`). (NVIDIA's trial voice was used in development until 2026-10-28; its audio could not be distributed, and it is removed.) |
 | JM-D14 | **Removed:** Nebius Token Factory, all Nemotron models, Tavily web search, and the Google/Gemini cloud stack (Gemini models, Gemini Live, Chirp STT/TTS) from configuration and from the submission. Done: the Google stack's code, tests and release material were deleted 2026-10-28 (§8.1). |
-| JM-D15 | **Adult product:** every profile is `18_plus`; guardian consent, parent summaries, family plan and under-18 Ask policies are hidden or removed. Sign-up asks for date of birth and blocks under-18s. |
+| JM-D15 | **Adult product:** every profile is `18_plus`; guardian consent, parent summaries, family plan and under-18 Ask policies are hidden or removed. Sign-up asks for age (whole years) and blocks under-18s. *Changed 2026-11-01 from a date of birth: less friction, and the check is a self-declaration either way; only the `18_plus` band is stored, as before.* |
 | JM-D16 | **Muse Spark Standard mode only**, never Contributor mode (Meta trains on Contributor data). Contributor mode is a separate model id (`muse-spark-1.3-contributor`), so the gateway configures only Standard ids. Zero data retention for the project account is requested only if the owner chooses it over the research agent (§15 item 2): it disables search grounding, background and stored requests, and file uploads. Muse Code, if used, must not run in Contributor mode on this repository: **Muse Code subscriptions default to Contributor mode**, so run it with `--contributor-mode off` or `MUSE_CONTRIBUTOR_MODE=0`. |
 | JM-D17 | **Submission scope:** the organisers receive a perpetual licence to whatever is submitted (Official Rules, "Hackathon Submission"). Only what the entry needs is submitted (§9). The owner signs off on the scope before submission. Owner, 2026-10-27: Chemistry ships with Mathematics and Physics; Accounting stays out. |
 | JM-D18 | **English only** (owner, 2026-10-26). No Yoruba, Hausa, Igbo or Pidgin input in the entry; Voice Transcribe does not support the first three anyway. |
@@ -338,7 +338,7 @@ Tavily removal: done. Google stack: deleted (2026-10-28).
 
 | Area | Change |
 |---|---|
-| Sign-up | Date of birth field; under 18 → blocked with a short explanation. Store `age_band = "18_plus"` (`store/profiles.py` `ADULT_BAND`). Done in the app; the engine-side check is still open (§17 W5). |
+| Sign-up | Age field (whole number of years, 1 to 120; was a date of birth until 2026-11-01); under 18 → blocked with a short explanation. Store `age_band = "18_plus"` (`store/profiles.py` `ADULT_BAND`). Done in the app; the engine-side check is still open (§17 W5). |
 | Ask policy | `engine/ask_anything.py` `policy_for()` and `cloud_gateway/ask.py` audience: adult only; the `under_18` branch is removed from the UI. |
 | Consent | Keep per-feature consent (the learner's own consent now). Remove guardian flows: `store/subscription.py` guardian consent, `plans.toml` `jana_family`, UI `ParentSummary.tsx`, `FamilyControls.tsx`, guardian parts of `OnlineFeatures.tsx`, `Studies.tsx`, `StudyWorkspace.tsx`; `engine/parents.py` not wired. |
 | Copy | Rewrite `parents.*`, `settings.study.needs_guardian`, `study.access.guardian`, `error.guardian_consent_required` and related keys for an adult managing their own settings; the study banner "A parent or guardian needs to approve" becomes the learner's own consent prompt. |
@@ -642,7 +642,7 @@ RAG apps, simple image analyzers and dashboards. The demo therefore opens with w
 and keeps Study's summaries, Ask anything and the Progress pages out of it. Pitch: an exam-prep system for adults that
 checks every step with code, keeps working without power or internet, and uses Meta's models to see, hear and reason.
 
-1. An adult candidate signs up (date of birth, 18+) and photographs three lines of their own handwritten working.
+1. An adult candidate signs up (age, 18+) and photographs three lines of their own handwritten working.
    Muse Spark reads it, the maths tools find the sign error, and SAM 3.1 outlines **that line on their photo**; Jana
    asks about it rather than correcting it.
 2. Diagram drill: a photographed physics diagram (our own) becomes "tap the component that…" questions, each tap
@@ -756,8 +756,8 @@ demo, §8.1), health probes, W4, the rest of W5, W6 #2, #3, #7, §9, Identity.
 - **W4**: `podcast_speech.py` cannot serve live speech as it is (one global lock, whole-file buffering, a 100 per day
   request cap, free-trial access only). `voice.py` is tied to Google beyond `voice_google` (`PROVIDER="google"`,
   `google_stack`). Barge-in is a server control: there is no client VAD, so §3's diagram is wrong.
-- **W5 (done in part 2026-10-26)**: `client-core/src/setup.ts` made every profile `13_15`. The app now asks for a date
-  of birth on every create form, checks it on the device without storing or sending it, and creates `18_plus` only.
+- **W5 (done in part 2026-10-26)**: `client-core/src/setup.ts` made every profile `13_15`. The app now asks for an age
+  (a date of birth until 2026-11-01) on every create form, checks it on the device without storing or sending it, and creates `18_plus` only.
   Still to do: make `POST`/`PATCH /v1/profiles` refuse other bands too; about 100 test profiles in 51 modules are
   created with minor bands through the API (the `student()` helper defaults to `13_15`) and must move first.
   Profiles an older build made keep their band and their guardian rules. The parent summary and alerts sections are gone. Still to do: `parent_remote_view`, the other guardian copy
@@ -2101,8 +2101,13 @@ departs from the text above, and why:
   `on_new_window` handler, so wry's delegate may drop the request. The spike did not test it. If it is dead, Ask
   anything's sources are dead the same way; a shell command behind the opener seam is the fix, a decision of its own.
 - **Limits.** `video_minutes_per_month` is a gateway-held limit (`GATEWAY_HELD_LIMITS`), derived as 60 times
-  `recording_hours_per_month` when unset, never signed into entitlements (as W8's caps); the gateway enforces neither
-  pool today, a pre-existing gap. `upload_max_mb` is 100 in `plans.toml`, the worker's cap, and
+  `recording_hours_per_month` when unset, never signed into entitlements (as W8's caps). Fixed 1 November: before
+  transcription or frame processing, the gateway atomically admits the decoded duration in milliseconds against
+  the shared recording pool and, for videos, the video ceiling. Authenticated subscription seats share these limits
+  across devices in the subscription's billing month. The durable `study_media_usage` ledger counts each admitted
+  extraction once; failed, cancelled and uncertain attempts remain counted until the month ends, and deleting a
+  source cannot refund processed media. Expired month rows are purged; no source text or media is retained there.
+  `upload_max_mb` is 100 in `plans.toml`, the worker's cap, and
   `test_m45_regional_plans.py` says so.
 - **Existing tests whose assertions changed:** `test_companion_continuity.py` expects the forward migration to apply
   v22 and v23 (the transcript still survives); `test_m45_regional_plans.py` reads 100 MB.

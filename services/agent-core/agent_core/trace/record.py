@@ -58,6 +58,8 @@ class TraceBuilder:
     build: dict[str, Any] = field(default_factory=dict)
     assets: dict[str, Any] = field(default_factory=dict)
     capture_mode: str = "hashes"
+    # The connectivity layer's state when the trace began (ARC-08), read by the engine; "off" is "no layer to read".
+    connectivity: str = "off"
     monotonic: Callable[[], float] = time.monotonic
     wall: Callable[[], datetime.datetime] = lambda: datetime.datetime.now(datetime.UTC)
     trace_id: str = field(default_factory=new_ulid)
@@ -184,7 +186,7 @@ class TraceBuilder:
             "guards": self.guards,
             "phases": self.phases,
             "delegations": self.delegations,
-            "connectivity": {"state_at_start": "off", "features_used": []},
+            "connectivity": {"state_at_start": self.connectivity, "features_used": self.features_used()},
             "capture": {"mode": self.capture_mode, "redaction_policy_version": REDACTION_POLICY_VERSION},
         }
         if self.turn_id:
@@ -200,6 +202,10 @@ class TraceBuilder:
         if self.policy_decisions:
             out["policy_decisions"] = self.policy_decisions
         return out
+
+    def features_used(self) -> list[str]:
+        """The online features this turn's model calls used: the cloud tier when any call was served there."""
+        return ["cloud_tier"] if any(c.get("provider_kind") == "cloud" for c in self.model_calls) else []
 
     def errors(self) -> list[str]:
         return contract_errors(CONTRACT, self.record())
