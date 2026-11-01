@@ -53,6 +53,7 @@ from agent_core.memory.capture import CaptureFilter, default_filter
 from agent_core.memory.policy import Candidate, Rejection, content_hash
 from agent_core.memory.queries import NoteRecord, ReviewItem, memory_saving, review_items, stored_notes
 from agent_core.memory.visibility import advance as invalidate_context
+from agent_core.store.companion_summary import summary_body as summary_body
 from agent_core.store.events import COLUMNS, MERGE_ORDER, StoredEvent, iso_ms
 from agent_core.store.ids import new_ulid
 from agent_core.store.sqlite import transaction
@@ -813,12 +814,6 @@ SUMMARY_TYPES = ("attempt", "verdict", "review", "misconception_evidence", "stud
 SUMMARY_TOPICS_MAX = 6
 SUMMARY_MISCONCEPTIONS_MAX = 4
 SUMMARY_DAYS = 30
-
-
-def summary_body() -> dict[str, Any]:
-    """An empty `CompanionSummary`."""
-    return {"version": 0, "cursor_seq": 0, "updated_at": None, "topics": [], "misconceptions": [], "next_step": None,
-            "episodes": 0}  # fmt: skip
 
 
 def _summary_kcs(type_: str, payload: Mapping[str, Any]) -> list[str]:

@@ -7,8 +7,9 @@ import sqlite3
 from typing import Any
 
 from agent_core.contracts import errors
-from agent_core.memory.visibility import ACTION, cutoff, revision
+from agent_core.store.companion_summary import summary_body
 from agent_core.store.exports import ExportError
+from agent_core.store.memory_context import ACTION, cutoff, revision
 
 TABLES = {
     "summaries": ("companion_summary", ("thread_id", "version", "cursor_seq", "updated_at", "body_json")),
@@ -131,8 +132,6 @@ def validate(rows: Any, sessions: dict[str, Any]) -> None:
 
 
 def restore(conn: sqlite3.Connection, rows: dict[str, Any]) -> None:
-    from agent_core.memory.write import summary_body
-
     for key, (table, columns) in TABLES.items():
         for original in rows[key]:
             row = dict(original)

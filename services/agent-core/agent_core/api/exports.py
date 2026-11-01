@@ -381,16 +381,14 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
 
                     restore_companion(conn, archive.companion)
                 if memory_removed:
-                    from agent_core.memory.visibility import advance
+                    from agent_core.engine.companion_import import exclude_removed_memory
 
                     # Old archives can contain paraphrases in dialogue/check-ins. Keep authorized history visible,
                     # exclude it from model recall, and do not revive reminders derived from removed memory.
-                    advance(conn, now)
-                    conn.execute("DELETE FROM commitments")
+                    exclude_removed_memory(conn, now)
             if archive.companion is not None:
-                from agent_core.memory.write import fold_companion_summary
+                from agent_core.engine.companion_import import refold_summaries
 
-                for summary in archive.companion["summaries"]:
-                    fold_companion_summary(conn, summary["thread_id"], core.companion.content(), now_ms=now)
+                refold_summaries(conn, archive.companion, core.companion.content(), now_ms=now)
         d.audit("profile.import", internal)
         return new_id_
