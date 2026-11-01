@@ -1,0 +1,102 @@
+packages/ui/gallery/states/study-workspace.canonical.chapters.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 200-204
+services/agent-core/agent_core/contracts/study/workspace.py
+  s_49ba057c5af1a1::t_eaa1bee604de5a 2,409-416,1244,1336
+packages/ui/gallery/states/study-workspace.canonical.quiz.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 83-87,118-122
+packages/contracts-ts/src/generated/study/workspace.ts
+  s_49ba057c5af1a1::t_eaa1bee604de5a 2,532-539,568,1049
+contracts/study/workspace.schema.json
+  s_49ba057c5af1a1::t_7551b97d6478bf 1217-1236,1307-1309,2321-2325
+packages/ui/test/study-workspace.test.tsx
+  s_49ba057c5af1a1::t_2eb7159f11905a 565
+  s_49ba057c5af1a1::t_fc5bd9a5516746 562-564,566
+packages/ui/gallery/states/study-workspace.canonical.cards.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 83-87,118-122
+packages/i18n/locales/en.json
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 2692-2697,3118
+services/cloud-gateway/cloud_gateway/contracts/schemas/study/workspace.schema.json
+  s_49ba057c5af1a1::t_eaa1bee604de5a 2,1210-1229,1300-1302,2312-2316
+services/cloud-gateway/tests/test_m42_study.py
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 851-852
+evals/suites.toml
+  s_49ba057c5af1a1::t_fc5bd9a5516746 23
+services/agent-core/agent_core/contracts/cloud/gateway.py
+  s_49ba057c5af1a1::t_eaa1bee604de5a 831
+packages/ui/gallery/states/study-workspace.canonical.generate.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 83-87
+packages/client-core/src/study-workspace.ts
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 18-26
+services/agent-core/agent_core/engine/study.py
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 1437-1438,1440-1441,2329,2334
+packages/contracts-ts/src/generated/index.ts
+  s_49ba057c5af1a1::t_eaa1bee604de5a 4,753-1045
+packages/client-core/src/index.ts
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 116
+packages/contracts-ts/src/generated/client.ts
+  s_49ba057c5af1a1::t_eaa1bee604de5a 4,409-579
+services/agent-core/agent_core/engine/reflection.py
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 230,256-257,305
+packages/contracts-ts/src/generated/cloud/gateway.ts
+  s_49ba057c5af1a1::t_eaa1bee604de5a 465,960
+packages/ui/gallery/states/study-workspace.canonical.chat.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 84-88,119-123
+packages/ui/gallery/states/study-workspace.error-retriable.distress.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 83-87,117-121
+HACKATHON_DEMO.md
+  s_49ba057c5af1a1::t_84bfcfe8b100a6 3
+  s_49ba057c5af1a1::t_7dec5a3d2206d9 32-95
+packages/ui/gallery/states/study-workspace.canonical.reader.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 83-87,117-121
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_49ba057c5af1a1::t_eaa1bee604de5a 395,464
+packages/ui/gallery/states/study-workspace.canonical.audio.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 83-87,117-121
+packages/ui/gallery/states/study-workspace.error-retriable.graded-work.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 83-87,117-121
+packages/ui/test/study-research.test.tsx
+  s_49ba057c5af1a1::t_b6542cd82a8930 129-144
+packages/contracts-ts/src/generated/validators.d.ts
+  s_49ba057c5af1a1::t_eaa1bee604de5a 930
+services/cloud-gateway/cloud_gateway/contracts/cloud/gateway.py
+  s_49ba057c5af1a1::t_eaa1bee604de5a 831
+services/cloud-gateway/cloud_gateway/study.py
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 1924
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 9,487-488
+  s_49ba057c5af1a1::t_fc5bd9a5516746 352
+services/agent-core/tests/test_study_workspace.py
+  s_49ba057c5af1a1::t_fc5bd9a5516746 1558-1575
+  s_49ba057c5af1a1::t_391e55c142b552 717
+packages/ui/gallery/states/study-workspace.canonical.partial.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 85-89,119-123
+evals/lock.json
+  s_49ba057c5af1a1::t_c303de8d35f5a1 7451,15379-15380,15639-15644,15646-15647,15650,15652-15653
+services/agent-core/agent_core/contracts/schemas/study/workspace.schema.json
+  s_49ba057c5af1a1::t_eaa1bee604de5a 2,1210-1229,1300-1302,2312-2316
+packages/ui/src/learn/StudyResearch.tsx
+  s_49ba057c5af1a1::t_cc43f9638abaaa 110,113,115
+  s_49ba057c5af1a1::t_75d8bf2f1fd027 203
+packages/ui/gallery/states/study-workspace.canonical.topics.json
+  s_49ba057c5af1a1::t_fc5bd9a5516746 83-87
+packages/contracts-ts/src/generated/client-validators.js
+  s_49ba057c5af1a1::t_64d0919c2590d1 10
+packages/contracts-ts/src/generated/validators.js
+  s_49ba057c5af1a1::t_cda230def0c430 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f0b862f28acd90db02af7153e4a57b439e87e86d",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
