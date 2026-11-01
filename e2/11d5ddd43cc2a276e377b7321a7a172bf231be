@@ -1,0 +1,25 @@
+HACKATHON_DEMO.md
+  s_47e83918b89096::t_a8cbc9f85f75ab 99,112,157,209,216-218
+  s_47e83918b89096::t_d84481a5e681aa 3-4,8-24,27,29-98,100-111,113-120,124-143,145-149,151,154-156,158-189,193-208,210-215
+README.md
+  s_47e83918b89096::t_e521322e66e330 13-32,35,41-44,120-122
+  s_47e83918b89096::t_64917825f6e791 33-34
+HACKATHON_SUBMISSION.md
+  s_47e83918b89096::t_13774ebc4ec421 1,3-4,21,24-27,29-51,64-67,76-77,79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e211d5ddd43cc2a276e377b7321a7a172bf231be",
+  "prompts": {},
+  "sessions": {
+    "s_47e83918b89096": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cfeb08eb-96b2-47b7-98db-f1d074f296dd",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
