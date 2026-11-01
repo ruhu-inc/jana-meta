@@ -23,7 +23,7 @@ test("returning to curriculum material waits for workspace setup and retains the
 });
 function show(extra: Partial<StudyWorkspaceView>, onReviewAccess?: () => void, onJourneyStarted?: (node: string, subject: string) => void) {
   const view = { ...EMPTY_STUDY, status: "ready", ...extra } as StudyWorkspaceView;
-  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}), loadTopicMaps: vi.fn(async () => {}) };
+  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadPage: vi.fn(async () => null), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}), loadTopicMaps: vi.fn(async () => {}) };
   const connected = { ...controller, beginJourney: vi.fn(async () => true) };
   render(<StudyWorkspace controller={connected as unknown as StudyWorkspaceController} {...(onReviewAccess ? { onReviewAccess } : {})} {...(onJourneyStarted ? { onJourneyStarted } : {})} />);
   return connected;
@@ -187,10 +187,11 @@ test("Study distress refusal shows the canned support text without repeating the
 
 const aidBase = { job_id: `stj_${"0".repeat(26)}`, sources: [{ source_id: sid, revision: 1 }], title: "Biology", claims: [cited("From this material")], status: "ready", created_at: now } as const;
 
-test("stu21_settings_respected: before material the tools are greyed with the reason", () => {
+test("the empty library focuses on adding material instead of disabled tools", () => {
   show({ sources: [] });
-  expect(screen.getByText("Add material to generate study tools")).toBeTruthy();
-  expect((screen.getByRole("button", { name: /^Quiz/ }) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByRole("button", { name: "Add material", exact: true })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /^Quiz/ })).toBeNull();
+  expect(screen.getByRole("tab", { name: "Explore" })).toBeTruthy();
 });
 
 test("stu21_settings_respected: a quiz's settings dialog sends its types, difficulty, topics and focus", () => {
@@ -212,6 +213,7 @@ test("stu21_settings_respected: a quiz's settings dialog sends its types, diffic
 
 test("stu21_settings_respected: a podcast takes its length and voices; a lesson plan its time", () => {
   const controller = show({ source });
+  fireEvent.click(screen.getByText("More study tools"));
   fireEvent.click(screen.getByRole("button", { name: "Settings: Podcast" }));
   fireEvent.click(screen.getByRole("radio", { name: "Short" }));
   fireEvent.click(screen.getByRole("radio", { name: "Two voices" }));
@@ -219,6 +221,7 @@ test("stu21_settings_respected: a podcast takes its length and voices; a lesson 
   expect(controller.generate).toHaveBeenLastCalledWith("audio_overview", 10, false, true, undefined, { podcast_length: "short", voices: 2 });
   cleanup();
   const again = show({ source });
+  fireEvent.click(screen.getByText("More study tools"));
   fireEvent.click(screen.getByRole("button", { name: "Settings: Lesson plan" }));
   fireEvent.change(screen.getByRole("spinbutton", { name: "Minutes you have" }), { target: { value: "30" } });
   fireEvent.change(screen.getByLabelText("Ready by"), { target: { value: "2026-11-02" } });

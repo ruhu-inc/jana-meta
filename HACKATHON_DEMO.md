@@ -301,3 +301,55 @@ and their checksums are unchanged; a date over 26 weeks back is refused; no prob
 (`test_w10_*`, `services/agent-core/tests/scenarios/w10/map_month_later.yaml`).
 
 The build tagged `demo-2026-11-01` is the reference for all of the above.
+
+## Technical-notes alternative: ridge versus lasso (rehearsed 1 November)
+
+This is the recommended short material demo when presenting to a technical audience. Use the supplied
+`notes.pdf`, *Introduction to Machine Learning Class Notes* by Huy Nguyen. PDF pages **14–16** (printed pages
+13–15) cover regularized least squares, ridge/lasso penalties and Gaussian/Laplace priors. The separate
+**ML Demo** adult profile at `http://127.0.0.1:5199/` contains the imported notes, saved explanation and quizzes.
+Its data directory is `/tmp/jana-ridge-lasso-demo`; copy or preserve that directory before clearing temporary files.
+The local runner is `python -m jana_tools.hackathon_dev --port 5199 --data-dir /tmp/jana-ridge-lasso-demo --online-demo`.
+
+| Time | Action and narration |
+| --- | --- |
+| 0:00–0:25 | Study → Materials → notes.pdf. Show page 14, then page 15's diagrams. “These are my actual lecture notes. Jana keeps the original equations and diagrams available.” |
+| 0:25–1:15 | Back to study → Chat → the saved ridge/lasso question. Show the L2 and L1 equations. “Ridge favours small coefficients; lasso encourages sparse solutions. The explanation connects these penalties to Gaussian and Laplace priors.” |
+| 1:15–1:45 | Open a page citation, compare it with the original PDF, then Back to study aid. “I can inspect the passage behind the explanation.” Page numbers are PDF page numbers, not printed page numbers. |
+| 1:45–2:35 | Generate → My Sets → the **three-question** quiz. Choose lasso's L1 penalty for ridge once; Check answer gives Incorrect without immediately revealing the key. Correct it, then answer the sparsity and prior questions. |
+| 2:35–3:00 | Submit quiz and show the three Correct verdicts and cited explanations. “I can turn my own technical material into practice and trace the answers back to it.” These Study results do not update syllabus mastery. |
+
+Question used for the saved explanation:
+
+> Using sections 3.3.1 and 3.3.2, explain ridge versus lasso regression. Start with intuition, then show the two penalty equations and connect them to Gaussian and Laplace priors. Cite the relevant passages.
+
+For a fresh quiz, open **Settings: Quiz**, keep Multiple choice only, choose 3 questions, review the extraction,
+and use this Focus:
+
+> PDF pages 14–16: ridge versus lasso. Test the L2/L1 penalty, sparse solutions, and the Gaussian/Laplace prior connection. Preserve the source qualifiers in every correct option. Use clear LaTeX for equations.
+
+The `PDF pages …:` prefix narrows the source before batching; an ordinary free-text focus alone still sends
+all selected pages. Leave focus blank for whole-document coverage. Generate before recording and use the saved
+quiz during the three-minute demo. The final rehearsal generation took about **9 seconds**, but model latency
+is variable. Do not present a cut or a saved result as instantaneous live generation.
+
+Verified in the live app:
+
+- All 69 pages extracted; none unreadable. Native extraction flattens some formula notation, so the paged
+  original PDF is the reference for equations and diagrams. Extracted citation text stays unchanged.
+- The saved explanation's 11 citations and the final quiz's 6 stem/explanation citations exactly matched their
+  source offsets. Main penalty equations and quiz equations rendered without KaTeX errors.
+- Wrong-answer feedback, correction, next/previous navigation, a source-linked hint, final submission and three
+  Correct verdicts worked. The hint was safe but terse (a penalty-function definition); use the cited explanation
+  for the main demo rather than promising rich hints on every question.
+- The first unscoped quiz failed on unrelated batches. Explicit page scoping fixed that path. An intermediate
+  two-question quiz remains in My Sets; use the later three-question set. Wording was tightened after an early
+  option overstated lasso's bias as a guarantee.
+- Materials, Your tutor and Explore now have separate library tabs. Common tools appear first; other formats
+  are under More study tools. Citations open one original page, while answers and quizzes use the main area.
+- Responsive checks at 1280 and 772 pixels: no horizontal overflow. 104 UI tests and 36 backend/gateway tests
+  passed; TypeScript, mypy and Ruff checks passed for the changed code.
+
+This demo shows Muse Spark's grounded generation through the Meta gateway. Native PDF text extraction and
+PDF page rendering are document processing, not a demonstration of Muse vision or SAM. Quiz explanations are
+labelled “Judged, not checked”; do not claim that every generated mathematical statement was formally proved.

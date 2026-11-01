@@ -489,3 +489,20 @@ def test_stu21_api_sets_draft_and_screened_focus(tmp_path):
             await stop_core(runtime)
 
     asyncio.run(scenario())
+
+
+def test_explicit_pdf_focus_scopes_before_batching_without_rewriting_evidence(tmp_path):
+    desk = desk_at(tmp_path)
+    chunks = [
+        {"chunk_id": f"page-{page}", "text": f"Page {page}: ||w||22", "locator": {"kind": "page", "page": page}}
+        for page in range(1, 70)
+    ]
+    request = {"kind": "quiz", "sources": [], "settings": {"focus": "PDF pages 14–16: ridge versus lasso"}}
+    assert desk.scoped(request, chunks) == chunks[13:16]
+    assert desk.scoped(request, chunks)[0] is chunks[13]
+    assert desk.scoped({**request, "settings": {}}, chunks) == chunks
+    assert desk.scoped({**request, "settings": {"focus": "Compare examples on pages 14–16"}}, chunks) == chunks
+    for focus in ("PDF pages 16-14: ridge", "PDF pages 99: ridge", "PDF pages 0: ridge"):
+        with pytest.raises(StudyError):
+            desk.scoped({**request, "settings": {"focus": focus}}, chunks)
+    desk.conn.close()

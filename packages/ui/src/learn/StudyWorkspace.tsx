@@ -14,6 +14,7 @@ import { useOpenLesson, useOpenTopic } from "./link.js";
 import { defaultRequest, GenerateDialog, GenerateTools, MySets, type GenerateRequest } from "./StudyGenerate.js";
 import { StudyPlayer } from "./StudyPlayer.js";
 import { StudyOutline } from "./StudyOutline.js";
+import { StudyPdfReader } from "./StudyPdfReader.js";
 import { StudyLinkAdd } from "./StudyLinkAdd.js";
 import { StudyConceptMap } from "./StudyConceptMap.js";
 import { StudyResearch } from "./StudyResearch.js";
@@ -53,6 +54,9 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   const [topicsSearched, setTopicsSearched] = useState(false);
   const [topicText, setTopicText] = useState("");
   const [teachReview, setTeachReview] = useState(false);
+  const [libraryTab, setLibraryTab] = useState<"materials" | "companion" | "explore">(initialResearch ? "explore" : "materials");
+  const [sourceOpen, setSourceOpen] = useState(true);
+  const [sourcePage, setSourcePage] = useState(1), [pageLoading, setPageLoading] = useState(false), [pageFailed, setPageFailed] = useState(false);
   const studyReady = view.status === "ready";
   useEffect(() => { if (studyReady) controller.loadTopicMaps().catch(() => undefined); }, [controller, studyReady]);
   // The materials research packs made (SPEC §18): their concept maps say their concepts came from the web.
@@ -69,18 +73,26 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   const pageUrl = useRef<string | null>(null), pageRequest = useRef(0), pageFigure = useRef<HTMLElement>(null);
   useEffect(() => {
     if (pageUrl.current) URL.revokeObjectURL(pageUrl.current);
-    pageUrl.current = null; setPageImage(null);
+    pageUrl.current = null; setPageImage(null); setSourcePage(1); setPageLoading(false); setPageFailed(false); setSourceOpen(true);
     return () => { pageRequest.current++; if (pageUrl.current) URL.revokeObjectURL(pageUrl.current); pageUrl.current = null; };
   }, [view.source?.source_id, view.source?.revision]);
   useEffect(() => { if (pageImage) pageFigure.current?.scrollIntoView?.({ block: "start" }); }, [pageImage]);
   const showPage = (page: number, revision: number, sourceId: string) => { const request = ++pageRequest.current;
+    setSourcePage(page); setPageLoading(true); setPageFailed(false); setSourceOpen(true);
     if (pageUrl.current) URL.revokeObjectURL(pageUrl.current);
     pageUrl.current = null; setPageImage(null);
     void controller.loadPage(page, revision, sourceId).then((blob) => {
-    if (blob === null || request !== pageRequest.current) return;
+    if (request !== pageRequest.current) return;
+    setPageLoading(false);
+    if (blob === null) { setPageFailed(true); return; }
     if (pageUrl.current) URL.revokeObjectURL(pageUrl.current);
     const url = URL.createObjectURL(blob); pageUrl.current = url; setPageImage({ url, page });
-  }); };
+  }).catch(() => { if (request === pageRequest.current) { setPageLoading(false); setPageFailed(true); } }); };
+  useEffect(() => {
+    if (!sourceOpen || view.source?.kind !== "pdf" || view.busy || pageImage || pageLoading || pageFailed) return;
+    const first = view.chunks.find((c) => c.locator.kind === "page" && c.source_id === view.source?.source_id);
+    if (first?.locator.kind === "page") showPage(first.locator.page, first.revision, first.source_id);
+  }, [sourceOpen, view.source?.source_id, view.chunks, view.busy, pageImage, pageLoading, pageFailed]);
   // Study processing uses the online plan; saved passages remain readable on this computer.
   const preferCloud = true;
   const [helpReview, setHelpReview] = useState<{ itemId: string; kind: (typeof STUDY_HELP)[number] } | null>(null);
@@ -105,7 +117,7 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   const [tab, setTab] = useState<Tab>(view.aid ? tabOf(view.aid.kind) : "generate");
   useEffect(() => { onTab?.(tab); }, [onTab, tab]);
   useEffect(() => { if (!companion && tab === "companion") setTab("generate"); }, [companion, tab]);
-  useEffect(() => { if (view.aid) setTab(tabOf(view.aid.kind)); }, [view.aid?.aid_id, view.aid?.kind]);
+  useEffect(() => { if (view.aid) { setTab(tabOf(view.aid.kind)); setSourceOpen(false); } }, [view.aid?.aid_id, view.aid?.kind]);
   const resultPanel = useRef<HTMLElement>(null), quizHelpPanel = useRef<HTMLElement>(null);
   useEffect(() => { if (view.quizHelp) { quizHelpPanel.current?.focus({ preventScroll: true }); quizHelpPanel.current?.scrollIntoView?.({ block: "nearest" }); } }, [view.quizHelp?.jobId, view.quizHelp?.aid?.aid_id]);
   useEffect(() => { if (view.aid) { resultPanel.current?.focus({ preventScroll: true }); resultPanel.current?.scrollIntoView?.({ block: "start" }); } }, [view.aid?.aid_id, tab]);
@@ -136,7 +148,7 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
     void controller.load().then(async () => {
       if (!live) return;
       if (request.kind === "target") await controller.openTarget(request);
-      else if (request.kind === "companion") { if (controller.getView().source) setTab("companion"); }
+      else if (request.kind === "companion") { if (controller.getView().source) { setTab("companion"); setSourceOpen(false); } else setLibraryTab("companion"); }
       else if (request.kind === "source" || request.kind === "flashcards") {
         await controller.open(request.source_id);
         if (live && request.kind === "flashcards" && controller.getView().source) { setTab("generate"); setTool("flashcards"); }
@@ -147,8 +159,8 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
       }
       else {
         if (controller.getView().source) controller.close();
-        if (request.kind === "add") { setAdding(true); setPasting(false); requestAnimationFrame(() => addPanel.current?.scrollIntoView?.({ block: "start" })); }
-        else setResearchTopic((current) => ({ topic: request.topic, seq: (current?.seq ?? 0) + 1 }));
+        if (request.kind === "add") { setLibraryTab("materials"); setAdding(true); setPasting(false); requestAnimationFrame(() => addPanel.current?.scrollIntoView?.({ block: "start" })); }
+        else { setLibraryTab("explore"); setResearchTopic((current) => ({ topic: request.topic, seq: (current?.seq ?? 0) + 1 })); }
       }
       if (live) requestDone.current?.();
     });
@@ -215,7 +227,7 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   const cite = (c: W.Citation) => {
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     void controller.readCitation(c).then((ok) => { if (ok) {
-      setCitation(c);
+      setCitation(c); setSourceOpen(true);
       const material = view.source?.source_id === c.source_id ? view.source : view.sources.find((s) => s.source_id === c.source_id);
       const locator = locations.current.values.get(citationKey(c)) ?? controller.getView().chunks.find((chunk) => citationKey(chunk) === citationKey(c))?.locator;
       if (material && "kind" in material && material.kind === "pdf" && locator?.kind === "page") showPage(locator.page, c.revision, c.source_id);
@@ -295,13 +307,15 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
   // --- the library -------------------------------------------------------------------------------------------------
   if (!view.source) return <><section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10" aria-labelledby="study-heading">
     <header className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h1 id="study-heading" className="text-title text-ink">{t("study.title")}</h1><Button size="sm" tone="primary" aria-expanded={adding || pasting || view.sources.length === 0} onClick={() => { setAdding((v) => !v); setPasting(false); }}>{t("study.library_add")}</Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h1 id="study-heading" className="text-title text-ink">{t("study.title")}</h1><Button size="sm" tone="primary" aria-expanded={adding || pasting || view.sources.length === 0} onClick={() => { setLibraryTab("materials"); setAdding((v) => !v); setPasting(false); }}>{t("study.library_add")}</Button></div>
       <p className="text-ui text-muted">{t("study.library_intro")}</p>
       <div className="flex flex-wrap gap-2">{activityButton}{view.sets.length > 0 && <Button size="sm" tone="ghost" onClick={() => setAllSetsOpen(true)}><Icon name="learn" size={16} />{t("study.all_sets")}</Button>}</div>
     </header>
-    {lastTime}
-    {companion?.("panel")}
+    <div role="tablist" aria-label={t("study.library.navigation")} className="flex gap-1 border-b border-line pb-2">{(["materials", ...(companion ? ["companion"] : []), "explore"] as const).map((name) => <Button key={name} role="tab" size="sm" tone="ghost" aria-selected={libraryTab === name} onClick={() => setLibraryTab(name as typeof libraryTab)}>{t(name === "companion" ? "study.tab.companion" : `study.library.${name}`)}</Button>)}</div>
+    {libraryTab === "companion" && companion?.("panel")}
     {status}
+    {libraryTab === "materials" && <>
+    {view.sources.length > 0 && lastTime}
     <div ref={addPanel} hidden={!adding && !pasting && view.sources.length > 0} className="flex flex-col gap-4 rounded-card border border-line bg-canvas p-5">
       {/* A drop zone over the native picker, which stays in the tab order (focus rings the whole zone). */}
       <label data-study-drop={dragging ? "over" : ""} onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDragging(true); } }} onDragLeave={() => setDragging(false)}
@@ -329,10 +343,11 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
       onOpen={(source) => { if (source.private) setConfirm(source.source_id); else void controller.open(source.source_id); }}
       onArchive={(ids, archived) => { void controller.archiveSources(ids, archived); }} />
     <Dialog open={confirm !== null} heading={t("study.private_source")} closeLabel={t("action.cancel")} onClose={() => setConfirm(null)}><p className="text-ui">{t("study.private_confirm")}</p><Button onClick={() => { const id = confirm; setConfirm(null); if (id) void controller.open(id); }}>{t("study.open_private")}</Button></Dialog>
-    {/* Before any material the tools show what they will do, greyed (STU-21). */}
-    {view.sources.length === 0 && view.status === "ready" && <GenerateTools disabled empty onPick={() => undefined} />}
+    </>}
+    {libraryTab === "explore" && <>
     <StudyResearch controller={controller} initialCapture={initialResearch ?? null} topicRequest={researchTopic} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
     {topicMaps}
+    </>}
     {jobs(view.jobs.filter((job) => ["running", "queued", "waiting_online", "paused"].includes(job.state)))}
   </section>{activityDialog}<Dialog open={allSetsOpen} heading={t("study.all_sets")} closeLabel={t("action.close")} onClose={() => setAllSetsOpen(false)} wide><MySets sets={view.sets} busy={view.busy} heading={false} onOpen={(set) => { setAllSetsOpen(false); void controller.openSet(set); }} /></Dialog></>;
 
@@ -380,9 +395,7 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
 
   // The split needs the screen's own width (a container query), not the window's: the sidebar and the board take room.
   // The settings dialog sits outside the container query: a size container would trap its fixed overlay.
-  return <><section className="@container h-full min-h-0 w-full" aria-labelledby="study-heading"><div className="flex h-full min-h-0 w-full flex-col overflow-y-auto @4xl:flex-row @4xl:overflow-hidden">
-    {/* The material */}
-    <div className="flex min-w-0 flex-col @4xl:min-h-0 @4xl:flex-1">
+  return <><section className="@container flex h-full min-h-0 w-full flex-col" aria-labelledby="study-heading">
       <header className="flex min-h-14 shrink-0 items-center gap-2 px-4">
         <IconButton icon="go-back" size="sm" label={t("study.back")} onClick={() => controller.close()} />
         <div className="flex min-w-0 flex-col">
@@ -390,9 +403,14 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
           <p className="text-meta text-muted">{source.revision > 1 && <>{t("study.revision", { revision: source.revision })} · </>}{t(source.state === "queued" && accessBlocked ? "study.source.saved" : source.state === "partial" && source.unreadable_units.length === 0 ? "study.source.review" : `study.source.${source.state}`)}</p>
         </div>
         <span className="flex-1" />
+        <Button size="sm" tone="ghost" aria-expanded={sourceOpen} onClick={() => setSourceOpen((open) => !open)}>{t(sourceOpen ? "study.hide_source" : "study.show_source")}</Button>
         {view.availableRevisions.length > 1 && <label className="flex items-center gap-2 text-meta text-muted">{t("study.choose_revision")}<select className={FIELD_LOOK} value={source.revision} onChange={(e) => { void controller.open(source.source_id, Number(e.target.value)); }}>{view.availableRevisions.map((rev) => <option key={rev} value={rev}>{rev}</option>)}</select></label>}
       </header>
-      <div className="flex max-h-72 flex-col gap-4 overflow-y-auto px-6 pb-6 @4xl:max-h-none @4xl:min-h-0 @4xl:flex-1">
+    <div className="flex min-h-0 flex-1 overflow-hidden">
+    {/* Source pages are opened deliberately, keeping the answer in focus. */}
+    <div className={`${sourceOpen ? "flex" : "hidden"} min-h-0 min-w-0 flex-1 flex-col @4xl:max-w-[48%]`}>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-6">
         {source.state !== "ready" && <Notice message={source.state === "queued" && accessBlocked ? t(view.access?.needsGuardian ? "study.saved_pending_guardian" : "study.saved_pending_access") : source.state === "partial" ? source.unreadable_units.length ? t("study.partial", { units: source.unreadable_units.join(", ") }) : t("study.review_extracted") : t(`study.source.${source.state}`)}
           {...(source.state === "queued" && accessBlocked && onReviewAccess ? { action: { label: t("study.access.review"), onClick: onReviewAccess } } : {})} />}
         {(source.kind === "recording" || source.kind === "video") && <Notice message={t("study.recording_help")} />}
@@ -411,16 +429,17 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
         </div>}
         {correcting && <form className="flex flex-col items-start gap-3" onSubmit={(e) => { e.preventDefault(); void controller.correctText(correctedText).then(() => { if (!controller.getView().error) setCorrecting(false); }); }}><label className="flex w-full flex-col gap-2 text-ui text-ink">{t("study.correct_help")}<textarea rows={10} required maxLength={200000} className={FIELD_LOOK} value={correctedText} onChange={(e) => setCorrectedText(e.target.value)} /></label><div className="flex gap-2"><Button type="submit" tone="primary" disabled={view.busy || !correctedText.trim()}>{t("study.save_revision")}</Button><Button tone="ghost" onClick={() => setCorrecting(false)}>{t("action.cancel")}</Button></div></form>}
         {deleting && <div className="flex flex-col items-start gap-2"><p className="text-ui">{t("study.delete_confirm")}</p><div className="flex gap-2"><Button tone="danger" disabled={view.busy} onClick={() => { void controller.remove(); }}>{t("study.delete_yes")}</Button><Button tone="ghost" onClick={() => setDeleting(false)}>{t("action.cancel")}</Button></div></div>}
-        <div ref={passage} tabIndex={-1} className="mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-card border border-line bg-canvas px-8 py-7 outline-none" aria-label={t("study.source_passage")}>
-          {citation && <span><Button size="sm" onClick={() => { setCitation(null); returnFocus.current?.focus(); }}>{t("study.back_to_aid")}</Button></span>}
-          {pageImage && <figure ref={pageFigure} className="flex flex-col gap-2"><img className="h-auto w-full" src={pageImage.url} alt={t("study.page_image", { page: pageImage.page })} /><figcaption className="text-meta text-muted">{t("study.page_image", { page: pageImage.page })}</figcaption>{citation && <span><Button size="sm" tone="ghost" onClick={() => passage.current?.querySelector("mark")?.scrollIntoView?.({ block: "center" })}>{t("study.read_extracted_passage")}</Button></span>}</figure>}
+        <div ref={passage} tabIndex={-1} className="mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-card border border-line bg-canvas p-4 outline-none" aria-label={t("study.source_passage")}>
+          {citation && <span><Button size="sm" onClick={() => { setCitation(null); setSourceOpen(false); requestAnimationFrame(() => returnFocus.current?.focus()); }}>{t("study.back_to_aid")}</Button></span>}
+          {source.kind !== "pdf" && pageImage && <figure ref={pageFigure} className="flex flex-col gap-2"><img className="h-auto w-full" src={pageImage.url} alt={t("study.page_image", { page: pageImage.page })} /><figcaption className="text-meta text-muted">{t("study.page_image", { page: pageImage.page })}</figcaption>{citation && <span><Button size="sm" tone="ghost" onClick={() => passage.current?.querySelector("mark")?.scrollIntoView?.({ block: "center" })}>{t("study.read_extracted_passage")}</Button></span>}</figure>}
+          {source.kind === "pdf" && <StudyPdfReader chunks={view.chunks} page={sourcePage} image={pageImage} loading={pageLoading} failed={pageFailed} citation={citation} onPage={(chunk) => { if (chunk.locator.kind === "page") { setCitation(null); showPage(chunk.locator.page, chunk.revision, chunk.source_id); } }} />}
           {(source.kind === "recording" || source.kind === "video" || source.kind === "video_link") && view.chunks.length > 0 && <StudyPlayer source={source} chunks={view.chunks} chapters={chapters} playhead={view.playhead} busy={view.busy}
             loadMedia={() => controller.loadMedia()} onSeek={(ms) => controller.seek(ms)} onOpenMoment={(ms) => { controller.openMoment(ms); }} onCite={cite}
             onAskMoment={onAskMoment && companion ? (ms) => onAskMoment(source, ms) : undefined}
             canMakeChapters={ready} onMakeChapters={() => { void controller.generate("chapters", 10, readableConfirmed, preferCloud); }}
             canOutline={ready && view.chunks.some((c) => c.locator.kind === "time")} outlinePending={pendingKinds.includes("teaching_outline")}
             onMakeOutline={source.kind === "video_link" || source.kind === "video" ? () => { void controller.generate("teaching_outline", 10, readableConfirmed, preferCloud); } : undefined} />}
-          {source.kind !== "recording" && source.kind !== "video" && source.kind !== "video_link" && view.chunks.map((chunk) => <article key={chunk.chunk_id} className="flex flex-col gap-2">
+          {source.kind !== "pdf" && source.kind !== "recording" && source.kind !== "video" && source.kind !== "video_link" && view.chunks.map((chunk) => <article key={chunk.chunk_id} className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <p className="text-meta text-faint">{chunk.locator.kind === "time" ? t("study.timestamp", { start: `${Math.floor(chunk.locator.start_ms / 60000)}:${String(Math.floor(chunk.locator.start_ms / 1000) % 60).padStart(2, "0")}`, end: `${Math.floor(chunk.locator.end_ms / 60000)}:${String(Math.floor(chunk.locator.end_ms / 1000) % 60).padStart(2, "0")}` }) : t("study.location", { kind: "page" in chunk.locator ? "page" : "slide" in chunk.locator ? "slide" : "part", number: "page" in chunk.locator ? chunk.locator.page : "slide" in chunk.locator ? chunk.locator.slide : chunk.ordinal + 1 })}{revisionTag(chunk.revision)}</p>
               {"page" in chunk.locator && <Button size="sm" tone="ghost" disabled={view.busy} onClick={() => { if ("page" in chunk.locator) showPage(chunk.locator.page, chunk.revision, chunk.source_id); }}>{t("study.show_page", { page: chunk.locator.page })}</Button>}
@@ -432,16 +451,16 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
     </div>
 
     {/* The study tools */}
-    <aside aria-label={t("study.aids")} className="flex w-full shrink-0 flex-col border-t border-line bg-canvas @4xl:min-h-0 @4xl:w-[28rem] @4xl:border-t-0 @4xl:border-s @6xl:w-[32rem]">
+    <aside aria-label={t("study.aids")} className={`${sourceOpen ? "hidden @4xl:flex @4xl:border-s" : "flex"} min-h-0 min-w-0 flex-1 flex-col border-line bg-canvas`}>
       <div role="tablist" aria-label={t("study.aids")} className="flex min-h-14 shrink-0 items-center gap-1 overflow-x-auto border-b border-line px-3">
         {(companion ? TABS_WITH_COMPANION : TABS).map((name) => <Button key={name} role="tab" size="sm" tone="ghost" aria-selected={tab === name} onClick={() => setTab(name)}>{t(`study.tab.${name}`)}</Button>)}
       </div>
-      <div role="tabpanel" aria-label={t(`study.tab.${tab}`)} className="flex flex-col gap-4 px-5 py-4 @4xl:min-h-0 @4xl:flex-1 @4xl:overflow-y-auto">
+      <div role="tabpanel" aria-label={t(`study.tab.${tab}`)} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
         {tab === "companion" ? companion?.("tab") : <>
         {savedJourney && <StudyJourney journey={savedJourney} busy={view.busy} onReviewDue={() => { void controller.refreshDueReview(); }} onContinue={() => { if (savedJourney.phase === "make_quiz" && shown?.aid_id === savedJourney.cards_aid_id) pick("quiz", shown.aid_id); else void controller.continueJourney(); }} onLesson={() => { void controller.continueJourney("lesson"); }} onResults={() => { void controller.continueJourney("quiz"); }} />}
         {status}
         {jobs(currentJobs)}
-        <p className="text-meta text-muted">{t("study.grounded_notice")}</p>
+        <details className="text-meta text-muted"><summary className="cursor-pointer">{t("study.about_sources")}</summary><p className="mt-2">{t("study.grounded_notice")}</p></details>
         {tab === "generate" && !shown && <>
           <GenerateTools disabled={view.busy || !canConfigure} pendingKinds={pendingKinds} onPick={quickGenerate} onConfigure={pick} />
           <MySets sets={setsHere} busy={view.busy} contextual sourceAliases={sourceAliases} onOpen={(set) => { void controller.openSet(set); }} />
@@ -451,10 +470,10 @@ export function StudyWorkspace({ controller, lastTime, companion, request, onReq
             <label className="flex w-full flex-col gap-2 text-ui">{t("journey.choose_objective")}<select className={FIELD_LOOK} value={journeyChoices[topic.node_id] ?? topic.objectives[0]?.kc_id} onChange={(e) => setJourneyChoices((all) => ({ ...all, [topic.node_id]: e.target.value }))}>{topic.objectives.map((objective) => <option key={objective.kc_id} value={objective.kc_id}>{objective.statement}</option>)}</select></label>
             <Button size="sm" disabled={view.busy} onClick={() => { const kc = journeyChoices[topic.node_id] ?? topic.objectives?.[0]?.kc_id; if (kc) void controller.beginJourney(topic.node_id, kc).then((ok) => { if (ok) onJourneyStarted(topic.node_id, topic.subject); }); }}>{t("journey.begin")}</Button>
           </div>}<div className="flex flex-wrap gap-2">{openTopic && <Button size="sm" onClick={() => openTopic(topic.node_id)}>{t("study.topic_guide")}</Button>}{onPractice && <Button size="sm" onClick={() => onPractice(topic.subject, topic.kc_ids)}>{t("study.topic_practice")}</Button>}{openLesson && topic.lesson_ids.map((lesson, i) => <Button size="sm" key={lesson} onClick={() => openLesson(lesson)}>{t("study.topic_lesson", { number: i + 1 })}</Button>)}</div></div>)}</section>}
-          <fieldset className="flex flex-col gap-2"><legend className="text-ui font-semibold">{t("study.extra_sources")}</legend><p className="text-meta text-muted">{t("study.extra_sources_help")}</p>{view.sources.filter((s) => s.source_id !== source.source_id && (!("state" in s) || s.state === "ready")).map((s) => <div key={s.source_id} className="flex flex-col gap-2"><label className="flex min-h-11 items-center gap-2 text-ui"><input type="checkbox" checked={view.selections.some((x) => x.source_id === s.source_id)} disabled={view.busy || (view.selections.length >= 8 && !view.selections.some((x) => x.source_id === s.source_id))} onChange={() => { if (s.private && !view.selections.some((x) => x.source_id === s.source_id)) setExtraConfirm(s.source_id); else void controller.selectExtra(s.source_id); }} />{"title" in s ? s.title : t("study.private_source")}</label>{extraConfirm === s.source_id && <><p className="text-ui">{t("study.private_confirm")}</p><div className="flex gap-2"><Button size="sm" onClick={() => { setExtraConfirm(null); void controller.selectExtra(s.source_id); }}>{t("study.open_private")}</Button><Button size="sm" tone="ghost" onClick={() => setExtraConfirm(null)}>{t("action.cancel")}</Button></div></>}</div>)}</fieldset>
+          <fieldset hidden={view.sources.length < 2} className="flex flex-col gap-2"><legend className="text-ui font-semibold">{t("study.extra_sources")}</legend><p className="text-meta text-muted">{t("study.extra_sources_help")}</p>{view.sources.filter((s) => s.source_id !== source.source_id && (!("state" in s) || s.state === "ready")).map((s) => <div key={s.source_id} className="flex flex-col gap-2"><label className="flex min-h-11 items-center gap-2 text-ui"><input type="checkbox" checked={view.selections.some((x) => x.source_id === s.source_id)} disabled={view.busy || (view.selections.length >= 8 && !view.selections.some((x) => x.source_id === s.source_id))} onChange={() => { if (s.private && !view.selections.some((x) => x.source_id === s.source_id)) setExtraConfirm(s.source_id); else void controller.selectExtra(s.source_id); }} />{"title" in s ? s.title : t("study.private_source")}</label>{extraConfirm === s.source_id && <><p className="text-ui">{t("study.private_confirm")}</p><div className="flex gap-2"><Button size="sm" onClick={() => { setExtraConfirm(null); void controller.selectExtra(s.source_id); }}>{t("study.open_private")}</Button><Button size="sm" tone="ghost" onClick={() => setExtraConfirm(null)}>{t("action.cancel")}</Button></div></>}</div>)}</fieldset>
         </>}
         {tab === "chat" && source.state === "partial" && <label className="flex min-h-11 items-center gap-2 text-ui text-ink"><input type="checkbox" checked={readableConfirmed} onChange={(e) => review(e.target.checked)} />{t("study.confirm_readable")}</label>}
-        {tab === "chat" && chats.length > 0 && <ul className="flex flex-col" aria-label={t("study.aids")}>{chats.map((aid) => <li key={aid.aid_id}><Button size="sm" tone="ghost" aria-pressed={view.aid?.aid_id === aid.aid_id} disabled={view.busy} onClick={() => { void controller.showAid(aid.aid_id); }}>{aid.prompt ?? aid.title}{aid.status === "stale" ? ` · ${t("study.stale")}` : ""}</Button></li>)}</ul>}
+        {tab === "chat" && chats.length > 0 && (chats.length > 1 || !shown) && <details open={!shown}><summary className="cursor-pointer text-meta text-muted">{t("study.previous_questions")}</summary><ul className="flex flex-col" aria-label={t("study.aids")}>{chats.map((aid) => <li key={aid.aid_id}><Button size="sm" tone="ghost" aria-pressed={view.aid?.aid_id === aid.aid_id} disabled={view.busy} onClick={() => { void controller.showAid(aid.aid_id); }}>{aid.prompt ?? aid.title}{aid.status === "stale" ? ` · ${t("study.stale")}` : ""}</Button></li>)}</ul></details>}
         {shown && <article ref={resultPanel} tabIndex={-1} aria-label={`${t(`study.tool.${shown.kind}`)} · ${shown.title}`} className="flex flex-col gap-4 outline-none">
           {tab === "generate" && <span><Button size="sm" tone="ghost" onClick={() => controller.hideAid()}><Icon name="go-back" size={16} />{t("study.all_tools")}</Button></span>}
           {tab === "generate" && <h2 className="text-ui font-semibold text-ink">{t(`study.tool.${shown.kind}`)} · {shown.title}</h2>}

@@ -1195,6 +1195,18 @@ class StudyDesk:
 
     def scoped(self, request: dict[str, Any], chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Only the chunks of the topics the learner kept; all topics kept means the whole material (STU-21)."""
+        # An explicit PDF page scope is applied before batching. Otherwise a focused quiz
+        # asks unrelated chapters for evidence and one irrelevant batch can fail the job.
+        # Keep whole frozen chunks: page selection must not alter citation text or offsets.
+        focus = request.get("settings", {}).get("focus", "")
+        page_scope = re.search(r"(?:^|\n)PDF pages?\s+(\d+)(?:\s*[-\u2013\u2014]\s*(\d+))?\s*:", focus, re.I)
+        if page_scope and request["kind"] in ("quiz", "flashcards", "summary", "notes", "lesson_plan"):
+            first, last = int(page_scope[1]), int(page_scope[2] or page_scope[1])
+            if not 1 <= first <= last <= 300:
+                raise StudyError("insufficient_evidence")
+            chunks = [c for c in chunks if c["locator"]["kind"] == "page" and first <= c["locator"]["page"] <= last]
+            if not chunks:
+                raise StudyError("insufficient_evidence")
         if request.get("context_aid_id"):
             parent = self.follow_up_aid(request)
             ids = {c["chunk_id"] for claim in self.follow_up_claims(parent) for c in claim["citations"]}

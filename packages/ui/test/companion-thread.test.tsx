@@ -235,13 +235,13 @@ describe("W8 Your tutor in Study", () => {
     return { ...result, controller, done };
   }
 
-  test("the library shows the thread as a panel above the sources, after the Last time card", () => {
+  test("the library keeps materials and the tutor in separate tabs", () => {
     const { container } = study({ sources: [source] });
-    const panel = container.querySelector('[data-companion-place="panel"]') as HTMLElement;
-    expect(panel).not.toBeNull();
-    expect(panel.previousElementSibling?.hasAttribute("data-last-time")).toBe(true);
-    const library = screen.getAllByRole("button", { name: /Biology/ })[0]!;
-    expect(panel.compareDocumentPosition(library) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelector('[data-companion-place="panel"]')).toBeNull();
+    expect(screen.getAllByRole("button", { name: /Biology/ }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("tab", { name: "Your tutor" }));
+    expect(container.querySelector('[data-companion-place="panel"]')).not.toBeNull();
+    expect(screen.queryByRole("button", { name: /Biology/ })).toBeNull();
   });
 
   test("inside a material the thread is a third tab beside Generate and Chat, and the study ask box steps aside", () => {

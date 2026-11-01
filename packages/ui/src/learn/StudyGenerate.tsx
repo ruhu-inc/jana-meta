@@ -19,19 +19,19 @@ export type GenerateRequest = { count: number; settings: W.GenerateSettings };
 export const defaultRequest = (tool: GenerateTool): GenerateRequest => ({ count: 10, settings: tool === "quiz" ? { question_types: ["choice", "fill_blank", "true_false"], difficulty: "medium" } : tool === "audio_overview" ? { podcast_length: "standard", voices: 1 } : tool === "lesson_plan" ? { minutes_available: 45 } : {} });
 const SUMMARY_STYLES = { detailed: "", cheat: "Format as concise revision bullet points. Preserve all source qualifiers and cover the whole material.", short: "Choose the essential source-supported points from every section, with brief wording and all qualifiers intact." } as const;
 
-/** The six tools of a material, each opening its settings. Before any material, they show greyed with the reason. */
+/** Three common tools first; additional formats remain available in a disclosure. */
 export function GenerateTools({ disabled, empty = false, onPick, onConfigure, pendingKinds = [] }: { disabled: boolean; empty?: boolean; pendingKinds?: readonly string[]; onPick: (tool: GenerateTool) => void; onConfigure?: (tool: GenerateTool) => void }) {
   const t = useT();
-  return <section className="flex flex-col gap-3" aria-labelledby="study-generate">
-    <h2 id="study-generate" className="text-ui font-semibold text-ink">{t("study.generate_heading")}</h2>
-    <p className="text-meta text-muted">{t(empty ? "study.generate_needs_material" : "study.generate_help")}</p>
-    <div className="grid grid-cols-2 gap-2">
-      {GENERATE_TOOLS.map((tool) => <div key={tool} className="flex items-center rounded-card border border-line bg-canvas"><button type="button" disabled={disabled || empty || pendingKinds.includes(tool)} onClick={() => onPick(tool)}
+  const card = (tool: GenerateTool) => <div key={tool} className="flex items-center rounded-card border border-line bg-canvas"><button type="button" disabled={disabled || empty || pendingKinds.includes(tool)} onClick={() => onPick(tool)}
         className="jana-press flex min-h-16 min-w-0 flex-1 items-start gap-3 rounded-card px-3 py-3 text-start hover:bg-wash disabled:cursor-not-allowed disabled:bg-chrome disabled:text-faint">
         <StudyToolIcon kind={tool} />
         <span className="flex min-w-0 flex-col gap-0.5"><span className="text-ui font-medium">{t(`study.tool.${tool}`)}</span><span className="text-meta text-muted">{t(`study.tool_help.${tool}`)}</span></span>
-      </button>{onConfigure && <IconButton icon="settings" size="sm" label={t("study.configure_tool", { tool: t(`study.tool.${tool}`) })} disabled={disabled || empty || pendingKinds.includes(tool)} onClick={() => onConfigure(tool)} />}</div>)}
-    </div>
+      </button>{onConfigure && <IconButton icon="settings" size="sm" label={t("study.configure_tool", { tool: t(`study.tool.${tool}`) })} disabled={disabled || empty || pendingKinds.includes(tool)} onClick={() => onConfigure(tool)} />}</div>;
+  return <section className="flex flex-col gap-3" aria-labelledby="study-generate">
+    <h2 id="study-generate" className="text-ui font-semibold text-ink">{t("study.generate_heading")}</h2>
+    <p className="text-meta text-muted">{t(empty ? "study.generate_needs_material" : "study.generate_help")}</p>
+    <div className="grid grid-cols-1 gap-2 @xl:grid-cols-3">{GENERATE_TOOLS.filter((tool) => ["summary", "quiz", "flashcards"].includes(tool)).map(card)}</div>
+    <details><summary className="cursor-pointer py-2 text-meta text-muted">{t("study.more_tools")}</summary><div className="mt-2 grid grid-cols-1 gap-2 @xl:grid-cols-2">{GENERATE_TOOLS.filter((tool) => !["summary", "quiz", "flashcards"].includes(tool)).map(card)}</div></details>
   </section>;
 }
 
