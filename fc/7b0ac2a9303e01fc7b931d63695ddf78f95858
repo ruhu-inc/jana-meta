@@ -1,0 +1,21 @@
+services/study-worker/study_worker/__main__.py
+  s_49ba057c5af1a1::t_ecb15cb5ffe964 7,11-16
+services/study-worker/tests/test_native_thread_pools.py
+  s_49ba057c5af1a1::t_e40a1ab777aebc 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fc7b0ac2a9303e01fc7b931d63695ddf78f95858",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
