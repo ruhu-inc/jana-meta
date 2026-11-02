@@ -1,0 +1,21 @@
+services/agent-core/tests/test_symbolic_plan_evidence.py
+  s_d5c00ecab43fb6::t_af1ef6ac5709b9 17-26,28-32,36-63,70-77,97-106,108-115
+services/agent-core/agent_core/engine/toolround.py
+  s_d5c00ecab43fb6::t_af1ef6ac5709b9 47-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3856b91622893df018f1aeb587eba3e724982e5e",
+  "prompts": {},
+  "sessions": {
+    "s_d5c00ecab43fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44ba0f5a-afb1-425d-8e0e-cfd3bea8cdc4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
