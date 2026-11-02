@@ -1,0 +1,23 @@
+.github/actions/setup/action.yml
+  s_d5c00ecab43fb6::t_2958cbcde4c235 31-38
+services/agent-core/tests/test_m25b_numbers_and_answers.py
+  s_d5c00ecab43fb6::t_02dbfddd83e757 100-101
+.github/workflows/ci.yml
+  s_d5c00ecab43fb6::t_65a010706cd128 81-82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4c6c9f0d30d504aed97894d00e6a00cb7fd71e51",
+  "prompts": {},
+  "sessions": {
+    "s_d5c00ecab43fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44ba0f5a-afb1-425d-8e0e-cfd3bea8cdc4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
