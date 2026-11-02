@@ -1279,6 +1279,7 @@
   "ledger.remove_table": "Remove table",
   "ledger.convert": "Make this a journal?",
   "ledger.totals": "Dr total {dr}; Cr total {cr} ({currency})",
+  "photo.add": "Add a photo",
   "photo.title": "Photo of a question",
   "photo.confirm_title": "Is this the question?",
   "photo.working_title": "Is this what you wrote?",

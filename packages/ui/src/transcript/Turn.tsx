@@ -67,8 +67,12 @@ function VisualPart({ part }: { part: PartRec }) {
   return <Rendered keys={[`visual:${type}`, "visual:*"]} data={visual.spec} lifecycle={lifecycleOf(part)} partId={part.part_id} />;
 }
 
-/** `readAloud` false leaves a text part's Read aloud to the reply's action row. */
-export const PartView = memo(function PartView({ partId, readAloud = true }: { partId: string; readAloud?: boolean }) {
+// Quiet until the reply is hovered or focused, never hidden on touch (D109).
+const QUIET = "pointer-fine:opacity-0 pointer-fine:group-hover/turn:opacity-100 pointer-fine:group-focus-within/turn:opacity-100";
+
+/** `readAloud` false leaves a text part's Read aloud to the reply's action row. `quiet` and `quietText` keep a Read
+ * aloud out of view until its reply is hovered: a card's on an older reply, and an earlier text part's on any reply. */
+export const PartView = memo(function PartView({ partId, readAloud = true, quiet = false, quietText = false }: { partId: string; readAloud?: boolean; quiet?: boolean; quietText?: boolean }) {
   const part = useSelect((s) => s.parts[partId]);
   const session = useSession();
   const ended = useSelect((s) => s.turns[s.parts[partId]?.turn_id ?? ""]?.status !== "streaming");
@@ -85,8 +89,9 @@ export const PartView = memo(function PartView({ partId, readAloud = true }: { p
       ) : (
         <Rendered keys={keysOf(part)} data={part} lifecycle={lifecycleOf(part)} partId={partId} onAction={onAction} />
       )}
-      {part.kind === "card" && part.status === "complete" && ended && part.card && ["question", "hint"].includes(part.card.card.card_type) && <div className="-ms-2 flex flex-wrap items-center"><ReadAloud source={{ kind: "session_card", part_id: partId }} /></div>}
-      {readAloud && part.kind === "text" && part.status === "complete" && ended && <div className="-ms-2 flex flex-wrap items-center"><ReadAloud partId={partId} /></div>}
+      {/* A question the learner has answered is not read back: there is nothing left to decide. A hint stays worth hearing. */}
+      {part.kind === "card" && part.status === "complete" && ended && part.card && (part.card.card.card_type === "hint" || (part.card.card.card_type === "question" && part.card.state === "open")) && <div className={`-ms-2 flex flex-wrap items-center ${quiet ? QUIET : ""}`}><ReadAloud source={{ kind: "session_card", part_id: partId }} /></div>}
+      {readAloud && part.kind === "text" && part.status === "complete" && ended && <div className={`-ms-2 flex flex-wrap items-center ${quietText ? QUIET : ""}`}><ReadAloud partId={partId} /></div>}
     </div>
   );
 });
@@ -152,13 +157,13 @@ export const TurnView = memo(function TurnView({ turnId }: { turnId: string }) {
             {folded.map((p) => <PartView key={p.part_id} partId={p.part_id} />)}
           </Disclosure>
         )}
-        {parts.filter((p) => !folded.includes(p)).map((p) => <PartView key={p.part_id} partId={p.part_id} readAloud={p.part_id !== spoken} />)}
+        {parts.filter((p) => !folded.includes(p)).map((p) => <PartView key={p.part_id} partId={p.part_id} readAloud={p.part_id !== spoken} quiet={!latest} quietText />)}
         {shownNotices.map((id) => <PartView key={id} partId={id} />)}
         <TurnFailure turn={turn} />
         <TurnEgress turnId={turnId} live={live} />
         <MemoryChips sessionId={turn.session_id} turnId={turnId} />
         {live ? <StatusLine turn={turn} onStop={() => void session?.cancel(turn.turn_id)} onRetry={() => void session?.retryTurn(turn.turn_id)} {...(faster !== null ? { onUseFaster: faster } : {})} /> : (
-          <div data-reply-actions="" className={`-ms-2 flex flex-wrap items-center gap-0.5 ${latest ? "" : "pointer-fine:opacity-0 pointer-fine:group-hover/turn:opacity-100 pointer-fine:group-focus-within/turn:opacity-100"}`}>
+          <div data-reply-actions="" className={`-ms-2 flex flex-wrap items-center gap-0.5 ${latest ? "" : QUIET}`}>
             {spoken !== undefined && <ReadAloud partId={spoken} />}
             {parts.length > 0 && !readOnly && <ReportProblem sessionId={turn.session_id} turnId={turnId} />}
             {parts.length > 0 && !readOnly && <SaveQuestion sessionId={turn.session_id} turnId={turnId} />}

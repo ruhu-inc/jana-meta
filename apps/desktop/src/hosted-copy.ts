@@ -5,4 +5,6 @@ export const HOSTED_COPY: Record<string, string> = {
   "first_run.stays": "Your work is kept on this demo's server.",
   "connectivity.label.all_off": "On this server",
   "connectivity.line.all_off": "Everything stays on this demo's server.",
+  "egress.first_use.keep_local": "Don't send it",
+  "egress.first_use.keep_voice_local": "Don't send my voice",
 };

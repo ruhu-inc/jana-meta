@@ -34,13 +34,18 @@ function mount(board = false) {
   const view = render(<LocaleProvider locale="en"><StoreProvider holder={fixture.holder} session={session}>{board ? <Board sessionId={SESSION} /> : <Composer sessionId={SESSION} asking />}</StoreProvider></LocaleProvider>);
   return { ...view, fixture, session, uploaded, crops };
 }
+/** The tutor's message box keeps one photo button; question or diagram is chosen from its menu. */
+function openPhoto() {
+  fireEvent.click(screen.getByRole("button", { name: "Add a photo", exact: true }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Photo of a question" }));
+}
 for (const [format, mime] of [["jpg", "image/jpeg"], ["png", "image/png"], ["webp", "image/webp"]] as const) {
   for (const source of ["file", "paste", "drop", "board_drop"] as const) test(`inp15_sources_equivalent: ${format} ${source}`, async () => {
     const bytes = new Uint8Array(readFileSync(path.resolve(import.meta.dirname, `../gallery/photo-source-fixture.${format}`))), file = new File([bytes], `synthetic.${format}`, { type: mime });
     const view = mount(source === "board_drop");
     try {
       if (source === "file") {
-        fireEvent.click(screen.getByRole("button", { name: "Photo of a question", exact: true }));
+        openPhoto();
         fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [file] } });
       } else {
         const target = source === "board_drop" ? view.container.querySelector("section")! : screen.getByRole("textbox", { name: "Message to the tutor" });
@@ -64,7 +69,7 @@ test("inp15_sources_equivalent: synthetic webcam encoder boundary delivers the s
   vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => callback(new Blob([jpeg], { type: "image/jpeg" })));
   const view = mount();
   try {
-    fireEvent.click(screen.getByRole("button", { name: "Photo of a question", exact: true }));
+    openPhoto();
     fireEvent.click(screen.getByRole("button", { name: "Use camera" }));
     const video = await screen.findByLabelText("Live camera preview");
     Object.defineProperties(video, { videoWidth: { value: 900 }, videoHeight: { value: 700 } });
@@ -78,7 +83,7 @@ test("paste/drop respect the same unavailable capture state as the button", asyn
   const view = mount();
   try {
     act(() => { view.fixture.startTurn(); });
-    expect(screen.getByRole("button", { name: "Photo of a question", exact: true }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("button", { name: "Add a photo", exact: true }).hasAttribute("disabled")).toBe(true);
     const target = screen.getByRole("textbox", { name: "Message to the tutor" }), transfer = { files: [new File([jpeg], "synthetic.jpg", { type: "image/jpeg" })], types: ["Files"] };
     fireEvent.paste(target, { clipboardData: transfer }); fireEvent.drop(target, { dataTransfer: transfer });
     await act(async () => { await Promise.resolve(); }); expect(view.uploaded).toHaveLength(0); expect(screen.queryByRole("dialog")).toBeNull();
@@ -92,7 +97,7 @@ test("inp15_sources_equivalent: synthetic HEIC decoder boundary normalizes befor
   vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => callback(new Blob([jpeg], { type: "image/jpeg" })));
   const view = mount();
   try {
-    fireEvent.click(screen.getByRole("button", { name: "Photo of a question", exact: true }));
+    openPhoto();
     fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(["synthetic HEIC decoder input"], "fixture.heic", { type: "image/heic" })] } });
     await waitFor(() => expect(view.crops).toHaveLength(1));
     expect(view.uploaded[0]?.bytes).toEqual(jpeg); expect(view.uploaded[0]?.meta).toMatchObject({ source: "photo_file", purpose: "question" });
@@ -111,5 +116,17 @@ test("a board photo cannot follow a session switch", async () => {
     await act(async () => { await Promise.resolve(); });
     expect(screen.queryByRole("dialog")).toBeNull(); expect(view.uploaded).toHaveLength(1);
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:synthetic-local-fixture");
+  } finally { view.unmount(); view.session.close(); }
+});
+
+test("the tutor's message box has one photo button, with question and diagram in its menu", async () => {
+  const view = mount();
+  try {
+    expect(screen.queryByRole("button", { name: "Photo of a question", exact: true })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Photo of a diagram to learn", exact: true })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Add a photo", exact: true }));
+    expect(screen.getByRole("menuitem", { name: "Photo of a question" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Photo of a diagram to learn" }));
+    expect(await screen.findByRole("dialog", { name: "Photo of a diagram to learn" })).toBeTruthy();
   } finally { view.unmount(); view.session.close(); }
 });

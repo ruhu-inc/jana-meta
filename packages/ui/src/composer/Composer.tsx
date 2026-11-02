@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { captureRegionText, PhotoCommands, typedCapture, reviseTypedCapture, confirmTypedCapture, cancelTypedCapture, type CapturedQuestion } from "@jana/client-core";
 import { useT } from "../i18n.js";
-import { Button, IconButton, SuggestionChip } from "../primitives/index.js";
+import { Button, IconButton, MenuButton, SuggestionChip } from "../primitives/index.js";
 import { ComposerShell } from "../primitives/ComposerShell.js";
 import { useSelect, useSession } from "../store.js";
 import { CaptureDiagrams } from "./CaptureDiagrams.js";
@@ -212,10 +212,12 @@ export function Composer({ sessionId, asking = false, onSent, placement = "dock"
         {photo !== null && photo.sessionId === sessionId && photo.diagram === true && <PhotoCapture key={`${sessionId}:diagram`} sessionId={sessionId} {...(photo.file === undefined ? {} : { file: photo.file })} {...(photo.source === undefined ? {} : { source: photo.source })} purpose="diagram" onConfirmed={(capture) => setDrill(capture)} onDiscardSource={() => setPhoto({ sessionId, diagram: true })} onTyped={() => undefined} onClose={() => setPhoto(null)} />}
         {photo !== null && photo.sessionId === sessionId && photo.diagram !== true && <PhotoCapture key={sessionId} purpose={answering ? "answer" : "question"} {...photo} onConfirmed={(capture) => { if (session !== null) { if (sent !== null) session.discardFailed?.(sent); editor.current?.clear(); editor.current?.insert(capture.text); submittedText.current = editor.current?.text() ?? null; setSent(session.sendCapture(capture, answering ? "answer" : "ask")); onSent?.(); setUpNext((queue) => [...queue, capture]); } }} onDiscardSource={() => setPhoto({ sessionId })} onTyped={(text) => editor.current?.insert(text)} onClose={() => setPhoto(null)} />}
       </>}
-      attach={<>
-        <IconButton icon="photo" label={t("photo.title")} tip="above" disabled={!canCapture} onClick={() => setPhoto({ sessionId })} />
-        {placement === "dock" && <IconButton icon="diagram" label={t("photo.diagram_action")} tip="above" disabled={!canCapture} onClick={() => { setDrill(null); setPhoto({ sessionId, diagram: true }); }} />}
-      </>}
+      attach={placement === "dock"
+        ? <MenuButton label={t("photo.add")} placement="above" align="start" trigger={(props) => <IconButton icon="photo" label={t("photo.add")} tip="above" disabled={!canCapture} {...props} />} items={[
+          { id: "question", icon: "photo", label: t("photo.title"), onSelect: () => setPhoto({ sessionId }) },
+          { id: "diagram", icon: "diagram", label: t("photo.diagram_action"), onSelect: () => { setDrill(null); setPhoto({ sessionId, diagram: true }); } },
+        ]} />
+        : <IconButton icon="photo" label={t("photo.title")} tip="above" disabled={!canCapture} onClick={() => setPhoto({ sessionId })} />}
       keyboard={<IconButton icon="maths" label={t("input.keyboard")} tip="above" aria-expanded={keyboard} disabled={sending || confirming || dictating} onClick={() => setKeyboard((open) => !open)} />}
       voice={<DictationControl look="tool" purpose={answering ? "answer" : "question"} disabled={liveTurn !== null || confirming || sending || photo !== null} onDraft={onDraft} />}
       send={liveTurn !== null ? <IconButton tone="action" tip="above" icon="stop" label={t("action.stop")} onClick={stop} /> :

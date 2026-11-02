@@ -251,3 +251,37 @@ it("retains a note after a failed Save and prevents concurrent duplicate saves",
   await waitFor(() => expect(s.tools.saveNote).toHaveBeenCalledTimes(2));
   await waitFor(() => expect(screen.getByRole("textbox", { name: "Note draft" }).textContent).toBe(""));
 });
+
+describe("the chat stays quiet", () => {
+  const question = { card_type: "question", prompt: "Which force?", options: [{ id: "gravity", label: "Gravity" }], multi: false, allow_free_text: true };
+  const hint = { card_type: "hint", rung: 2, of: 5, body: "Which force?", actions: ["try_it", "next_hint", "show_step"] };
+  function withCard(card: Record<string, unknown>, closing?: Record<string, unknown>) {
+    const f = new Fixture(), s = speech();
+    f.startTurn();
+    f.emit({ type: "part.start", part_id: "prt_card", kind: "card", index: 0 });
+    f.emit({ type: "card.open", request_id: "req_card", part_id: "prt_card", call_id: null, card });
+    if (closing) f.emit(closing);
+    f.emit({ type: "part.end", part_id: "prt_card", status: "complete", duration_ms: 1 });
+    f.end();
+    f.render(<SpeechToolsProvider controller={s.controller}><PartView partId="prt_card" /></SpeechToolsProvider>);
+  }
+  it("offers to read a question the learner has still to answer", () => {
+    withCard(question);
+    expect(screen.getByRole("button", { name: "Read aloud" })).toBeTruthy();
+  });
+  it("does not read back a question already answered", () => {
+    withCard(question, { type: "card.answered", request_id: "req_card", answer_summary: "Gravity", answered_ts: Date.now() });
+    expect(screen.getByText("Answered")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Read aloud" })).toBeNull();
+  });
+  it("still reads a hint aloud", () => {
+    withCard(hint);
+    expect(screen.getByRole("button", { name: "Read aloud" })).toBeTruthy();
+  });
+  it("keeps an earlier part's Read aloud out of view until the reply is hovered", () => {
+    const f = new Fixture(), s = speech();
+    f.startTurn(); const part = f.text("A first thought."); f.end();
+    f.render(<SpeechToolsProvider controller={s.controller}><PartView partId={part} quietText /></SpeechToolsProvider>);
+    expect(screen.getByRole("button", { name: "Read aloud" }).closest("div.-ms-2")?.className).toContain("pointer-fine:opacity-0");
+  });
+});
