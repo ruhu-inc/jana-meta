@@ -1,0 +1,17 @@
+[Unit]
+Description=Jana demo: the front door and each judge's core
+After=jana-gateway.service
+Requires=jana-gateway.service
+
+[Service]
+User=jana
+Environment=HOME=/var/lib/jana
+Environment=PATH=/opt/jana/app/.venv/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=/opt/jana/app
+ExecStart=/opt/jana/app/.venv/bin/python -m jana_tools.hosted serve --config /etc/jana/hosted.toml --port 8000
+Restart=always
+RestartSec=3
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

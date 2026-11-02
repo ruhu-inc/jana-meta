@@ -4,8 +4,13 @@ import { StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { Launch } from "@jana/client-core";
 import "./app.css";
+import { BASE } from "@jana/i18n";
+import { HOSTED_COPY } from "./hosted-copy.js";
 import { LaunchScreen } from "@jana/ui/launch";
 import { desktopCheckinNotifier, hasNativeFilePickers, launchInfo, pickInstallSource, pickProfileArchive, rollbackUpdate, updateRecovery } from "./launch.js";
+
+// The hosted demo (`scripts/hosted`) keeps data on a server, so a build for it must not say it stays on this computer.
+if (import.meta.env.VITE_JANA_HOSTED === "1") Object.assign(BASE, HOSTED_COPY);
 
 let info: Promise<{ base_url: string; token: string }> | null = null;
 const launch: Launch = {

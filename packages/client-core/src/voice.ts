@@ -162,11 +162,14 @@ export class VoiceController {
       const endpoint = await this.endpoint();
       if (generation !== this.generation) return;
       const url = new URL(endpoint.baseUrl);
-      if (!["127.0.0.1", "[::1]"].includes(url.hostname) || url.protocol !== "http:" || url.username || url.password) {
+      // The core on loopback, or the hosted demo's own front door on the page's own HTTPS origin; nothing else.
+      const loopback = ["127.0.0.1", "[::1]"].includes(url.hostname) && url.protocol === "http:";
+      const hosted = url.protocol === "https:" && url.origin === globalThis.location?.origin;
+      if ((!loopback && !hosted) || url.username || url.password) {
         throw new Error("voice_core_origin_required");
       }
-      url.protocol = "ws:";
-      url.pathname = `/v1/sessions/${encodeURIComponent(this.sessionId)}/voice`;
+      url.protocol = hosted ? "wss:" : "ws:";
+      url.pathname = `${url.pathname.replace(/\/$/, "")}/v1/sessions/${encodeURIComponent(this.sessionId)}/voice`;
       url.search = "";
       url.hash = "";
       const profile = Object.entries(endpoint.headers ?? {}).find(([name]) => name.toLowerCase() === "x-profile-token")?.[1];

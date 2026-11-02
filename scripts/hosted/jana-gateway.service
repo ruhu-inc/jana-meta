@@ -1,0 +1,16 @@
+[Unit]
+Description=Jana demo: the budgeted Meta gateway, on loopback
+After=jana-key.service
+Requires=jana-key.service
+
+[Service]
+User=jana
+Environment=HOME=/var/lib/jana
+WorkingDirectory=/opt/jana/app
+LoadCredential=meta_api_key:/etc/jana/meta_api_key
+ExecStart=/opt/jana/app/.venv/bin/python -m cloud_gateway --config services/cloud-gateway/deploy/meta-hosted.toml --port 8081
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

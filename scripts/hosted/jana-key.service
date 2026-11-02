@@ -1,0 +1,15 @@
+# Fetches the Meta key from Secret Manager into a root-only file before the gateway starts.
+[Unit]
+Description=Jana demo: fetch the Meta key
+Before=jana-gateway.service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+UMask=0077
+ExecStart=/bin/sh -c 'gcloud secrets versions access latest --secret=jana-meta-api-key > /etc/jana/meta_api_key'
+
+[Install]
+WantedBy=multi-user.target

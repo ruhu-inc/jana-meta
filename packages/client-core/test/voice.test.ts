@@ -391,3 +391,20 @@ describe("conversation place (VOC-53, D130)", () => {
   });
 });
 
+describe("the hosted demo's voice socket", () => {
+  test("reaches its core through the page's own https origin, keeping the front door's path", async () => {
+    vi.stubGlobal("location", { origin: "https://demo.test" });
+    const { controller, factory } = setup("https://demo.test/core");
+    await controller.open();
+    expect(factory.mock.calls[0]?.[0]).toBe("wss://demo.test/core/v1/sessions/ses_one/voice");
+    vi.unstubAllGlobals();
+  });
+
+  test("refuses any other origin", async () => {
+    vi.stubGlobal("location", { origin: "https://demo.test" });
+    const { controller, factory } = setup("https://elsewhere.test/core");
+    await controller.open().catch(() => undefined);
+    expect(factory).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+});
