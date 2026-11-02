@@ -1,0 +1,19 @@
+apps/desktop/src-tauri/src/keychain.rs
+  s_d5c00ecab43fb6::t_33bbf45cb94e22 752-756,798-801,807-810,886-889,969-972
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cc59d97243f28b8f30a82d249770531e10d531e0",
+  "prompts": {},
+  "sessions": {
+    "s_d5c00ecab43fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44ba0f5a-afb1-425d-8e0e-cfd3bea8cdc4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
