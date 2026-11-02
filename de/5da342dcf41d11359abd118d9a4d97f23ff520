@@ -1,0 +1,43 @@
+packages/ui/src/progress/Progress.tsx
+  s_49ba057c5af1a1::t_3bb6752fa5d3c5 243-250,254,272
+services/agent-core/agent_core/engine/companion_opener.py
+  s_49ba057c5af1a1::t_952088831ba35b 17,188-190,193-196
+services/agent-core/agent_core/engine/companion.py
+  s_49ba057c5af1a1::t_3bb6752fa5d3c5 999,1001,1007-1008
+services/agent-core/agent_core/engine/companion_facts.py
+  s_49ba057c5af1a1::t_3bb6752fa5d3c5 79-91,144
+services/agent-core/agent_core/api/companion.py
+  s_49ba057c5af1a1::t_952088831ba35b 34-42
+  s_49ba057c5af1a1::t_53bee2cccc50a9 14
+packages/ui/test/study-workspace.test.tsx
+  s_49ba057c5af1a1::t_952088831ba35b 24,26,567-569,571,573,575-577
+  s_49ba057c5af1a1::t_2e1cbd128691ee 572,574,578
+  s_49ba057c5af1a1::t_b2e637f69ed88f 570
+  s_49ba057c5af1a1::t_e011cd6c252884 579
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_49ba057c5af1a1::t_3bb6752fa5d3c5 445
+packages/ui/test/progress.test.tsx
+  s_49ba057c5af1a1::t_952088831ba35b 231-246
+services/agent-core/tests/test_companion_fact_binding.py
+  s_49ba057c5af1a1::t_f55f4926422410 18
+  s_49ba057c5af1a1::t_952088831ba35b 6-8,12-17,19-21
+  s_49ba057c5af1a1::t_53bee2cccc50a9 9-11
+services/agent-core/tests/test_w8_opener.py
+  s_49ba057c5af1a1::t_952088831ba35b 54-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "de5da342dcf41d11359abd118d9a4d97f23ff520",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
