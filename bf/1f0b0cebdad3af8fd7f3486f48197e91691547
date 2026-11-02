@@ -1,0 +1,23 @@
+scripts/jana_tools/__main__.py
+  s_49ba057c5af1a1::t_51cb8959653571 387-388
+services/agent-core/agent_core/engine/plans.py
+  s_49ba057c5af1a1::t_51cb8959653571 514-515
+services/cloud-gateway/cloud_gateway/research.py
+  s_49ba057c5af1a1::t_51cb8959653571 85-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bf1f0b0cebdad3af8fd7f3486f48197e91691547",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
