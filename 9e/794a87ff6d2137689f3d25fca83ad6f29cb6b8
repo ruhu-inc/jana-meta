@@ -1,0 +1,25 @@
+scripts/jana_tools/hosted.py
+  s_49ba057c5af1a1::t_7457c3895bd475 75,99,235-243,373,375-376
+scripts/hosted/deploy.sh
+  s_49ba057c5af1a1::t_7457c3895bd475 50-51,62,64
+scripts/tests/test_hosted.py
+  s_49ba057c5af1a1::t_7457c3895bd475 121-147
+scripts/hosted/setup-vm.sh
+  s_49ba057c5af1a1::t_7457c3895bd475 45,52,54-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9e794a87ff6d2137689f3d25fca83ad6f29cb6b8",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
