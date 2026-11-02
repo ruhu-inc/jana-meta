@@ -44,9 +44,16 @@ def _checked_expressions(name: str, args: dict[str, Any], data: Any) -> list[str
     found: list[Any] = []
     if name == "math_check_equivalence" and value.get("verdict") == "equivalent":
         found = [args.get("a"), args.get("b")]
-    elif name == "math_simplify" and value.get("status") == "ok" and args.get("form", "simplest") in {
-        "simplest", "expanded", "factored",
-    }:
+    elif (
+        name == "math_simplify"
+        and value.get("status") == "ok"
+        and args.get("form", "simplest")
+        in {
+            "simplest",
+            "expanded",
+            "factored",
+        }
+    ):
         result = value.get("result")
         if isinstance(result, dict):
             found = [result.get("text"), data.get("latex")]
