@@ -40,7 +40,7 @@ import {
   type CheckinNotifier, type CompanionAction, type ConceptNode, type KcLinks, type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
 } from "@jana/client-core";
 import {
-  AskAnswer, CompanionThread, StudyWorkspace, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, NotesPlace, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, LastTimeCard, CheckinCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
+  AskAnswer, CourseAsk, CompanionThread, StudyWorkspace, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, NotesPlace, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, LastTimeCard, CheckinCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
   ConceptMapRendererProvider, GapLinkProvider, ResearchLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
@@ -373,6 +373,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   useEffect(() => { if (screen !== "settings" && screen !== "knows-from-settings") studySettingsReturn.current = null; }, [screen]);
   const [keysHelp, setKeysHelp] = useState(false);
   const [record, setRecord] = useState<{ subjects: string[]; level: "O" | "A" } | null>(null);
+  // A profile with no subjects studies its own course and materials: no curriculum places, no curriculum tutor session.
+  const ownCourse = record !== null && record.subjects.length === 0;
   const [online, setOnline] = useState(false);
   const [mapTopic, setMapTopic] = useState<string | null>(null);
   const [mapSubject, setMapSubject] = useState<string | null>(null);
@@ -500,8 +502,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
   }), [profiles]);
   // Where no tutor can answer, the app opens on Learn, never on a tutor that cannot reply (PLT-29).
   useEffect(() => {
-    if (answers === false) setScreen((current) => (current === "tutor" || current === "home" ? "learn" : current));
-  }, [answers, active]);
+    if (answers === false && !ownCourse) setScreen((current) => (current === "tutor" || current === "home" ? "learn" : current));
+  }, [answers, active, ownCourse]);
 
   // A sitting left open comes first when a profile opens: the welcome back of an interrupted mock, before any other
   // screen (TABLE UXS-25a), or the sitting itself when the core kept it running. No tutor session is opened while a
@@ -741,10 +743,11 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         <FirstRun profiles={profiles} packs={degraded.packs}
           {...(runtime.chooseArchive === undefined ? {} : { onRestore: () => setFirstRun({ step: "restore" }) })}
           existing={firstRun.resume === true ? view.profiles.map((p) => ({ profileId: p.profile_id, name: p.display_name, avatar: p.avatar })) : []}
-          onStarted={(name) => {
+          onStarted={(name, curriculum) => {
             // "Start learning" is recorded, so a later launch opens the picker, not first run (UXS-10).
             void finishSetup(profiles.commands).catch(() => undefined);
-            setFirstRun({ step: "handoff", name });
+            // Their own course needs no talk of lessons, a tutor model or exam goals: straight to their materials.
+            if (curriculum) setFirstRun({ step: "handoff", name }); else { setFirstRun(null); setScreen("home"); }
           }} />
       </Centred>
     );
@@ -903,7 +906,8 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     setScreen("tutor");
   };
   /** "New question": the tutor workspace with an empty conversation, a new session for the subject (UXS-01). */
-  const newQuestion = tutorOffered && lock === null && protectedCheck === undefined && screen !== "assessment" ? () => {
+  const newQuestion = ownCourse && studyAvailable ? () => { setStudyRequest({ kind: "companion" }); setScreen("study"); }
+    : tutorOffered && lock === null && protectedCheck === undefined && screen !== "assessment" ? () => {
     const target = shownTarget ?? (installed[0] !== undefined ? askTarget(installed[0].subject, installed[0].level) : null);
     if (target === null) return;
     const fresh = askTarget(target.subject, target.level ?? "O");
@@ -1046,6 +1050,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         // A homework question goes to the guided tutor as a new question (PED-01).
         const question = payload.question?.trim() ?? "";
         const subject = subjectName(shownTarget?.subject ?? "") ?? installed[0]?.subject ?? null;
+        if (ownCourse) { setStudyRequest({ kind: "companion" }); setScreen("study"); return; }
         if (question === "" || !tutorOffered || lock !== null || protectedCheck !== undefined || subject === null) { setScreen("tutor"); return; }
         firstQuestions.start({ subject, content: [{ type: "text", text: question }] });
         return;
@@ -1154,14 +1159,14 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     ...(record !== null && record.subjects.length > 0 ? { detail: t("frame.menu.detail", { subjects: record.subjects.map(subjectLabel).join(", "), level: t(`settings.profiles.level_name.${record.level.toLowerCase()}`) }) } : {}) };
   const openSettingsAt = (id: string) => { setSettingsAt({ id, at: Date.now() }); setScreen("settings"); };
   const home = () => {
-    const notice = answers === false ? (
+    const notice = answers === false && !ownCourse ? (
       // No tutor answers here: lessons and practice instead of an Ask box (UXS-12 content-only state, PLT-17).
       <div className="flex flex-col items-start gap-4">
         <Notice message={setup.kind === "no_model" ? t("first_run.tutor.no_model") : t("first_run.tutor.content_only")} />
         <Button tone="primary" onClick={() => setScreen("learn")}>{t("home.browse_topics")}</Button>
       </div>
     ) : undefined;
-    if (answers !== false && session === "failed" && lock === null) return <Opening failed />;
+    if (answers !== false && session === "failed" && lock === null && !ownCourse) return <Opening failed />;
     // Home shows at once (UXS-12); while the subject's session opens, the Ask box is its quiet frame.
     const waiting = <ComposerShell send={<IconButton icon="send" tone="action" disabled label={t("action.send")} />}><span className="block py-2"><Skeleton lines={1} /></span></ComposerShell>;
     // While the model loads the Ask box still takes the question and keeps it until the tutor is ready (UXS-12).
@@ -1186,7 +1191,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       void runtime.ask.ask(text);
       return false;
     };
-    const ask = lock !== null || protectedCheck !== undefined ? null : answers === false ? <SearchBox onSearch={(query) => { void runtime.search.search(query); setScreen("search"); }} />
+    const ask = lock !== null || protectedCheck !== undefined ? null : ownCourse ? <CourseAsk onAsk={(text) => { setCompanionDraft(text); setStudyRequest({ kind: "companion" }); setScreen("study"); }} /> : answers === false ? <SearchBox onSearch={(query) => { void runtime.search.search(query); setScreen("search"); }} />
       : noTutor !== null ? noTutorNotice(noTutor)
       : session === null || session === "failed" ? waiting
       : withSpeech(<Composer sessionId={session.sessionId} asking placement="inline" onSent={() => { setFromLesson(null); setFromPractice(false); setFromReport(false); setScreen("tutor"); }} route={routeHome} {...warmingProps} />,
@@ -1211,22 +1216,23 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     const today = Date.now();
     return (
       <Home
+        materialsOpen={ownCourse}
         name={profile?.name ?? ""}
         ask={ask}
         materials={materials}
         answer={answer}
         notice={lock !== null ? <ExamLockNotice lock={lock} now={lockNow} place="tutor" onOpen={openMock} /> : <>{heldNote}{notice}</>}
         /* Worked-solution search and the diagnostic are quiet rows under the main actions (the crowding review of 2026-11-01). */
-        more={[
+        more={ownCourse ? [] : [
           { id: "search", icon: "search", label: t("search.title"), onClick: () => setScreen("search") },
           { id: "diagnostic", icon: "mastery-nearly", label: t(assessmentView.assessments.some((a) => ["in_progress", "waiting", "stopped"].includes(a.state)) ? "assessment.finish" : "assessment.find_start"), onClick: () => openAssessment() },
         ]}
         plan={<div className="flex flex-col gap-4">
           {journeyCard && <div className="[&>section]:mx-0 [&>section]:my-0">{journeyCard}</div>}
           {savedStudy.journey && <details open={!journeyView.journey}><summary className="cursor-pointer text-meta text-muted">{t("study.journey.title")}</summary><div className="mt-3"><StudyJourney journey={savedStudy.journey} busy={savedStudy.busy} onReviewDue={() => { void runtime.studyWorkspace.load(); }} onContinue={() => { setStudyResume("next"); setScreen("study"); }} onLesson={() => { setStudyResume("lesson"); setScreen("study"); }} onResults={() => { setStudyResume("quiz"); setScreen("study"); }} /></div></details>}
-          {journeyView.journey || savedStudy.journey ? <details open={planExpanded} onToggle={(event) => setPlanExpanded(event.currentTarget.open)}><summary className="cursor-pointer text-meta text-muted">{t("study.journey.curriculum_plan")}</summary><div className="mt-3">{planCard}</div></details> : planCard}
+          {ownCourse ? null : journeyView.journey || savedStudy.journey ? <details open={planExpanded} onToggle={(event) => setPlanExpanded(event.currentTarget.open)}><summary className="cursor-pointer text-meta text-muted">{t("study.journey.curriculum_plan")}</summary><div className="mt-3">{planCard}</div></details> : planCard}
         </div>}
-        {...(goalTarget > 0 && planView.plan !== null ? { goal: <DailyGoalChip progress={goalProgress(planView.plan, goalTarget)} onChange={(target) => void runtime.goal.set(target)} /> } : {})}
+        {...(goalTarget > 0 && planView.plan !== null && !ownCourse ? { goal: <DailyGoalChip progress={goalProgress(planView.plan, goalTarget)} onChange={(target) => void runtime.goal.set(target)} /> } : {})}
         countdown={<ExamCountdownCard countdown={examDatesView.countdown} reminders={examDatesView.reminders} onDismiss={(r) => void runtime.examDates.dismiss(r)} onOpen={openMock} />}
         lastTime={<LastTimeCard view={companionView} {...(studyAvailable ? { onOpenStudy: () => openStudy() } : {})} />}
         checkin={lock !== null ? undefined : <CheckinCard view={checkinView} onDismiss={(id) => void runtime.companion.dismissCheckin(id)} onOpen={(id) => {
@@ -1237,7 +1243,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
           setScreen("study");
         }} />}
         {...(newest?.state === "abandoned" ? { mock: <AbandonedMockCard onNew={openMock} /> } : {})}
-        subjects={installed.map((s) => ({ subjectId: s.subjectId, subject: s.subject, label: subjectLabel(s.subject), chosen: s.subjectId === chosenSubject }))}
+        subjects={ownCourse ? [] : installed.map((s) => ({ subjectId: s.subjectId, subject: s.subject, label: subjectLabel(s.subject), chosen: s.subjectId === chosenSubject }))}
         onSubject={chooseSubject}
         pickup={answers === false ? [] : recent.map((s) => ({
           sessionId: s.session_id, title: s.title !== "" ? s.title : t("composer.new_question"), subject: s.subject, subjectLabel: subjectLabel(s.subject),
@@ -1286,7 +1292,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       topic={(id) => Object.values(maps).flatMap((m) => m.sections.flatMap((s) => s.topics)).find((tp) => tp.node_id === id)?.title ?? id} />;
     if (screen === "progress") {
       return (
-        <Progress controller={runtime.progress} version={progressVersion}
+        <Progress controller={runtime.progress} version={progressVersion} ownCourse={ownCourse}
           map={{ controller: runtime.overview, layer: mapLens.layer, onLayer: (layer) => runtime.conceptMap.setLayer(layer),
             onOpen: (subjectId) => { setMapSubject(subjectId); setMapTopic(null); setMapFirst(true); setScreen("learn"); },
             tileOf: (kc) => Object.values(maps).flatMap((m) => m.sections.flatMap((s) => s.topics)).find((tp) => tp.kcs.some((k) => k.kc_id === kc))?.node_id ?? null }}
@@ -1318,7 +1324,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
       return <KnowsPage knows={runtime.knows} onClose={() => setScreen(back)} onOpenSettings={() => setScreen("settings")} />;
     }
     if (screen === "study") {
-      const workspace = <StudyWorkspace controller={runtime.studyWorkspace} lastTime={<LastTimeCard view={companionView} />}
+      const workspace = <StudyWorkspace controller={runtime.studyWorkspace} curriculum={!ownCourse} lastTime={<LastTimeCard view={companionView} />}
         {...(companionThread.status !== "unavailable" ? { companion: (place: "panel" | "tab") => <CompanionThread companion={runtime.companion} onAction={companionAction} place={place} draft={companionDraft} onDraftShown={() => setCompanionDraft(null)} />,
           // Ask about this moment (SPEC §20.5 step 4): the thread opens with the moment as its pending context; nothing is sent.
           onAskMoment: (source: { source_id: string; title: string }, at_ms: number) => { void runtime.companion.openWithContext({ source_id: source.source_id, at_ms }, source.title); setStudyRequest({ kind: "companion" }); } } : {})}
@@ -1422,9 +1428,9 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
     { id: "progress", icon: "progress", label: t("app.progress"), group: t("nav.your_learning"), current: screen === "progress" || screen === "knows-from-progress" || screen === "session-history", onSelect: openProgress },
     // Study notes and saved questions are one place with a switch (owner, 2026-10-19).
     { id: "notes", icon: "notes", label: t("nav.notes_saved"), short: t("nav.notes_short"), group: t("nav.your_learning"), current: screen === "notes" || screen === "saved-questions" || screen === "history", onSelect: () => setScreen("notes") },
-    { id: "learn", icon: "learn", label: t("nav.lessons"), group: t(installed.every((s) => s.level === "O") ? "nav.o_level" : "nav.curriculum"), current: screen === "learn" || screen === "lesson" || (screen === "tutor" && !tutorOffered), onSelect: () => setScreen("learn") },
+    ...(ownCourse ? [] : [{ id: "learn", icon: "learn", label: t("nav.lessons"), group: t(installed.every((s) => s.level === "O") ? "nav.o_level" : "nav.curriculum"), current: screen === "learn" || screen === "lesson" || (screen === "tutor" && !tutorOffered), onSelect: () => setScreen("learn") },
     { id: "practice", icon: "practice", label: t("app.practice"), group: t(installed.every((s) => s.level === "O") ? "nav.o_level" : "nav.curriculum"), current: screen === "practice", onSelect: () => openPractice() },
-    { id: "mock", icon: "mock", label: t("app.mock"), group: t(installed.every((s) => s.level === "O") ? "nav.o_level" : "nav.curriculum"), current: screen === "mock", onSelect: openMock },
+    { id: "mock", icon: "mock", label: t("app.mock"), group: t(installed.every((s) => s.level === "O") ? "nav.o_level" : "nav.curriculum"), current: screen === "mock", onSelect: openMock },] satisfies FramePlace[]),
   ];
   const sidebar: SidebarContent = {
     places,

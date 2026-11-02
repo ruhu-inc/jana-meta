@@ -29,6 +29,29 @@ product; `HACKATHON_SUBMISSION.md` lists the event work in full. Caption each be
 Muse Glimmer as the tutor, the Projectile motion subtopic, the Companion, the YouTube lecture outline and the learner's
 map. Existing foundation: the checking worker, the hint ladder and the Study desk the new features sit in.
 
+## Storyboard, 2 November (later): any material, for a university student
+
+This is the recommended recording script. It shows the widest use of Muse Spark online and the broadest audience, and
+it needs no curriculum. Every time below was measured live on 2 November against this build, on a new learner, with
+a synthetic six-page lecture (Intermediate Microeconomics, monopoly). Bring a real lecture of your own if you can.
+
+| Time | Beat | Screen | Measured |
+| --- | --- | --- | --- |
+| 0:00–0:20 | New learner: name, age, **My own course and materials**. Straight to Home: no syllabus, no lessons in the sidebar | First run, Home | 4 s to Home |
+| 0:20–0:45 | Add material: the lecture PDF. "Ready to study", no review step, page images beside the tools. Mention the same path took a 1,000-page PDF | My materials | under 12 s; 1,000 pages under 23 s |
+| 0:45–1:10 | One press of **Summary**: cited page by page, maths rendered, "Made online with Muse Spark, then checked against your material." | Generate | 21 s |
+| 1:10–2:10 | **Quiz** with Number or expression, Fill in the blank and Written answer. Answer a blank with "MR": **Correct** (an abbreviation, marked online, not a string match). Write a wrong explanation: **Incorrect**, no answer shown. Correct it: **Correct**. The numeric question: "Q = 20" **Correct**. **Finish quiz**: 4 of 4, then **Retake quiz** exists | Generate → Settings: Quiz | 25 s to make, 3–9 s per answer |
+| 2:10–2:40 | **Your tutor**: "Why does a monopolist never operate on the inelastic part of demand?" A grounded answer that ends with a guiding question | Your tutor | 12 s |
+| 2:40–3:00 | Close on the two-model line: online with Muse Spark, private on this computer with Muse Glimmer. Optionally a glance at the O-level learner's map to show the curriculum depth is still there | Spoken | none |
+
+Tick **Written answer** and **Number or expression** and untick the others in the quiz settings before Generate. Make
+the quiz before recording if you would rather cut the 25 s; the tutor and marking are fast enough to show live.
+
+Rough edges still to know about: a marking the judge and the separate check disagree on says **Not marked** and shows
+the explanation; a long source with no focus reads 24 sections spread across it and says so; research still asks the
+level as a quick reply. PDF formulas come from the text layer, so a heavily mathematical PDF can read badly in the
+source pane, though the page image beside it is always right.
+
 ## Storyboard, 2 November build: one lecture, fully learned
 
 This replaces the 1 November storyboard below as the recording script. It was walked live, beat by beat, on the night

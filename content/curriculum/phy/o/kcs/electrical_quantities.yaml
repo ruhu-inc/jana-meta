@@ -33,6 +33,17 @@
   - uncharged
   - attraction
   - repulsion
+  key_points:
+  - id: kp_electron_transfer
+    text:
+      en: Rubbing transfers electrons from one object to the other; the object that gains electrons becomes negative.
+    follow_up:
+      en: When a rod is charged by rubbing, which particles move, and what charge does each object end up with?
+  - id: kp_like_unlike
+    text:
+      en: Like charges repel and unlike charges attract.
+    follow_up:
+      en: What does a positively charged rod do to a negatively charged ball, and what does it do to a positive one?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -65,6 +76,17 @@
   - electron
   - circuit
   - ammeter
+  key_points:
+  - id: kp_charge_product
+    text:
+      en: Charge equals current multiplied by time, so a current of 1 A carries 1 C of charge each second.
+    follow_up:
+      en: How is the charge that flows through a lamp linked to the current and the time it flows?
+  - id: kp_time_seconds
+    text:
+      en: The time must be in seconds, so minutes are converted first when using Q = It.
+    follow_up:
+      en: A current runs for 3 minutes. What must you do with the time before finding the charge?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -105,6 +127,17 @@
   - joule
   - cell
   - circuit
+  key_points:
+  - id: kp_energy_per_charge
+    text:
+      en: The p.d. across a component is the energy transferred to it by each coulomb of charge passing through.
+    follow_up:
+      en: What does a voltmeter reading of 6 V across a lamp tell you about each coulomb of charge?
+  - id: kp_emf
+    text:
+      en: The e.m.f. of a source is the energy it gives to each coulomb of charge as it drives it round the circuit.
+    follow_up:
+      en: In energy terms, what separates a cell's e.m.f. from the p.d. across a lamp?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -180,6 +213,17 @@
   - ohm
   - resistor
   - conductor
+  key_points:
+  - id: kp_length
+    text:
+      en: Resistance is directly proportional to length, so a wire twice as long has twice the resistance.
+    follow_up:
+      en: What happens to the resistance if the same wire is made three times as long?
+  - id: kp_area
+    text:
+      en: Resistance is inversely proportional to cross-sectional area, so a thicker wire has less resistance.
+    follow_up:
+      en: How would you change a wire's thickness to lower its resistance, and why does that work?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -214,6 +258,22 @@
   - resistance
   - gradient
   - ohmic
+  key_points:
+  - id: kp_resistor_line
+    text:
+      en: For a fixed resistor the graph is a straight line through the origin, because current is proportional to voltage.
+    follow_up:
+      en: What shape of current-voltage graph tells you that a component has constant resistance?
+  - id: kp_lamp_curve
+    text:
+      en: A filament lamp's graph curves because its filament gets hotter and its resistance rises.
+    follow_up:
+      en: Why does the current through a filament lamp rise by less and less as the voltage increases?
+  - id: kp_diode_graph
+    text:
+      en: A diode's graph shows almost no current one way and a rapid rise the other way once a small voltage is passed.
+    follow_up:
+      en: What does a diode's graph look like for each direction of voltage?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active

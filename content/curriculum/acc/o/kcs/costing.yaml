@@ -27,6 +27,17 @@
   - target profit
   - revenue
   - unit cost
+  key_points:
+  - id: kp_fixed_variable
+    text:
+      en: A fixed cost stays the same whatever the output, while a variable cost changes with the number of units made.
+    follow_up:
+      en: If output doubles, which kind of cost would you expect to stay unchanged?
+  - id: kp_direct_indirect
+    text:
+      en: A direct cost can be traced to a unit of product, while an indirect cost is shared and cannot be traced to one unit.
+    follow_up:
+      en: How do you tell the cost of materials in a product from the cost of renting the factory?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -61,6 +72,17 @@
   - target profit
   - revenue
   - unit cost
+  key_points:
+  - id: kp_unit_contribution
+    text:
+      en: Contribution per unit is the selling price less the variable cost per unit.
+    follow_up:
+      en: Which costs are taken away from the selling price to find it?
+  - id: kp_total_contribution
+    text:
+      en: Total contribution is contribution per unit times units sold, and it pays for fixed costs before any profit.
+    follow_up:
+      en: What is the money left after variable costs used to cover first?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -95,6 +117,17 @@
   - target profit
   - revenue
   - unit cost
+  key_points:
+  - id: kp_no_profit
+    text:
+      en: Break-even is the output where total contribution just covers fixed costs, so there is no profit or loss.
+    follow_up:
+      en: What is the level of profit when sales are at break-even?
+  - id: kp_fixed_over_contribution
+    text:
+      en: Break-even units are fixed costs divided by contribution per unit, and revenue is units times selling price.
+    follow_up:
+      en: Which two figures do you combine to find the number of units?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -130,6 +163,17 @@
   - target profit
   - revenue
   - unit cost
+  key_points:
+  - id: kp_buffer
+    text:
+      en: The margin of safety is how far actual or budgeted sales are above the break-even point.
+    follow_up:
+      en: How far can sales fall before the business starts making a loss?
+  - id: kp_profit_beyond
+    text:
+      en: Profit at a given output is the units above break-even multiplied by the contribution per unit.
+    follow_up:
+      en: Which units earn profit once fixed costs are covered?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -164,6 +208,17 @@
   - target profit
   - revenue
   - unit cost
+  key_points:
+  - id: kp_cover_both
+    text:
+      en: To earn a target profit, contribution must cover the fixed costs and the profit wanted.
+    follow_up:
+      en: What two amounts must the contribution pay for?
+  - id: kp_units_needed
+    text:
+      en: The output needed is fixed costs plus target profit, divided by the contribution per unit.
+    follow_up:
+      en: How do you turn that total requirement into a number of units?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active

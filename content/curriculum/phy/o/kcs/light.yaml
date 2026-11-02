@@ -31,6 +31,17 @@
   - virtual image
   - image
   - reflection
+  key_points:
+  - id: kp_law_reflection
+    text:
+      en: The angle of incidence equals the angle of reflection, both measured from the normal.
+    follow_up:
+      en: How is the angle at which a ray leaves a mirror related to its angle of arrival, and from which line are they measured?
+  - id: kp_image
+    text:
+      en: A plane mirror's image is virtual, upright, the same size, and as far behind the mirror as the object is in front.
+    follow_up:
+      en: Describe the nature, size and position of your image in a flat mirror.
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -73,6 +84,17 @@
   - denser
   - refract
   - sine
+  key_points:
+  - id: kp_n_formula
+    text:
+      en: Refractive index n = sin i / sin r, with both angles measured from the normal.
+    follow_up:
+      en: Which two angles go into the refractive index, and from which line are they measured?
+  - id: kp_bending
+    text:
+      en: Light entering a denser material such as glass bends towards the normal, and bends away from it on leaving.
+    follow_up:
+      en: Which way does a ray bend, relative to the normal, when it passes from air into glass?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -103,6 +125,17 @@
   - vacuum
   - refraction
   - denser
+  key_points:
+  - id: kp_n_speeds
+    text:
+      en: Refractive index equals the speed of light in a vacuum divided by its speed in the material.
+    follow_up:
+      en: You know how fast light travels in a vacuum and in glass. How do you get glass's refractive index?
+  - id: kp_slower
+    text:
+      en: Light is slower in any material than in a vacuum, so a larger refractive index means slower light.
+    follow_up:
+      en: What does a higher refractive index tell you about how fast light moves in that material?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -143,6 +176,17 @@
   - totally internally reflected
   - refraction
   - sine
+  key_points:
+  - id: kp_conditions
+    text:
+      en: Total internal reflection happens when light in a denser medium meets the boundary at more than the critical angle.
+    follow_up:
+      en: Under what two conditions does all the light stay inside a glass block?
+  - id: kp_critical_angle
+    text:
+      en: At the critical angle the refracted ray runs along the boundary, and sin c = 1/n, so a higher n gives a smaller c.
+    follow_up:
+      en: What is the refracted ray doing at the critical angle, and how is c found from n?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -184,6 +228,17 @@
   - upright
   - principal axis
   - lens
+  key_points:
+  - id: kp_construction_rays
+    text:
+      en: A ray parallel to the axis refracts through the principal focus, and a ray through the lens centre goes straight on.
+    follow_up:
+      en: Which two construction rays can you draw from the top of an object, and what happens to each at the lens?
+  - id: kp_image_nature
+    text:
+      en: Beyond 2F the image is real, inverted and smaller, but with the object inside F it is virtual, upright and magnified.
+    follow_up:
+      en: How does the image change as the object moves from far away to closer than the focal length?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active

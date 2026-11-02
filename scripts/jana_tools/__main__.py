@@ -74,6 +74,9 @@ CHECKS: dict[str, Callable[[], list[str]]] = {
     "installer-strings": lambda: _installer_strings(),  # LOC-01: the installer's words are keyed and generated
     "copy-lint": lambda: _copy_lint(),  # LRN-35: no dark patterns in any locale file
 }
+# These compare the repository with the private specification, so a public checkout cannot run them. Their failures
+# there ("the specification names no such test") say nothing about the code.
+SPEC_ONLY_CHECKS = frozenset({"spec-lock", "threat-model", "review-template", "test-names"})
 # Commands run explicitly by a CI stage, not by the default `python -m jana_tools`.
 STAGE_COMMANDS: dict[str, Callable[[], list[str]]] = {}
 
@@ -967,8 +970,24 @@ def main(argv: list[str] | None = None) -> int:
         if check is None:
             print(f"unknown check {name!r}; choose from {', '.join([*CHECKS, *STAGE_COMMANDS])}", file=sys.stderr)
             return 2
-        failed = _report(name, check()) != 0 or failed
+        if not _spec_present() and name in SPEC_ONLY_CHECKS:
+            print(f"{name}: skipped (the private specification is not in this checkout)")
+            continue
+        try:
+            errors = check()
+        except FileNotFoundError as missing:
+            # A public checkout has no docs/ (never committed here): a check that reads the specification cannot run,
+            # and saying so is not a pass. Anything else missing is a real failure.
+            if _spec_present() or "/docs/" not in str(missing.filename):
+                raise
+            print(f"{name}: skipped (the private specification is not in this checkout)")
+            continue
+        failed = _report(name, errors) != 0 or failed
     return 1 if failed else 0
+
+
+def _spec_present() -> bool:
+    return (REPO_ROOT / "docs" / "specification").is_dir()
 
 
 def _report(name: str, errors: list[str]) -> int:

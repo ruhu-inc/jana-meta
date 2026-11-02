@@ -38,6 +38,17 @@
   - spectrum
   - vacuum
   - transverse
+  key_points:
+  - id: kp_order
+    text:
+      en: 'In order of decreasing wavelength: radio, microwave, infrared, visible, ultraviolet, X-ray, gamma.'
+    follow_up:
+      en: Starting from radio waves, what comes next as the frequency increases?
+  - id: kp_shared
+    text:
+      en: All electromagnetic waves are transverse, carry energy, and travel at 3.0 × 10⁸ m/s in a vacuum.
+    follow_up:
+      en: What do all electromagnetic waves have in common in how they travel through empty space?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -75,6 +86,17 @@
   - microwave
   - radio wave
   - satellite
+  key_points:
+  - id: kp_light_speed
+    text:
+      en: In a vacuum every electromagnetic wave travels at the speed of light, 3.0 × 10⁸ m/s.
+    follow_up:
+      en: What value of speed do you use for any electromagnetic wave when finding its frequency or wavelength?
+  - id: kp_inverse
+    text:
+      en: Since the speed is fixed, a wave of higher frequency has a shorter wavelength.
+    follow_up:
+      en: If the frequency of an electromagnetic wave doubles, what happens to its wavelength?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -119,6 +141,17 @@
   - radar
   - sterilise
   - sterilising
+  key_points:
+  - id: kp_ionising
+    text:
+      en: Ultraviolet, X-rays and gamma rays carry the most energy and are ionising, so they can damage living cells.
+    follow_up:
+      en: Which regions of the spectrum are most dangerous to living cells, and why?
+  - id: kp_use_from_property
+    text:
+      en: Each use depends on a property of the waves, such as X-rays passing through soft tissue but not through bone.
+    follow_up:
+      en: What property of X-rays makes them useful for imaging the inside of the body?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active

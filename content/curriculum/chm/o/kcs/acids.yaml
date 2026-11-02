@@ -36,6 +36,17 @@
   - effervescence
   - relative formula mass
   - equation
+  key_points:
+  - id: kp_metal_carbonate
+    text:
+      en: An acid reacts with a metal to give a salt and hydrogen, and with a carbonate to give a salt, water and carbon dioxide.
+    follow_up:
+      en: Name the gas produced when an acid meets a reactive metal, and the gas when it meets a carbonate.
+  - id: kp_base_alkali
+    text:
+      en: An acid reacting with a base or an alkali gives only a salt and water, which is neutralisation.
+    follow_up:
+      en: What are the only two products when an acid is neutralised by a base?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -78,6 +89,17 @@
   - alkaline
   - neutral
   - limewater
+  key_points:
+  - id: kp_ph_scale
+    text:
+      en: A pH below 7 is acidic, 7 is neutral and above 7 is alkaline.
+    follow_up:
+      en: How would you describe a solution with a pH of 3, and one with a pH of 11?
+  - id: kp_indicator_colour
+    text:
+      en: An indicator changes colour in acid and alkali, for example litmus is red in acid and blue in alkali.
+    follow_up:
+      en: What does an indicator show you about a solution, and what colours does litmus show?
   difficulty_prior: -0.7
   version: 0.1.1
   status: active
@@ -129,6 +151,17 @@
   - conductivity
   - ammonia
   - hydrogen ion
+  key_points:
+  - id: kp_ionisation
+    text:
+      en: A strong acid ionises completely in water, while a weak acid ionises only partly and sets up an equilibrium.
+    follow_up:
+      en: What happens to the acid molecules when each type dissolves in water?
+  - id: kp_not_concentration
+    text:
+      en: Strong and weak describe the degree of ionisation, not how concentrated the acid is.
+    follow_up:
+      en: Can a dilute acid be strong, and can a concentrated acid be weak? Explain.
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -165,6 +198,17 @@
   - magnesium
   - relative formula mass
   - solution
+  key_points:
+  - id: kp_acidic_basic
+    text:
+      en: Non-metal oxides are usually acidic and metal oxides are usually basic, so they react with bases or acids respectively.
+    follow_up:
+      en: What kind of element usually forms an acidic oxide, and what does a basic oxide react with?
+  - id: kp_amphoteric_neutral
+    text:
+      en: An amphoteric oxide reacts with both acids and bases, while a neutral oxide reacts with neither.
+    follow_up:
+      en: How would you test whether an oxide is amphoteric, and what would you see?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -210,6 +254,22 @@
   - filtrate
   - magnesium
   - relative formula mass
+  key_points:
+  - id: kp_soluble_titration
+    text:
+      en: A soluble salt is made by reacting an acid with an excess of an insoluble base or metal, filtering and crystallising.
+    follow_up:
+      en: Why is an excess of the solid added, and how is the leftover removed?
+  - id: kp_insoluble_precipitation
+    text:
+      en: An insoluble salt is made by mixing two soluble solutions so it precipitates, then filtering and washing it.
+    follow_up:
+      en: How would you make an insoluble salt, and what do you do to the solid you collect?
+  - id: kp_titration_alkali
+    text:
+      en: A soluble salt of Group I or ammonium needs a titration of an acid with the alkali, since no excess solid can be filtered off.
+    follow_up:
+      en: Why can an excess-and-filter method not be used when the starting base is soluble?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -259,6 +319,17 @@
   - burette
   - mol/dm³
   - equation
+  key_points:
+  - id: kp_moles_ratio
+    text:
+      en: Work out the moles of the known solution, then use the equation's mole ratio to find the moles of the unknown.
+    follow_up:
+      en: Once you know the moles in one solution, what do you use to link it to the other?
+  - id: kp_concentration
+    text:
+      en: Divide the moles of the unknown by its volume in dm3 to get its concentration.
+    follow_up:
+      en: How do you turn moles of the unknown into a concentration, and what must you do with the volume in cm3 first?
   difficulty_prior: 0.8
   version: 0.1.1
   status: active

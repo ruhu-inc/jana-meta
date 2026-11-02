@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 41dba64061a66285324d0ad5a3d5a5fc9fcff6109dc6b7e1c8fa97ee2700eca0; do not edit",
+ "$comment": "GENERATED from contracts/study/workspace.schema.json sha256 83e8c3084e6c302b6ea85fa2debaa187f0444850bdeb45e6e0bd7576fd0b1e25; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/study/workspace",
  "$defs": {
@@ -65,7 +65,7 @@
       "page": {
        "type": "integer",
        "minimum": 1,
-       "maximum": 300
+       "maximum": 1000
       }
      },
      "required": [
@@ -83,7 +83,7 @@
       "slide": {
        "type": "integer",
        "minimum": 1,
-       "maximum": 300
+       "maximum": 1000
       }
      },
      "required": [
@@ -1145,7 +1145,8 @@
     },
     "notice": {
      "enum": [
-      "allowance_exhausted"
+      "allowance_exhausted",
+      "sampled_long_source"
      ]
     }
    },
@@ -2956,6 +2957,15 @@
      },
      "maxItems": 10000
     },
+    "scanned_units": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+     },
+     "maxItems": 1000
+    },
     "extractor_version": {
      "type": "string",
      "minLength": 1,
@@ -4303,6 +4313,91 @@
     "request_id",
     "concepts",
     "relations"
+   ]
+  },
+  "AnswerMarking": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "request_id": {
+     "type": "string",
+     "pattern": "^req_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "item_type": {
+     "enum": [
+      "fill_blank",
+      "free_response",
+      "numeric",
+      "expression"
+     ]
+    },
+    "question": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 3000
+    },
+    "answer": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4000
+    },
+    "reference": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 6000
+    },
+    "passages": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 12,
+     "items": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16000
+     }
+    },
+    "output_locale": {
+     "type": "string",
+     "maxLength": 35
+    }
+   },
+   "required": [
+    "request_id",
+    "item_type",
+    "question",
+    "answer",
+    "reference",
+    "passages"
+   ]
+  },
+  "AnswerVerdict": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "request_id": {
+     "type": "string",
+     "pattern": "^req_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "verdict": {
+     "enum": [
+      "correct",
+      "incorrect",
+      "partial",
+      "unverifiable"
+     ]
+    },
+    "model": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 80
+    },
+    "usage": {
+     "type": "object"
+    }
+   },
+   "required": [
+    "request_id",
+    "verdict"
    ]
   },
   "LearnerBlock": {

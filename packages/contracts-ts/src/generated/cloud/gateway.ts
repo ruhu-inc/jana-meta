@@ -742,6 +742,10 @@ export interface StudyExtractionResponse {
    * @maxItems 10000
    */
   unreadable_units: number[];
+  /**
+   * @maxItems 1000
+   */
+  scanned_units?: number[];
   extractor_version: string;
   next_cursor: string | null;
   duration_ms?: number;
@@ -779,8 +783,8 @@ export interface ResearchRequest {
  */
 export interface StudyResearchBrief {
   title: string;
-  subject: "mathematics" | "physics" | "chemistry" | "accounting" | "biology";
-  level: "o_level" | "first_year";
+  subject: "mathematics" | "physics" | "chemistry" | "accounting" | "biology" | "other";
+  level: "o_level" | "first_year" | "university";
   purpose: "exam" | "lesson" | "curiosity";
   known: string;
   focus: string;
@@ -876,6 +880,10 @@ export interface StudyWorkspaceExtractionResponse {
    * @maxItems 10000
    */
   unreadable_units: number[];
+  /**
+   * @maxItems 1000
+   */
+  scanned_units?: number[];
   extractor_version: string;
   next_cursor: string | null;
   duration_ms?: number;

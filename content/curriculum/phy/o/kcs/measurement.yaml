@@ -24,6 +24,17 @@
   - giga
   - nano
   - SI unit
+  key_points:
+  - id: kp_powers_of_ten
+    text:
+      en: 'Each prefix is a power of ten: milli is 10⁻³, micro is 10⁻⁶, kilo is 10³ and mega is 10⁶.'
+    follow_up:
+      en: What number does the prefix micro stand for, and how does it help you convert to the base unit?
+  - id: kp_bigger_number
+    text:
+      en: Changing to a smaller unit gives a larger number, and changing to a larger unit gives a smaller number.
+    follow_up:
+      en: Is the number bigger or smaller when you write a length in millimetres instead of metres, and why?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -54,6 +65,17 @@
   - density
   - force
   - gravitational store
+  key_points:
+  - id: kp_definition
+    text:
+      en: A scalar has size only, while a vector has both size and direction.
+    follow_up:
+      en: What extra piece of information does a vector have compared with a scalar?
+  - id: kp_classify
+    text:
+      en: Speed, mass, time and energy are scalars, while velocity, force, displacement and acceleration are vectors.
+    follow_up:
+      en: Why is velocity a vector but speed a scalar?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -88,6 +110,17 @@
   - right angles
   - Pythagoras
   - scale drawing
+  key_points:
+  - id: kp_same_line
+    text:
+      en: Vectors along one line add if they point the same way and subtract if opposite, giving the resultant.
+    follow_up:
+      en: A boat moves at 4 m/s in still water against a river flowing at 1 m/s. How do you combine them?
+  - id: kp_right_angles
+    text:
+      en: Two vectors at right angles combine by Pythagoras for the size, with trigonometry giving the direction.
+    follow_up:
+      en: How do you find the size of the resultant of a 3 N force and a 4 N force at right angles?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -121,6 +154,17 @@
   - pendulum
   - period
   - reaction time
+  key_points:
+  - id: kp_micrometer
+    text:
+      en: A micrometer reads small lengths, such as a wire's diameter, far more precisely than a ruler can.
+    follow_up:
+      en: Which instrument would you choose for the thickness of a wire, and why?
+  - id: kp_repeat_timing
+    text:
+      en: Timing many repeats and dividing by their number reduces the error when measuring a short time interval.
+    follow_up:
+      en: How can you get an accurate period for a pendulum that swings too fast to time once?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active

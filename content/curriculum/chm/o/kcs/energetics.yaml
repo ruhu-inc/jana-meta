@@ -28,6 +28,17 @@
   - sodium hydrogencarbonate
   - alkali
   - solution
+  key_points:
+  - id: kp_exo
+    text:
+      en: An exothermic reaction gives out heat to the surroundings, so the temperature rises and the enthalpy change is negative.
+    follow_up:
+      en: What happens to the temperature of the surroundings in an exothermic reaction, and what sign does the enthalpy change have?
+  - id: kp_endo
+    text:
+      en: An endothermic reaction takes in heat from the surroundings, so the temperature falls and the enthalpy change is positive.
+    follow_up:
+      en: How would you tell from a thermometer and from the sign that a reaction is endothermic?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -60,6 +71,17 @@
   - catalyst
   - reactants
   - products
+  key_points:
+  - id: kp_enthalpy_change
+    text:
+      en: The enthalpy change is the difference in energy between the products and the reactants on the diagram.
+    follow_up:
+      en: Which two levels on the diagram do you compare to find the enthalpy change?
+  - id: kp_activation
+    text:
+      en: The activation energy is the energy needed to rise from the reactants to the top of the hump.
+    follow_up:
+      en: Between which two points on the diagram do you measure the activation energy?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -92,6 +114,17 @@
   - exothermic
   - endothermic
   - covalent bond
+  key_points:
+  - id: kp_break_make
+    text:
+      en: Breaking bonds takes in energy and making bonds gives out energy.
+    follow_up:
+      en: Which of bond breaking and bond making takes in energy, and which releases it?
+  - id: kp_total
+    text:
+      en: The enthalpy change is the energy to break all the reactant bonds minus the energy released making the product bonds.
+    follow_up:
+      en: How do you combine the two totals to get the overall enthalpy change, and in what order?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -127,6 +160,17 @@
   - polystyrene cup
   - hydrogencarbonate
   - solution
+  key_points:
+  - id: kp_q_formula
+    text:
+      en: The energy transferred equals the mass of water times 4.18 times the temperature change.
+    follow_up:
+      en: Which three quantities do you need to calculate the energy transferred to the water?
+  - id: kp_per_mole
+    text:
+      en: Divide the energy by the moles that reacted to get the enthalpy change per mole, with a negative sign if the temperature rose.
+    follow_up:
+      en: What do you divide the energy by, and how do you decide the sign?
   difficulty_prior: 0.7
   version: 0.1.1
   status: active

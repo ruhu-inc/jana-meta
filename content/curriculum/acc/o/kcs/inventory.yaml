@@ -33,6 +33,17 @@
   - understated
   - overstate
   - understate
+  key_points:
+  - id: kp_oldest_sold_first
+    text:
+      en: FIFO assumes the earliest purchases are sold first, so cost of sales uses the oldest prices.
+    follow_up:
+      en: Which purchases are treated as leaving the store first?
+  - id: kp_closing_latest
+    text:
+      en: Closing inventory is therefore valued at the most recent purchase prices.
+    follow_up:
+      en: Which batch of purchases is assumed to remain at the end of the period?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -71,6 +82,17 @@
   - understated
   - overstate
   - understate
+  key_points:
+  - id: kp_average_price
+    text:
+      en: The weighted average cost is total cost of the goods held divided by the total number of units held.
+    follow_up:
+      en: What two totals are combined to find the price for one unit?
+  - id: kp_recalculate
+    text:
+      en: The average is recalculated after each new purchase and applied to units issued and to those left.
+    follow_up:
+      en: When does the unit cost need to be worked out again?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -109,6 +131,17 @@
   - understated
   - overstate
   - understate
+  key_points:
+  - id: kp_nrv_meaning
+    text:
+      en: What the goods would fetch, minus whatever must still be spent to sell them, gives their net realisable value.
+    follow_up:
+      en: What costs are taken away from the expected selling price?
+  - id: kp_lower_of
+    text:
+      en: Inventory is valued at the lower of cost and net realisable value, in line with prudence.
+    follow_up:
+      en: If an item will sell for less than it cost, which figure is used?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -148,6 +181,17 @@
   - understated
   - overstate
   - understate
+  key_points:
+  - id: kp_closing_higher
+    text:
+      en: Overstating closing inventory lowers cost of sales, so profit is overstated.
+    follow_up:
+      en: What happens to cost of sales when a larger closing figure is deducted?
+  - id: kp_closing_lower
+    text:
+      en: Understating closing inventory raises cost of sales, so profit is understated, and next year's opening figure is wrong too.
+    follow_up:
+      en: What does a closing figure that is too small do to profit this year?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active

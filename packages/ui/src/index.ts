@@ -71,6 +71,7 @@ export { boardBeside, layoutOf, useLayoutClass, type LayoutClass } from "./frame
 export { characterKeysStored, inTextField, moveRegion, sessionCharacterKeys, useCharacterKeys, useGlobalShortcuts, type GlobalKeys } from "./frame/shortcuts.js";
 export { KeyboardHelp, SHORTCUTS } from "./frame/KeyboardHelp.js";
 export { Home, partOfDay, type HomeMaterials, type HomePickup, type HomeSubject } from "./home/Home.js";
+export { CourseAsk } from "./home/CourseAsk.js";
 export { DailyGoalChip } from "./home/DailyGoal.js";
 export { LastTimeCard } from "./home/LastTimeCard.js";
 export { CheckinCard } from "./home/CheckinCard.js";

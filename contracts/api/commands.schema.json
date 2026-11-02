@@ -2269,7 +2269,7 @@
       "type": "string",
       "maxLength": 32
      },
-     "minItems": 1
+     "minItems": 0
     },
     "exam_date": {
      "anyOf": [

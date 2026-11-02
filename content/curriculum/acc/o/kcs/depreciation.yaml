@@ -38,6 +38,17 @@
   - wear and tear
   - capitalised
   - installation
+  key_points:
+  - id: kp_capital_lasting
+    text:
+      en: Capital expenditure buys or improves a non-current asset that will be used for more than one year.
+    follow_up:
+      en: How long does a business expect to benefit from an item bought as an asset?
+  - id: kp_revenue_running
+    text:
+      en: Revenue expenditure is the day-to-day cost of running the business and maintaining assets, and it is charged to profit.
+    follow_up:
+      en: Where does the cost of repairing a machine appear in the accounts?
   difficulty_prior: -0.7
   version: 0.1.1
   status: active
@@ -81,6 +92,17 @@
   - wear and tear
   - capitalised
   - installation
+  key_points:
+  - id: kp_spread_cost
+    text:
+      en: Depreciation spreads the cost of a non-current asset over the years in which it is used.
+    follow_up:
+      en: Why is the whole cost of a machine not charged in the year it is bought?
+  - id: kp_causes
+    text:
+      en: Assets lose value through wear and tear, the passage of time, obsolescence or the use of up their life.
+    follow_up:
+      en: Name something other than use that makes an asset worth less.
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -124,6 +146,17 @@
   - wear and tear
   - capitalised
   - installation
+  key_points:
+  - id: kp_cost_less_residual
+    text:
+      en: The amount to depreciate is cost less the expected residual value.
+    follow_up:
+      en: What is deducted from the cost before it is spread over the years?
+  - id: kp_equal_each_year
+    text:
+      en: Straight-line charges the same amount every year, found by dividing that figure by the useful life.
+    follow_up:
+      en: How does the yearly charge change from one year to the next?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -167,6 +200,17 @@
   - wear and tear
   - capitalised
   - installation
+  key_points:
+  - id: kp_percent_of_nbv
+    text:
+      en: Reducing balance applies a fixed percentage to the net book value at the start of the year.
+    follow_up:
+      en: Which value is the percentage applied to, cost or something else?
+  - id: kp_falling_charge
+    text:
+      en: The charge is largest in the first year and falls in later years, as the net book value falls.
+    follow_up:
+      en: How does the charge in year three compare with year one, and why?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -211,6 +255,17 @@
   - wear and tear
   - capitalised
   - installation
+  key_points:
+  - id: kp_accumulated
+    text:
+      en: Accumulated depreciation is the total of the yearly charges made on the asset up to the date.
+    follow_up:
+      en: What does the accumulated amount add up from the earlier years?
+  - id: kp_cost_less_acc
+    text:
+      en: Net book value is the cost of the asset less the accumulated depreciation.
+    follow_up:
+      en: Which two figures decide what the asset is carried at in the statement?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -254,6 +309,17 @@
   - wear and tear
   - capitalised
   - installation
+  key_points:
+  - id: kp_compare_proceeds
+    text:
+      en: Profit or loss on disposal compares the sale proceeds with the net book value at the date of sale.
+    follow_up:
+      en: Which two amounts are compared when an asset is sold?
+  - id: kp_proceeds_above
+    text:
+      en: Proceeds above net book value give a profit, and proceeds below it give a loss.
+    follow_up:
+      en: What does it mean for the result if the buyer pays less than the book value?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active

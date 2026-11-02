@@ -24,6 +24,17 @@
   - velocity
   - mass
   - kilogram metre per second
+  key_points:
+  - id: kp_p_mv
+    text:
+      en: Momentum is mass multiplied by velocity, p = mv, measured in kg m/s.
+    follow_up:
+      en: Which two quantities decide the momentum of a moving object?
+  - id: kp_sign
+    text:
+      en: Momentum is a vector, so opposite directions get opposite signs, such as positive to the right and negative to the left.
+    follow_up:
+      en: Two trolleys move towards each other. How do you show that their momenta point opposite ways?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -57,6 +68,17 @@
   - velocity
   - recoil
   - total momentum
+  key_points:
+  - id: kp_total_same
+    text:
+      en: With no external force, the total momentum before a collision equals the total momentum after it.
+    follow_up:
+      en: What do you compare before and after a collision in a closed system?
+  - id: kp_explosion
+    text:
+      en: In an explosion from rest the total momentum stays zero, so the parts move off with equal and opposite momentum.
+    follow_up:
+      en: Two trolleys spring apart from rest. What is their total momentum afterwards, and how do their momenta compare?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -91,6 +113,17 @@
   - velocity
   - crumple zone
   - collision
+  key_points:
+  - id: kp_impulse
+    text:
+      en: Impulse is force multiplied by the time it acts, and it equals the change in momentum.
+    follow_up:
+      en: How is the change in an object's momentum linked to the force on it and the time that force lasts?
+  - id: kp_longer_time
+    text:
+      en: For the same change in momentum, a longer contact time means a smaller average force.
+    follow_up:
+      en: Why does a crumple zone reduce the force on passengers in a crash?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active

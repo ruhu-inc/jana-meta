@@ -26,6 +26,17 @@
   - vapour
   - density
   - kinetic particle model
+  key_points:
+  - id: kp_arrangement
+    text:
+      en: Particles are close and in fixed positions in solids, close but irregular in liquids, and far apart in gases.
+    follow_up:
+      en: How does the spacing and arrangement of particles differ between a solid, a liquid and a gas?
+  - id: kp_motion
+    text:
+      en: Particles vibrate in place in a solid, slide past each other in a liquid, and move quickly in all directions in a gas.
+    follow_up:
+      en: How does the motion of the particles differ across the three states?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -63,6 +74,17 @@
   - proportional
   - average kinetic energy
   - Celsius scale
+  key_points:
+  - id: kp_add_273
+    text:
+      en: A temperature in kelvin is the Celsius temperature plus 273, so 0 °C is 273 K.
+    follow_up:
+      en: What do you add or subtract to switch a temperature between Celsius and kelvin?
+  - id: kp_absolute_zero
+    text:
+      en: At absolute zero, 0 K or -273 °C, particles have their lowest possible energy and almost stop moving.
+    follow_up:
+      en: What is true of the particles of a substance at absolute zero?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -98,6 +120,22 @@
   - temperature
   - volume
   - kinetic energy
+  key_points:
+  - id: kp_collisions
+    text:
+      en: Gas pressure is caused by particles hitting the walls of the container and exerting a force on them.
+    follow_up:
+      en: What are the particles doing that creates a pressure on the walls of a container?
+  - id: kp_temperature
+    text:
+      en: Heating a gas in a fixed volume makes its particles faster, so they hit the walls harder and more often.
+    follow_up:
+      en: Why does the pressure in a sealed can rise when it is heated?
+  - id: kp_volume
+    text:
+      en: In a smaller volume the particles hit the walls more often, so the pressure is higher.
+    follow_up:
+      en: Why does the pressure of a gas go up when the same gas is squeezed into a smaller space?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -129,6 +167,17 @@
   - fixed mass
   - pascal
   - kilopascal
+  key_points:
+  - id: kp_constant_pv
+    text:
+      en: 'For a fixed mass of gas at constant temperature, pressure × volume stays the same: p₁V₁ = p₂V₂.'
+    follow_up:
+      en: What stays the same when you compress a gas slowly with the temperature unchanged?
+  - id: kp_inverse
+    text:
+      en: Pressure is inversely proportional to volume, so halving the volume doubles the pressure.
+    follow_up:
+      en: What happens to the pressure if the volume of the gas is cut to a third?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active

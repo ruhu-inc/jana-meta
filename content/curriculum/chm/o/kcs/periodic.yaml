@@ -25,6 +25,17 @@
   - proton number
   - element
   - electron
+  key_points:
+  - id: kp_group_outer
+    text:
+      en: The group number equals the number of outer-shell electrons, so elements in a group react in a similar way.
+    follow_up:
+      en: What does the group number tell you about the electrons, and what follows for the chemistry?
+  - id: kp_period_shells
+    text:
+      en: The period number equals the number of electron shells that are occupied.
+    follow_up:
+      en: What does the period number tell you about the electron arrangement?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -63,6 +74,22 @@
   - universal indicator
   - outer electron
   - reactivity
+  key_points:
+  - id: kp_trend_reactivity
+    text:
+      en: Going down Group I, the metals get more reactive, softer and have lower melting points.
+    follow_up:
+      en: How do reactivity and melting point change as you go down the group?
+  - id: kp_water_reaction
+    text:
+      en: Group I metals react with water to give a metal hydroxide solution and hydrogen gas.
+    follow_up:
+      en: What two products form when a Group I metal is dropped into water?
+  - id: kp_reason_outer_electron
+    text:
+      en: The outer electron is lost more easily down the group as it is further from the nucleus.
+    follow_up:
+      en: Why does losing the outer electron get easier down the group?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -101,6 +128,17 @@
   - solution
   - relative formula mass
   - equation
+  key_points:
+  - id: kp_halogen_trend
+    text:
+      en: Going down Group VII, the halogens get darker in colour, have higher melting points and become less reactive.
+    follow_up:
+      en: Describe how colour, melting point and reactivity change down the group.
+  - id: kp_halogen_displacement
+    text:
+      en: A more reactive halogen displaces a less reactive halide from its solution, such as chlorine from bromide.
+    follow_up:
+      en: When will a halogen push another halogen out of a solution of its salt?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -129,6 +167,17 @@
   - density
   - relative formula mass
   - solution
+  key_points:
+  - id: kp_transition_properties
+    text:
+      en: Transition elements have high density, high melting points, form coloured compounds and are good catalysts.
+    follow_up:
+      en: Which properties are typical of the block of elements in the middle of the table?
+  - id: kp_compared_group_i
+    text:
+      en: Compared with Group I, they are harder and denser, with higher melting points, and react much less vigorously.
+    follow_up:
+      en: How do they differ from Group I metals in hardness, density and reactivity?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -161,6 +210,17 @@
   - argon
   - neon
   - helium
+  key_points:
+  - id: kp_full_shell
+    text:
+      en: The noble gases have full outer shells, so they have no tendency to gain, lose or share electrons and are unreactive.
+    follow_up:
+      en: What is special about their electron arrangement, and what does it do to their reactions?
+  - id: kp_uses
+    text:
+      en: Their inertness decides their uses, such as argon in light bulbs and helium in balloons.
+    follow_up:
+      en: How does being unreactive make argon suitable for a light bulb?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active

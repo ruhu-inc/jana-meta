@@ -22,6 +22,17 @@
   - hypotenuse
   - right-angled triangle
   - square root
+  key_points:
+  - id: kp_hypotenuse
+    text:
+      en: Pythagoras applies to right-angled triangles only, and the hypotenuse is the longest side, opposite the right angle.
+    follow_up:
+      en: In what kind of triangle does the theorem work, and which side is special?
+  - id: kp_add_or_subtract
+    text:
+      en: To find the hypotenuse add the squares of the other sides, and to find a shorter side subtract the squares.
+    follow_up:
+      en: How do you decide whether to add or subtract the squares?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -55,6 +66,17 @@
   - trigonometry
   - ratio
   - Pythagoras' theorem
+  key_points:
+  - id: kp_label_sides
+    text:
+      en: Label the sides opposite, adjacent and hypotenuse relative to the given angle before choosing a ratio.
+    follow_up:
+      en: What do you decide first before picking sine, cosine or tangent?
+  - id: kp_choose_ratio
+    text:
+      en: The ratio is chosen by the two sides involved, one known and one wanted, and then rearranged to get the unknown.
+    follow_up:
+      en: How do you choose between the three ratios for a particular problem?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -86,6 +108,17 @@
   - opposite
   - adjacent
   - right-angled triangle
+  key_points:
+  - id: kp_inverse_function
+    text:
+      en: When two sides are known, the ratio of them is found and the inverse function on the calculator turns it into the angle.
+    follow_up:
+      en: Which calculator button turns a ratio back into an angle?
+  - id: kp_calculator_mode
+    text:
+      en: The calculator must be in degree mode, and the answer is checked against the triangle for reasonableness.
+    follow_up:
+      en: What setting on the calculator affects the angle answer?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -116,6 +149,17 @@
   - vertical
   - tangent
   - right-angled triangle
+  key_points:
+  - id: kp_from_horizontal
+    text:
+      en: Angles of elevation and depression are measured from the horizontal, upwards or downwards.
+    follow_up:
+      en: From which line are these angles measured?
+  - id: kp_draw_right_triangle
+    text:
+      en: A sketch with a right-angled triangle is drawn, and the depression angle equals the elevation angle from the other end.
+    follow_up:
+      en: How are the angle of depression from the top and the angle of elevation from the bottom related?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -143,6 +187,17 @@
   - opposite
   - acute
   - obtuse
+  key_points:
+  - id: kp_pairs_opposite
+    text:
+      en: The sine rule links each side with the sine of its opposite angle, so a matching pair must be known.
+    follow_up:
+      en: What must be known before the sine rule can be used?
+  - id: kp_ambiguous_case
+    text:
+      en: Finding an angle can give two possibilities, as a sine is the same for an angle and for 180 degrees minus that angle.
+    follow_up:
+      en: Why might a second angle be possible when you use the rule to find an angle?
   difficulty_prior: 0.7
   version: 0.1.1
   status: active
@@ -170,6 +225,17 @@
   - cosine
   - included angle
   - opposite
+  key_points:
+  - id: kp_when_cosine
+    text:
+      en: The cosine rule is used when two sides and the angle between them are known, or when all three sides are known.
+    follow_up:
+      en: Which sets of known information call for the cosine rule?
+  - id: kp_included_angle
+    text:
+      en: The angle in the rule is the one opposite the side being found, and the same rule rearranged finds an angle.
+    follow_up:
+      en: Which angle sits opposite the side on the left of the formula?
   difficulty_prior: 0.8
   version: 0.1.1
   status: active
@@ -196,6 +262,17 @@
   - included angle
   - sine
   - area of a triangle
+  key_points:
+  - id: kp_included_angle_area
+    text:
+      en: This area rule needs two sides together with the angle they enclose.
+    follow_up:
+      en: Which angle must be used in relation to the two sides?
+  - id: kp_half_ab_sin
+    text:
+      en: The area is half the product of the two sides and the sine of that angle, a version of half base times height.
+    follow_up:
+      en: How does this formula connect to half base times height?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -230,6 +307,17 @@
   - trigonometry
   - vertical
   - horizontal
+  key_points:
+  - id: kp_right_triangles_inside
+    text:
+      en: A 3D problem is broken into right-angled triangles, often by drawing the base diagonal first.
+    follow_up:
+      en: What is the strategy for turning a solid into something solvable?
+  - id: kp_angle_with_plane
+    text:
+      en: The angle between a line and a plane is found in a right-angled triangle formed with the line and its projection on the plane.
+    follow_up:
+      en: Which two lines form the angle between a sloping line and a flat base?
   difficulty_prior: 1.0
   version: 0.1.1
   status: active

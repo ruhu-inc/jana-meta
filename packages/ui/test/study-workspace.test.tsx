@@ -512,7 +512,7 @@ test.each(["hint", "walk_through"] as const)("unverified choice %s offers labell
     quiz: { quiz_id: quizId, aid_id: `aid_${"0".repeat(26)}`, revision: 1, status: "ready", draft: { quiz_revision: 1, position: 0, answers: [{ item_id: "q1", answer: "b" }] }, items: [{ item_id: "q1", type: "choice", stem: cited("What stores genetic information?"), options: [{ option_id: "a", text: "DNA" }, { option_id: "b", text: "Water" }] }] },
     quizHelp: { quizId, itemId: "q1", kind, jobId, aid: null } });
   const help = screen.getByRole("region", { name: "Help with this question" });
-  expect(within(help).getByText(/General study strategy/)).toBeTruthy();
+  expect(within(help).getByText(/could not be checked, so here is a way in/)).toBeTruthy();
   expect(within(help).queryByText(/DNA|Water/)).toBeNull();
   expect((screen.getByRole("radio", { name: "Water" }) as HTMLInputElement).checked).toBe(true);
   expect(within(help).getByRole("textbox", { name: "Ask a follow-up about this question" })).toBeTruthy();

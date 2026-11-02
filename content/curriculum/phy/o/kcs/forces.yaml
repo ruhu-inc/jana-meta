@@ -32,6 +32,17 @@
   - velocity
   - steady velocity
   - driving force
+  key_points:
+  - id: kp_add_subtract
+    text:
+      en: Forces along a line add if they point the same way and subtract if they are opposite, giving the resultant.
+    follow_up:
+      en: Two forces act on a box along one line in opposite directions. How do you find their combined effect?
+  - id: kp_zero_or_not
+    text:
+      en: A zero resultant means constant velocity or rest, while a non-zero resultant changes the object's motion.
+    follow_up:
+      en: What does a resultant force of zero tell you about a moving object's speed and direction?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -68,6 +79,17 @@
   - accelerate
   - velocity
   - steady velocity
+  key_points:
+  - id: kp_resultant_used
+    text:
+      en: The force in F = ma is the resultant force, in N, with mass in kg and acceleration in m/s².
+    follow_up:
+      en: A 10 N push meets 4 N of friction. Which force do you use to find the acceleration?
+  - id: kp_mass_inverse
+    text:
+      en: For the same resultant force, a larger mass gives a smaller acceleration.
+    follow_up:
+      en: What happens to the acceleration if you push a heavier trolley with the same resultant force?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -113,6 +135,17 @@
   - decelerate
   - deceleration
   - resultant
+  key_points:
+  - id: kp_drag_opposes
+    text:
+      en: Friction and air resistance act against the motion, and air resistance gets bigger as speed increases.
+    follow_up:
+      en: Which way do drag forces act, and how do they change as an object speeds up?
+  - id: kp_terminal
+    text:
+      en: At terminal velocity air resistance equals the weight, so the resultant force is zero and the speed stays constant.
+    follow_up:
+      en: Once a skydiver is at terminal velocity, how do the forces on her compare and what is her speed doing?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -146,6 +179,17 @@
   - elastic
   - Hooke's law
   - newton
+  key_points:
+  - id: kp_proportional
+    text:
+      en: Extension is proportional to the force applied, F = kx, as long as the spring is within its limit of proportionality.
+    follow_up:
+      en: How does the extension change if you double the load on a spring that is within its limit?
+  - id: kp_spring_constant
+    text:
+      en: The spring constant k is the force needed per metre of extension, in N/m, so a stiffer spring has a larger k.
+    follow_up:
+      en: What does a spring constant of 50 N/m tell you about the force needed to stretch the spring?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -181,6 +225,17 @@
   - velocity
   - constant speed
   - acceleration
+  key_points:
+  - id: kp_velocity_changes
+    text:
+      en: In circular motion the direction keeps changing, so the velocity changes and the object is accelerating even at constant speed.
+    follow_up:
+      en: A satellite orbits at steady speed. Why is it still accelerating?
+  - id: kp_towards_centre
+    text:
+      en: The resultant force on an object moving in a circle points towards the centre, at right angles to its velocity.
+    follow_up:
+      en: Where does the resultant force point for an object moving round a circle?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -218,6 +273,17 @@
   - newton metre
   - force
   - lever
+  key_points:
+  - id: kp_moment
+    text:
+      en: The moment of a force is the force multiplied by the perpendicular distance from the pivot to the line of action.
+    follow_up:
+      en: What is the distance in a moment measured between?
+  - id: kp_balance
+    text:
+      en: For a balanced object, the total clockwise moment equals the total anticlockwise moment about the pivot.
+    follow_up:
+      en: What must be true of the moments on a see-saw that is balanced?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -250,6 +316,17 @@
   - unstable
   - pivot
   - moment
+  key_points:
+  - id: kp_low_wide
+    text:
+      en: An object is more stable when its centre of gravity is low and its base is wide.
+    follow_up:
+      en: How would you redesign a tall, narrow object to make it harder to topple?
+  - id: kp_topple
+    text:
+      en: An object topples when the vertical line down from its centre of gravity falls outside its base.
+    follow_up:
+      en: As an object is tilted, at what point does it begin to topple over?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active

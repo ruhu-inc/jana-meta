@@ -16,7 +16,7 @@ def test_a_long_skill_statement_is_clipped_at_a_word_never_mid_word() -> None:
     assert clip("short") == "short"
     assert clip("x" * 150) == "x" * 99 + "…"  # no space to cut at: a hard cut
     facts = from_progress({"bands": [{"ref": "r1", "skill": long, "band": "learning"}]}, period="2026-11-02")
-    assert facts[0].statement == f"Recorded practice band for {clipped}: learning."
+    assert facts[0].statement == f"Your practice on {clipped}: learning."
 
 
 def test_neighbouring_card_word_cannot_bind_an_exam_count() -> None:

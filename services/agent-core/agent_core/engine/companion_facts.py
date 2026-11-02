@@ -76,6 +76,11 @@ def band_words(band: object) -> str:
     return BAND_WORDS.get(str(band), str(band).replace("_", " "))
 
 
+def counted(count: int, noun: str) -> str:
+    """A count with its noun, so a fact never says "1 skills"."""
+    return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
+
+
 STATEMENT_MAX = 100  # a skill statement inside a fact, clipped at a word boundary
 
 
@@ -153,7 +158,7 @@ def from_progress(data: dict[str, Any], *, period: str) -> list[Fact]:
                 skill,
                 period,
                 PROGRESS_SOURCE,
-                f"Recorded practice band for {skill}: {band_words(band['band'])}.",
+                f"Your practice on {skill}: {band_words(band['band'])}.",
             )
         )
     return facts

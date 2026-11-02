@@ -30,6 +30,17 @@
   - kinetic energy
   - power station
   - turbine
+  key_points:
+  - id: kp_conserved
+    text:
+      en: Energy is never created or destroyed, only transferred from one store to another.
+    follow_up:
+      en: When a ball rolls to a stop on rough ground, where has its kinetic energy gone?
+  - id: kp_wasted
+    text:
+      en: Energy not transferred usefully ends up spread out in the surroundings, usually as heat.
+    follow_up:
+      en: A motor lifts a load. Where does the input energy that is not stored in the load end up?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -67,6 +78,17 @@
   - speed
   - joule
   - velocity
+  key_points:
+  - id: kp_mass_speed
+    text:
+      en: 'Moving objects carry kinetic energy set by mass and speed, using Ek = ½mv².'
+    follow_up:
+      en: Which two quantities decide how much kinetic energy a moving object has?
+  - id: kp_speed_squared
+    text:
+      en: Because the speed is squared, doubling the speed makes the kinetic energy four times greater.
+    follow_up:
+      en: If a car's speed doubles, what happens to its kinetic energy?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -103,6 +125,17 @@
   - mass
   - joule
   - weight
+  key_points:
+  - id: kp_mgh
+    text:
+      en: The gain in gravitational potential energy is mass × g × height raised.
+    follow_up:
+      en: Which quantities do you multiply to find the energy gained when something is lifted?
+  - id: kp_vertical_height
+    text:
+      en: Only the vertical change in height counts, not the length of the path taken to get there.
+    follow_up:
+      en: A box is pushed up a long slope to a height of 2 m. Which distance goes into the calculation?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -145,6 +178,17 @@
   - pendulum
   - friction
   - air resistance
+  key_points:
+  - id: kp_pe_to_ke
+    text:
+      en: As an object falls, its potential energy decreases while its kinetic energy increases by the same amount.
+    follow_up:
+      en: As a ball falls, what happens to its gravitational potential energy and to its kinetic energy?
+  - id: kp_equate
+    text:
+      en: With no energy wasted, the loss in potential energy equals the gain in kinetic energy, so mgh = ½mv².
+    follow_up:
+      en: How can you find the speed at the bottom of a drop without using forces or time?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -182,6 +226,17 @@
   - newton
   - direction of the force
   - energy transferred
+  key_points:
+  - id: kp_force_distance
+    text:
+      en: Work done equals force multiplied by the distance moved in the direction of the force.
+    follow_up:
+      en: Which two quantities give the work done, and how must the distance be measured?
+  - id: kp_work_is_energy
+    text:
+      en: Work done is energy transferred, measured in joules, so doing work on an object changes its energy.
+    follow_up:
+      en: What does the work done by a force tell you about energy, and what is its unit?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -217,6 +272,17 @@
   - energy transferred
   - work done
   - joule
+  key_points:
+  - id: kp_rate
+    text:
+      en: 'Power is the rate of transferring energy: the energy transferred divided by the time taken.'
+    follow_up:
+      en: What does a 60 W lamp tell you about the energy it transfers each second?
+  - id: kp_same_work_faster
+    text:
+      en: Doing the same work in less time needs more power.
+    follow_up:
+      en: Two machines lift the same load by the same height, one in half the time. How do their powers compare?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -254,6 +320,17 @@
   - electrical energy
   - solar cell
   - motor
+  key_points:
+  - id: kp_useful_over_total
+    text:
+      en: Efficiency is the useful energy output divided by the total energy input.
+    follow_up:
+      en: Which energy goes on the top of the fraction when finding efficiency?
+  - id: kp_below_100
+    text:
+      en: Efficiency can never reach 100% in a real device, because some input energy is always wasted.
+    follow_up:
+      en: Why is the efficiency of a real machine always less than 100%?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -305,6 +382,17 @@
   - renewability
   - generator
   - turbine
+  key_points:
+  - id: kp_renewable
+    text:
+      en: A renewable resource, such as wind, solar or tidal, is replaced as fast as it is used; fossil fuels are not.
+    follow_up:
+      en: What makes a resource count as renewable?
+  - id: kp_tradeoffs
+    text:
+      en: Choosing a resource means weighing reliability, cost and environmental effect, as no source is best at all three.
+    follow_up:
+      en: Why might a country still burn fossil fuels when wind power is renewable?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active

@@ -35,6 +35,17 @@
   - displacement-time graph
   - rest position
   - cycle
+  key_points:
+  - id: kp_amplitude_wavelength
+    text:
+      en: Amplitude is the greatest displacement from the rest position; wavelength is the gap between matching points on adjacent waves.
+    follow_up:
+      en: What do amplitude and wavelength each measure on a drawing of a wave?
+  - id: kp_frequency_period
+    text:
+      en: 'Frequency is the number of waves per second, in hertz, and the period is the time for one wave: T = 1/f.'
+    follow_up:
+      en: How are the period and the frequency of a wave related?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -69,6 +80,17 @@
   - crest
   - trough
   - period
+  key_points:
+  - id: kp_v_f_lambda
+    text:
+      en: Wave speed equals frequency times wavelength.
+    follow_up:
+      en: Which two properties of a wave do you multiply to get its speed?
+  - id: kp_fixed_speed
+    text:
+      en: If the speed stays the same, doubling the frequency halves the wavelength.
+    follow_up:
+      en: A wave's speed is fixed by the medium. What happens to its wavelength when its frequency goes up?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -112,6 +134,17 @@
   - seismic wave
   - P-wave
   - S-wave
+  key_points:
+  - id: kp_transverse
+    text:
+      en: In a transverse wave the vibrations are at right angles to the direction of travel, as in light and water waves.
+    follow_up:
+      en: How does the direction of vibration compare with the direction of travel in a transverse wave?
+  - id: kp_longitudinal
+    text:
+      en: In a longitudinal wave the vibrations are parallel to the direction of travel, as in sound, with compressions and rarefactions.
+    follow_up:
+      en: How do the particles move in a sound wave compared with the direction the wave travels?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -159,6 +192,22 @@
   - ripple tank
   - wavefront
   - boundary
+  key_points:
+  - id: kp_reflection
+    text:
+      en: Reflection bounces a wave back with the same speed and wavelength, and the angle of incidence equals the angle of reflection.
+    follow_up:
+      en: What happens to the speed and wavelength of a wave when it reflects?
+  - id: kp_refraction
+    text:
+      en: Refraction changes a wave's speed and wavelength as it enters a new medium, while its frequency stays the same.
+    follow_up:
+      en: What happens to a wave's speed, wavelength and frequency when water waves enter shallower water?
+  - id: kp_diffraction
+    text:
+      en: Waves spread as they pass a gap or an edge, most strongly when the gap is close to the wavelength.
+    follow_up:
+      en: What happens to a wave passing through a gap, and when is the effect strongest?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active

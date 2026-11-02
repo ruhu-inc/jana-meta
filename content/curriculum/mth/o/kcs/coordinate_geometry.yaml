@@ -23,6 +23,17 @@
   - y-coordinate
   - substitute
   - equation
+  key_points:
+  - id: kp_substitute_coords
+    text:
+      en: A point lies on a line if its coordinates make the equation true when put in for x and y.
+    follow_up:
+      en: How can you test whether a given point is on a given line?
+  - id: kp_missing_coordinate
+    text:
+      en: To find a missing coordinate, substitute the known one into the equation and solve for the other.
+    follow_up:
+      en: If one coordinate of a point on the line is unknown, how do you find it?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -55,6 +66,17 @@
   - x-intercept
   - y-intercept
   - coordinate
+  key_points:
+  - id: kp_x_axis_zero
+    text:
+      en: On the x-axis the y value is zero, so setting y to zero in the equation gives where the line meets it.
+    follow_up:
+      en: What is true about the y value at every point on the x-axis?
+  - id: kp_y_axis_zero
+    text:
+      en: On the y-axis the x value is zero, so setting x to zero gives the other crossing point.
+    follow_up:
+      en: How do you find where a line meets the y-axis from its equation?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -119,6 +141,17 @@
   - Pythagoras' theorem
   - coordinate
   - square root
+  key_points:
+  - id: kp_right_triangle
+    text:
+      en: The horizontal and vertical differences between the ends form two sides of a right-angled triangle.
+    follow_up:
+      en: What shape can be drawn between two points to help find the distance between them?
+  - id: kp_use_pythagoras
+    text:
+      en: The length is the square root of the sum of the squared differences in x and in y.
+    follow_up:
+      en: Once you have the two differences, what do you do to reach the length?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -143,6 +176,17 @@
   - midpoint
   - line segment
   - coordinate
+  key_points:
+  - id: kp_average_coords
+    text:
+      en: The midpoint has the average of the two x values and the average of the two y values.
+    follow_up:
+      en: How do you get each coordinate of the point halfway along a segment?
+  - id: kp_halfway_meaning
+    text:
+      en: The midpoint is the same distance from each end, so it lies halfway along the segment.
+    follow_up:
+      en: Why does averaging the coordinates give the middle of the segment?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -171,6 +215,17 @@
   - intercept
   - equation
   - coordinate
+  key_points:
+  - id: kp_gradient_first
+    text:
+      en: Find the gradient from the given information, using the rise over the run between two points if needed.
+    follow_up:
+      en: What must you know about the line before you can write its equation?
+  - id: kp_find_c
+    text:
+      en: Put the coordinates of a point on the line into y = mx + c with the gradient to find c.
+    follow_up:
+      en: How do you find the value of c once you have the gradient?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -197,6 +252,17 @@
   - gradient
   - y-intercept
   - equation
+  key_points:
+  - id: kp_same_gradient
+    text:
+      en: Parallel lines have equal gradients, so a line parallel to a given one keeps that gradient.
+    follow_up:
+      en: What do two parallel lines have in common?
+  - id: kp_new_intercept
+    text:
+      en: The parallel line's constant c is found using the point it must pass through, since the old c no longer applies.
+    follow_up:
+      en: Why can the new line not simply keep the old line's c?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -223,6 +289,17 @@
   - negative reciprocal
   - reciprocal
   - equation
+  key_points:
+  - id: kp_negative_reciprocal
+    text:
+      en: The gradient of a perpendicular line is the negative reciprocal of the original gradient.
+    follow_up:
+      en: How are the gradients of two lines at right angles linked?
+  - id: kp_product_minus_one
+    text:
+      en: Two perpendicular gradients multiply to give minus one, which can be used to check an answer.
+    follow_up:
+      en: How can you check that your two gradients really are perpendicular?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active

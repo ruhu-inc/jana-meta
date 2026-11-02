@@ -34,6 +34,17 @@
   - nuclide notation
   - neutral atom
   - element
+  key_points:
+  - id: kp_protons_electrons
+    text:
+      en: The proton number is the number of protons, and in a neutral atom it equals the number of electrons.
+    follow_up:
+      en: In a neutral atom, how is the electron count linked to the lower number in the nuclide symbol?
+  - id: kp_neutrons
+    text:
+      en: The number of neutrons is the nucleon number minus the proton number.
+    follow_up:
+      en: Which two numbers in the nuclide notation do you combine to get the neutrons, and how?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -75,6 +86,17 @@
   - neutral atom
   - element
   - radioactive
+  key_points:
+  - id: kp_same_protons
+    text:
+      en: Isotopes of an element have the same number of protons, so they are chemically the same element.
+    follow_up:
+      en: What stays identical about the atoms of two isotopes of one element?
+  - id: kp_different_neutrons
+    text:
+      en: Isotopes differ in their number of neutrons, so their nucleon numbers and masses differ.
+    follow_up:
+      en: What is different inside the nuclei of two isotopes, and what does that change about each atom?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -114,6 +136,17 @@
   - nuclear model
   - deflected
   - deflection
+  key_points:
+  - id: kp_mostly_empty
+    text:
+      en: Most alpha particles passed straight through the gold foil, so an atom is mostly empty space.
+    follow_up:
+      en: What did most of the alpha particles do, and what does that suggest about the inside of an atom?
+  - id: kp_small_dense_positive
+    text:
+      en: A few alphas were turned back or deflected strongly, so the nucleus is small, dense and positively charged.
+    follow_up:
+      en: What explains the rare alpha particle that bounced back towards the source?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active

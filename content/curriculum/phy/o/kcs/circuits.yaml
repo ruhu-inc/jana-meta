@@ -147,6 +147,17 @@
   - junction
   - combined resistance
   - voltage
+  key_points:
+  - id: kp_parallel_first
+    text:
+      en: Replace each parallel group with one equivalent resistance first, then add it to the resistors in series.
+    follow_up:
+      en: In a circuit with both arrangements, which part do you simplify first, and what do you do next?
+  - id: kp_parallel_smaller
+    text:
+      en: The combined resistance of resistors in parallel is smaller than the smallest single branch.
+    follow_up:
+      en: How does the total resistance of two parallel resistors compare with each one alone, and why?
   difficulty_prior: 0.8
   version: 0.1.1
   status: active
@@ -184,6 +195,17 @@
   - variable resistor
   - voltage
   - circuit
+  key_points:
+  - id: kp_share_voltage
+    text:
+      en: In a potential divider the supply voltage is shared between the two resistors in proportion to their resistances.
+    follow_up:
+      en: Of two resistors in series, which one gets the bigger share of the supply voltage?
+  - id: kp_sensor_share
+    text:
+      en: A component whose resistance rises takes a larger share of the voltage, as an LDR does in the dark.
+    follow_up:
+      en: What happens to the voltage across an LDR in a divider when the light level drops?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -229,6 +251,17 @@
   - light-emitting diode
   - forward direction
   - reverse direction
+  key_points:
+  - id: kp_thermistor_ldr
+    text:
+      en: A thermistor's resistance falls as it gets hotter, and an LDR's resistance falls as the light gets brighter.
+    follow_up:
+      en: How do the resistances of a thermistor and of an LDR respond to heat and to light?
+  - id: kp_diode
+    text:
+      en: A diode lets current pass in one direction only.
+    follow_up:
+      en: What happens to the current if a diode is connected the other way round?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active

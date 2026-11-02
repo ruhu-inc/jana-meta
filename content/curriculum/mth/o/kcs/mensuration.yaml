@@ -32,6 +32,17 @@
   - square metre
   - hectare
   - tonne
+  key_points:
+  - id: kp_unit_factor
+    text:
+      en: Converting units means multiplying or dividing by the conversion factor, going to a smaller unit gives a bigger number.
+    follow_up:
+      en: Moving from metres to centimetres, does the number get larger or smaller, and why?
+  - id: kp_area_volume_factor
+    text:
+      en: For area the length factor is squared and for volume it is cubed.
+    follow_up:
+      en: Why is converting square metres to square centimetres not the same factor as for lengths?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -65,6 +76,17 @@
   - trapezia
   - perpendicular height
   - parallel
+  key_points:
+  - id: kp_perimeter_vs_area
+    text:
+      en: Perimeter is the distance around the outside of a shape, while area is the amount of surface it covers.
+    follow_up:
+      en: How do perimeter and area differ in what they measure and in their units?
+  - id: kp_perpendicular_height
+    text:
+      en: Area formulas for triangles, parallelograms and trapezia use the perpendicular height, not the slant side.
+    follow_up:
+      en: Which height should be used in these area formulas?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -91,6 +113,17 @@
   - radius
   - radii
   - semicircle
+  key_points:
+  - id: kp_radius_diameter
+    text:
+      en: The diameter is twice the radius, and the radius must be found first if the diameter is given.
+    follow_up:
+      en: What must you check about the given length before using a circle formula?
+  - id: kp_circumference_vs_area
+    text:
+      en: Circumference is a length around the circle, while area covers the inside and involves the radius squared.
+    follow_up:
+      en: Which of the two measures involves squaring the radius, and why?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -119,6 +152,17 @@
   - radius
   - circumference
   - angle at the centre
+  key_points:
+  - id: kp_fraction_of_circle
+    text:
+      en: An arc or sector is the fraction angle over 360 of the whole circumference or whole area.
+    follow_up:
+      en: What fraction of the full circle does a sector represent?
+  - id: kp_arc_sector_difference
+    text:
+      en: Arc length uses the circumference formula and sector area uses the area formula, each multiplied by that same fraction.
+    follow_up:
+      en: Which whole-circle quantity does the fraction multiply for an arc, and which for a sector?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -155,6 +199,17 @@
   - cross-section
   - cross-sectional area
   - capacity
+  key_points:
+  - id: kp_cross_section_length
+    text:
+      en: The volume of a prism is the area of its cross-section multiplied by its length.
+    follow_up:
+      en: What two quantities are multiplied to find the volume of any prism?
+  - id: kp_surface_faces
+    text:
+      en: Surface area is the total of the areas of all the faces, and for a cylinder the curved surface opens out to a rectangle.
+    follow_up:
+      en: What shape does the curved face of a cylinder become if it is unrolled?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -188,6 +243,17 @@
   - volume
   - surface area
   - curved surface area
+  key_points:
+  - id: kp_third_of_prism
+    text:
+      en: A pyramid or cone has one third the volume of the prism with the same base and height.
+    follow_up:
+      en: How does a cone's volume compare with that of a cylinder having an equal base and height?
+  - id: kp_slant_height
+    text:
+      en: The curved surface area of a cone uses the slant height, which is a different length from the vertical height.
+    follow_up:
+      en: Which height goes into the curved surface of a cone, and how can it be found?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -223,6 +289,17 @@
   - cylinder
   - cuboid
   - perimeter
+  key_points:
+  - id: kp_split_or_subtract
+    text:
+      en: A compound shape is split into simple parts that are added, or a missing part is subtracted from a larger shape.
+    follow_up:
+      en: What are the two ways of dealing with a shape built from simpler ones?
+  - id: kp_find_missing_dims
+    text:
+      en: Missing lengths for each part are worked out from the given dimensions before any area or volume is calculated.
+    follow_up:
+      en: What needs to be done before you can use the formula for each part?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active

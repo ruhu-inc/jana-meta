@@ -38,6 +38,17 @@
   - magnetic
   - magnetic field line
   - right-hand grip rule
+  key_points:
+  - id: kp_field_shapes
+    text:
+      en: A straight wire has circular field lines around it, and a solenoid has a field like a bar magnet's.
+    follow_up:
+      en: What pattern would iron filings make around a straight current-carrying wire, and around a solenoid?
+  - id: kp_stronger_magnet
+    text:
+      en: An electromagnet is made stronger by more current, more turns of wire, or a soft iron core.
+    follow_up:
+      en: Name the changes you could make to an electromagnet to increase its pull.
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -78,6 +89,22 @@
   - magnet
   - magnetic
   - armature
+  key_points:
+  - id: kp_force_perpendicular
+    text:
+      en: The force on the wire is at right angles to both the field and the current, and reversing either one reverses the force.
+    follow_up:
+      en: How could you make the force on a wire in a magnetic field point the opposite way?
+  - id: kp_coil_turns
+    text:
+      en: The two sides of a motor coil carry current in opposite directions, so they are pushed opposite ways and the coil turns.
+    follow_up:
+      en: Why does the coil of a motor rotate instead of just moving sideways?
+  - id: kp_commutator
+    text:
+      en: The split-ring commutator reverses the current every half turn so the coil keeps turning the same way.
+    follow_up:
+      en: What would happen to the coil if its current never reversed as it passed the vertical position?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -122,6 +149,17 @@
   - a.c. generator
   - slip ring
   - dynamo
+  key_points:
+  - id: kp_changing_field
+    text:
+      en: An e.m.f. is induced when a conductor cuts field lines or when the magnetic field through a coil changes.
+    follow_up:
+      en: A magnet held still inside a coil gives no voltage. What must happen for a voltage to appear?
+  - id: kp_increase_emf
+    text:
+      en: The induced e.m.f. is bigger with faster movement, a stronger magnet or more turns on the coil.
+    follow_up:
+      en: Which changes to the magnet or the coil would give a bigger voltage reading?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -163,6 +201,17 @@
   - alternating current
   - iron core
   - coil
+  key_points:
+  - id: kp_turns_ratio
+    text:
+      en: 'Coil voltages are in the same ratio as their turns: Vs/Vp = Ns/Np.'
+    follow_up:
+      en: How is the ratio of output voltage to input voltage linked to the two coils?
+  - id: kp_ac_only
+    text:
+      en: A transformer needs a.c., as a changing primary current gives a changing field that induces a voltage in the secondary.
+    follow_up:
+      en: Why does a transformer give no output when connected to a steady d.c. supply?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -213,6 +262,17 @@
   - transmission line
   - national grid
   - power station
+  key_points:
+  - id: kp_power_equal
+    text:
+      en: 'An ideal transformer wastes no energy, so power in equals power out: VpIp = VsIs.'
+    follow_up:
+      en: If a transformer steps the voltage up, how does the secondary current compare with the primary current?
+  - id: kp_high_voltage
+    text:
+      en: At high voltage the same power needs a lower current, so less energy is lost as heat in the cables.
+    follow_up:
+      en: Why are long power lines run at very high voltage rather than at the voltage homes use?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active

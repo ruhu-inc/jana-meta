@@ -51,6 +51,17 @@
   - other income
   - discount received
   - discount allowed
+  key_points:
+  - id: kp_opening_purchases_closing
+    text:
+      en: Cost of sales is opening inventory plus purchases, less closing inventory.
+    follow_up:
+      en: What is deducted at the end because the goods are still unsold?
+  - id: kp_adjust_purchases
+    text:
+      en: Purchases are adjusted by adding carriage inwards and deducting returns outwards.
+    follow_up:
+      en: Which costs of getting goods into the business belong in the purchases figure?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -106,6 +117,17 @@
   - other income
   - discount received
   - discount allowed
+  key_points:
+  - id: kp_net_revenue
+    text:
+      en: Revenue is sales less returns inwards, since returned goods were not truly sold.
+    follow_up:
+      en: What happens to the sales figure when customers return goods?
+  - id: kp_gp_difference
+    text:
+      en: Gross profit is that revenue less the cost of sales.
+    follow_up:
+      en: Which two figures are compared to give the profit made on trading?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -162,6 +184,17 @@
   - other income
   - discount received
   - discount allowed
+  key_points:
+  - id: kp_add_income
+    text:
+      en: Profit for the year is gross profit plus other income, less the expenses of running the business.
+    follow_up:
+      en: What is added to and what is taken from gross profit?
+  - id: kp_accrual_basis
+    text:
+      en: The expenses used are those belonging to the year after accruals, prepayments, depreciation and allowances.
+    follow_up:
+      en: Are the expenses simply the cash paid, or something else?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -217,6 +250,17 @@
   - other income
   - discount received
   - discount allowed
+  key_points:
+  - id: kp_assets_groups
+    text:
+      en: Non-current assets are held for long use, while current assets are expected to turn into cash within a year.
+    follow_up:
+      en: How long does the business expect to keep each kind of asset?
+  - id: kp_liabilities_equity
+    text:
+      en: Current liabilities are due within a year, non-current liabilities later, and the owner's capital is shown separately.
+    follow_up:
+      en: How do you decide whether a debt is current or non-current?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -271,6 +315,17 @@
   - other income
   - discount received
   - discount allowed
+  key_points:
+  - id: kp_current_totals
+    text:
+      en: Current assets are inventory, receivables and cash or bank, and current liabilities are payables and short-term debts.
+    follow_up:
+      en: Which items are added to give each of the two totals?
+  - id: kp_net_current
+    text:
+      en: Net current assets, or working capital, are current assets less current liabilities.
+    follow_up:
+      en: What does the business have left for day-to-day use after short-term debts?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -329,6 +384,17 @@
   - other income
   - discount received
   - discount allowed
+  key_points:
+  - id: kp_profit_add_draw_less
+    text:
+      en: Closing capital is opening capital plus profit and capital introduced, less drawings.
+    follow_up:
+      en: Which items raise the owner's stake over the year and which lower it?
+  - id: kp_matches_net_assets
+    text:
+      en: Closing capital equals the net assets shown on the statement of financial position.
+    follow_up:
+      en: What other total in the statement should agree with the closing capital?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active

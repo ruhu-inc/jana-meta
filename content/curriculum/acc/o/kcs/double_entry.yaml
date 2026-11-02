@@ -34,6 +34,17 @@
   - trade payables
   - sales returns
   - purchases returns
+  key_points:
+  - id: kp_assets_expenses
+    text:
+      en: Increases in assets and expenses are debited, and decreases in them are credited.
+    follow_up:
+      en: On which side would you record more cash in the bank?
+  - id: kp_liab_cap_income
+    text:
+      en: Increases in liabilities, capital and income are credited, and decreases in them are debited.
+    follow_up:
+      en: Which side records a growing amount owed to a supplier?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -82,6 +93,17 @@
   - trade payables
   - sales returns
   - purchases returns
+  key_points:
+  - id: kp_two_accounts
+    text:
+      en: Each transaction is entered twice, once as a debit in one account and once as a credit in another.
+    follow_up:
+      en: How many accounts does a single payment affect?
+  - id: kp_cash_direction
+    text:
+      en: Money received is debited in the cash or bank account, and money paid is credited there.
+    follow_up:
+      en: Which side of the bank account shows a cheque written out?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -133,6 +155,17 @@
   - credit purchase
   - returns inwards
   - returns outwards
+  key_points:
+  - id: kp_credit_sales_purchases
+    text:
+      en: Credit sales debit the customer and credit sales, while credit purchases debit purchases and credit the supplier.
+    follow_up:
+      en: Whose account is affected when goods are sold but not yet paid for?
+  - id: kp_returns
+    text:
+      en: Returns reverse the original entry, and use returns inwards or returns outwards accounts.
+    follow_up:
+      en: How does an item sent back by a customer change the entries made for the sale?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -181,6 +214,17 @@
   - sales returns
   - purchases returns
   - capital introduced
+  key_points:
+  - id: kp_capital_in
+    text:
+      en: Capital introduced debits the asset received and credits the capital account.
+    follow_up:
+      en: What does the business gain, and what does it owe the owner, when capital is put in?
+  - id: kp_drawings
+    text:
+      en: Drawings of cash or goods debit the drawings account and credit cash or purchases, as the owner takes value out.
+    follow_up:
+      en: Which account takes the debit when the owner takes stock for private use?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -224,6 +268,17 @@
   - purchases returns
   - balance carried down
   - balance brought down
+  key_points:
+  - id: kp_difference
+    text:
+      en: A balance is the difference between the totals of the two sides of the account.
+    follow_up:
+      en: How do you work out what is left in an account at the period end?
+  - id: kp_brought_down
+    text:
+      en: The balance is carried down on the smaller side and brought down on the opposite side on the next day.
+    follow_up:
+      en: Which side holds the balance brought down if debits are larger?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active

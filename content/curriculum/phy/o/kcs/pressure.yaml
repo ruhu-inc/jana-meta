@@ -31,6 +31,17 @@
   - newton per square metre
   - square metre
   - square centimetre
+  key_points:
+  - id: kp_p_f_a
+    text:
+      en: Pressure is the force acting on each unit of area, p = F/A, measured in pascals (N/m²).
+    follow_up:
+      en: Which two quantities do you divide to get pressure, and what is its unit?
+  - id: kp_area_effect
+    text:
+      en: For the same force, a smaller area gives a greater pressure, which is why knives are sharp and skis are wide.
+    follow_up:
+      en: Why does a sharp knife cut better than a blunt one with the same push?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -70,6 +81,17 @@
   - pascal
   - kilopascal
   - atmospheric pressure
+  key_points:
+  - id: kp_rho_g_h
+    text:
+      en: The pressure increase in a liquid is density × g × depth.
+    follow_up:
+      en: Which quantities decide the extra pressure at a given depth in a liquid?
+  - id: kp_depth_density
+    text:
+      en: Pressure rises with depth and with the liquid's density, and at one depth it acts equally in all directions.
+    follow_up:
+      en: How does the pressure on a diver change as she goes deeper, and does direction matter?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -108,6 +130,17 @@
   - kilopascal
   - gas pressure
   - vacuum
+  key_points:
+  - id: kp_barometer
+    text:
+      en: Atmospheric pressure holds up a column of liquid in a barometer, and the height of the column measures it.
+    follow_up:
+      en: What holds up the mercury in a barometer tube?
+  - id: kp_manometer
+    text:
+      en: In a manometer the gas pressure differs from atmospheric pressure by the pressure of the liquid's height difference.
+    follow_up:
+      en: How do you use the difference in liquid levels in a manometer to find the pressure of a gas?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active

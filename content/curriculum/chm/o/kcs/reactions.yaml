@@ -19,6 +19,17 @@
   - dissolving
   - evaporation
   - combustion
+  key_points:
+  - id: kp_new_substance
+    text:
+      en: A chemical change forms a new substance, while a physical change leaves the substance the same.
+    follow_up:
+      en: What is the basic difference in what ends up after each type of change?
+  - id: kp_reversible_signs
+    text:
+      en: Signs of a chemical change include colour change, gas, precipitate and energy change; a physical change is easy to reverse.
+    follow_up:
+      en: Name some observations that suggest a chemical change, and how does reversibility differ?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -48,6 +59,17 @@
   - particle
   - hydrochloric acid
   - magnesium
+  key_points:
+  - id: kp_increase_rate
+    text:
+      en: Higher concentration, pressure, temperature or surface area, or a catalyst, all increase the rate of reaction.
+    follow_up:
+      en: Which changes make a reaction go faster, and does the catalyst belong in that list?
+  - id: kp_catalyst_not_used
+    text:
+      en: A catalyst speeds up a reaction but is not used up, so its mass is the same at the end.
+    follow_up:
+      en: What happens to a catalyst by the end of the reaction?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -81,6 +103,17 @@
   - concentrated
   - hydrochloric acid
   - magnesium
+  key_points:
+  - id: kp_frequency
+    text:
+      en: Anything raising the number of collisions each second, like higher concentration or smaller particles, raises the rate.
+    follow_up:
+      en: How does a higher concentration or surface area affect how often particles collide?
+  - id: kp_energy
+    text:
+      en: Higher temperature gives particles more energy, so more collisions reach the activation energy; a catalyst lowers it.
+    follow_up:
+      en: Why does a rise in temperature produce more successful collisions, and how does a catalyst help?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -109,6 +142,17 @@
   - molar gas volume
   - room temperature and pressure
   - oxygen
+  key_points:
+  - id: kp_rate_formula
+    text:
+      en: Mean rate is the amount of product formed, or reactant used, divided by the time taken.
+    follow_up:
+      en: Which two quantities do you divide to find a mean rate?
+  - id: kp_gradient
+    text:
+      en: On a graph the rate at a given moment is the gradient, which is steepest at the start and zero when the reaction ends.
+    follow_up:
+      en: Where is the graph steepest, and what does a flat line mean?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -144,6 +188,17 @@
   - molecule
   - temperature
   - pressure
+  key_points:
+  - id: kp_le_chatelier
+    text:
+      en: The position moves to oppose a change, such as towards the endothermic side when the temperature rises.
+    follow_up:
+      en: In which direction does the system move when you heat it up, and why?
+  - id: kp_pressure_conc
+    text:
+      en: Raising pressure favours the side with fewer gas molecules, and adding reactant moves the position towards the products.
+    follow_up:
+      en: How do the numbers of gas molecules decide the effect of pressure, and what does extra reactant do?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -181,6 +236,17 @@
   - acidified
   - colourless
   - solution
+  key_points:
+  - id: kp_oil_rig
+    text:
+      en: Oxidation is loss of electrons or gain of oxygen, and reduction is gain of electrons or loss of oxygen.
+    follow_up:
+      en: What happens to electrons, and to oxygen, in oxidation and in reduction?
+  - id: kp_agents
+    text:
+      en: The oxidising agent is the substance that gets reduced, and the reducing agent is the substance that gets oxidised.
+    follow_up:
+      en: How does the agent's role relate to what happens to it in the reaction?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -214,6 +280,17 @@
   - oxygen
   - nitrogen
   - hydrogen
+  key_points:
+  - id: kp_rules
+    text:
+      en: An uncombined element has oxidation number 0, and the numbers in a compound add up to its overall charge.
+    follow_up:
+      en: What do the oxidation numbers of all the atoms add up to in a neutral compound or an ion?
+  - id: kp_fixed_values
+    text:
+      en: Oxygen is usually -2, hydrogen is usually +1, and Group I and Group II metals are +1 and +2, so the unknown element can be found.
+    follow_up:
+      en: Which element values can you rely on to find the one you do not know?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active

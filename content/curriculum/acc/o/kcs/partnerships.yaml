@@ -31,6 +31,17 @@
   - fixed capital
   - drawings
   - capital
+  key_points:
+  - id: kp_agreement_terms
+    text:
+      en: A partnership agreement sets how profits are shared and covers capital, interest, salaries and drawings.
+    follow_up:
+      en: What matters would partners want settled before they begin trading together?
+  - id: kp_no_agreement
+    text:
+      en: Without an agreement, profits are shared equally and no interest or salaries are given, apart from interest on loans.
+    follow_up:
+      en: How are profits divided when the partners never agreed anything?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -68,6 +79,17 @@
   - fixed capital
   - drawings
   - capital
+  key_points:
+  - id: kp_interest_capital_salary
+    text:
+      en: Interest on capital and salaries reward money invested and work done, and are given out before the residual profit is shared.
+    follow_up:
+      en: Why do these amounts come out of profit before the final split?
+  - id: kp_interest_drawings
+    text:
+      en: Interest on drawings is charged to the partner, so it reduces that partner's share and adds to the profit available.
+    follow_up:
+      en: Which way does interest on drawings move a partner's share?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -108,6 +130,17 @@
   - fixed capital
   - drawings
   - capital
+  key_points:
+  - id: kp_residual_ratio
+    text:
+      en: After interest and salaries, the remaining profit is shared in the agreed profit-sharing ratio.
+    follow_up:
+      en: What is divided using the ratio, the full profit or what is left?
+  - id: kp_total_share
+    text:
+      en: A partner's total share is salary and interest plus the share of the residual profit.
+    follow_up:
+      en: What three things add up to what each partner is awarded?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -147,6 +180,17 @@
   - fixed capital
   - drawings
   - capital
+  key_points:
+  - id: kp_credits_debits
+    text:
+      en: A current account is credited with salary, interest and profit share, and debited with drawings and interest on drawings.
+    follow_up:
+      en: Which items increase what the business owes the partner?
+  - id: kp_balance_sign
+    text:
+      en: The closing balance is the difference between the sides, and a credit balance is owed to the partner.
+    follow_up:
+      en: What does a debit balance on the account tell you about the partner?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -184,6 +228,17 @@
   - fixed capital
   - drawings
   - capital
+  key_points:
+  - id: kp_capital_fixed
+    text:
+      en: The capital account holds the fixed amount invested by the partner, which changes only when agreed.
+    follow_up:
+      en: Which account does not move with the yearly profit?
+  - id: kp_current_moves
+    text:
+      en: The current account records the year's profit share, drawings and similar items that change each year.
+    follow_up:
+      en: Where is a partner's yearly drawings entered?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active

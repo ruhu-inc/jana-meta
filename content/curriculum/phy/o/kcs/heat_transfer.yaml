@@ -30,6 +30,17 @@
   - conduct
   - inversely proportional
   - rate of conduction
+  key_points:
+  - id: kp_particle_passing
+    text:
+      en: In solids, vibrating particles pass energy to their neighbours, and free electrons in metals carry it faster.
+    follow_up:
+      en: How does energy travel along a metal rod that is heated at one end?
+  - id: kp_good_poor
+    text:
+      en: Metals conduct well because of free electrons, while non-metals, liquids and gases are poor conductors.
+    follow_up:
+      en: Why does a metal spoon feel colder to the touch than a wooden one at the same temperature?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -65,6 +76,17 @@
   - expand
   - expansion
   - fluid
+  key_points:
+  - id: kp_density_change
+    text:
+      en: A heated fluid expands and becomes less dense, so it rises while cooler, denser fluid sinks to replace it.
+    follow_up:
+      en: What happens to the density of water at the bottom of a heated beaker, and what follows?
+  - id: kp_fluids_only
+    text:
+      en: This circulation is a convection current, and it needs particles free to move, so it cannot happen in solids.
+    follow_up:
+      en: Why can convection not take place in a solid?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -103,6 +125,22 @@
   - emitter
   - absorber
   - matt
+  key_points:
+  - id: kp_surface
+    text:
+      en: Dark, matt surfaces are the best absorbers and emitters of infrared radiation, and light, shiny ones are the worst.
+    follow_up:
+      en: Which kind of surface makes a good radiator and which a good lining for a flask?
+  - id: kp_hotter
+    text:
+      en: The hotter an object is, the more infrared radiation it emits.
+    follow_up:
+      en: How does the infrared given out by a hot object compare with that from a cooler one?
+  - id: kp_vacuum
+    text:
+      en: Infrared radiation needs no medium, so it can cross a vacuum.
+    follow_up:
+      en: How does the Sun's energy reach Earth when space has no particles to carry it?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active

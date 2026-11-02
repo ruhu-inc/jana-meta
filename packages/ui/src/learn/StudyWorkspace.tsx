@@ -27,7 +27,7 @@ import { StudyJourney } from "./StudyJourney.js";
 import { StudyQuiz, type StudyHelpKind } from "./StudyQuiz.js";
 import { citationKey, StudyCitations } from "./StudyCitation.js";
 
-const ACCEPT = ".pdf,.txt,.md,.docx,.odt,.pptx,.odp,.png,.jpg,.jpeg,.webp,.wav,.mp3,.m4a,.mp4,.webm,.ogg,.flac,.aac,.mov,.mkv,.avi";
+const ACCEPT = ".pdf,.txt,.md,.tex,.bib,.rst,.csv,.tsv,.py,.r,.m,.jl,.java,.c,.h,.cpp,.cs,.js,.ts,.go,.rs,.sql,.ipynb,.json,.yaml,.yml,.html,.docx,.odt,.pptx,.odp,.png,.jpg,.jpeg,.webp,.wav,.mp3,.m4a,.mp4,.webm,.ogg,.flac,.aac,.mov,.mkv,.avi";
 export type StudyTab = "generate" | "chat" | "companion";
 type Tab = StudyTab;
 const TABS: readonly Tab[] = ["generate", "chat"];
@@ -45,10 +45,11 @@ export type StudyRequest = { kind: "target"; job_id?: string; aid_id?: string; d
 const tabOf = (kind: string): Tab => (kind === "chat" ? "chat" : "generate");
 
 /** `onTab` hears which tab is open: the voice conversation lives in Ask this material (VOC-53, D130). */
-export function StudyWorkspace({ controller, companion, request, onRequestDone, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened, onAskMoment, onSkill, skillName }: { controller: StudyWorkspaceController;
+export function StudyWorkspace({ controller, curriculum = true, companion, request, onRequestDone, onPractice, onTab, onReviewAccess, initialAdd, onJourneyStarted, initialJourney, onJourneyOpened, initialSource, onSourceOpened, initialResearch, onResearchOpened, onAskMoment, onSkill, skillName }: { controller: StudyWorkspaceController;
   /** The Last time card (SPEC §19.5.2) is Home's Continue learning block now; the library no longer repeats it. */ lastTime?: ReactNode;
   /** Ask about this moment (SPEC §20.5 step 4): Your tutor opens with the moment as its pending context. */ onAskMoment?: (source: W.Source, at_ms: number) => void;
   /** A skill chip in the outline: the learner's map at that skill (SPEC §21). */ onSkill?: (kcId: string) => void; skillName?: (kcId: string) => string | null;
+  /** Off for a learner with no curriculum subjects: no syllabus topics, journeys or pack labels, only their material. */ curriculum?: boolean;
   /** **Your tutor** (SPEC §19.4): the library's panel above the sources and a third tab inside a material, one thread. */ companion?: (place: "panel" | "tab") => ReactNode;
   /** A place to go, once (a companion button, the plan's due Study cards); `onRequestDone` hears it was handled. */ request?: StudyRequest | null; onRequestDone?: () => void; /** A practised diagram's capture: Study's research starts from it (SPEC §18). */ initialResearch?: string | null; onResearchOpened?: () => void; onPractice?: (subject: string, kcIds: string[]) => void; onTab?: (tab: Tab) => void; onReviewAccess?: () => void; initialAdd?: "paste" | null; onJourneyStarted?: (node: string, subject: string) => void; initialJourney?: "next" | "lesson" | "quiz" | null; onJourneyOpened?: () => void; initialSource?: Pick<W.Source, "source_id" | "revision"> | null; onSourceOpened?: () => void }) {
   const openLesson = useOpenLesson(), openTopic = useOpenTopic();
@@ -245,7 +246,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
       </div>
       <p className="text-meta text-muted">{t("study.explore.provenance")}</p>
     </form>
-    <StudyResearch controller={controller} hideStart start={researchStart} onStartUsed={() => setResearchStart(null)} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
+    <StudyResearch controller={controller} hideStart start={researchStart} onStartUsed={() => setResearchStart(null)} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { setLibraryTab("materials"); void controller.load().then(() => controller.open(id)); }} />
     {(view.conceptTopics ?? []).length > 0 && <div className="flex flex-col gap-2" aria-label={t("study.concept.topic_saved")}><p className="text-meta text-muted">{t("study.concept.topic_saved")}</p><div className="flex flex-wrap gap-2">{(view.conceptTopics ?? []).slice(0, 8).map((m) => <Button key={m.map_id} size="sm" tone="ghost" aria-pressed={topicMap?.map_id === m.map_id} disabled={view.busy} onClick={() => { void controller.openTopicMap(m.map_id); }}>{m.topic}</Button>)}</div></div>}
     {topicMap !== null && <StudyConceptMap map={topicMap.concept_map} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editTopicMap(ops); }}
       heading={<div className="flex flex-wrap items-center justify-between gap-2" data-topic-map={topicMap.map_id} data-origin={topicMap.origin}>
@@ -275,6 +276,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
       {["running", "queued", "waiting_online"].includes(job.state) && job.kind !== "extract" && <p className="w-full text-meta text-muted">{t("study.generating_help")}</p>}
       {job.error && !(job.error === "consent_required" && accessBlocked) && (compact ? <details className="w-full text-meta text-muted"><summary className="cursor-pointer">{t("study.activity_details")}</summary><p className="py-2">{errorText(job.error)}</p></details> : <p className="w-full text-meta text-muted">{errorText(job.error)}</p>)}
       {job.notice === "allowance_exhausted" && <Notice message={t("study.allowance_fallback")} />}
+      {job.notice === "sampled_long_source" && <Notice message={t("study.sampled_long_source")} />}
       {["queued", "running", "waiting_online", "paused"].includes(job.state) && <Button size="sm" tone="ghost" disabled={view.busy} onClick={() => { void controller.jobAction(job.job_id, "cancel"); }}>{t("action.cancel")}</Button>}
       {["failed", "paused", "waiting_online"].includes(job.state) && <Button size="sm" disabled={view.busy || !!accessBlocked} onClick={() => { void controller.jobAction(job.job_id, job.state === "failed" ? "retry" : "resume"); }}>{t("action.try_again")}</Button>}
     </div>)}
@@ -336,7 +338,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
     </div>
     <StudyLibrary sources={view.sources} sets={view.sets} archivedIds={view.archivedSourceIds ?? []} busy={view.busy}
       onOpen={(source) => { if (source.private) setConfirm(source.source_id); else void controller.open(source.source_id); }}
-      onArchive={(ids, archived) => { void controller.archiveSources(ids, archived); }} />
+      onArchive={(ids, archived) => { void controller.archiveSources(ids, archived); }} onRename={(ids, name) => { void controller.renameSources(ids, name); }} />
     <Dialog open={confirm !== null} heading={t("study.private_source")} closeLabel={t("action.cancel")} onClose={() => setConfirm(null)}><p className="text-ui">{t("study.private_confirm")}</p><Button onClick={() => { const id = confirm; setConfirm(null); if (id) void controller.open(id); }}>{t("study.open_private")}</Button></Dialog>
     </>}
     {libraryTab === "explore" && explore}
@@ -462,8 +464,8 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
         {tab === "generate" && !shown && <>
           <GenerateTools disabled={view.busy || !canConfigure} pendingKinds={pendingKinds} onPick={quickGenerate} onConfigure={pick} />
           <MySets sets={setsHere} busy={view.busy} contextual sourceAliases={sourceAliases} onOpen={(set) => { void controller.openSet(set); }} />
-          <Button size="sm" tone="ghost" disabled={view.busy || !["ready", "partial"].includes(source.state) || source.readable_units < 1 || !view.followCurrent} onClick={() => { void controller.loadTopics().then((ok) => setTopicsSearched(ok)); }}>{t("study.find_topics")}</Button>
-          {topicsSearched && view.topics.length === 0 && <><p className="text-meta text-muted">{t("journey.unmapped")}</p><span><Button size="sm" disabled={view.busy || !canConfigure} onClick={() => source.state === "partial" && !readableConfirmed ? setTeachReview(true) : teach()}>{t("journey.teach_beginning")}</Button></span></>}
+          {curriculum && <Button size="sm" tone="ghost" disabled={view.busy || !["ready", "partial"].includes(source.state) || source.readable_units < 1 || !view.followCurrent} onClick={() => { void controller.loadTopics().then((ok) => setTopicsSearched(ok)); }}>{t("study.find_topics")}</Button>}
+          {curriculum && topicsSearched && view.topics.length === 0 && <><p className="text-meta text-muted">{t("journey.unmapped")}</p><span><Button size="sm" disabled={view.busy || !canConfigure} onClick={() => source.state === "partial" && !readableConfirmed ? setTeachReview(true) : teach()}>{t("journey.teach_beginning")}</Button></span></>}
           {view.topics.length > 0 && <section className="flex flex-col gap-3" aria-label={t("study.suggested_topics")}><p className="text-meta text-muted">{t("study.topic_help")}</p>{view.topics.map((topic) => <div key={topic.node_id} className="flex flex-col gap-2"><p className="text-ui font-semibold">{topic.title}</p>{onJourneyStarted && topic.objectives && topic.objectives.length > 0 && <div className="flex flex-col items-start gap-2">
             <label className="flex w-full flex-col gap-2 text-ui">{t("journey.choose_objective")}<select className={FIELD_LOOK} value={journeyChoices[topic.node_id] ?? topic.objectives[0]?.kc_id} onChange={(e) => setJourneyChoices((all) => ({ ...all, [topic.node_id]: e.target.value }))}>{topic.objectives.map((objective) => <option key={objective.kc_id} value={objective.kc_id}>{objective.statement}</option>)}</select></label>
             <Button size="sm" disabled={view.busy} onClick={() => { const kc = journeyChoices[topic.node_id] ?? topic.objectives?.[0]?.kc_id; if (kc) void controller.beginJourney(topic.node_id, kc).then((ok) => { if (ok) onJourneyStarted(topic.node_id, topic.subject); }); }}>{t("journey.begin")}</Button>
@@ -497,7 +499,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
             <p className="text-meta text-muted">{t(view.podcastVoice?.enabled ? "study.audio_online" : "study.audio_local")}</p>
           </>}
           {shown.status === "stale" && <Notice message={t("study.stale_help")} />}
-          {shown.kind === "teaching_outline" && shown.outline && <StudyOutline outline={shown.outline} sourceTitle={shown.title} chunks={view.chunks} busy={view.busy} onOpenMoment={(ms) => { controller.openMoment(ms); }} onCite={cite} onSkill={onSkill} skillName={skillName} />}
+          {shown.kind === "teaching_outline" && shown.outline && <StudyOutline outline={shown.outline} ownCourse={!curriculum} sourceTitle={shown.title} chunks={view.chunks} busy={view.busy} onOpenMoment={(ms) => { controller.openMoment(ms); }} onCite={cite} onSkill={onSkill} skillName={skillName} />}
           {shown.kind === "concept_map" && shown.concept_map && <StudyConceptMap map={shown.concept_map} fromWeb={shown.sources.some((x) => webSources.has(x.source_id))} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editConceptMap(ops); }}
             actions={ready ? { onAsk: (name) => { setTab("chat"); void controller.conceptAction(name, "ask", preferCloud); }, onFlashcards: (name) => { void controller.conceptAction(name, "flashcards", preferCloud); }, onQuiz: (name) => { void controller.conceptAction(name, "quiz", preferCloud); } } : {}} />}
           {summaryGroups ? summaryGroups.map((group, i) => <section key={i} className="flex flex-col gap-3"><h3 className="text-ui font-semibold text-ink">{group.label}</h3>{shown.settings?.focus?.startsWith("Format as concise revision bullet points.") ? <ul className="flex list-disc flex-col gap-3 ps-5">{group.claims.map((c, j) => <li key={j}>{claim(c)}</li>)}</ul> : group.claims.map((c, j) => claim(c, String(j)))}</section>) : !view.deck && !view.quiz && shown.kind !== "concept_map" && shown.kind !== "teaching_outline" && shown.claims.map((c, i) => claim(c, String(i)))}
@@ -521,7 +523,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
             quizHelp={view.quizHelp} helpJob={helpJob} helpPending={helpPending} safeHelp={safeHelp} helpAids={helpAids} claim={claim} jobs={jobs}
             onDraft={(answers, position) => { void controller.saveDraft(answers, position); }}
             onCheck={(id, value) => { const quizId = view.quiz?.quiz_id; return controller.checkAnswer(id, value).then(() => controller.getView().quiz?.quiz_id === quizId && !controller.getView().error); }}
-            onSubmit={(answers) => { void controller.submit(answers); }} onClearResult={() => controller.clearResult()} onHelp={help}
+            onSubmit={(answers) => { void controller.submit(answers); }} onClearResult={() => controller.clearResult()} onRetake={() => { void controller.retakeQuiz(); }} ownCourse={!curriculum} onHelp={help}
             onFollowUp={(itemId, kind, text) => controller.requestQuizHelp(itemId, kind, readableConfirmed, text).then(() => !controller.getView().error)} />}
         </article>}
         {tab === "generate" && <div className="flex flex-wrap items-center gap-2 pt-2">{activityButton}<span className="flex-1" /><Button size="sm" tone="ghost" onClick={goAsk}><Icon name="question" size={16} />{t("study.chat_prompt")}</Button></div>}

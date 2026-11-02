@@ -1561,11 +1561,16 @@ def test_an_aid_records_where_and_by_which_model_it_was_made(tmp_path):
     d, s = seeded(tmp_path)
     chunks = d.chunks(s["source_id"], 1)["items"]
     sources = [{"source_id": s["source_id"], "revision": 1}]
-    for execution, runtime, model in (("local", "device", "muse-glimmer-30b"), ("prefer_cloud", "online", "muse-spark-1.3")):
+    for execution, runtime, model in (
+        ("local", "device", "muse-glimmer-30b"),
+        ("prefer_cloud", "online", "muse-spark-1.3"),
+    ):
         job = d.create_job({"kind": "notes", "execution": execution, "sources": sources})
         job["state"] = "running"
         d.save_job(job)
-        aid = d.commit_aid(job, {"request_id": job["job_id"], "kind": "notes", "claims": [claim(chunks[0])], "model": model}, [True])
+        aid = d.commit_aid(
+            job, {"request_id": job["job_id"], "kind": "notes", "claims": [claim(chunks[0])], "model": model}, [True]
+        )
         assert aid["made_by"] == {"runtime": runtime, "model": model}
         assert d.aid(aid["aid_id"])["made_by"] == {"runtime": runtime, "model": model}
     job = d.create_job({"kind": "summary", "execution": "local", "sources": sources})

@@ -40,6 +40,17 @@
   - other payables
   - other receivables
   - commission
+  key_points:
+  - id: kp_expense_used
+    text:
+      en: The expense for the year is the cost that belongs to that year, whether or not it has been paid.
+    follow_up:
+      en: Why can the amount paid in the year differ from the cost of the year?
+  - id: kp_add_owing
+    text:
+      en: When part of an expense is still owing, it is added to the amount paid to find the year's expense.
+    follow_up:
+      en: What do you do with an unpaid amount when working out the cost of the year?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -85,6 +96,17 @@
   - other payables
   - other receivables
   - commission
+  key_points:
+  - id: kp_next_year_part
+    text:
+      en: The part of a payment that covers the next period is not an expense of this year.
+    follow_up:
+      en: Which part of an insurance premium paid belongs to the following year?
+  - id: kp_deduct_prepaid
+    text:
+      en: The expense for the year is the amount paid less the part paid in advance.
+    follow_up:
+      en: How do you adjust the cash paid to get to the cost of this year only?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -128,6 +150,17 @@
   - other payables
   - other receivables
   - commission
+  key_points:
+  - id: kp_income_earned
+    text:
+      en: Income for the year is the amount earned in that year, whether or not the cash has been received.
+    follow_up:
+      en: Why might rent received in the year not equal the rent earned for the year?
+  - id: kp_owing_advance
+    text:
+      en: Income owing is added to the cash received and income received in advance is taken off it.
+    follow_up:
+      en: Which direction does each of these two situations move the cash figure?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -172,6 +205,17 @@
   - other payables
   - other receivables
   - commission
+  key_points:
+  - id: kp_accrual_liability
+    text:
+      en: An accrued expense is something owed, so it is a current liability in the statement of financial position.
+    follow_up:
+      en: Does the business owe or is it owed an amount when an expense is unpaid?
+  - id: kp_prepay_asset
+    text:
+      en: A prepaid expense is a benefit paid for but not yet used, so it is a current asset.
+    follow_up:
+      en: Why is paying for next year's cost something the business holds rather than owes?
   difficulty_prior: -0.1
   version: 0.1.1
   status: active

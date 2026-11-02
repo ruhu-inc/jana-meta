@@ -132,6 +132,9 @@ function base64(data: Uint8Array): string {
   for (let i = 0; i < data.length; i += 8192) result += String.fromCharCode(...data.subarray(i, i + 8192));
   return btoa(result);
 }
+/** Plain text a course hands out, read as text like .txt: notes, LaTeX, data and code (`TEXT_SUFFIXES` in the core). */
+const TEXT_SUFFIXES = ["txt", "md", "tex", "bib", "rst", "csv", "tsv", "py", "r", "m", "jl", "java", "c", "h", "cpp", "cs", "js", "ts", "go", "rs", "sql", "ipynb", "json", "yaml", "yml", "html"];
+
 export class StudyWorkspaceController {
   private view = EMPTY_STUDY;
   private listeners = new Set<() => void>();
@@ -268,6 +271,13 @@ export class StudyWorkspaceController {
     return ids as string[];
   }
   /** A profile-local view preference: no source, revision, set, review or job is deleted or modified. */
+  /** The learner's own name for a material (SourcePatch), on every copy of it. */
+  async renameSources(ids: string[], title: string): Promise<void> {
+    await this.action(async () => {
+      for (const id of ids) await this.mutate("PATCH", `/v1/study/sources/${id}`, { title });
+      await this.load();
+    });
+  }
   async archiveSources(ids: string[], archived: boolean): Promise<void> {
     const generation = this.profiles.generation;
     await this.action(async (current) => {
@@ -438,7 +448,7 @@ export class StudyWorkspaceController {
       const suffix = file.name.split(".").at(-1)?.toLowerCase();
       // A video container is kind `video` by suffix at create (SPEC §20.4); the core downgrades it to a recording
       // in the extracted revision when it holds no video stream.
-      const kind = suffix === "pdf" ? "pdf" : ["pptx", "odp"].includes(suffix ?? "") ? "slides" : ["txt", "md", "docx", "odt"].includes(suffix ?? "") ? "document" : ["jpg", "jpeg", "png", "webp"].includes(suffix ?? "") ? "photo" : (VIDEO_SUFFIXES as readonly string[]).includes(suffix ?? "") ? (existing && existing.kind === "recording" ? "recording" : "video") : (AUDIO_SUFFIXES as readonly string[]).includes(suffix ?? "") ? "recording" : null;
+      const kind = suffix === "pdf" ? "pdf" : ["pptx", "odp"].includes(suffix ?? "") ? "slides" : [...TEXT_SUFFIXES, "docx", "odt"].includes(suffix ?? "") ? "document" : ["jpg", "jpeg", "png", "webp"].includes(suffix ?? "") ? "photo" : (VIDEO_SUFFIXES as readonly string[]).includes(suffix ?? "") ? (existing && existing.kind === "recording" ? "recording" : "video") : (AUDIO_SUFFIXES as readonly string[]).includes(suffix ?? "") ? "recording" : null;
       if (!kind) throw new CommandError(422, "unsupported_format", false, undefined);
       this.patch({ uploadBytes: 0, uploadTotal: file.size });
       const data = new Uint8Array(await file.arrayBuffer()), hash = await sha(data);
@@ -852,6 +862,8 @@ export class StudyWorkspaceController {
   }
   /** Back to the questions after a result, keeping the answers, for a second attempt (ASM-28). */
   clearResult(): void { if (this.view.result) this.patch({ result: null }); }
+  /** A finished quiz, taken again from the start: its questions stay, the saved answers go; earlier attempts remain. */
+  async retakeQuiz(): Promise<void> { this.clearResult(); await this.saveDraft({}, 0); }
   /** Mark only the requested question through the existing native marker; no answer keys reach the client. */
   async checkAnswer(itemId: string, answer: string): Promise<void> {
     const quiz = this.view.quiz;

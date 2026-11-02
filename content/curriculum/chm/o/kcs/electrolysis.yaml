@@ -27,6 +27,17 @@
   - molten
   - binary compound
   - relative molecular mass
+  key_points:
+  - id: kp_free_ions
+    text:
+      en: Electrolysis needs the ions to be free to move, which happens when the compound is molten or dissolved.
+    follow_up:
+      en: What condition must the compound be in for the ions to carry current?
+  - id: kp_electrode_products
+    text:
+      en: Positive ions gain electrons at the cathode and negative ions lose them at the anode, giving a metal and a non-metal.
+    follow_up:
+      en: Which ion goes to which electrode, and what is formed at each in a molten binary compound?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -64,6 +75,22 @@
   - sulfuric acid
   - solution
   - relative formula mass
+  key_points:
+  - id: kp_water_ions
+    text:
+      en: An aqueous solution also holds hydrogen and hydroxide ions from water, so each electrode has a choice of ions.
+    follow_up:
+      en: Besides the ions of the dissolved compound, what other ions are in the solution?
+  - id: kp_selection_rule
+    text:
+      en: At the cathode the less reactive of the metal and hydrogen forms, and at the anode a halogen or else oxygen forms.
+    follow_up:
+      en: How do you decide which ion is discharged at each electrode?
+  - id: kp_concentration_effect
+    text:
+      en: A concentrated halide solution gives the halogen at the anode, but a dilute one gives oxygen instead.
+    follow_up:
+      en: How would diluting a sodium chloride solution change the product at the anode?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -100,6 +127,17 @@
   - concentrated
   - sulfuric acid
   - hydroxide
+  key_points:
+  - id: kp_cathode_gain
+    text:
+      en: At the cathode ions gain electrons (reduction), so the electrons appear on the left of the half-equation.
+    follow_up:
+      en: At the cathode, are electrons gained or lost, and which side of the equation do they go on?
+  - id: kp_anode_lose
+    text:
+      en: At the anode ions lose electrons (oxidation), and the half-equation must balance both atoms and charge.
+    follow_up:
+      en: What must be balanced in a half-equation besides the atoms?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -133,6 +171,17 @@
   - cryolite
   - impurities
   - solution
+  key_points:
+  - id: kp_plating_refining
+    text:
+      en: In electroplating the object is the cathode and the coating metal is the anode; impure copper is the anode when refining.
+    follow_up:
+      en: In plating an object, which electrode is the object, and which is the coating metal?
+  - id: kp_aluminium
+    text:
+      en: Aluminium is extracted by electrolysing molten aluminium oxide dissolved in cryolite, which lowers the energy needed.
+    follow_up:
+      en: Why is the aluminium oxide dissolved in another substance before electrolysis?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -163,6 +212,17 @@
   - coulomb
   - electrode
   - relative atomic mass
+  key_points:
+  - id: kp_charge
+    text:
+      en: The charge passed is the current multiplied by the time in seconds.
+    follow_up:
+      en: Which two quantities combine to give the charge, and what unit of time must be used?
+  - id: kp_moles_electrons
+    text:
+      en: The moles of product come from the charge divided by 96 500 per mole of electrons, adjusted for the electrons each ion needs.
+    follow_up:
+      en: How do you turn the charge into moles of product, and what does the ion's charge change?
   difficulty_prior: 0.9
   version: 0.1.1
   status: active

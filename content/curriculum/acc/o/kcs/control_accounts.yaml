@@ -40,6 +40,17 @@
   - debit balance
   - credit balance
   - ledger
+  key_points:
+  - id: kp_total_check
+    text:
+      en: A control account shows the total owed by all customers or to all suppliers, and acts as a check on the ledger.
+    follow_up:
+      en: What is a total account used to test in the individual ledger?
+  - id: kp_locate_errors
+    text:
+      en: If it disagrees with the list of balances, an error is signalled, and it helps to find who is responsible and where to look.
+    follow_up:
+      en: What does a difference between the two figures tell you about the ledger?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -86,6 +97,17 @@
   - debit balance
   - credit balance
   - ledger
+  key_points:
+  - id: kp_totals_from_books
+    text:
+      en: Control account figures come from the totals of the day books, the cash book and the journal for the period.
+    follow_up:
+      en: Where do you find the total of credit sales for the month?
+  - id: kp_same_sides
+    text:
+      en: Items sit on the same side as in the individual accounts, so a rise in what customers owe is a debit in the sales control.
+    follow_up:
+      en: On which side does a customer's balance sit, and what increases it?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -135,6 +157,17 @@
   - debit balance
   - credit balance
   - ledger
+  key_points:
+  - id: kp_debits_credits
+    text:
+      en: Opening receivables and credit sales go on the debit side, while cash, discount and returns go on the credit side.
+    follow_up:
+      en: Which items increase what customers owe and which reduce it?
+  - id: kp_balance_down
+    text:
+      en: The closing balance is the difference between the two sides and should agree with the total of customers' balances.
+    follow_up:
+      en: How do you get the closing figure, and what should it match?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -184,6 +217,17 @@
   - debit balance
   - credit balance
   - ledger
+  key_points:
+  - id: kp_purchases_sides
+    text:
+      en: Credit purchases and opening payables are credits, and payments, discount received and returns out are debits.
+    follow_up:
+      en: Which items increase what the business owes and which reduce it?
+  - id: kp_closing_agrees
+    text:
+      en: The closing balance is what remains owing to suppliers and should agree with the sum of the supplier balances.
+    follow_up:
+      en: What should the final figure be compared with to check it?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active

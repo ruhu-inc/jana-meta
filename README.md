@@ -1,8 +1,13 @@
-# Jana: an exam-prep tutor for adult learners, built on Meta's models
+# Jana: a study tutor for adults, built on Meta's models
 
-Jana helps adults (18 and over) prepare for O level Mathematics, Physics and Chemistry, or refresh those foundations
-before university entry and first-year study. The content packs follow the Cambridge O level topic structure
-(5054, 5070), written in our own words, and cover the core O level topics that WAEC, NECO and GCE syllabuses share.
+Jana helps adults (18 and over) study what they actually have to learn. A university or college student brings their
+own material (PDFs and slides up to 1,000 pages, lecture recordings, YouTube transcripts, notes, LaTeX, data and code
+files) and Jana turns it into cited summaries, concept maps, quizzes that mark written answers, and a tutor that works
+from it. No curriculum is needed for that.
+
+For learners preparing for O level Mathematics, Physics, Chemistry or Accounting, Jana also has a full curriculum:
+lessons, practice, mock exams and a map of what they have secured. The content packs follow the Cambridge O level topic
+structure (5054, 5070), written in our own words, and cover the core topics that WAEC, NECO and GCE syllabuses share.
 
 Jana is a tutor, not a chatbot. It never just hands over an answer: it asks where the learner is stuck, works from
 their own steps and gives the next hint. Every number it says is checked by code first (a sandboxed maths and units

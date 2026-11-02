@@ -128,7 +128,10 @@ def wrap_notes(lines: Sequence[str]) -> str:
 
 
 def profile_line(profile: ProfileSummary, *, cloud: bool = False, cloud_notes: bool = False) -> str:
-    parts = [f"{profile.level} level" if profile.level else "level not set"]
+    if not profile.subjects:  # no curriculum chosen: their own course and materials set the level and the words
+        parts = ["studying their own course materials, with no syllabus here: the material sets the level and words"]
+    else:
+        parts = [f"{profile.level} level" if profile.level else "level not set"]
     if profile.subjects:
         parts.append(", ".join(profile.subjects))
     if cloud_notes:  # §19.6: level, subjects, the exam's distance (never its date) and the solution policy

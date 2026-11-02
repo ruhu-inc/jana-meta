@@ -3024,3 +3024,38 @@ in the file named before it was taken. Each and where this version answers it:
 Not changed on review: JM-D47's required choice with nothing preselected (the review did not question it); JM-D49's
 timing; the four-group table; the deferral (review 15 confirmed its facts). Open for the owner: none of the review's
 seven questions was left unanswered; its recommended answers are the working assumptions above.
+
+## 23. Beyond O level: study almost any material (proposed 2026-11-02, owner to confirm)
+
+Status: **built 2026-11-02 on the branch `claude/beyond-o-level`.** The owner's direction: Jana should be something
+university students also use, to study almost any material. Asked whether that needs a University profile, the answer
+adopted is no: the material is the curriculum, and one first-run choice is enough.
+
+- **No new level or profile type.** `profile.level` stays O or A. A profile with **no subjects** studies its own course
+  and materials; that is the only signal, and Settings can add subjects later. No schema migration.
+- **First run** asks "What are you studying?": My own course and materials, or The O-level curriculum (default). Their
+  own course skips the hand-off, the tutor pick and the interview, which all speak of lessons and exams.
+- **With no subjects:** no Lessons, Practice or Mock exam in the sidebar, no plan, daily goal, subject chips or map; Home's
+  box goes to Your tutor; New question opens Your tutor; Study hides syllabus topics and pack labels; no curriculum
+  tutor session opens. Prompts say "studying their own course materials", never "O level".
+- **Pitch follows the material.** Study's learner sentence now says to pitch to the supplied material whatever the
+  learner's level says. Ask and the no-source concept map no longer assume a school student.
+- **Limits.** PDFs and slides up to 1,000 pages (`Locator`, the gateway, the worker), matching what `plans.toml` already
+  promised. LaTeX, BibTeX, CSV, code and Jupyter notebooks read as text. A long source with no focus reads 24 sections
+  spread across it and says so (`sampled_long_source`), so ten questions never cost a hundred model calls.
+- **Research.** A no-subject profile may research any academic topic (`Brief.subject: other`, `level: university`).
+- **Written answers are marked online** (`POST /v1/study/mark`, `AnswerMarking`, `AnswerVerdict`) for learners with no
+  local model. A judge sees the reference; a separate check never does. Correct needs the check's entailment, incorrect
+  needs only that the check cannot support the answer, and real disagreement is unmarked. Only the passages the question
+  cites are sent. Nothing changes mastery.
+- **Reliability.** A draft outside a size bound gets the reserved second draft, told the limits; a refused aid goes
+  again once by itself per press of Try again. A text-layer PDF no longer asks for a review tick: only pages read by
+  OCR do (`ExtractionResponse.scanned_units`).
+- **Explain-it-back** now has key points for all 367 skills (AI-drafted, sampled by eye, checked against held-out wording;
+  they want a subject teacher's review). A mastery check now waits for the explanation on every skill, so it needs a judge.
+- **Public checkouts.** `jana_tools` reports checks that read the private specification as skipped when `docs/` is
+  absent, instead of crashing or failing; `spec.lock` is untracked, so CI's pinned checkout needs it restored to run.
+
+Open for the owner: restore `spec.lock` and the deploy key if CI should verify against the specification; a teacher's
+review of the key points; whether own-course should become the default first-run choice.
+

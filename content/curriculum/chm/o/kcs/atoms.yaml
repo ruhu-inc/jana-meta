@@ -24,6 +24,17 @@
   - relative molecular mass
   - chemical formula
   - formula
+  key_points:
+  - id: kp_element_compound
+    text:
+      en: An element has only one type of atom, while a compound has different atoms chemically bonded in fixed proportions.
+    follow_up:
+      en: What do the atoms in an element have in common, and what holds the atoms in a compound together?
+  - id: kp_mixture
+    text:
+      en: A mixture is not chemically joined, so its parts keep their own properties and can be separated physically.
+    follow_up:
+      en: How are the substances in a mixture held together, and how can you separate them?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -55,6 +66,22 @@
   - atomic number
   - mass number
   - ion
+  key_points:
+  - id: kp_proton_electron
+    text:
+      en: In a neutral atom the number of protons equals the number of electrons, and the proton number is the atomic number.
+    follow_up:
+      en: How does the count of electrons relate to the count of protons in a neutral atom?
+  - id: kp_neutrons
+    text:
+      en: The number of neutrons is the nucleon number minus the proton number.
+    follow_up:
+      en: If you are told the nucleon number and the proton number, how do you find the neutrons?
+  - id: kp_ion_electrons
+    text:
+      en: An ion has gained or lost electrons, so its electron number differs from its proton number.
+    follow_up:
+      en: For a positive ion, how do its electrons compare with its protons?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -85,6 +112,17 @@
   - proton number
   - aluminium
   - potassium
+  key_points:
+  - id: kp_shell_filling
+    text:
+      en: Electrons fill shells from the nearest the nucleus outwards, with 2 in the first shell and up to 8 in the second and third.
+    follow_up:
+      en: In what order do electrons fill the shells, and how many fit in each of the first three?
+  - id: kp_outer_electrons
+    text:
+      en: The outer-shell electrons set the chemistry of the element, and their number equals the group number for Groups I to VII.
+    follow_up:
+      en: Which electrons decide how an element reacts, and how do you read their number from the periodic table?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -117,6 +155,17 @@
   - rubidium
   - iridium
   - antimony
+  key_points:
+  - id: kp_isotopes_def
+    text:
+      en: Isotopes are atoms of the same element with the same proton number but different numbers of neutrons.
+    follow_up:
+      en: What is the same and what is different between two isotopes of one element?
+  - id: kp_weighted_mean
+    text:
+      en: 'The relative atomic mass is a weighted mean: multiply each mass by its percentage, add them and divide by 100.'
+    follow_up:
+      en: Why is the relative atomic mass not simply the average of the isotope masses?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -148,6 +197,17 @@
   - outer shell
   - magnesium
   - oxygen
+  key_points:
+  - id: kp_full_outer_shell
+    text:
+      en: Atoms gain or lose electrons to reach a full outer shell, like a noble gas.
+    follow_up:
+      en: What outcome is an atom aiming for when it forms an ion?
+  - id: kp_charge_from_group
+    text:
+      en: Metals lose outer electrons to form positive ions and non-metals gain electrons to form negative ions, by group.
+    follow_up:
+      en: Which kind of element gives positive ions, and how do you work out the charge from the group?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -185,6 +245,17 @@
   - nitrogen
   - hydrogen
   - oxygen
+  key_points:
+  - id: kp_shared_pair
+    text:
+      en: A covalent bond is a shared pair of electrons between two non-metal atoms.
+    follow_up:
+      en: What is shared in a covalent bond, and between which kind of atoms?
+  - id: kp_pairs_to_full_shell
+    text:
+      en: Each atom shares enough electrons to fill its outer shell, so the number of bonds equals the electrons it still needs.
+    follow_up:
+      en: How do you decide how many electron pairs an atom shares?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -225,6 +296,17 @@
   - particle
   - relative formula mass
   - solution
+  key_points:
+  - id: kp_ionic_giant
+    text:
+      en: Ionic compounds have strong attractions throughout a lattice, so high melting points, and conduct only when molten or dissolved.
+    follow_up:
+      en: Why do ionic solids melt only at high temperatures, and when can they carry a current?
+  - id: kp_simple_molecular
+    text:
+      en: Simple molecular substances have weak forces between molecules, so low melting points and no electrical conduction.
+    follow_up:
+      en: What is broken when a simple molecular substance melts, and why is it easy to do?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -260,6 +342,17 @@
   - lattice
   - delocalised electron
   - relative formula mass
+  key_points:
+  - id: kp_diamond_silica
+    text:
+      en: Diamond and silicon(IV) oxide have strong covalent bonds throughout a giant lattice, so they are hard with high melting points.
+    follow_up:
+      en: What kind of bonding runs through diamond, and what does it do to the properties?
+  - id: kp_graphite
+    text:
+      en: Graphite has layers with weak forces between them and delocalised electrons, so it is soft and conducts electricity.
+    follow_up:
+      en: What is different about graphite's layers that makes it slippery and a conductor?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -293,6 +386,17 @@
   - malleability
   - electron
   - magnesium
+  key_points:
+  - id: kp_electron_sea
+    text:
+      en: A metal is a lattice of positive ions in a sea of delocalised electrons, which are free to move and carry charge.
+    follow_up:
+      en: What are the two things that make up a metallic structure, and which can move?
+  - id: kp_malleable
+    text:
+      en: The layers of ions can slide past each other without breaking the bonding, so metals bend and shape instead of shattering.
+    follow_up:
+      en: Why does hitting a metal change its shape rather than break it?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active

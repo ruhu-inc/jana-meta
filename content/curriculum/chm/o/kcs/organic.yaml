@@ -27,6 +27,17 @@
   - general formula
   - molecular formula
   - relative molecular mass
+  key_points:
+  - id: kp_group_defines_series
+    text:
+      en: A homologous series is a family of compounds with the same functional group and so similar chemical properties.
+    follow_up:
+      en: What do all members of one homologous series share?
+  - id: kp_recognise_group
+    text:
+      en: 'The functional group is recognised in the formula: C=C for alkenes, OH for alcohols and COOH for carboxylic acids.'
+    follow_up:
+      en: Which feature in a formula tells you the family a compound belongs to?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -70,6 +81,17 @@
   - hydrocarbon
   - molecular formula
   - relative molecular mass
+  key_points:
+  - id: kp_stem
+    text:
+      en: 'The stem comes from the number of carbon atoms: meth, eth, prop and but for one to four.'
+    follow_up:
+      en: Which part of a name tells you how many carbon atoms there are?
+  - id: kp_ending
+    text:
+      en: 'The ending shows the family: ane for alkanes, ene for alkenes, anol for alcohols and anoic acid for carboxylic acids.'
+    follow_up:
+      en: Which part of the name shows the family, and what ending belongs to each family?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -102,6 +124,17 @@
   - alcohol
   - carboxylic acid
   - molecule
+  key_points:
+  - id: kp_substitute_n
+    text:
+      en: Put the number of carbon atoms in place of n in the general formula, such as CnH2n+2 for alkanes, to get the molecular formula.
+    follow_up:
+      en: What do you replace in the general formula to get the formula of one member?
+  - id: kp_mr_from_formula
+    text:
+      en: Adding up the relative atomic masses of all the atoms in that molecular formula gives the relative molecular mass.
+    follow_up:
+      en: Having found the molecular formula, how do you turn it into a relative molecular mass?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -137,6 +170,17 @@
   - alkene
   - dodecane
   - molecule
+  key_points:
+  - id: kp_fractional_distillation
+    text:
+      en: Fractional distillation separates petroleum by boiling point, with the smaller molecules rising higher in the column.
+    follow_up:
+      en: On what property does the separation depend, and where in the column do small molecules end up?
+  - id: kp_cracking
+    text:
+      en: Large alkanes are cracked into smaller alkanes and alkenes, as small molecules are in more demand.
+    follow_up:
+      en: Why is it worth breaking large hydrocarbons into smaller ones, and what is made?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -166,6 +210,17 @@
   - addition reaction
   - substitution reaction
   - double bond
+  key_points:
+  - id: kp_saturated_unsaturated
+    text:
+      en: Alkanes are saturated with only single bonds, while alkenes are unsaturated and contain a C=C double bond.
+    follow_up:
+      en: What kind of bond differs between the two families?
+  - id: kp_bromine_test
+    text:
+      en: Bromine water stays orange with an alkane but is decolourised by an alkene because it adds across the double bond.
+    follow_up:
+      en: What would you see on adding bromine water to each, and why do they differ?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -206,6 +261,17 @@
   - universal indicator
   - relative molecular mass
   - solution
+  key_points:
+  - id: kp_making_ethanol
+    text:
+      en: Ethanol is made by fermentation of sugar with yeast, or by reacting ethene with steam.
+    follow_up:
+      en: What are the two ways of making ethanol, and what are the starting materials?
+  - id: kp_oxidation_ester
+    text:
+      en: Ethanol is oxidised to ethanoic acid, and an alcohol with a carboxylic acid and an acid catalyst forms an ester.
+    follow_up:
+      en: What does oxidation turn ethanol into, and what combination forms an ester?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -239,6 +305,17 @@
   - repeat unit
   - molecule
   - relative molecular mass
+  key_points:
+  - id: kp_addition
+    text:
+      en: Addition polymers are made from monomers with a C=C double bond that open up and join, with no other product.
+    follow_up:
+      en: What feature must a monomer have to join into an addition polymer?
+  - id: kp_condensation
+    text:
+      en: Condensation polymers join monomers with two functional groups at each end and lose a small molecule such as water each time.
+    follow_up:
+      en: What is different about the monomers and the products in condensation polymerisation?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -276,6 +353,17 @@
   - molecule
   - equation
   - balanced equation
+  key_points:
+  - id: kp_products
+    text:
+      en: Complete combustion of a hydrocarbon or alcohol in plenty of oxygen gives only carbon dioxide and water.
+    follow_up:
+      en: Which products form when a fuel burns completely?
+  - id: kp_balance_order
+    text:
+      en: Balance carbon first, then hydrogen, and leave oxygen to last, since oxygen comes from both products.
+    follow_up:
+      en: In what order do you balance the atoms, and why is oxygen left until last?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -312,6 +400,17 @@
   - universal indicator
   - flavouring
   - perfume
+  key_points:
+  - id: kp_weak_acid
+    text:
+      en: Ethanoic acid is a weak acid because it ionises only partly in water, though it still reacts with metals, bases and carbonates.
+    follow_up:
+      en: How far does ethanoic acid ionise, and does that stop it behaving as an acid?
+  - id: kp_esters
+    text:
+      en: An ester is made from a carboxylic acid and an alcohol, named alcohol first, and used as flavourings and perfumes.
+    follow_up:
+      en: What two reactants make an ester, and how are its two name parts ordered?
   difficulty_prior: 0.2
   version: 0.1.0
   status: active

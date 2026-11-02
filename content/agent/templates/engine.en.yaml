@@ -128,9 +128,10 @@ companion:
     # When the reply was refused and a teaching outline is ready (live-run fix 2026-11-01): what the video teaches
     # that is not yet secure, by code from the outline's skills and the learner's bands; never the canned line then.
     outline:
-      not_yet: "Of this video's {skills} skills, {count} are not yet secure: {statements}."
-      not_yet_one: "Of this video's {skills} skills, 1 is not yet secure: {statements}."
+      not_yet: "Of this video's {skills}, {count} are not yet secure: {statements}."
+      not_yet_one: "Of this video's {skills}, 1 is not yet secure: {statements}."
       all_secure: "All {skills} skills this video teaches are secure for you."
+      all_secure_one: "The one skill this video teaches is secure for you."
   # Check-ins (SPEC §19.5.5, phase 3): the heartbeat's questions and every desktop notification's body, one per kind,
   # word for word the app's home.checkin.notify.* (the shell's checkins.rs is tested against those). Never the
   # check-in's own text; no numbers, no names.

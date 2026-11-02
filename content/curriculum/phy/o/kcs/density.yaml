@@ -28,6 +28,17 @@
   - kilogram
   - cubic metre
   - cubic centimetre
+  key_points:
+  - id: kp_mass_over_volume
+    text:
+      en: Density is the mass of a substance divided by its volume.
+    follow_up:
+      en: Which two measurements do you combine to get a density, and how?
+  - id: kp_matching_units
+    text:
+      en: Mass and volume must use matching units, such as g with cm³ or kg with m³, before dividing.
+    follow_up:
+      en: A mass is in grams and a volume in m³. What must you do before finding the density?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -64,6 +75,17 @@
   - measuring cylinder
   - irregular solid
   - overflow can
+  key_points:
+  - id: kp_displacement
+    text:
+      en: The volume of an irregular solid is the rise in water level when it is fully submerged.
+    follow_up:
+      en: How can you find the volume of a stone that has no regular shape?
+  - id: kp_mass_then_divide
+    text:
+      en: Measure the solid's mass on a balance, then divide it by the displaced volume to get its density.
+    follow_up:
+      en: Once you have the stone's volume, what else do you measure and what do you do with the two readings?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -91,6 +113,17 @@
   - mass
   - volume
   - upthrust
+  key_points:
+  - id: kp_compare_density
+    text:
+      en: An object floats if its density is less than the liquid's density, and sinks if it is greater.
+    follow_up:
+      en: What must be true about a solid and a liquid for the solid to rise to the surface?
+  - id: kp_average_density
+    text:
+      en: A steel ship floats because its average density, including the air inside, is less than that of water.
+    follow_up:
+      en: Steel is denser than water, so how can a steel ship float?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active

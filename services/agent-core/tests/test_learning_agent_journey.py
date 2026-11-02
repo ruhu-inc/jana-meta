@@ -180,7 +180,7 @@ def test_multi_day_personal_learning_agent_journey(tmp_path: Path, monkeypatch: 
             shown = await t.snapshot(resumed["session_id"])
             wording = " ".join(part.get("text", "") for part in shown["parts"].values())
             today = datetime.fromtimestamp(clock.now / 1000, UTC).date().isoformat()
-            assert "Recorded practice band for " in wording
+            assert "Your practice on " in wording
             assert f"Source: checked practice records ({today})." in wording
             history = await t.api.call("GET", "/v1/companion/history", profile=t.token)
             assert any("momentum example" in row["text"] for row in history.json()["items"])

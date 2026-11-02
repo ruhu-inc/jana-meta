@@ -33,6 +33,17 @@
   - permanent magnet
   - attraction
   - repulsion
+  key_points:
+  - id: kp_poles
+    text:
+      en: Like poles repel and unlike poles attract.
+    follow_up:
+      en: What happens when you bring two north poles together, and when you bring a north pole to a south pole?
+  - id: kp_soft_hard
+    text:
+      en: Soft magnetic materials such as iron magnetise and demagnetise easily, while hard ones such as steel keep their magnetism.
+    follow_up:
+      en: Why is iron used for the core of an electromagnet but steel for permanent magnets?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -68,6 +79,17 @@
   - compass
   - magnetic
   - pole
+  key_points:
+  - id: kp_direction
+    text:
+      en: Field lines run from the north pole to the south pole, showing the way a free north pole would be pushed.
+    follow_up:
+      en: Which way do field lines point around a bar magnet, and what does that direction mean?
+  - id: kp_strongest
+    text:
+      en: The field is strongest where the lines are closest together, which is near the poles.
+    follow_up:
+      en: Where around a bar magnet is the field strongest, and how can a diagram show it?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active

@@ -29,6 +29,17 @@
   - hydroxide
   - ammonium
   - relative formula mass
+  key_points:
+  - id: kp_balance_charges
+    text:
+      en: The ions combine in the ratio that makes the total positive charge equal the total negative charge.
+    follow_up:
+      en: What must be true of the total charges in an ionic formula?
+  - id: kp_swap_brackets
+    text:
+      en: Use the charge of each ion as the number of the other, simplify, and put brackets round a polyatomic ion needing more than one.
+    follow_up:
+      en: How do you work out the amount of each ion, and when are brackets needed?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -59,6 +70,17 @@
   - formulae
   - reactant
   - product
+  key_points:
+  - id: kp_coefficients_only
+    text:
+      en: Only the numbers in front of formulae can be changed, because changing a formula changes the substance.
+    follow_up:
+      en: What are you allowed to change when balancing, and why not the small numbers?
+  - id: kp_atoms_equal
+    text:
+      en: An equation is balanced when each element has the same number of atoms on both sides.
+    follow_up:
+      en: How do you check that an equation is balanced?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -92,6 +114,17 @@
   - ammonium
   - aluminium
   - magnesium
+  key_points:
+  - id: kp_add_ar
+    text:
+      en: Add up the relative atomic masses of every atom shown in the formula.
+    follow_up:
+      en: What do you add together to get the relative formula mass?
+  - id: kp_brackets_multiples
+    text:
+      en: Numbers after brackets multiply every atom inside, and water of crystallisation is added in the same way.
+    follow_up:
+      en: How do you treat atoms inside brackets, or a number written before water in a hydrated salt?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -120,6 +153,17 @@
   - relative atomic mass
   - ammonium
   - aluminium
+  key_points:
+  - id: kp_fraction
+    text:
+      en: The percentage is the mass of the element in one formula divided by the relative formula mass.
+    follow_up:
+      en: Which two masses form the fraction for the element in a compound?
+  - id: kp_times_hundred
+    text:
+      en: Multiply that fraction by 100 and count all the atoms of the element in the formula.
+    follow_up:
+      en: After forming the fraction, what step turns it into a percentage, and what about the number of atoms?
   difficulty_prior: -0.1
   version: 0.1.1
   status: active
@@ -149,6 +193,17 @@
   - relative formula mass
   - Avogadro constant
   - equation
+  key_points:
+  - id: kp_moles_formula
+    text:
+      en: Moles equal mass divided by molar mass.
+    follow_up:
+      en: Which quantity is divided by which to get an amount in moles?
+  - id: kp_rearrange
+    text:
+      en: Mass equals moles multiplied by molar mass, with the molar mass in g/mol equal to the relative formula mass.
+    follow_up:
+      en: How do you go from moles back to a mass, and what number do you use as the molar mass?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -182,6 +237,17 @@
   - relative formula mass
   - limiting reactant
   - excess
+  key_points:
+  - id: kp_mass_to_moles
+    text:
+      en: Convert the known mass to moles first, then use the equation's mole ratio to get the moles of the wanted substance.
+    follow_up:
+      en: What do you do with the given mass before using the equation?
+  - id: kp_back_to_mass
+    text:
+      en: Convert the moles you found into a mass using the molar mass of the wanted substance.
+    follow_up:
+      en: Once you have moles of the wanted substance, how do you end up with the mass?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -212,6 +278,17 @@
   - room temperature and pressure
   - mole
   - dm³
+  key_points:
+  - id: kp_molar_volume
+    text:
+      en: At room conditions one mole of any gas occupies 24 dm3.
+    follow_up:
+      en: What volume does a mole of any gas fill at room temperature and pressure?
+  - id: kp_volume_calc
+    text:
+      en: Volume equals moles times 24, in dm3, and equal volumes of gases at the same conditions hold equal numbers of moles.
+    follow_up:
+      en: How do you get a gas volume from moles, and what does the equation's ratio tell you about volumes?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -245,6 +322,17 @@
   - hydrochloric acid
   - sodium hydroxide
   - potassium hydroxide
+  key_points:
+  - id: kp_conc_formula
+    text:
+      en: Concentration in mol/dm3 equals moles divided by volume in dm3.
+    follow_up:
+      en: What two quantities do you divide to get a concentration, and in what unit is the volume?
+  - id: kp_unit_conversion
+    text:
+      en: Divide a volume in cm3 by 1000 to get dm3, and a concentration in g/dm3 is the mass of solute in each dm3.
+    follow_up:
+      en: How do you handle a volume given in cm3, and how do g/dm3 differ from mol/dm3?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -274,6 +362,17 @@
   - mole ratio
   - formula
   - aluminium
+  key_points:
+  - id: kp_moles_ratio
+    text:
+      en: Divide each mass or percentage by the atomic mass to get moles, then divide by the smallest to find the simplest ratio.
+    follow_up:
+      en: What do you do with each mass first, and how do you reach the simplest whole-number ratio?
+  - id: kp_molecular_multiple
+    text:
+      en: The molecular formula is the empirical formula multiplied by the relative molecular mass divided by the empirical formula mass.
+    follow_up:
+      en: What extra information do you need to turn an empirical formula into a molecular formula?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -304,6 +403,17 @@
   - yield
   - purity
   - impurities
+  key_points:
+  - id: kp_percent_yield
+    text:
+      en: Percentage yield is the actual mass obtained divided by the theoretical maximum mass, times 100.
+    follow_up:
+      en: Which two masses form the percentage yield, and which one comes from the equation?
+  - id: kp_percent_purity
+    text:
+      en: Percentage purity is the mass of pure substance divided by the total mass of the sample, times 100.
+    follow_up:
+      en: What do you divide by what to find the purity of a sample?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active

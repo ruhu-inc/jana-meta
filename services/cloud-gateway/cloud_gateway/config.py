@@ -415,7 +415,7 @@ class GatewayConfig(_Strict):
     plans: Plans = Field(default_factory=packaged_plans)
     study_memory_bytes: int = key(256 * 1024 * 1024, serves="STU-17", unit="bytes", ge=104857600)
     study_source_max_mb: int = key(100, serves="STU-02", unit="MiB", ge=1, le=100)
-    study_source_max_pages: int = key(300, serves="STU-02", unit="pages", ge=1, le=300)
+    study_source_max_pages: int = key(1000, serves="STU-02", unit="pages", ge=1, le=1000)
     # Engineering proposal for gateway extraction compute; generation is metered separately by real token usage.
     study_extract_page_usd: float = key(0.0001, serves="STU-12", unit="USD/page", ge=0)
     study_extract_chars_per_page: int = key(4000, serves="STU-12", unit="characters/page", ge=1000, le=10000)

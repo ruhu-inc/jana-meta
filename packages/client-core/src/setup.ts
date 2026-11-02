@@ -56,7 +56,9 @@ export function isAdultAge(age: string): boolean | null {
  * are 18 or over; the band is always the adult band; level and subjects are every installed subject at the level
  * of the installed packs (O level when both are installed). With no pack installed yet, every subject at O level, so
  * content added later fits. The disc follows the order of creation (DSN-24). */
-export function firstRunProfile(name: string, packs: PackList["packs"], order: number): CreateProfile {
+export function firstRunProfile(name: string, packs: PackList["packs"], order: number, curriculum = true): CreateProfile {
+  // No curriculum: no subjects, so the app leads with the learner's own materials and asks nothing about a syllabus.
+  if (!curriculum) return { display_name: name.trim(), avatar: `avatar-${(order % 8) + 1}`, level: "O", subjects: [], age_band: ADULT_BAND };
   const installed = installedSubjects(packs);
   const level = installed.length === 0 || installed.some((s) => s.level === "O") ? "O" : "A";
   const subjects = [...new Set(installed.filter((s) => s.level === level).map((s) => s.subject))];

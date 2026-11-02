@@ -81,8 +81,10 @@ function About({ view }: { view: KnowsView }) {
     return name === key ? s : name;
   };
   const rows: [string, string][] = [
-    [t("knows.about.level"), t(`settings.profiles.level_name.${view.about.level.toLowerCase()}`)],
-    [t("knows.about.subjects"), view.about.subjects.map(subject).join(", ")],
+    ...(view.about.subjects.length === 0 ? [[t("knows.about.studying"), t("first_run.focus_own")] as [string, string]] : [
+      [t("knows.about.level"), t(`settings.profiles.level_name.${view.about.level.toLowerCase()}`)] as [string, string],
+      [t("knows.about.subjects"), view.about.subjects.map(subject).join(", ")] as [string, string],
+    ]),
   ];
   if (view.about.exam_date !== null) rows.push([t("knows.about.exam"), view.about.exam_date]);
   return (

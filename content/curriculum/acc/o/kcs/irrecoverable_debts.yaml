@@ -32,6 +32,17 @@
   - statement of financial position
   - income statement
   - debtor
+  key_points:
+  - id: kp_write_off_entry
+    text:
+      en: Writing off a debt debits irrecoverable debts expense and credits the customer's account, as the money will not be received.
+    follow_up:
+      en: Which account is credited so the customer no longer owes the amount?
+  - id: kp_recovery
+    text:
+      en: A debt recovered after being written off is first reinstated, then the cash is entered as received from that customer.
+    follow_up:
+      en: What must be done in the customer's account before the money is recorded?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -67,6 +78,17 @@
   - statement of financial position
   - income statement
   - debtor
+  key_points:
+  - id: kp_estimate
+    text:
+      en: An allowance is an estimate of debts that may not be paid, set as a percentage of receivables.
+    follow_up:
+      en: Why is this an estimate rather than a known loss?
+  - id: kp_after_write_offs
+    text:
+      en: The percentage is applied to receivables after any actual debts have been written off.
+    follow_up:
+      en: When in the year-end process is the percentage applied?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -103,6 +125,17 @@
   - statement of financial position
   - income statement
   - debtor
+  key_points:
+  - id: kp_only_change
+    text:
+      en: Only the change in the allowance is charged to profit, not the full new figure.
+    follow_up:
+      en: Which figure is recorded in the income statement each year?
+  - id: kp_increase_decrease
+    text:
+      en: An increase in the allowance is an expense, and a decrease is a gain added to profit.
+    follow_up:
+      en: What does the result of a lower allowance than last year do to profit?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -138,6 +171,17 @@
   - statement of financial position
   - income statement
   - debtor
+  key_points:
+  - id: kp_deduct_allowance
+    text:
+      en: Net trade receivables are the total owed by customers less the allowance for irrecoverable debts.
+    follow_up:
+      en: What is subtracted from the receivables total in the statement?
+  - id: kp_prudent_value
+    text:
+      en: This shows the amount that the business expects to collect, in line with prudence.
+    follow_up:
+      en: What does the figure after the deduction represent for the reader?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active

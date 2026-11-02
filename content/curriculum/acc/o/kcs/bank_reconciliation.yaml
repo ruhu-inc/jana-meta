@@ -34,6 +34,17 @@
   - overdrawn
   - debit balance
   - credit balance
+  key_points:
+  - id: kp_timing_items
+    text:
+      en: Unpresented cheques and outstanding lodgements are in the cash book, but the bank has not yet processed them.
+    follow_up:
+      en: Why do some cash book entries not show on the bank statement at the same date?
+  - id: kp_bank_only_items
+    text:
+      en: Bank charges, interest and direct payments appear on the statement first, so the cash book must be updated for them.
+    follow_up:
+      en: Which items does the business only learn about when the statement arrives?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -77,6 +88,17 @@
   - overdrawn
   - debit balance
   - credit balance
+  key_points:
+  - id: kp_adjust_cash_book
+    text:
+      en: The cash book is adjusted for items on the bank statement that it does not yet show.
+    follow_up:
+      en: Which of the two records needs changing for a bank charge you did not know about?
+  - id: kp_direction
+    text:
+      en: Receipts such as direct credits are added to the cash book balance and payments such as charges are deducted.
+    follow_up:
+      en: How does money coming in directly from a customer change the cash book balance?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -117,6 +139,17 @@
   - overdrawn
   - debit balance
   - credit balance
+  key_points:
+  - id: kp_start_cash_book
+    text:
+      en: The reconciliation starts from the updated cash book balance and adjusts it for timing differences to reach the bank statement.
+    follow_up:
+      en: Which balance is the starting point, and which is the one you reach?
+  - id: kp_cheques_lodgements
+    text:
+      en: Unpresented cheques are added back and outstanding lodgements are deducted when moving from the cash book to the statement.
+    follow_up:
+      en: Which way does a cheque that the bank has not yet paid move the starting figure?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -157,6 +190,17 @@
   - overdrawn
   - debit balance
   - credit balance
+  key_points:
+  - id: kp_cashbook_side
+    text:
+      en: In the business's cash book, a debit balance means money at the bank and a credit balance means an overdraft.
+    follow_up:
+      en: What does a credit balance in the cash book tell you about the bank account?
+  - id: kp_statement_opposite
+    text:
+      en: The bank statement is the bank's view, so the sides are reversed and a debit balance there means an overdraft.
+    follow_up:
+      en: Why does the same overdrawn position look the opposite way round on the statement?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active

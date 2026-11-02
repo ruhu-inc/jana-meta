@@ -22,6 +22,17 @@
   - aluminium
   - magnesium
   - alloy
+  key_points:
+  - id: kp_property_use
+    text:
+      en: A metal is chosen for a job because a property fits it, such as copper for wires since it conducts well and bends easily.
+    follow_up:
+      en: How do you link a use of a metal to the property that makes it suitable?
+  - id: kp_chemical_property
+    text:
+      en: Chemical properties like resistance to corrosion or low reactivity also decide the use, for example aluminium for drinks cans.
+    follow_up:
+      en: Besides physical properties, what does a metal's reactivity decide about its use?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -49,6 +60,17 @@
   - steel
   - bronze
   - malleable
+  key_points:
+  - id: kp_different_sizes
+    text:
+      en: An alloy is a mixture of a metal with other elements, whose atoms are different sizes.
+    follow_up:
+      en: What is an alloy made from, and how do the atoms in it differ?
+  - id: kp_layers_blocked
+    text:
+      en: The different-sized atoms disrupt the regular layers, so they cannot slide over each other easily and the alloy is harder.
+    follow_up:
+      en: What happens to the layers of atoms when other-sized atoms are mixed in, and how does that affect hardness?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -76,6 +98,17 @@
   - aluminium
   - hydrogen
   - solution
+  key_points:
+  - id: kp_displacement
+    text:
+      en: A more reactive metal displaces a less reactive metal from its compound, but not the other way round.
+    follow_up:
+      en: When does a metal push another metal out of its salt solution?
+  - id: kp_water_acid
+    text:
+      en: The higher a metal is in the series, the more vigorously it reacts with water and acids; the lowest do not react.
+    follow_up:
+      en: How does the position in the series change how a metal behaves with water and acid?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -105,6 +138,17 @@
   - barrier method
   - hydrated iron(III) oxide
   - oxygen
+  key_points:
+  - id: kp_rust_conditions
+    text:
+      en: Iron rusts only when both oxygen and water are present.
+    follow_up:
+      en: Which substances must be there for iron to rust, and what happens if one is missing?
+  - id: kp_barrier_sacrificial
+    text:
+      en: Barrier methods such as paint keep out air and water; sacrificial protection uses a more reactive metal that corrodes first.
+    follow_up:
+      en: How does painting stop rust, and how is a more reactive metal used differently?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -136,6 +180,17 @@
   - aluminium oxide
   - ore
   - electron
+  key_points:
+  - id: kp_position_method
+    text:
+      en: 'Extraction depends on position: unreactive metals are found uncombined, middle ones need carbon, reactive ones electrolysis.'
+    follow_up:
+      en: What links the choice of extraction method to a metal's place in the series?
+  - id: kp_carbon_reduction
+    text:
+      en: Carbon takes the oxygen from the oxide of a metal less reactive than carbon, but cannot do so for a more reactive metal.
+    follow_up:
+      en: Why can carbon extract iron but not aluminium?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -170,6 +225,17 @@
   - electrolysis
   - relative formula mass
   - equation
+  key_points:
+  - id: kp_ore_moles
+    text:
+      en: Find the moles of the ore from its mass and molar mass, then use the equation ratio to get the moles of metal.
+    follow_up:
+      en: What do you do first with the mass of ore, and what links ore and metal?
+  - id: kp_metal_mass
+    text:
+      en: Convert the moles of metal back to mass by multiplying by its relative atomic mass.
+    follow_up:
+      en: Once you have moles of metal, how do you get to the mass?
   difficulty_prior: 0.7
   version: 0.1.1
   status: active
@@ -203,6 +269,17 @@
   - alkaline
   - hydrogen
   - steam
+  key_points:
+  - id: kp_bonding_explains
+    text:
+      en: Metals conduct and bend because delocalised electrons move freely and layers of ions slide without breaking the bonding.
+    follow_up:
+      en: What parts of metallic bonding explain conduction and shaping?
+  - id: kp_reactions
+    text:
+      en: Reactive metals react with water to give hydroxide and hydrogen, with steam to give an oxide, and with acids to give a salt.
+    follow_up:
+      en: What products form when a reactive metal meets water, steam and an acid?
   difficulty_prior: -0.4
   version: 0.1.0
   status: active

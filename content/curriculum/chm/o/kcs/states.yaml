@@ -20,6 +20,17 @@
   - gas
   - vibrate
   - kinetic energy
+  key_points:
+  - id: kp_arrangement
+    text:
+      en: Solid particles are packed in a fixed pattern, liquid particles touch but are irregular, and gas particles are far apart.
+    follow_up:
+      en: How close together and how orderly are the particles in each of the three states?
+  - id: kp_motion
+    text:
+      en: Solid particles only vibrate, liquid particles slide past each other, and gas particles move quickly in all directions.
+    follow_up:
+      en: How does the type of movement differ between the three states?
   difficulty_prior: -1.2
   version: 0.1.1
   status: active
@@ -50,6 +61,17 @@
   - sublimation
   - state
   - particle
+  key_points:
+  - id: kp_compare_temperature
+    text:
+      en: A substance is a solid below its melting point, a liquid between melting and boiling points, and a gas above its boiling point.
+    follow_up:
+      en: How do you use the melting and boiling points to decide the state at a given temperature?
+  - id: kp_energy_forces
+    text:
+      en: In melting and boiling, the particles take in energy to overcome the forces between them, and the temperature stays constant.
+    follow_up:
+      en: What does the energy supplied do during a change of state, and what happens to the temperature?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -78,6 +100,17 @@
   - molecule
   - ammonia
   - hydrogen chloride
+  key_points:
+  - id: kp_mass_effect
+    text:
+      en: Gases with a lower relative molecular mass diffuse faster because their lighter particles move faster at the same temperature.
+    follow_up:
+      en: How does the mass of a gas particle affect how quickly it spreads?
+  - id: kp_temperature_effect
+    text:
+      en: A higher temperature makes the particles move faster, so diffusion is quicker.
+    follow_up:
+      en: What happens to the speed of particles when a gas is warmed, and what does that do to diffusion?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active

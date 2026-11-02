@@ -30,6 +30,22 @@
   - rotate
   - Moon's phases
   - sunlit
+  key_points:
+  - id: kp_day_night
+    text:
+      en: Day and night happen because Earth spins on its axis once every 24 hours, turning each place towards then away from the Sun.
+    follow_up:
+      en: What movement of the Earth causes day and night, and how long does it take?
+  - id: kp_seasons
+    text:
+      en: The seasons happen because Earth's axis is tilted, so each hemisphere gets more direct, longer sunlight when tilted to the Sun.
+    follow_up:
+      en: Why is it summer in the north when the south has winter?
+  - id: kp_phases
+    text:
+      en: The Moon's phases change because, as it orbits Earth each month, we see different amounts of its sunlit half.
+    follow_up:
+      en: Why does the shape of the lit part of the Moon change over a month?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -67,6 +83,17 @@
   - communications satellite
   - radius
   - period
+  key_points:
+  - id: kp_circumference
+    text:
+      en: Orbital speed is the distance around the orbit, 2πr, divided by the orbital period.
+    follow_up:
+      en: What distance does a planet travel in one orbit, and which time goes with it?
+  - id: kp_si_units
+    text:
+      en: Radius and period must be in metres and seconds to give a speed in m/s.
+    follow_up:
+      en: A period is given in days and a radius in km. What must you do before finding the speed in m/s?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -110,6 +137,17 @@
   - comet
   - asteroid
   - orbital period
+  key_points:
+  - id: kp_gravity_orbit
+    text:
+      en: The Sun's gravity pulls each planet inwards, giving the force that keeps it in a near-circular orbit.
+    follow_up:
+      en: What force keeps the Earth moving round the Sun instead of travelling in a straight line?
+  - id: kp_closer_faster
+    text:
+      en: Planets nearer the Sun feel stronger gravity, orbit faster and have shorter years than distant ones.
+    follow_up:
+      en: How do the orbital speed and orbital period of a planet change with its distance from the Sun?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active

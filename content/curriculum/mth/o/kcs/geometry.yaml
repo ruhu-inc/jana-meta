@@ -32,6 +32,17 @@
   - diagonal
   - perpendicular
   - parallel
+  key_points:
+  - id: kp_defining_features
+    text:
+      en: A shape is named by its sides, angles and symmetry, such as equal sides or parallel pairs, rather than by how it looks.
+    follow_up:
+      en: What features would you check to tell two similar-looking quadrilaterals apart?
+  - id: kp_square_rhombus
+    text:
+      en: A rhombus has four equal sides but not necessarily right angles, while a square has four equal sides and four right angles.
+    follow_up:
+      en: How does a rhombus differ from a square?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -62,6 +73,17 @@
   - arc
   - compasses
   - protractor
+  key_points:
+  - id: kp_equal_arcs
+    text:
+      en: Constructions use compass arcs of the same radius from each end of a line or arm of an angle to mark equal distances.
+    follow_up:
+      en: Why are arcs used with the compass kept at one setting?
+  - id: kp_keep_marks
+    text:
+      en: Arcs and intersection marks are left on the drawing, and the final line joins the points where the arcs cross.
+    follow_up:
+      en: What do you draw last, and what should remain visible?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -87,6 +109,17 @@
   - scale drawing
   - ratio
   - map scale
+  key_points:
+  - id: kp_scale_meaning
+    text:
+      en: A scale such as 1 to 50 000 means one unit on the drawing stands for that many of the same unit in real life.
+    follow_up:
+      en: What does the second number in a scale ratio stand for?
+  - id: kp_convert_units
+    text:
+      en: After multiplying or dividing by the scale, the answer is converted to a sensible unit such as kilometres.
+    follow_up:
+      en: Why might the length need converting after using the scale?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -113,6 +146,17 @@
   - back bearing
   - clockwise
   - three-figure bearing
+  key_points:
+  - id: kp_three_figures
+    text:
+      en: A bearing is an angle measured clockwise from north, written with three figures.
+    follow_up:
+      en: From which direction and in which turning direction is a bearing measured?
+  - id: kp_back_bearing
+    text:
+      en: The back bearing differs from the forward bearing by 180 degrees, added or taken away to stay between 0 and 360.
+    follow_up:
+      en: How do you get the bearing of the return journey?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -139,6 +183,17 @@
   - scale factor
   - corresponding
   - enlargement
+  key_points:
+  - id: kp_scale_factor
+    text:
+      en: The scale factor is found by dividing a length on one shape by the matching length on the other.
+    follow_up:
+      en: How do you find the scale factor between two similar shapes?
+  - id: kp_matching_sides
+    text:
+      en: Only corresponding sides are compared, and the same scale factor applies to every pair of them.
+    follow_up:
+      en: Which sides of the two shapes can be paired up?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -170,6 +225,17 @@
   - volume scale factor
   - surface area
   - volume
+  key_points:
+  - id: kp_area_squared
+    text:
+      en: If lengths are in the ratio k, areas are in the ratio k squared.
+    follow_up:
+      en: When a shape is made bigger by a length factor k, how does its area change?
+  - id: kp_volume_cubed
+    text:
+      en: Volumes are in the ratio k cubed, because three dimensions all scale.
+    follow_up:
+      en: Why does volume change by a different power from area?
   difficulty_prior: 0.7
   version: 0.1.1
   status: active
@@ -211,6 +277,17 @@
   - isosceles
   - equilateral
   - rectangle
+  key_points:
+  - id: kp_line_mirror
+    text:
+      en: A line of symmetry splits a shape into two halves that match exactly as a mirror image.
+    follow_up:
+      en: How can you test whether a line is a line of symmetry?
+  - id: kp_rotational_order
+    text:
+      en: Rotational symmetry order is the number of times a shape fits its outline in one full turn.
+    follow_up:
+      en: What do you count to find the order of rotational symmetry?
   difficulty_prior: -0.9
   version: 0.1.1
   status: active
@@ -242,6 +319,17 @@
   - isosceles
   - isosceles triangle
   - reflex
+  key_points:
+  - id: kp_sum_totals
+    text:
+      en: Angles on a straight line add to 180 degrees, and angles around a point add to 360 degrees.
+    follow_up:
+      en: What total do angles around one point make, and how does a straight line differ?
+  - id: kp_vertically_opposite
+    text:
+      en: When two straight lines cross, the angles facing each other are equal.
+    follow_up:
+      en: Which pairs of angles are equal where two lines intersect?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -269,6 +357,17 @@
   - corresponding
   - co-interior
   - transversal
+  key_points:
+  - id: kp_alternate_corresponding
+    text:
+      en: Alternate angles are equal, corresponding angles are equal, and the Z and F shapes help to spot them.
+    follow_up:
+      en: Which letter shapes help to find equal angles between parallel lines?
+  - id: kp_cointerior
+    text:
+      en: Co-interior angles lie between the lines on the same side of the cutting line and add to 180 degrees.
+    follow_up:
+      en: What do co-interior angles add up to, and where are they found?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -299,6 +398,17 @@
   - exterior angle
   - interior angle
   - triangle
+  key_points:
+  - id: kp_sum_180
+    text:
+      en: The three angles in any triangle add up to 180 degrees.
+    follow_up:
+      en: What total do you use to find an unknown angle in a triangle?
+  - id: kp_exterior_isosceles
+    text:
+      en: An exterior angle equals the sum of the two opposite interior angles, and an isosceles triangle has two equal base angles.
+    follow_up:
+      en: How is an exterior angle related to the interior angles at the other two corners?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -328,6 +438,17 @@
   - hexagon
   - octagon
   - decagon
+  key_points:
+  - id: kp_exterior_360
+    text:
+      en: Exterior angles of any polygon add to 360 degrees, so a regular polygon's exterior angle is 360 over its number of sides.
+    follow_up:
+      en: What do all exterior angles of a polygon total?
+  - id: kp_interior_exterior_pair
+    text:
+      en: An interior angle and its exterior angle lie on a straight line and so add to 180 degrees.
+    follow_up:
+      en: How are the interior and exterior angles at one corner connected?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -357,6 +478,17 @@
   - angle at the centre
   - circumference
   - circle theorem
+  key_points:
+  - id: kp_semicircle_right
+    text:
+      en: An angle drawn from the ends of a diameter to a point on the circle is a right angle.
+    follow_up:
+      en: What is the size of an angle standing on a diameter?
+  - id: kp_centre_double
+    text:
+      en: The angle at the centre is twice the angle at the circumference standing on the same arc.
+    follow_up:
+      en: How do the angles at the centre and at the edge compare when they share an arc?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -387,6 +519,17 @@
   - segment
   - circumference
   - circle theorem
+  key_points:
+  - id: kp_opposite_180
+    text:
+      en: Opposite angles of a cyclic quadrilateral add up to 180 degrees.
+    follow_up:
+      en: What can you say about two opposite corners of a four-sided shape inside a circle?
+  - id: kp_same_segment
+    text:
+      en: Angles in the same segment standing on the same chord are equal.
+    follow_up:
+      en: What do you know about two angles drawn from the same chord to the same side of the circle?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
