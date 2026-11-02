@@ -1,0 +1,58 @@
+packages/client-core/test/voice.test.ts
+  s_49ba057c5af1a1::t_3f45327b7a24f6 396-399,404-406
+  s_49ba057c5af1a1::t_146dc733c487ab 394-395,400-403,407-410
+scripts/hosted/startup.sh
+  s_49ba057c5af1a1::t_c5d4a1967ba208 1-6
+scripts/hosted/setup-vm.sh
+  s_49ba057c5af1a1::t_c5d4a1967ba208 1-70
+scripts/jana_tools/hosted.py
+  s_49ba057c5af1a1::t_99fbf073560a41 170,224,226-230
+  s_49ba057c5af1a1::t_4bd35b0217dc9e 8,249-251
+  s_49ba057c5af1a1::t_9199c72110f119 1-7,9-14,16-36,38-105,107-169,171-223,225,231-247,252-312,314-340,342-359,363-376,378-455
+  s_49ba057c5af1a1::t_8b8f1b216ba02a 15,248,341,360-362,377
+  s_49ba057c5af1a1::t_c1f30f75db1c88 37,106,313
+scripts/tests/test_hosted.py
+  s_49ba057c5af1a1::t_8b8f1b216ba02a 102-103
+  s_49ba057c5af1a1::t_c1f30f75db1c88 5,30-73
+  s_49ba057c5af1a1::t_4bd35b0217dc9e 1-4,6-29,74-101,104-120
+services/cloud-gateway/deploy/meta-hosted.toml
+  s_49ba057c5af1a1::t_4bd35b0217dc9e 1-12,14-35,37-40
+  s_49ba057c5af1a1::t_0d224aac9d3945 13,36
+packages/client-core/src/voice.ts
+  s_49ba057c5af1a1::t_8b8f1b216ba02a 165-168,171-172
+apps/desktop/src/main.tsx
+  s_49ba057c5af1a1::t_146dc733c487ab 7-8,12-13
+  s_49ba057c5af1a1::t_520a9bf2bf46db 14
+scripts/hosted/deploy.sh
+  s_49ba057c5af1a1::t_c5d4a1967ba208 1-68
+scripts/jana_tools/hosted_landing.html
+  s_49ba057c5af1a1::t_99fbf073560a41 1-20
+apps/desktop/src/hosted-copy.ts
+  s_49ba057c5af1a1::t_146dc733c487ab 1-8
+scripts/hosted/jana-front.service
+  s_49ba057c5af1a1::t_c5d4a1967ba208 1-17
+scripts/hosted/teardown.sh
+  s_49ba057c5af1a1::t_c5d4a1967ba208 1-10
+scripts/hosted/jana-gateway.service
+  s_49ba057c5af1a1::t_c5d4a1967ba208 1-16
+scripts/hosted/jana-key.service
+  s_49ba057c5af1a1::t_c5d4a1967ba208 1-15
+scripts/hosted/README.md
+  s_49ba057c5af1a1::t_c5d4a1967ba208 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "beaa8465a78cd9ec93aeb74fb7bb3439c2167ba4",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
