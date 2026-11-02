@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from study_worker import DocumentError as DocumentError
+from study_worker import confident_text as confident_text
 from study_worker import decode as decode
 
 from agent_core.config import Settings

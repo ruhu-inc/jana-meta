@@ -52,6 +52,17 @@ rather than the fallback sentence. **Progress** lists "Practised in Study today"
 check can run, or **Practise this idea** when it cannot yet. A saved quiz has **Retake quiz**. A window narrower than 1180 px
 opens a material on the study tools, with **View source** and **Study tools** to swap sides.
 
+A reliability run on 2 November put 30 generated files through upload, summary and quiz with Muse Spark, plus the real
+machine-learning notes. After fixes, every readable file gave a summary and all but one gave a quiz. The exception was
+a tiny notebook, refused as too little to test. Corrupt, encrypted, blank and speechless files were refused. These are
+varied test files, not students' own documents.
+
+| Size | Example | Time, summary and quiz | Meta cost |
+| --- | --- | --- | --- |
+| A few pages | Lecture notes | 20 s | $0.03 |
+| 69 pages, heavy maths | Machine-learning notes | 100 s | $0.34 |
+| 117 pages | Long history text, sampled | 290 s | $0.84 |
+
 Rough edges still to know about: a marking the judge and the separate check disagree on says **Not marked** and shows
 the explanation; a long source with no focus reads 24 sections spread across it and says so; research still asks the
 level as a quick reply. PDF formulas come from the text layer, so a heavily mathematical PDF can read badly in the

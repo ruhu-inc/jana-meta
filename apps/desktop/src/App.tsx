@@ -40,7 +40,7 @@ import {
   type CheckinNotifier, type CompanionAction, type ConceptNode, type KcLinks, type NoteReference, type VoiceAnswer, type VoicePlace, type AssessmentStart, type ChooseInstallSource, type HealthReport, type Launch, type MapTopic, type NewSubjectStart, type PlanBlock, type SessionTarget, type SubjectMap as SubjectMapData,
 } from "@jana/client-core";
 import {
-  AskAnswer, CourseAsk, CompanionThread, StudyWorkspace, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, NotesPlace, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, LastTimeCard, CheckinCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
+  AskAnswer, CourseAsk, DueToday, CompanionThread, StudyWorkspace, FollowUpProvider, type FollowUpHandlers, DailyGoalChip, Transcript, SessionNotes, NotesPlace, SavedQuestions, SavedQuestionsProvider, AssessmentPlace, AbandonedMockCard, AppFrame, ExamCountdownCard, LastTimeCard, CheckinCard, Button, Composer, ComposerShell, ExamLockNotice, FasterTutorProvider, IconButton, Loader, MenuBar, MockPlace, NoTutor, Skeleton, StudyNotes, ErrorState, DegradedNotices, FirstRun, FirstRunInterview, FirstRunTutor, FirstRunTutorPick, Home,
   ConceptMapRendererProvider, GapLinkProvider, ResearchLinkProvider, KnowsLinkProvider, KnowsPage, LaunchScreen, useLaunchSurface, LessonLinkProvider, LessonPlayer, KeyboardHelp, LocaleProvider, Notice, PlanCard, Practice, ProfilePicker, Progress, RegistryProvider, ScreenHeader, SearchBox, SearchScreen,
   SessionHistory, Settings, Sidebar, StoreProvider, StudioFrame, SubjectDot, SubjectMap, TabBar, TutorLookProvider, TutorScreen, ProfileRecovery, clearRenderCaches, defaultRegistry, discOf, tutorAvatarOf, tutorNameOf,
   useAppliedPreferences, useCharacterKeys, useDuePractice, useGlobalShortcuts, useNow,
@@ -1230,6 +1230,13 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
         plan={<div className="flex flex-col gap-4">
           {journeyCard && <div className="[&>section]:mx-0 [&>section]:my-0">{journeyCard}</div>}
           {savedStudy.journey && <details open={!journeyView.journey}><summary className="cursor-pointer text-meta text-muted">{t("study.journey.title")}</summary><div className="mt-3"><StudyJourney journey={savedStudy.journey} busy={savedStudy.busy} onReviewDue={() => { void runtime.studyWorkspace.load(); }} onContinue={() => { setStudyResume("next"); setScreen("study"); }} onLesson={() => { setStudyResume("lesson"); setScreen("study"); }} onResults={() => { setStudyResume("quiz"); setScreen("study"); }} /></div></details>}
+          {ownCourse && studyAvailable ? <DueToday
+            sets={savedStudy.sets.flatMap((set) => {
+              const due = set.progress !== undefined && "cards_due_today" in set.progress ? set.progress.cards_due_today : 0;
+              return due > 0 ? [{ aid_id: set.aid_id, due, ...(set.title !== undefined ? { title: set.title } : {}) }] : [];
+            })}
+            hasCards={savedStudy.sets.some((set) => set.kind === "flashcards")}
+            onReview={(aidId) => toStudy({ kind: "target", aid_id: aidId })} /> : null}
           {ownCourse ? null : journeyView.journey || savedStudy.journey ? <details open={planExpanded} onToggle={(event) => setPlanExpanded(event.currentTarget.open)}><summary className="cursor-pointer text-meta text-muted">{t("study.journey.curriculum_plan")}</summary><div className="mt-3">{planCard}</div></details> : planCard}
         </div>}
         {...(goalTarget > 0 && planView.plan !== null && !ownCourse ? { goal: <DailyGoalChip progress={goalProgress(planView.plan, goalTarget)} onChange={(target) => void runtime.goal.set(target)} /> } : {})}

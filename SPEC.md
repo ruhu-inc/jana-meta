@@ -3061,6 +3061,14 @@ adopted is no: the material is the curriculum, and one first-run choice is enoug
 - **Hints on lectures.** A transcript line can now be a hint's prerequisite (`transcript_sentences`), which is what made
   lecture hints always fall back. The safe fallback is offered on every item type, with wording for written answers.
 - **Narrow windows.** Below 1180 px a material opens on the study tools and a citation still jumps to the source.
+- **Scanned pages and photos.** A low-confidence line is left out, not the whole page (`confident_text`): before this, one
+  stray mark made a good page unreadable, and every scan in the 2 November reliability run failed. A page where most
+  lines are uncertain still counts as unreadable.
+- **Jobs recover by themselves.** A job parked because the gateway could not be reached goes again every 30 s
+  (`retry_waiting_online`); a model reply that could not be read goes again once.
+- **Coming back.** Home lists an own-course learner's flashcard sets with cards due (`DueToday`).
+- **Hosted demo.** `scripts/hosted` and `jana_tools.hosted` run the browser app on one VM for judges: one core per private
+  link, gateway and cores on loopback, no provider key in a core. Offline tutoring, voice and podcasts are not hosted.
 - **Public checkouts.** `jana_tools` reports checks that read the private specification as skipped when `docs/` is
   absent, instead of crashing or failing; `spec.lock` is untracked, so CI's pinned checkout needs it restored to run.
 

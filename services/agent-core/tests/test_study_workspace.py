@@ -1071,7 +1071,7 @@ def test_whole_pdf_cloud_batches_cover_every_page_and_resume(tmp_path, interrupt
                     self.interrupted = True
                     if interruption == "cancelled":
                         raise asyncio.CancelledError()
-                    raise StudyError("model_unavailable")
+                    raise StudyError("processing_failed")
                 seen.extend(c["chunk_id"] for c in chunks)
                 output = {"request_id": identity, "kind": kind, "claims": [claim(c) for c in chunks]}
                 item_chunks = chunks

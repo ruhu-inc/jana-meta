@@ -100,6 +100,13 @@ Kokoro-82M (Apache-2.0).
 Offline on any laptop, the signed content packs keep working: lessons, practice with code-checked marking and
 authored hints, mock papers and saved study packs.
 
+## Try the hosted demo
+
+Judges receive a private link. It opens Jana online with Muse Spark, with no install: start from **Demo Ada** to see a
+learner's saved work, or add a profile, choose **My own course and materials** and upload a PDF, slides or notes.
+Offline tutoring with Muse Glimmer, voice and podcasts need the desktop app. `scripts/hosted/README.md` says how the
+demo is deployed.
+
 ## Run it
 
 Requirements (tested on macOS on Apple silicon): Node 24 (`.nvmrc`) with pnpm 10, uv 0.10 (it installs Python

@@ -74,6 +74,7 @@ export { Home, partOfDay, type HomeMaterials, type HomePickup, type HomeSubject 
 export { CourseAsk } from "./home/CourseAsk.js";
 export { DailyGoalChip } from "./home/DailyGoal.js";
 export { LastTimeCard } from "./home/LastTimeCard.js";
+export { DueToday, type DueSet } from "./home/DueToday.js";
 export { CheckinCard } from "./home/CheckinCard.js";
 export { AskAnswer, type AskActions } from "./home/AskAnswer.js";
 export { PlanCard, useBlockText, type PlanActions, type PlanNames } from "./home/PlanCard.js";

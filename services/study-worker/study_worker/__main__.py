@@ -7,7 +7,7 @@ import json
 import sys
 from typing import Any
 
-from study_worker import DocumentError, decode
+from study_worker import DocumentError, confident_text, decode
 
 
 def main() -> None:
@@ -63,13 +63,7 @@ def main() -> None:
                     raise DocumentError("safety_blocked")
                 if reading.get("ocr_model_version") is None:
                     raise DocumentError("model_unavailable")
-                lines = reading.get("lines", [])
-                unit["text"] = (
-                    "\n".join(line["text"] for line in lines)
-                    if lines
-                    and all(line["confidence"] >= 0.85 and not line.get("low_confidence_spans") for line in lines)
-                    else ""
-                )
+                unit["text"] = confident_text(reading.get("lines", []))
         if sum(len(u["text"]) for u in units) > 6_000_000:  # a 1,000-page textbook
             raise DocumentError("source_too_large")
         result = {"units": units}

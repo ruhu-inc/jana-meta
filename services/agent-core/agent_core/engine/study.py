@@ -32,7 +32,7 @@ from agent_core.learner.mastery import MasteryParams
 from agent_core.prompts.untrusted import screened
 from agent_core.router import RouterError
 from agent_core.store.sqlite import transaction
-from agent_core.tools.study_document import DocumentError, extract, raster
+from agent_core.tools.study_document import DocumentError, confident_text, extract, raster
 
 PREFIX = "study/workspace#/$defs/"
 TERMINAL = ("completed", "failed", "cancelled")
@@ -54,6 +54,7 @@ RETRIED_KINDS = (
     "audio_overview",
 )
 MAX_CHUNK = 1024 * 1024
+ONLINE_RETRY_MS = 30_000
 SCHEDULER = "fsrs-6-source-v1"
 # STU-21: the Generate panel settings each tool takes; anything else is refused rather than silently ignored.
 SETTINGS = {
@@ -1913,6 +1914,7 @@ class StudyQueue:
         self.checker: Callable[..., Any] | None = None
         self.content: Callable[[], Any] | None = None
         self.task: asyncio.Task[Any] | None = None
+        self.next_online_retry = 0
         self.owner: Any = None
         self.grants: dict[str, tuple[Any, str, int, int]] = {}
         self.jid: str | None = None
@@ -2212,6 +2214,22 @@ class StudyQueue:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
 
+    def retry_waiting_online(self, desk: StudyDesk) -> None:
+        """A job parked because the gateway could not be reached goes again by itself once in a while, so a brief outage
+        never leaves a learner's material waiting until they press Resume. Offline, a retry is refused on this device
+        before anything is sent, and the attempt is unchanged, so the gateway bills a retried request only once."""
+        if self.cloud is None or self.clock() < self.next_online_retry:
+            return
+        self.next_online_retry = self.clock() + ONLINE_RETRY_MS
+        rows = desk.conn.execute(
+            "SELECT job_id FROM study_jobs WHERE state='waiting_online' "
+            "AND json_extract(checkpoint,'$.request.execution')='prefer_cloud'"
+        ).fetchall()
+        for row in rows:
+            job = desk.job(row[0])
+            job.update(state="queued", error=None)
+            desk.save_job(job)
+
     def poll(self) -> None:
         if self.cleanup_task is not None and not self.cleanup_task.done():
             return
@@ -2241,6 +2259,7 @@ class StudyQueue:
 
                 self.cleanup_task = asyncio.create_task(cleanup())
                 return
+        self.retry_waiting_online(desk)
         # Running is crash recovery only when there is no live task for it.
         row = desk.conn.execute(
             "SELECT job_id FROM study_jobs WHERE state IN ('queued','running') ORDER BY updated_at,job_id LIMIT 1"
@@ -2533,10 +2552,11 @@ class StudyQueue:
         desk.conn.execute("UPDATE study_jobs SET checkpoint=json_remove(checkpoint,'$.batches') WHERE job_id=?", (jid,))
 
     def retry_refused(self, desk: StudyDesk, jid: str) -> bool:
-        """A generated aid the verifier refused goes again once by itself, from its verified sections, so one weak draft
-        is not the learner's failure (the 2 November rehearsal). The attempt number is the gateway's billing identity:
-        each press of Try again earns one more automatic try, never a loop. A learner's question that the material
-        cannot answer is not a weak draft: chat and quiz help stay refused."""
+        """A generated aid the verifier refused, or a model reply that could not be read, goes again once by itself,
+        from its verified sections, so one weak draft is not the learner's failure (the 2 November rehearsal). The
+        attempt number is the gateway's billing identity: each press of Try again earns one more automatic try, never
+        a loop. A learner's question that the material cannot answer is not a weak draft: chat and quiz help stay
+        refused."""
         row = desk.one("SELECT checkpoint FROM study_jobs WHERE job_id=?", (jid,))
         request = row["request"]
         if request.get("execution") != "prefer_cloud" or request.get("kind") not in RETRIED_KINDS:
@@ -2608,15 +2628,7 @@ class StudyQueue:
                         if result.get("ocr_model_version") is None:
                             raise StudyError("model_unavailable")
                         # A low-confidence line cannot become evidence. The learner may correct a new revision.
-                        lines = result.get("lines", [])
-                        unit["text"] = (
-                            "\n".join(line["text"] for line in lines)
-                            if lines
-                            and all(
-                                line["confidence"] >= 0.85 and not line.get("low_confidence_spans") for line in lines
-                            )
-                            else ""
-                        )
+                        unit["text"] = confident_text(result.get("lines", []))
                     if self.connection() is not desk.conn or desk.job(jid)["state"] != "running":
                         return
                 if self.connection() is not desk.conn or desk.job(jid)["state"] != "running":
@@ -2671,7 +2683,7 @@ class StudyQueue:
                             return
                         if errors(PREFIX + "StudyError", reason):
                             reason = "processing_failed"
-                        if reason == "insufficient_evidence" and self.retry_refused(desk, jid):
+                        if reason in ("insufficient_evidence", "model_unavailable") and self.retry_refused(desk, jid):
                             return
                         job.update(state="failed", error=reason)
                         desk.save_job(job)

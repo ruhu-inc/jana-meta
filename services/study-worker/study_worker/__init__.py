@@ -11,6 +11,14 @@ class DocumentError(ValueError):
     pass
 
 
+def confident_text(lines: list[dict[str, Any]]) -> str:
+    """The text a page read from an image gives as evidence. A low-confidence line never becomes evidence, but one stray
+    mark must not throw away a page of good lines. A page where most lines are uncertain counts as unreadable: its few
+    confident fragments would mislead, so the learner is told instead."""
+    kept = [line["text"] for line in lines if line["confidence"] >= 0.85 and not line.get("low_confidence_spans")]
+    return "\n".join(kept) if len(kept) * 2 >= len(lines) else ""
+
+
 def decode(data: bytes, kind: str, name: str, max_units: int = 30) -> list[dict[str, Any]]:
     """Called only inside the sandbox; never execute document actions or fetch linked resources."""
     import io
