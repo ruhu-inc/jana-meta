@@ -72,6 +72,7 @@ class Config:
     gateway_port: int
     secure_cookie: bool
     slots: Mapping[str, str]  # slot name to the SHA-256 of its link secret; the secret itself is never stored
+    warm: bool = False
 
 
 def load(path: Path) -> Config:
@@ -95,6 +96,7 @@ def load(path: Path) -> Config:
         gateway_port=int(raw.get("gateway_port", 8081)),
         secure_cookie=origin.startswith("https://"),
         slots=dict(slots),
+        warm=bool(raw.get("warm", False)),
     )
 
 
@@ -230,6 +232,15 @@ REFUSED = (
 )
 
 
+async def warm(cores: Mapping[str, Core]) -> None:
+    """Start every judge's core ahead of time, one by one, so a first visit does not wait for one to start."""
+    for name, core in cores.items():
+        try:
+            await core.ensure()
+        except Exception:  # a first visit tries again and reports it
+            log.exception("slot %s: core did not start ahead of time", name)
+
+
 def create_app(config: Config) -> Starlette:
     cores = {name: Core(name, config) for name in config.slots}
     client = httpx.AsyncClient(trust_env=False, timeout=httpx.Timeout(None, connect=10))
@@ -359,7 +370,10 @@ def create_app(config: Config) -> Starlette:
 
     @contextlib.asynccontextmanager
     async def lifespan(_app: Starlette) -> AsyncIterator[None]:
+        warming = asyncio.create_task(warm(cores)) if config.warm else None
         yield
+        if warming is not None:
+            warming.cancel()
         await asyncio.gather(*(core.stop() for core in cores.values()), return_exceptions=True)
         await client.aclose()
 

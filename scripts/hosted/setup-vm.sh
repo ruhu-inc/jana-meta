@@ -42,14 +42,20 @@ bundle = "/opt/jana/bundle"
 data_root = "/var/lib/jana/data"
 gateway_config = "services/cloud-gateway/deploy/meta-hosted.toml"
 gateway_port = 8081
+warm = true
 CONFIG
 cat /etc/jana/slots.toml >> /etc/jana/hosted.toml
 chown root:jana /etc/jana /etc/jana/hosted.toml
 chmod 0750 /etc/jana
 chmod 0640 /etc/jana/hosted.toml
 
+# deploy.sh uploads the saved learner while this runs, and writes .complete last: wait for it, or slots start empty.
 template=()
-[ -d /var/lib/jana/template ] && template=(--template /var/lib/jana/template)
+if [ "$(meta jana-template)" = "yes" ]; then
+  for _ in $(seq 1 180); do [ -f /var/lib/jana/template/.complete ] && break; sleep 10; done
+  [ -f /var/lib/jana/template/.complete ] || { echo "the saved learner never arrived"; exit 1; }
+  template=(--template /var/lib/jana/template)
+fi
 run_as .venv/bin/python -m jana_tools.hosted prepare --config /etc/jana/hosted.toml "${template[@]}"
 
 cat > /etc/caddy/Caddyfile <<CADDY

@@ -118,3 +118,30 @@ def test_the_hosted_gateway_config_holds_no_key() -> None:
     config = load_config(path)
     assert config.environment == "dev" and config.audience_host == "localhost"
     assert config.quotas.device_daily_spend_usd == 5 and config.quotas.deployment_total_spend_usd == 120
+
+
+def test_cores_start_ahead_of_time_and_one_failure_does_not_stop_the_rest(tmp_path: Path) -> None:
+    started: list[str] = []
+
+    class Fake:
+        def __init__(self, name: str, fails: bool = False) -> None:
+            self.name, self.fails = name, fails
+
+        async def ensure(self) -> None:
+            started.append(self.name)
+            if self.fails:
+                raise RuntimeError("no")
+
+    asyncio.run(hosted.warm({"a": Fake("a", True), "b": Fake("b")}))  # type: ignore[dict-item]
+    assert started == ["a", "b"]
+
+
+def test_warming_is_off_unless_the_config_asks(tmp_path: Path) -> None:
+    path = tmp_path / "c.toml"
+    digests, _ = hosted.new_links(["judge-1"], "https://demo.test")
+    head = 'public_origin = "https://demo.test"\nbundle = "/b"\ndata_root = "/d"\n'
+    slots = f'[slots]\njudge-1 = "{digests["judge-1"]}"\n'
+    path.write_text(head + slots)
+    assert hosted.load(path).warm is False
+    path.write_text(head + "warm = true\n" + slots)
+    assert hosted.load(path).warm is True

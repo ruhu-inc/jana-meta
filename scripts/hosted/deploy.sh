@@ -47,7 +47,8 @@ if [ ! -f "$state/slots.toml" ] || ! grep -q "$host" "$state/links.txt" 2> /dev/
 fi
 chmod 600 "$state/slots.toml" "$state/links.txt"
 
-metadata=(--metadata "jana-commit=$commit,jana-host=$host" --metadata-from-file "jana-slots=$state/slots.toml,startup-script=$here/startup.sh")
+wanted=no; [ -n "$template" ] && wanted=yes
+metadata=(--metadata "jana-commit=$commit,jana-host=$host,jana-template=$wanted" --metadata-from-file "jana-slots=$state/slots.toml,startup-script=$here/startup.sh")
 if gc compute instances describe "$vm" --zone "$zone" > /dev/null 2>&1; then
   gc compute instances add-metadata "$vm" --zone "$zone" "${metadata[@]}" > /dev/null
 else
@@ -58,9 +59,9 @@ else
 fi
 if [ -n "$template" ]; then
   until gc compute ssh "$vm" --zone "$zone" --command 'id jana > /dev/null 2>&1 && test -d /var/lib/jana' > /dev/null 2>&1; do sleep 10; done
-  tar -C "$template" -czf "$state/template.tgz" .
+  COPYFILE_DISABLE=1 tar -C "$template" -czf "$state/template.tgz" .
   gc compute scp "$state/template.tgz" "$vm:/tmp/template.tgz" --zone "$zone" > /dev/null
-  gc compute ssh "$vm" --zone "$zone" --command 'sudo install -d -o jana -g jana -m 0700 /var/lib/jana/template && sudo tar -C /var/lib/jana/template --no-same-owner -xzf /tmp/template.tgz && sudo chown -R jana:jana /var/lib/jana/template && rm /tmp/template.tgz' > /dev/null
+  gc compute ssh "$vm" --zone "$zone" --command 'sudo install -d -o jana -g jana -m 0700 /var/lib/jana/template && sudo tar -C /var/lib/jana/template --no-same-owner -xzf /tmp/template.tgz && sudo chown -R jana:jana /var/lib/jana/template && sudo -u jana touch /var/lib/jana/template/.complete && rm /tmp/template.tgz' > /dev/null
 fi
 echo "address: $address"
 echo "host: https://$host"
