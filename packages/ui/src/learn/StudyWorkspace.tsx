@@ -28,6 +28,9 @@ import { StudyQuiz, type StudyHelpKind } from "./StudyQuiz.js";
 import { citationKey, StudyCitations } from "./StudyCitation.js";
 
 const ACCEPT = ".pdf,.txt,.md,.tex,.bib,.rst,.csv,.tsv,.py,.r,.m,.jl,.java,.c,.h,.cpp,.cs,.js,.ts,.go,.rs,.sql,.ipynb,.json,.yaml,.yml,.html,.docx,.odt,.pptx,.odp,.png,.jpg,.jpeg,.webp,.wav,.mp3,.m4a,.mp4,.webm,.ogg,.flac,.aac,.mov,.mkv,.avi";
+const TWO_PANES = "(min-width: 1180px)"; // the window width at which @4xl shows the source beside the tools, sidebar open
+// Below the two-pane width only one side shows: start on the study tools, the reason a learner opened the material.
+const startsOnSource = () => typeof window === "undefined" || window.matchMedia === undefined || window.matchMedia(TWO_PANES).matches;
 export type StudyTab = "generate" | "chat" | "companion";
 type Tab = StudyTab;
 const TABS: readonly Tab[] = ["generate", "chat"];
@@ -59,7 +62,7 @@ export function StudyWorkspace({ controller, curriculum = true, companion, reque
   const [topicText, setTopicText] = useState("");
   const [teachReview, setTeachReview] = useState(false);
   const [libraryTab, setLibraryTab] = useState<"materials" | "companion" | "explore">(initialResearch ? "explore" : "materials");
-  const [sourceOpen, setSourceOpen] = useState(true);
+  const [sourceOpen, setSourceOpen] = useState(startsOnSource);
   const [sourcePage, setSourcePage] = useState(1), [pageLoading, setPageLoading] = useState(false), [pageFailed, setPageFailed] = useState(false);
   const studyReady = view.status === "ready";
   useEffect(() => { if (studyReady) controller.loadTopicMaps().catch(() => undefined); }, [controller, studyReady]);
@@ -77,7 +80,7 @@ export function StudyWorkspace({ controller, curriculum = true, companion, reque
   const pageUrl = useRef<string | null>(null), pageRequest = useRef(0), pageFigure = useRef<HTMLElement>(null);
   useEffect(() => {
     if (pageUrl.current) URL.revokeObjectURL(pageUrl.current);
-    pageUrl.current = null; setPageImage(null); setSourcePage(1); setPageLoading(false); setPageFailed(false); setSourceOpen(true);
+    pageUrl.current = null; setPageImage(null); setSourcePage(1); setPageLoading(false); setPageFailed(false); setSourceOpen(startsOnSource());
     return () => { pageRequest.current++; if (pageUrl.current) URL.revokeObjectURL(pageUrl.current); pageUrl.current = null; };
   }, [view.source?.source_id, view.source?.revision]);
   useEffect(() => { if (pageImage) pageFigure.current?.scrollIntoView?.({ block: "start" }); }, [pageImage]);
@@ -363,7 +366,7 @@ export function StudyWorkspace({ controller, curriculum = true, companion, reque
   const currentJobs = sourceJobs.filter((j) => j.job_id !== view.quizHelp?.jobId && (["running", "queued", "waiting_online"].includes(j.state) || (!shown && j.job_id === view.requestedJobId && ["failed", "paused"].includes(j.state))));
   const helpJob = view.jobs.find((j) => j.job_id === view.quizHelp?.jobId);
   const helpPending = !!helpJob && ["queued", "running", "waiting_online", "paused"].includes(helpJob.state);
-  const safeHelp = helpJob?.state === "failed" && helpJob.error === "insufficient_evidence" && !!view.quiz?.items.some((item) => item.item_id === view.quizHelp?.itemId && item.type === "choice");
+  const safeHelp = helpJob?.state === "failed" && helpJob.error === "insufficient_evidence" && !!view.quiz?.items.some((item) => item.item_id === view.quizHelp?.itemId);
   const pendingKinds = currentJobs.filter((j) => ["running", "queued", "waiting_online", "paused"].includes(j.state)).map((j) => j.kind);
   const canConfigure = !accessBlocked && ["ready", "partial"].includes(source.state);
   const pick = (next: GenerateTool, contextAidId?: string) => { setToolContext(contextAidId ?? null); setTool(next); if (!contextAidId && view.materialTopics.length === 0) void controller.loadMaterialTopics(); };

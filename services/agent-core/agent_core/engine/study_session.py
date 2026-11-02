@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any
 
-from agent_core.engine.study_topics import kc_tags
+from agent_core.engine.study_topics import kc_tags, matching_topics
 from agent_core.learner.service import Learner, NewEvent
 from agent_core.memory.snapshot import (
     LEARNER_BLOCK_KCS,
@@ -324,13 +324,30 @@ class StudyVisits:
             self.failures += 1
             log.exception("study activity write failed")
 
-    def quiz(self, attempt_id: str, items: Sequence[tuple[int, str, str]]) -> int:
+    def quiz(self, attempt_id: str, items: Sequence[tuple[int, str, str]], material: str = "") -> int:
         """A submitted quiz: one `quiz_item` per item, `(index, item text, verdict)`; an omitted answer is
-        `skipped`. The text (stem, key and explanation) only chooses the topic tags; it is never stored."""
+        `skipped`. The text (stem, key and explanation) only chooses the topic tags; it is never stored. One question is
+        too little text to name a topic by itself, so `material`, the quiz's source, names the topics and the question
+        names the skill within them. Without this, no quiz answer was ever linked to a skill."""
         return self.record([
-            _payload("quiz_item", f"att:{attempt_id}:{index}", self._tags(text), outcome=OUTCOMES.get(verdict))
+            _payload("quiz_item", f"att:{attempt_id}:{index}", self._item_tags(text, material),
+                     outcome=OUTCOMES.get(verdict))
             for index, text, verdict in items
         ])  # fmt: skip
+
+    def _item_tags(self, text: str, material: str) -> list[dict[str, Any]]:
+        tags = self._tags(text)
+        if tags or not material:
+            return tags
+        try:
+            content = self.content()
+            topics = matching_topics(content, material)["items"]
+            if not topics:
+                return []
+            return kc_tags(content, text, within=topics, require_overlap=True, min_overlap=2, close=0.8)
+        except Exception:  # tags are a hint: an unreadable pack leaves them empty
+            log.exception("study kc tags failed")
+            return []
 
     def card(self, card_id: str, text: str, rating: str) -> int:
         """A Study card review, self-rated: one `card_review`. Study's own scheduler is unchanged."""

@@ -1809,8 +1809,14 @@ class StudyDesk:
                 (order.get(r["item_id"], i), item_text(items.get(r["item_id"], {}), keys.get(r["item_id"], {})),
                  r["verdict"])
                 for i, r in enumerate(result["results"])
-            ])  # fmt: skip
+            ], material=self.quiz_material(quiz["view"]["aid_id"]))  # fmt: skip
         return result
+
+    def quiz_material(self, aid_id: str) -> str:
+        """The text of a quiz's sources, bounded, which names the topics its questions belong to. Used for tags only."""
+        with contextlib.suppress(StudyError, sqlite3.Error, KeyError):
+            return "\n".join(c["text"] for c in self.selected(self.aid(aid_id)["sources"], ready=False))[:200_000]
+        return ""
 
     def save_draft(self, qid: str, body: dict[str, Any]) -> dict[str, Any]:
         """STU-21: keep a quiz's unsubmitted answers and place so the set opens where it was left. Never marked."""

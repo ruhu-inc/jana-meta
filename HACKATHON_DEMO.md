@@ -47,6 +47,11 @@ a synthetic six-page lecture (Intermediate Microeconomics, monopoly). Bring a re
 Tick **Written answer** and **Number or expression** and untick the others in the quiz settings before Generate. Make
 the quiz before recording if you would rather cut the 25 s; the tutor and marking are fast enough to show live.
 
+After a quiz, three things now carry on from it. **Help with this question** on a lecture question gives a tailored, cited hint
+rather than the fallback sentence. **Progress** lists "Practised in Study today" with **Check this idea** when a real
+check can run, or **Practise this idea** when it cannot yet. A saved quiz has **Retake quiz**. A window narrower than 1180 px
+opens a material on the study tools, with **View source** and **Study tools** to swap sides.
+
 Rough edges still to know about: a marking the judge and the separate check disagree on says **Not marked** and shows
 the explanation; a long source with no focus reads 24 sections spread across it and says so; research still asks the
 level as a quick reply. PDF formulas come from the text layer, so a heavily mathematical PDF can read badly in the

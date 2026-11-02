@@ -116,3 +116,43 @@ def test_a_profile_with_no_subjects_is_never_described_as_o_level():
     own = ProfileSummary("O", (), None, None, None, "guided")
     assert "O level" not in profile_line(own) and "own course" in profile_line(own)
     assert "O level" in profile_line(ProfileSummary("O", ("physics",), None, None, None, "guided"))
+
+
+def test_study_practice_lists_its_ideas_newest_first_without_a_skipped_question():
+    import sqlite3
+
+    from agent_core.memory.queries import studied_kcs
+
+    conn = sqlite3.connect(":memory:")
+    conn.execute(
+        "CREATE TABLE events (seq INTEGER PRIMARY KEY, type TEXT, payload TEXT, occurred_at INT, erased_at INT)"
+    )
+    rows = [("quiz_item", "kc.a", "correct", 10), ("quiz_item", "kc.b", "skipped", 11),
+            ("card_review", "kc.c", None, 12), ("aid_made", "kc.d", None, 13),
+            ("quiz_item", "kc.a", "incorrect", 2)]  # fmt: skip
+    for activity, kc, outcome, at in rows:
+        # Stored exactly as `kc_tags` writes them: an object with a weight, not a bare id.
+        payload = {"activity": activity, "kc_tags": [{"kc_id": kc, "weight": 1.0}], "outcome": outcome}
+        conn.execute("INSERT INTO events (type, payload, occurred_at) VALUES ('study_activity', ?, ?)",
+                     (json.dumps(payload), at))  # fmt: skip
+    assert studied_kcs(conn, 5) == ["kc.c", "kc.a"]
+
+
+def test_a_quiz_question_is_tagged_to_a_skill_through_its_material():
+    """One short question names no topic by itself: the real packs tagged 0 of 6 answers. The source names the topic."""
+    from agent_core.engine.study_session import StudyVisits
+    from test_w9_teaching_outline import seeded_pack
+
+    content = seeded_pack()
+    visits = StudyVisits.__new__(StudyVisits)
+    visits.content = lambda: content
+    recorded = []
+    visits.record = lambda activities, **_: recorded.extend(activities) or len(activities)
+    material = "in this lecture we look at projectile motion and the range of a projectile launched from level ground"
+    question = "What does the range equation give for a launch from level ground, and how does the angle change it?"
+    visits.quiz("sqa_1", [(0, question, "correct")], material=material)
+    assert recorded[0]["kc_tags"], "the question should reach a skill through its material"
+    assert all(t["kc_id"].startswith("kc.") for t in recorded[0]["kc_tags"])
+    recorded.clear()
+    visits.quiz("sqa_2", [(0, question, "correct")])  # no material: as before, no guess
+    assert isinstance(recorded[0]["kc_tags"], list)

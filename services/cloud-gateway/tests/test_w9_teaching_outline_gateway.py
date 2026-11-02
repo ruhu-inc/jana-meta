@@ -206,3 +206,20 @@ def test_agreement_rules_never_turn_a_disagreement_into_a_verdict():
     assert agreed_verdict("incorrect", "entailed") == "unverifiable"
     assert agreed_verdict("incorrect", "unknown") == "incorrect"  # off target, and nothing supports it
     assert agreed_verdict("correct", "unknown") == "unverifiable"
+
+
+def test_a_transcript_line_can_be_the_prerequisite_a_hint_offers():
+    """A recall question from a lecture had no cue at all: transcript lines have no capitals or full stops, so every
+    hint fell back to general strategy (the 1 November rehearsal). A line that gives the answer away is left out."""
+    from cloud_gateway.study import coaching_cues
+
+    quote = (
+        "[0:48] start with a ball launched at speed u at an angle theta above the horizontal\n"
+        "[0:55] I assume you already know how to resolve a vector into perpendicular components\n"
+        "[1:02] the horizontal component of the velocity is u cos theta\n"
+    )
+    body = {"kind": "chat", "prompt": "Give me one short hint", "settings": {"focus": "Coaching withheld wording: "
+            '["horizontal component of the velocity is u cos theta"]'}}  # fmt: skip
+    texts = [c["text"] for c in coaching_cues(body, [{"passage_id": "p0", "quote": quote}])]
+    assert "I assume you already know how to resolve a vector into perpendicular components." in texts
+    assert not any("0:55" in t for t in texts)

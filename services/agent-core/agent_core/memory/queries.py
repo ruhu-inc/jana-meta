@@ -577,6 +577,28 @@ def from_research_pack(conn: sqlite3.Connection, ref: str) -> bool:
     return found is not None
 
 
+def studied_kcs(conn: sqlite3.Connection, since_ms: int) -> list[str]:
+    """The ideas Study practice touched since `since_ms` (quiz questions answered and cards reviewed, through their
+    topic tags), newest first. Activity only: nothing here changes mastery (JM-D26)."""
+    rows = conn.execute(
+        "SELECT json_extract(payload, '$.kc_tags') FROM events WHERE type = 'study_activity' AND erased_at IS NULL"
+        " AND occurred_at >= ? AND json_extract(payload, '$.activity') IN ('quiz_item', 'card_review')"
+        " AND coalesce(json_extract(payload, '$.outcome'), '') <> 'skipped' ORDER BY occurred_at DESC, seq DESC",
+        (since_ms,),
+    ).fetchall()
+    found: dict[str, None] = {}
+    for (raw,) in rows:
+        try:
+            tags = json.loads(raw or "[]")
+        except (TypeError, json.JSONDecodeError):
+            continue
+        for tag in tags if isinstance(tags, list) else []:
+            kc = tag.get("kc_id") if isinstance(tag, dict) else tag  # stored as {kc_id, weight}
+            if isinstance(kc, str):
+                found[kc] = None
+    return list(found)
+
+
 def study_activity_counts(conn: sqlite3.Connection, since_ms: int) -> dict[str, int]:
     """Study activity since `since_ms` for Progress's "Study activity" line: quiz questions answered (a skipped one
     is not), how many were right, cards reviewed and aids made."""

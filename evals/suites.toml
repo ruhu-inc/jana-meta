@@ -20,7 +20,7 @@ files = ["evals/safety/*.yaml", "evals/safety/scripts/*.yaml"]
 owner = "Subject leads"
 cadence = "nightly; every change"
 stage = "S1"
-version = "2026-11-02.1"
+version = "2026-11-02.2"
 files = ["content/curriculum/*/*/*.yaml", "content/curriculum/*/*/*/*.yaml", "content/curriculum/ref/*/*.yaml"]
 
 [suites.marking]
@@ -100,7 +100,7 @@ files = []
 owner = "Curriculum lead"
 cadence = "every pack build"
 stage = "S1"
-version = "2026-11-02.1"
+version = "2026-11-02.2"
 files = ["content/curriculum/*/*/*.yaml", "content/curriculum/*/*/*/*.yaml", "content/curriculum/ref/*/*.yaml"]
 
 [suites.mastery_model]

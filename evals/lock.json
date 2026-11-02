@@ -6114,6 +6114,12 @@
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0008.yaml": "e492e7f50bf6d2e8fc776786a433dcfdd6cc573a3ecfaf86264bec2e31801627",
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0009.yaml": "0710676db7338a0096f6e2ecf6dba9bd563859fe76e2047cef557417a76b43d4",
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0010.yaml": "796e1b2e32a46625ae03ee48d926ecd26be3a3ed2667246325c034fa961415d0",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0011.yaml": "e1d6cf95fd1ff9ac46a65a769fcde191be5545186776db155d217d896be9b3f9",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0012.yaml": "c755c9e01412a7ae7de9a3f2a65c6d42258d7d976e29fd890313c9e1ee1d6f8a",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0013.yaml": "c6615a956c08d6ba8019619b9e72d4af8cea0fe03368494312151f804da0d706",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0014.yaml": "b76508aeef0ad10f1d93e9accf1472a303f77693537e31541d693561fd420f38",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0015.yaml": "b4dbcd2a89dd415847e3400d13b7913655370c03f98a1fdc893c09b4d7e63cd7",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0016.yaml": "a70c3f77f7afa16010f141c018a658751ac5a2e037ef072aa1622b66e9795e5e",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0001.yaml": "06ceedf7d0fc7ee724c96be1c44a98c66a78b6008f0a289b7c80d1076c150699",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0002.yaml": "32b685eb4162ad9158697f7f06583195ec54273249fda3cce50ee0d3f15a316b",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0003.yaml": "4bb5268bab369eb2847eb20673ff35dca120c3e671c9c86d58ff2ef6ca2093cd",
@@ -7224,7 +7230,7 @@
     "content/curriculum/phy/o/mock-papers/mck.phy.o.0002.yaml": "5e53b9281b97751d3e164057ca9a1e7c159fab2e939222237acc3524a452316f",
     "content/curriculum/phy/o/mock-papers/mck.phy.o.0003.yaml": "ddf019d49555cd18a54e423047cadbaaee3787cf5e4894d3408fd23a008fec7a",
     "content/curriculum/phy/o/mock-papers/mck.phy.o.0004.yaml": "497d2ddfc9a16592b2d7d768417233c295d80e8d577c85c8f6f0882becde2f23",
-    "content/curriculum/phy/o/pack.yaml": "22540fc38d1e69552d632adc48499fa82ffa46f0a4436d2250680f44faa358f9",
+    "content/curriculum/phy/o/pack.yaml": "b6c5d418658f3165554f57d40c8a34f9bfacfcdd2da7c20b13534817ce09d35a",
     "content/curriculum/phy/o/presets/dgm.phy.circuit_parallel_resistors.v1.yaml": "1dccffb8ac4c4f24531fd0cb783115f522376b5b34d8c317e5541e63026bd747",
     "content/curriculum/phy/o/presets/dgm.phy.circuit_series_two_lamps.v1.yaml": "92bae632df47ab3c9f3fef2fe86d886cd32704fc8f5a7ea1d998f0811deb1f2e",
     "content/curriculum/phy/o/presets/dgm.phy.ray_converging_beyond_2f.v1.yaml": "adbb0ecdc4c5790630ba2c6044902c23d7a59714f4e362f4715b496ca48c8b42",
@@ -7448,7 +7454,7 @@
     "content/curriculum/ref/phy-o/conventions.yaml": "0f38a9f6987826853749658a7752064d2bdf832b98babaee00423374a7d7db4b",
     "evals/held-out/answer_oracles.enc": "9f7e7dfeff0c79e496af67827a46300db8665a226e7bfdc9c58a4712057552a9"
    },
-   "version": "2026-11-02.1"
+   "version": "2026-11-02.2"
   },
   "classification": {
    "files": {},
@@ -13571,6 +13577,12 @@
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0008.yaml": "e492e7f50bf6d2e8fc776786a433dcfdd6cc573a3ecfaf86264bec2e31801627",
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0009.yaml": "0710676db7338a0096f6e2ecf6dba9bd563859fe76e2047cef557417a76b43d4",
     "content/curriculum/phy/o/items/itm.phy.o.projectiles.0010.yaml": "796e1b2e32a46625ae03ee48d926ecd26be3a3ed2667246325c034fa961415d0",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0011.yaml": "e1d6cf95fd1ff9ac46a65a769fcde191be5545186776db155d217d896be9b3f9",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0012.yaml": "c755c9e01412a7ae7de9a3f2a65c6d42258d7d976e29fd890313c9e1ee1d6f8a",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0013.yaml": "c6615a956c08d6ba8019619b9e72d4af8cea0fe03368494312151f804da0d706",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0014.yaml": "b76508aeef0ad10f1d93e9accf1472a303f77693537e31541d693561fd420f38",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0015.yaml": "b4dbcd2a89dd415847e3400d13b7913655370c03f98a1fdc893c09b4d7e63cd7",
+    "content/curriculum/phy/o/items/itm.phy.o.projectiles.0016.yaml": "a70c3f77f7afa16010f141c018a658751ac5a2e037ef072aa1622b66e9795e5e",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0001.yaml": "06ceedf7d0fc7ee724c96be1c44a98c66a78b6008f0a289b7c80d1076c150699",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0002.yaml": "32b685eb4162ad9158697f7f06583195ec54273249fda3cce50ee0d3f15a316b",
     "content/curriculum/phy/o/items/itm.phy.o.radioactivity.0003.yaml": "4bb5268bab369eb2847eb20673ff35dca120c3e671c9c86d58ff2ef6ca2093cd",
@@ -14681,7 +14693,7 @@
     "content/curriculum/phy/o/mock-papers/mck.phy.o.0002.yaml": "5e53b9281b97751d3e164057ca9a1e7c159fab2e939222237acc3524a452316f",
     "content/curriculum/phy/o/mock-papers/mck.phy.o.0003.yaml": "ddf019d49555cd18a54e423047cadbaaee3787cf5e4894d3408fd23a008fec7a",
     "content/curriculum/phy/o/mock-papers/mck.phy.o.0004.yaml": "497d2ddfc9a16592b2d7d768417233c295d80e8d577c85c8f6f0882becde2f23",
-    "content/curriculum/phy/o/pack.yaml": "22540fc38d1e69552d632adc48499fa82ffa46f0a4436d2250680f44faa358f9",
+    "content/curriculum/phy/o/pack.yaml": "b6c5d418658f3165554f57d40c8a34f9bfacfcdd2da7c20b13534817ce09d35a",
     "content/curriculum/phy/o/presets/dgm.phy.circuit_parallel_resistors.v1.yaml": "1dccffb8ac4c4f24531fd0cb783115f522376b5b34d8c317e5541e63026bd747",
     "content/curriculum/phy/o/presets/dgm.phy.circuit_series_two_lamps.v1.yaml": "92bae632df47ab3c9f3fef2fe86d886cd32704fc8f5a7ea1d998f0811deb1f2e",
     "content/curriculum/phy/o/presets/dgm.phy.ray_converging_beyond_2f.v1.yaml": "adbb0ecdc4c5790630ba2c6044902c23d7a59714f4e362f4715b496ca48c8b42",
@@ -14904,7 +14916,7 @@
     "content/curriculum/ref/mth-o/conventions.yaml": "5c49abab86abc36873c212c420d4e99c57586c6cab0e0d4045b1a8a50fe216dc",
     "content/curriculum/ref/phy-o/conventions.yaml": "0f38a9f6987826853749658a7752064d2bdf832b98babaee00423374a7d7db4b"
    },
-   "version": "2026-11-02.1"
+   "version": "2026-11-02.2"
   },
   "learner_map": {
    "files": {

@@ -3053,6 +3053,14 @@ adopted is no: the material is the curriculum, and one first-run choice is enoug
   OCR do (`ExtractionResponse.scanned_units`).
 - **Explain-it-back** now has key points for all 367 skills (AI-drafted, sampled by eye, checked against held-out wording;
   they want a subject teacher's review). A mastery check now waits for the explanation on every skill, so it needs a judge.
+- **From a quiz to a real check.** Quiz answers now carry the skills their material names (`_item_tags`), where before no
+  quiz answer was tagged to any skill. Progress lists today's practised skills with **Check this idea** when
+  `check_possible` holds and **Practise this idea** otherwise. All 367 skills have at least three question surfaces, after
+  six new projectile questions. The explanation judge now runs inside a job scope: before this it always raised
+  `RouterOutsideEngineContextError`, so no explanation could ever be judged by a real model.
+- **Hints on lectures.** A transcript line can now be a hint's prerequisite (`transcript_sentences`), which is what made
+  lecture hints always fall back. The safe fallback is offered on every item type, with wording for written answers.
+- **Narrow windows.** Below 1180 px a material opens on the study tools and a citation still jumps to the source.
 - **Public checkouts.** `jana_tools` reports checks that read the private specification as skipped when `docs/` is
   absent, instead of crashing or failing; `spec.lock` is untracked, so CI's pinned checkout needs it restored to run.
 

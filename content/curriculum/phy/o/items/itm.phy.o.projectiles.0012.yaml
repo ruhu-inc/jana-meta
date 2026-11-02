@@ -1,0 +1,89 @@
+id: itm.phy.o.projectiles.0012
+version: 0.1.0
+type: mcq
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.components_change
+stem: A ball flies through the air after being thrown at an angle. Ignore air resistance.
+parts:
+- id: a
+  prompt: Why does its horizontal velocity stay the same while its vertical velocity changes?
+  marks: 1
+  answer:
+    kind: mcq
+    diagnostic: false
+    shuffle: false
+    options:
+    - id: A
+      text: The launch keeps pushing the ball forward throughout the flight
+      correct: false
+      feedback: Once the ball has left the hand, nothing pushes it forward.
+    - id: B
+      text: The vertical motion uses up the speed the horizontal motion would have lost
+      correct: false
+      feedback: The two motions do not trade speed. Each is set by the force along its own direction.
+    - id: C
+      text: The only force is its weight, which acts downward and has no horizontal part
+      correct: true
+    - id: D
+      text: Gravity slows both velocities, but the horizontal one too little to notice
+      correct: false
+      misconception_id: mc.phy.o.horizontal_velocity_slows
+      feedback: Gravity acts straight down, so it has no effect on the horizontal velocity at all.
+  show_working: false
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: Think about which forces act on the ball once it has been released.
+  - rung: 2
+    name: concept
+    text:
+      en: A velocity changes only if there is a force along that direction.
+  - rung: 3
+    name: first_step
+    text:
+      en: Ask which way the ball's weight acts.
+  - rung: 4
+    name: worked_step
+    text:
+      en: Weight acts straight down, so there is a force vertically and none horizontally.
+  - rung: 5
+    name: full_step
+    text:
+      en: 'The answer is: the only force is its weight, which has no horizontal part.'
+  misconception_ids:
+  - mc.phy.o.horizontal_velocity_slows
+solution:
+  steps:
+  - n: 1
+    latex: a_x = 0,\ a_y = g
+    reason: Weight acts vertically, so only the vertical velocity changes
+difficulty:
+  prior: 0.1
+  band: core
+estimated_seconds: 60
+exam_style:
+  paper_style: objective
+  total_marks: 1
+  calculator: false
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-opus-5-5
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks: {}
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

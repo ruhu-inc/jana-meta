@@ -1,0 +1,90 @@
+id: itm.phy.o.projectiles.0013
+version: 0.1.0
+type: mcq
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.time_of_flight
+stem: Two balls are launched from level ground at the same speed, one at 30° and one at 60° above the horizontal. Ignore air
+  resistance.
+parts:
+- id: a
+  prompt: Which ball stays in the air longer, and why?
+  marks: 1
+  answer:
+    kind: mcq
+    diagnostic: false
+    shuffle: false
+    options:
+    - id: A
+      text: The 30° ball, because it travels further along the ground
+      correct: false
+      misconception_id: mc.phy.o.range_taken_as_height
+      feedback: Distance along the ground does not set the time. The vertical motion does.
+    - id: B
+      text: They land together, because they have the same launch speed
+      correct: false
+      feedback: The same speed splits differently at each angle, so the vertical components differ.
+    - id: C
+      text: It depends on which ball is heavier
+      correct: false
+      feedback: With no air resistance the mass does not change the motion.
+    - id: D
+      text: The 60° ball, because it has the larger vertical component of velocity
+      correct: true
+  show_working: false
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: The time in the air is decided by one of the two motions.
+  - rung: 2
+    name: concept
+    text:
+      en: Only the vertical motion sets the time of flight.
+  - rung: 3
+    name: first_step
+    text:
+      en: Compare the vertical components of the two launches.
+  - rung: 4
+    name: worked_step
+    text:
+      en: The vertical component is u sin θ, and sin 60° is larger than sin 30°.
+  - rung: 5
+    name: full_step
+    text:
+      en: 'The answer is: the 60° ball, because its vertical component is larger.'
+  misconception_ids:
+  - mc.phy.o.range_taken_as_height
+solution:
+  steps:
+  - n: 1
+    latex: T = \frac{2u\sin\theta}{g}
+    reason: The time of flight grows with the vertical component
+difficulty:
+  prior: 0.2
+  band: core
+estimated_seconds: 60
+exam_style:
+  paper_style: objective
+  total_marks: 1
+  calculator: false
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-opus-5-5
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks: {}
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

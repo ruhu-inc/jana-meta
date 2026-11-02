@@ -105,7 +105,7 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
         <h3 className="text-ui font-semibold">{t(`help.chip.${here.kind}`)}</h3>
         {here.aid ? here.aid.claims.map((c, i) => claim(c, String(i))) : safeHelp && helpJob ? <>
           <p className="text-meta text-muted">{t("study.quiz_help_general")}</p>
-          <p className="text-ui">{t(here.kind === "hint" ? "study.quiz_help_safe_hint" : "study.quiz_help_safe_walk")}</p>
+          <p className="text-ui">{t(item.type === "choice" || item.type === "multi_select" ? (here.kind === "hint" ? "study.quiz_help_safe_hint" : "study.quiz_help_safe_walk") : (here.kind === "hint" ? "study.quiz_help_safe_hint_written" : "study.quiz_help_safe_walk_written"))}</p>
           {item.stem.citations.length > 0 && claim({ text: t("study.quiz_help_read_source"), citations: item.stem.citations }, "safe-help-source")}
           <p className="text-ui">{t("study.quiz_help_safe_followup")}</p>
           <details><summary className="cursor-pointer text-meta text-muted">{t("study.quiz_help_tailored")}</summary>{jobs([helpJob], true)}</details>

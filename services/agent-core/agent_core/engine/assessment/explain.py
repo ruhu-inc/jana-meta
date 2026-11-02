@@ -71,6 +71,7 @@ class ExplainCommands:
     """Mixed into `AssessmentDesk`: the explanation that confirms a passed check (explain it back)."""
 
     explain_judge: ExplainJudge | None
+    explain_possible: Callable[[], bool]
     settings: Any
     content: Any
     busy: set[str]
@@ -78,7 +79,7 @@ class ExplainCommands:
 
     def explains(self, kc_id: str) -> bool:
         """Whether a passed check on this KC waits for the learner's explanation."""
-        return self.explain_judge is not None and bool(key_points(self.content, kc_id))
+        return self.explain_judge is not None and self.explain_possible() and bool(key_points(self.content, kc_id))
 
     def begin_explaining(self, state: dict[str, Any]) -> None:
         state.update(state="explaining", current_id=None)

@@ -154,3 +154,34 @@ def test_the_same_request_is_answered_once(desk: Any) -> None:
     first = run(d.explain_back(state["assessment_id"], "e1", "You put the two amounts together.", "typed"))
     again = run(d.explain_back(state["assessment_id"], "e1", "You put the two amounts together.", "typed"))
     assert first == again and len(judge.asked) == 1
+
+
+def test_the_real_judge_runs_inside_a_job_scope_because_the_router_refuses_any_other_call() -> None:
+    """The bug this guards: the tests above fake the judge, so nothing noticed that the real one raised
+    `RouterOutsideEngineContextError` on every explanation and no explanation could ever be checked."""
+    import asyncio
+    from types import SimpleNamespace
+
+    from agent_core.engine import assembly as module
+    from agent_core.trace import current_scope
+
+    seen: list[object] = []
+
+    class Auxiliary:
+        log = ()
+
+        async def judge(self, criteria: Any, words: str) -> tuple[list[dict[str, Any]], bool]:
+            seen.append(current_scope())
+            return [{"id": cid, "pass": True, "evidence": words, "status": "judged"} for cid, _ in criteria], False
+
+    this = SimpleNamespace(_assessment_desk=None, settings=module.Settings(), content_root=None,
+                           hardware_class=lambda: "mid", _judge_router=lambda: None)  # fmt: skip
+    original = module.Auxiliaries.load
+    module.Auxiliaries.load = lambda *a, **k: Auxiliary()  # type: ignore[assignment, method-assign]
+    try:
+        cls = next(v for v in vars(module).values() if isinstance(v, type) and hasattr(v, "_explanation_judge"))
+        out = asyncio.run(cls._explanation_judge(this, [("kp", "a key point")], "gravity slows the upward velocity"))
+    finally:
+        module.Auxiliaries.load = original  # type: ignore[method-assign]
+    assert seen and seen[0] is not None, "the judge must run inside a scope"
+    assert out is not None and out[0]["pass"] is True

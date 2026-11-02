@@ -682,6 +682,16 @@ def _plan_to_mastery(tmp_path: Path) -> Probe:
                     check = await c.ok("GET", f"/v1/assessments/{check['assessment_id']}")
                     served.append(item_record("phy", check["current_item"]["item_id"]))
                     check = await check_answer(c, check, correct(served[-1]))
+                    # Explain it back: every skill now has key points, so a passed check waits for the explanation.
+                    assert check["state"] == "explaining", check
+                    words = "speed is the distance covered divided by the time taken for the whole journey"
+
+                    async def judge(criteria: Any, text: str) -> list[dict[str, Any]]:
+                        return [{"id": cid, "pass": True, "evidence": text, "status": "judged"} for cid, _ in criteria]
+
+                    r.runtime.assessments().explain_judge = judge
+                    explanation = {"client_explain_id": new_id("cli"), "text": words, "modality": "typed"}
+                    check = await c.ok("POST", f"/v1/assessments/{check['assessment_id']}/explain", explanation)
                     assert check["state"] == "completed" and kc_row(r, SPEED)["status"] == "mastered", check
                     surfaces = {i.get("template_id") or i["stem"] for i in served}
                     assert len(surfaces) == S.mastery_check_items, "varied in surface"

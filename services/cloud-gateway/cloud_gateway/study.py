@@ -105,12 +105,24 @@ COACHING_SELECTION_VERIFICATION = (
 )
 
 
+_TIMED_LINE = re.compile(r"^\s*\[\d{1,3}:\d{2}(?::\d{2})?\]\s*(.+?)\s*$", re.MULTILINE)
+
+
+def transcript_sentences(quote: str) -> list[str]:
+    """A quote's timed lines as sentences: capitalised and closed, never with their moment. The words stay the source's,
+    so the separate support check still reads them against the cited passage."""
+    return [line[0].upper() + line[1:].rstrip(".") + "." for line in _TIMED_LINE.findall(quote) if line[0].isalpha()]
+
+
 def coaching_cues(body: dict[str, Any], passages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Bounded source sentences and explicit symbol declarations; selection cannot invent a factual premise."""
     cues: list[dict[str, Any]] = []
     for passage in passages:
         text = " ".join(passage["quote"].split())
         sentences = re.split(r"(?<=[.!?])\s+", text)
+        # A timed transcript has no capitals or full stops: each "[0:55] line" is a sentence of its own, or a lecture
+        # never has a prerequisite to offer and every hint falls back to general strategy.
+        sentences += transcript_sentences(passage["quote"])
         # Formula blocks often introduce a readable symbol definition without a preceding full stop.
         sentences += re.findall(r"\b(?:where|Here)\s+[^.!?]{10,250}[.!?]", text)
         declarations = {

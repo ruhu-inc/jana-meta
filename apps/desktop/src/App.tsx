@@ -1297,7 +1297,7 @@ function Shell({ runtime }: { runtime: AppRuntime }) {
             onOpen: (subjectId) => { setMapSubject(subjectId); setMapTopic(null); setMapFirst(true); setScreen("learn"); },
             tileOf: (kc) => Object.values(maps).flatMap((m) => m.sections.flatMap((s) => s.topics)).find((tp) => tp.kcs.some((k) => k.kc_id === kc))?.node_id ?? null }}
           names={{ subject: subjectLabel, kc: (kc) => known.statements.get(kc) ?? null }}
-          actions={{ onKnows: () => setScreen("knows-from-progress"), onNotes: () => setScreen("notes"), onHistory: () => setScreen("session-history"), onLearn: () => setScreen("learn"), onDiagnostic: () => openAssessment() }} />
+          actions={{ onCheck: (kc) => { const subject = kcSubject(kc); if (subject !== null) openAssessment({ kind: "mastery_check", subject, kc_id: kc }); }, onPractise: (kc) => { const subject = kcSubject(kc); if (subject !== null) openPractice(subject, [kc]); }, onKnows: () => setScreen("knows-from-progress"), onNotes: () => setScreen("notes"), onHistory: () => setScreen("session-history"), onLearn: () => setScreen("learn"), onDiagnostic: () => openAssessment() }} />
       );
     }
     if (screen === "session-history") return <SessionHistory controller={runtime.history} subject={subjectLabel} onClose={() => setScreen("progress")} />;

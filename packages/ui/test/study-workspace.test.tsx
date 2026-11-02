@@ -577,3 +577,23 @@ test("a research pack's text reads as Markdown with its maths; any other text so
   expect(screen.getByText(/## 1\. Zero Launch Angle/)).toBeTruthy();
   expect(document.querySelector(".katex")).toBeNull();
 });
+test("a narrow window opens a material on the study tools and the toggle goes both ways", () => {
+  vi.stubGlobal("matchMedia", (query: string) => ({ matches: false, media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
+  try {
+    show({ source, followCurrent: true });
+    const toSource = screen.getByRole("button", { name: "View source" });
+    expect(toSource.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(toSource);
+    const toTools = screen.getByRole("button", { name: "Study tools" });
+    expect(toTools.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(toTools);
+    expect(screen.getByRole("button", { name: "View source" })).toBeTruthy();
+  } finally { vi.unstubAllGlobals(); }
+});
+test("a wide window opens a material with its source showing", () => {
+  vi.stubGlobal("matchMedia", (query: string) => ({ matches: true, media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
+  try {
+    show({ source, followCurrent: true });
+    expect(screen.getByRole("button", { name: "Study tools" }).getAttribute("aria-expanded")).toBe("true");
+  } finally { vi.unstubAllGlobals(); }
+});

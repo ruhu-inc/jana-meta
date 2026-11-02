@@ -122,6 +122,8 @@ def outline_job(w: World, source: dict[str, Any], cloud: Cloud, content: Any) ->
     queue = StudyQueue(lambda: w.conn, lambda: None, lambda: False, w.clock, w.desk.settings)
     queue.cloud, queue.content, queue.activity = cloud, (lambda: content), w.visits
     asyncio.run(queue.run(w.desk, job["job_id"]))
+    if w.desk.job(job["job_id"])["state"] == "queued":  # a refused aid goes again once by itself
+        asyncio.run(queue.run(w.desk, job["job_id"]))
     return w.desk.job(job["job_id"])
 
 

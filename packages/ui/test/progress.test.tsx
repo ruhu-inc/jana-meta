@@ -258,3 +258,33 @@ describe("Progress, simpler by default", () => {
     expect(container.querySelector("[data-progress-topic$=\".chem\"] .text-ui")!.textContent).toBe("Motion (chemistry)");
   });
 });
+
+describe("Study practice on Progress", () => {
+  const withStudied = () => {
+    const view = STATES.find((s) => s.id === "progress.canonical")!.payload.progress as ProgressView;
+    const kcs = view.subjects[0]!.topics[0]!.kcs.map((k) => k.kc_id);
+    return { view: { ...view, studied_today: kcs.slice(0, 1), studied_checkable: kcs.slice(0, 1) }, kc: kcs[0]! };
+  };
+  test("an idea practised in Study today can be checked from here, which is how practice becomes mastery", () => {
+    const { view, kc } = withStudied();
+    const onCheck = vi.fn();
+    render(<LocaleProvider locale="en"><ProgressContent state={{ status: "ready", progress: view }} names={{ subject: () => "Physics", kc: () => "Find the time of flight" }} actions={{ onRetry: () => undefined, onCheck }} /></LocaleProvider>);
+    expect(screen.getByText("Practised in Study today")).toBeTruthy();
+    expect(screen.getByText(/A check is what makes an idea secure/)).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "Check this idea" })[0]!);
+    expect(onCheck).toHaveBeenCalledWith(kc);
+  });
+  test("an idea with too few questions for a check is offered practice, never a check that cannot start", () => {
+    const { view, kc } = withStudied();
+    const onPractise = vi.fn();
+    render(<LocaleProvider locale="en"><ProgressContent state={{ status: "ready", progress: { ...view, studied_checkable: [] } }} names={{ subject: () => "Physics", kc: () => "Sketch the path" }} actions={{ onRetry: () => undefined, onCheck: () => undefined, onPractise }} /></LocaleProvider>);
+    expect(screen.queryByRole("button", { name: "Check this idea" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Practise this idea" }));
+    expect(onPractise).toHaveBeenCalledWith(kc);
+  });
+  test("a learner with no curriculum sees no checks", () => {
+    const { view } = withStudied();
+    render(<LocaleProvider locale="en"><ProgressContent ownCourse state={{ status: "ready", progress: view }} names={{ subject: () => "", kc: () => null }} actions={{ onRetry: () => undefined, onCheck: () => undefined }} /></LocaleProvider>);
+    expect(screen.queryByText("Practised in Study today")).toBeNull();
+  });
+});
