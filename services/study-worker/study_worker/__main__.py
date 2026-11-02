@@ -4,10 +4,16 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import sys
 from typing import Any
 
-from study_worker import DocumentError, confident_text, decode
+# Set before any native library loads. Each pool thread reserves address space, so on a many-core Linux server a default
+# pool passes the memory cap below and the process dies while reading a scan (the VM of 2 November).
+for _pool in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "OMP_THREAD_LIMIT"):
+    os.environ[_pool] = "1"
+
+from study_worker import DocumentError, confident_text, decode  # noqa: E402
 
 
 def main() -> None:
