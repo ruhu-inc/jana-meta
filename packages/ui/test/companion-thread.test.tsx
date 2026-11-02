@@ -106,7 +106,7 @@ describe("W8 Your tutor", () => {
   test("the opener is the thread's first bubble, under the title and the on-this-computer line", () => {
     const { container } = shown(new FakeCompanion());
     expect(screen.getByRole("heading", { name: "Your tutor" })).toBeDefined();
-    expect(container.querySelector("[data-companion-local]")?.textContent).toBe("This conversation stays on this computer.");
+    expect(container.querySelector("[data-companion-local]")?.textContent).toBe("This conversation is saved on this computer.");
     const [first] = bubbles(container);
     expect(first?.getAttribute("data-opener")).toBe("2026-10-29");
     expect(first?.getAttribute("data-said")).toBe("tutor");

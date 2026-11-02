@@ -142,6 +142,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
   const requestDone = useRef(onRequestDone);
   requestDone.current = onRequestDone;
   const [researchStart, setResearchStart] = useState<{ topic: string; seq: number } | null>(null);
+  const researchSeq = useRef(0);
   const addPanel = useRef<HTMLDivElement>(null), exploreField = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!request) return;
@@ -236,7 +237,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
   const exploreTopic = topicText.trim();
   const explore = <section className="flex flex-col gap-4" aria-labelledby="study-explore" data-explore>
     <div className="flex flex-col gap-1"><h2 id="study-explore" className="text-ui font-semibold text-ink">{t("study.explore.heading")}</h2><p className="text-meta text-muted">{t("study.explore.help")}</p></div>
-    <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); if (exploreTopic.length < 3 || accessBlocked || view.busy) return; setResearchStart((current) => ({ topic: exploreTopic, seq: (current?.seq ?? 0) + 1 })); }}>
+    <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); if (exploreTopic.length < 3 || accessBlocked || view.busy) return; setResearchStart({ topic: exploreTopic, seq: ++researchSeq.current }); }}>
       <label className="flex flex-col gap-1 text-ui text-ink">{t("study.research.topic_label")}<input ref={exploreField} className={FIELD_LOOK} value={topicText} maxLength={200} disabled={view.busy} onChange={(e) => setTopicText(e.target.value)} /></label>
       <div className="flex flex-wrap gap-2">
         <Button type="submit" tone="primary" disabled={view.busy || Boolean(accessBlocked) || exploreTopic.length < 3}>{t("study.explore.research")}</Button>
@@ -244,7 +245,7 @@ export function StudyWorkspace({ controller, companion, request, onRequestDone, 
       </div>
       <p className="text-meta text-muted">{t("study.explore.provenance")}</p>
     </form>
-    <StudyResearch controller={controller} hideStart start={researchStart} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
+    <StudyResearch controller={controller} hideStart start={researchStart} onStartUsed={() => setResearchStart(null)} initialCapture={initialResearch ?? null} onCaptureUsed={onResearchOpened} disabled={Boolean(accessBlocked)} onOpenSource={(id) => { void controller.load().then(() => controller.open(id)); }} />
     {(view.conceptTopics ?? []).length > 0 && <div className="flex flex-col gap-2" aria-label={t("study.concept.topic_saved")}><p className="text-meta text-muted">{t("study.concept.topic_saved")}</p><div className="flex flex-wrap gap-2">{(view.conceptTopics ?? []).slice(0, 8).map((m) => <Button key={m.map_id} size="sm" tone="ghost" aria-pressed={topicMap?.map_id === m.map_id} disabled={view.busy} onClick={() => { void controller.openTopicMap(m.map_id); }}>{m.topic}</Button>)}</div></div>}
     {topicMap !== null && <StudyConceptMap map={topicMap.concept_map} claim={(c) => claim(c)} busy={view.busy} onEdit={(ops) => { void controller.editTopicMap(ops); }}
       heading={<div className="flex flex-wrap items-center justify-between gap-2" data-topic-map={topicMap.map_id} data-origin={topicMap.origin}>

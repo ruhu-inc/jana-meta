@@ -251,6 +251,19 @@ class OnlineLayer:
         consent = consent_store.active(learner, "cloud_tier")
         return consent is not None and consent[5] is None
 
+    def study_effective(self, profile_id: str | None, learner: sqlite3.Connection | None) -> bool:
+        """Online Study materials (STU-01, PRV-05): its switch is on, the cloud tier is effective for the profile and
+        the profile holds an active, unpaused `study_materials` consent. Only then may the learner's excerpts, search
+        hits or transcript lines reach the cloud."""
+        if "study_materials" not in self.features_on() or not self.cloud_effective(profile_id, learner):
+            return False
+        assert learner is not None
+        consent = consent_store.active(learner, "study_materials")
+        if consent is None or consent[5] is not None:
+            return False
+        expiry = learner.execute("SELECT expires_at FROM consents WHERE consent_id=?", (consent[0],)).fetchone()
+        return not (expiry and expiry[0] is not None and expiry[0] <= self.clock_ms())
+
     def memory_online_effective(self, profile_id: str | None, learner: sqlite3.Connection | None) -> bool:
         """Personal tutor memory online (SPEC §19.6, JM-D21): its switch is on, the cloud tier is effective for the
         profile (the consent requires it) and the profile holds an active, unpaused `tutor_memory_online` consent.

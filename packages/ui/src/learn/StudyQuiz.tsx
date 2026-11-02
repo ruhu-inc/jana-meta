@@ -3,7 +3,7 @@
 // the last question, and the results as their own view. ASM-28 holds throughout: a first wrong answer never shows the
 // answer; its explanation comes after the second attempt or when the learner asks for it. The draft (answers and the
 // question the learner was on) is saved as before, so a reopened quiz resumes where it was left.
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { quizHelpItem, type StudyContracts as W, type StudyWorkspaceView } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
@@ -65,6 +65,14 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
     onDraft(answers, position);
   }); };
   const finish = () => onSubmit(answers);
+  // Enter in an answer checks that answer, as the primary button does; only Finish quiz submits the whole quiz.
+  const enterChecks = (e: KeyboardEvent<HTMLFormElement>) => {
+    if (e.key !== "Enter" || !(e.target instanceof HTMLInputElement)) return;
+    e.preventDefault();
+    const at = e.target.closest<HTMLElement>("[data-item]")?.dataset.item;
+    const id = at === undefined ? undefined : quiz.items[Number(at)]?.item_id;
+    if (id !== undefined && !busy && quiz.status === "ready" && answers[id]?.trim() && checked[id] !== answers[id]) check(id);
+  };
   const locked = busy || !!result || quiz.status !== "ready";
 
   const inputs = (item: W.QuizItem, i: number) => item.type === "choice" ? item.options?.map((option) => <label key={option.option_id} className="flex min-h-11 items-center gap-3 rounded-control border border-line px-4 py-2 text-ui text-ink has-checked:border-ink"><input type="radio" name={item.item_id} value={option.option_id} checked={answers[item.item_id] === option.option_id} onChange={() => answer(item.item_id, option.option_id, i)} /><span><PackInline text={option.text} /></span></label>)
@@ -103,7 +111,7 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
         </> : helpJob && ["failed", "paused", "waiting_online", "cancelled"].includes(helpJob.state) ? jobs([helpJob], true) : <Loader label={t("study.quiz_help_loading")} />}
         {(here.aid || safeHelp) && <>
           <HelpChips kinds={STUDY_HELP.filter((kind) => kind !== here.kind)} disabled={busy || accessBlocked || helpPending || quiz.status !== "ready"} onHelp={(kind) => onHelp(kind as StudyHelpKind, item.item_id)} />
-          <form onSubmit={(e) => { e.preventDefault(); if (!followUp.trim()) return; void onFollowUp(item.item_id, here.kind, followUp).then((ok) => { if (ok) setFollowUp(""); }); }}>
+          <form onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); if (!followUp.trim()) return; void onFollowUp(item.item_id, here.kind, followUp).then((ok) => { if (ok) setFollowUp(""); }); }}>
             <ComposerShell send={<IconButton type="submit" tone="action" icon="send" tip="above" label={t("study.help_follow_up_send")} disabled={busy || helpPending || accessBlocked || !followUp.trim()} />}>
               <label htmlFor={`${helpId}-follow-up`} className="sr-only">{t("study.help_follow_up")}</label>
               <textarea ref={followUpField} id={`${helpId}-follow-up`} rows={1} maxLength={1000} placeholder={t("study.help_follow_up")} value={followUp} onChange={(e) => setFollowUp(e.target.value)} className="w-full resize-none bg-transparent px-1 text-body text-ink outline-none placeholder:text-placeholder" />
@@ -157,7 +165,7 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
       ...(last && !allQuestions ? [] : [{ id: "finish", group: "finish", label: t("study.finish_now"), onSelect: finish }]),
     ]} />;
   const checkedNow = checked[current.item_id] !== undefined && checked[current.item_id] === answers[current.item_id] && !!feedback[current.item_id];
-  return <form className="flex flex-col gap-5" data-study-quiz data-stale={stale ? "" : undefined} onSubmit={(e) => { e.preventDefault(); finish(); }}>
+  return <form className="flex flex-col gap-5" data-study-quiz data-stale={stale ? "" : undefined} onKeyDown={enterChecks} onSubmit={(e) => { e.preventDefault(); finish(); }}>
     {allQuestions ? <>
       {quiz.items.map((item, i) => <div key={item.item_id} className="flex flex-col gap-3">{question(item, i, true)}
         <span><Button size="sm" disabled={busy || !answers[item.item_id]?.trim() || quiz.status !== "ready"} onClick={() => check(item.item_id)}>{t("study.check_answer")}</Button></span>

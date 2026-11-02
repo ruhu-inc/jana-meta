@@ -43,6 +43,25 @@ def numbers_in(text: str) -> list[Fraction]:
     return list(_numbers_in(text))
 
 
+_STATED = re.compile(r"[-\u2212]?\d+(?:\.\d+)?(?:\s*/\s*\d+)?\s*([A-Za-z/^0-9\u00b0]*)")
+
+
+def stated_value(text: str) -> Fraction | None:
+    """The value a student states: the number after the last `=` when nothing but a unit follows it, or a bare number.
+    A working line ("0 = 14^2 - 2(9.8)s") states no value."""
+    tail = text.rsplit("=", 1)[-1].strip().rstrip(".?!")
+    if _STATED.fullmatch(tail):
+        found = numbers_in(tail)
+        return found[0] if found else None
+    return None
+
+
+def stated_unit(text: str) -> str | None:
+    """The unit written after a stated value ("s = 10 km" is km), if there is one."""
+    found = _STATED.fullmatch(text.rsplit("=", 1)[-1].strip().rstrip(".?!"))
+    return (found.group(1) or None) if found else None
+
+
 @functools.lru_cache(maxsize=4096)
 def _numbers_in(text: str) -> tuple[Fraction, ...]:
     found = []
@@ -237,10 +256,22 @@ class SessionState:
         if final and not (shown_through >= last):
             values.append((final[0], self.plan.final_unit))
         values += [(Fraction(v), None) for v in self.withheld_extra]  # what a correction would show (AGT-21)
-        derived = set()
-        for line in self.student_lines:
-            derived.update(numbers_in(line))
+        derived = self._derived()
         return [(v, u) for v, u in values if v not in derived]
+
+    def _derived(self) -> set[Fraction]:
+        """The values the student has reached on this problem. The statement and earlier problems are not their work,
+        and a line that quotes a number from the statement ("3x = 9") has reached only the value it states."""
+        statement = self.problem.statement if self.problem else None
+        lines = self.student_lines
+        if statement in lines:
+            lines = lines[len(lines) - lines[::-1].index(statement) :]
+        givens = set(numbers_in(statement)) if statement else set()
+        derived: set[Fraction] = set()
+        for line in lines:
+            stated = stated_value(line)
+            derived.update(v for v in numbers_in(line) if v not in givens or v == stated)
+        return derived
 
     def leak_gated(self) -> bool:
         """The no-answer-leak gate runs in every mode but solution mode; in revision the answer shows after the

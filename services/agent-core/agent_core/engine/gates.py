@@ -122,11 +122,15 @@ def leak_findings(
     for surface, text in surfaces.items():
         findings.extend(_expression_leaks(surface, text, withheld, rel, givens))
         text = _written_form(text)
-        written = [m.group(0) for m in re.finditer(r"-?\d+(?:\.\d+)?(?:/\d+)?", text.replace("\u2212", "-"))]
+        plain = text.replace("\u2212", "-")
+        found = list(re.finditer(r"-?\d+(?:\.\d+)?(?:/\d+)?", plain))
+        written = [m.group(0) for m in found]
         for value, unit in withheld:
-            for token, parsed in zip(written, numbers_in(" ".join(written)), strict=False):
-                if givens and parsed in givens and not _close(parsed, value, rel):
-                    continue  # a value the question or the student gave is never a leak by rounding or units
+            for match, token, parsed in zip(found, written, numbers_in(" ".join(written)), strict=False):
+                if givens and parsed in givens and not (_close(parsed, value, rel) and _states_result(plain, match)):
+                    # A value the question or the student gave is never a leak by rounding or units. A given that is
+                    # also the answer ("x + 5 = 10") may be quoted, but not stated as the result.
+                    continue
                 if _close(parsed, value, rel):
                     findings.append(LeakFinding("exact", surface, token))
                 elif _rounded_match(token, value):
@@ -134,13 +138,24 @@ def leak_findings(
                 elif unit in UNITS_SCALE and any(_close(parsed, value * k, rel) for k in UNITS_SCALE[unit].values()):
                     findings.append(LeakFinding("unit_converted", surface, token))
             for spelled in words_to_numbers(text):
-                if _close(spelled, value, rel):
+                if _close(spelled, value, rel) and not (givens and spelled in givens):
                     findings.append(LeakFinding("spelled_out", surface, str(spelled)))
         if options and ELIMINATION.search(text):
             named = [o for o in options if o.lower() in text.lower()]
             if len(named) >= max(1, len(options) - 1):
                 findings.append(LeakFinding("elimination", surface, "rules out all but one option"))
     return findings
+
+
+_STATES_BEFORE = re.compile(
+    r"(?:=|\u2248|\bequals?|\b(?:answer|result|solution|value)\b[^.?!\n]{0,24}\bis|\b[a-z]\s+is)\s*$", re.IGNORECASE
+)
+_CONTINUES = re.compile(r"\s*[-+*/^=(]|[A-Za-z]")
+
+
+def _states_result(text: str, number: re.Match[str]) -> bool:
+    """The number is written as a result ("x = 5", "the answer is 5"), not as a term of a sum ("5x", "5 + x")."""
+    return bool(_STATES_BEFORE.search(text[: number.start()])) and not _CONTINUES.match(text, number.end())
 
 
 def _written_form(text: str) -> str:

@@ -21,11 +21,13 @@ type Start = { topic: string } | { capture_id: string };
 type Phase = { kind: "start" } | { kind: "talking"; start: Start; history: R.ChatEntry[]; turn: R.ChatTurn | null }
   | { kind: "brief"; start: Start; brief: R.Brief } | { kind: "pack"; id: string };
 
-export function StudyResearch({ controller, initialCapture, topicRequest, start: startRequest, hideStart = false, onCaptureUsed, onOpenSource, onPracticeDiagram, disabled }: {
+export function StudyResearch({ controller, initialCapture, topicRequest, start: startRequest, onStartUsed, hideStart = false, onCaptureUsed, onOpenSource, onPracticeDiagram, disabled }: {
   controller: StudyWorkspaceController;
   /** A topic the learner chose to research from Explore's one topic field (the crowding review of 2026-11-01): the
    * conversation starts at once. A new `seq` starts it again. */
   start?: { topic: string; seq: number } | null;
+  /** The start was taken: the owner clears it, so coming back to Explore never starts (and bills) it again. */
+  onStartUsed?: (() => void) | undefined;
   /** Explore draws the topic field itself: the start phase shows only what is in progress and the saved packs. */
   hideStart?: boolean;
   /** A topic handed over by the companion's "Research this topic" (SPEC §19.3.3): filled in for the learner, who starts
@@ -88,6 +90,7 @@ export function StudyResearch({ controller, initialCapture, topicRequest, start:
   useEffect(() => {
     if (!startRequest || started.current === startRequest.seq) return;
     started.current = startRequest.seq;
+    onStartUsed?.();
     const asked = startRequest.topic.trim().slice(0, 200);
     if (asked.length >= 3) void ask({ topic: asked }, [], null);
   }, [startRequest?.seq]);
