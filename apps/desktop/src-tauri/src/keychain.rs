@@ -749,7 +749,11 @@ mod tests {
             answers,
             [
                 ("jana-meta.device-db".into(), KeyResultOp::Put, true),
-                ("jana-meta.service-credential.id".into(), KeyResultOp::Put, true),
+                (
+                    "jana-meta.service-credential.id".into(),
+                    KeyResultOp::Put,
+                    true
+                ),
                 ("jana-meta.device-db".into(), KeyResultOp::Delete, true),
                 ("not-a-ref".into(), KeyResultOp::Put, false),
             ]
@@ -791,13 +795,19 @@ mod tests {
         ));
         assert!(!store.put("jana-meta.bad", &Redacted::new("not base64!")));
         // The core's FileKeyStore layout: the raw secret, one file per reference, and nothing else.
-        assert_eq!(fs::read(dir.join("jana-meta.device-db")).unwrap(), b"db_key");
+        assert_eq!(
+            fs::read(dir.join("jana-meta.device-db")).unwrap(),
+            b"db_key"
+        );
         let mut names: Vec<_> = fs::read_dir(&dir)
             .unwrap()
             .map(|e| e.unwrap().file_name().into_string().unwrap())
             .collect();
         names.sort();
-        assert_eq!(names, ["jana-meta.device-db", "jana-meta.service-credential.id"]);
+        assert_eq!(
+            names,
+            ["jana-meta.device-db", "jana-meta.service-credential.id"]
+        );
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -873,7 +883,10 @@ mod tests {
         assert!(files.put("jana-meta.device-db", &Redacted::new("ZGJfa2V5")));
         fs::write(dir.join("jana-meta.install-marker.tmp"), b"half written").unwrap();
         let listed = files.clear(true);
-        assert_eq!(listed.files, ["jana-meta.device-db", "jana-meta.install-marker.tmp"]);
+        assert_eq!(
+            listed.files,
+            ["jana-meta.device-db", "jana-meta.install-marker.tmp"]
+        );
         assert!(dir.join("jana-meta.device-db").exists());
         fs::write(dir.join("notes.txt"), b"not the app's").unwrap();
         let cleared = files.clear(false);
@@ -953,7 +966,10 @@ mod tests {
         assert!(store.put("jana-meta.test-b", &Redacted::new("dGVzdA")));
         let nowhere = std::env::temp_dir().join(format!("jana-no-keys-{}", std::process::id()));
         let listed = uninstall_keys(&service, &nowhere, true);
-        assert_eq!(listed.keychain, ["jana-meta.test-a", "jana-meta.test-b", "index"]);
+        assert_eq!(
+            listed.keychain,
+            ["jana-meta.test-a", "jana-meta.test-b", "index"]
+        );
         assert_eq!(KeyStore::keychain(&service).unwrap().entries().len(), 2);
         let cleared = uninstall_keys(&service, &nowhere, false);
         assert!(cleared.ok(), "{cleared:?}");
