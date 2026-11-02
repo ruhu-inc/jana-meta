@@ -511,7 +511,8 @@ class PlanDesk:
             "moved_today": moved,
             # Study practice today, for "Check this idea": the way practice becomes mastery (activity, never mastery).
             "studied_today": [
-                k for k in studied_kcs(self.conn, p.local_day(now) * DAY_MS - p.learner_day_offset_minutes * 60_000)
+                k
+                for k in studied_kcs(self.conn, p.local_day(now) * DAY_MS - p.learner_day_offset_minutes * 60_000)
                 if k in self.content.kcs and (k not in views or views[k].state != "mastered")
             ],
             # SPEC §19.1: the week's Study activity, one quiet line (activity, never mastery; JM-D26).

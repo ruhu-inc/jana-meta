@@ -384,7 +384,8 @@ def _eval(args: list[str]) -> int:
         from .harness.revisions import commit_errors, regression_errors
 
         errors = []
-        decided = decided_decisions()
+        # With no private specification no decision can be confirmed, so a Tuning-exemption is refused, not assumed.
+        decided = decided_decisions() if _spec_present() else set()
         for sha in _git("rev-list", "--no-merges", args[1]).split():
             modified = _git("diff-tree", "--no-commit-id", "--name-only", "--diff-filter=MR", "-r", sha).split()
             message = _git("log", "-1", "--format=%B", sha)
