@@ -1,0 +1,19 @@
+HACKATHON_DEMO.md
+  s_49ba057c5af1a1::t_3ba19af2d6cdf5 49,52-54,59-99,131-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "87416cc13131d4f7c7d4e6b0f2b70d3eef9993c1",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
