@@ -1,0 +1,392 @@
+services/study-worker/study_worker/__init__.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 6
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 81,168-179
+content/curriculum/chm/o/kcs/environment.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 23-33,69-79,113-123,152-162
+evals/contracts/index.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 4544-4579
+services/cloud-gateway/tests/test_w9_teaching_outline_gateway.py
+  s_49ba057c5af1a1::t_0b22160840a7b6 127-148,150-168
+  s_49ba057c5af1a1::t_0d8748fa58ea36 149
+  s_49ba057c5af1a1::t_2d4028f5cf6ad8 207-208
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 173-174
+  s_49ba057c5af1a1::t_9d9096e9c14b34 169-172,175-206
+packages/ui/src/home/Home.tsx
+  s_49ba057c5af1a1::t_45932265d09d32 119,122-123,166-168
+services/agent-core/agent_core/contracts/schemas/api/commands.schema.json
+  s_49ba057c5af1a1::t_30e9ae4886040d 2,2272
+content/curriculum/phy/o/kcs/atom.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 37-47,89-99,139-149
+content/curriculum/acc/o/kcs/irrecoverable_debts.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 35-45,81-91,128-138,174-184
+services/agent-core/tests/test_companion_fact_binding.py
+  s_49ba057c5af1a1::t_2dbb2659c86f49 19
+contracts/api/commands.schema.json
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 2272
+packages/contracts-ts/src/generated/cloud/gateway.ts
+  s_49ba057c5af1a1::t_30e9ae4886040d 786-787
+  s_49ba057c5af1a1::t_b72dfc7883ef74 745-748,883-886
+content/curriculum/chm/o/kcs/periodic.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 28-38,77-92,131-141,170-180,213-223
+content/curriculum/mth/o/kcs/coordinate_geometry.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 26-36,69-79,144-154,179-189,218-228,255-265,292-302
+services/agent-core/agent_core/contracts/cloud/gateway.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 215,223,546-547
+  s_49ba057c5af1a1::t_6f7054d1d08a33 197-199,772
+content/curriculum/acc/o/kcs/control_accounts.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 43-53,100-110,160-170,220-230
+content/curriculum/acc/o/kcs/trial_balance.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 45-55,105-115,164-174,226-236,285-295
+services/cloud-gateway/cloud_gateway/research.py
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 85-86,95
+packages/contracts-ts/src/generated/api/commands.ts
+  s_49ba057c5af1a1::t_30e9ae4886040d 2,1643
+content/curriculum/mth/o/kcs/number.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 27-37,66-76,105-115,146-156,190-200,231-241,268-278,307-317,348-350,352-358,385-395,423-433,460-470,498-508,538-548,575-585,614-624,651-661,691-701,728-738,766-776,802-812,837-847,875-885,921-931,965-975
+  s_49ba057c5af1a1::t_e8ef25cd287168 351
+content/curriculum/mth/o/kcs/probability.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 25-35,67-77,111-121,150-160
+services/agent-core/tests/test_study_refused_aid_retry.py
+  s_49ba057c5af1a1::t_0b22160840a7b6 1-68
+content/curriculum/mth/o/pack.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 8
+content/curriculum/phy/o/kcs/oscilloscope.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 35-45,80-90
+services/agent-core/agent_core/engine/companion_facts.py
+  s_49ba057c5af1a1::t_2dbb2659c86f49 79-83,161
+content/curriculum/chm/o/kcs/reactions.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 22-32,62-72,106-116,145-155,191-201,239-249,283-293
+packages/contracts-ts/src/generated/index.ts
+  s_49ba057c5af1a1::t_956708080e5454 4,754-1047
+content/curriculum/chm/o/kcs/energetics.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 31-41,74-84,117-127,163-173
+packages/contracts-ts/src/generated/study/research.ts
+  s_49ba057c5af1a1::t_30e9ae4886040d 2,45-46
+content/curriculum/phy/o/kcs/mass_weight.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 29-39,76-86
+content/curriculum/chm/o/kcs/stoichiometry.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 32-42,73-83,117-127,156-166,196-206,240-250,281-291,325-335,365-375,406-416
+content/curriculum/acc/o/kcs/double_entry.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 37-47,96-106,158-168,217-227,271-281
+content/curriculum/phy/o/kcs/radioactivity.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 49-64,114-124,164-174,216-226,278-293
+content/curriculum/phy/o/kcs/forces.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 35-45,82-92,138-148,182-192,228-238,276-286,319-329
+content/curriculum/chm/o/kcs/electrolysis.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 30-40,78-93,130-140,174-184,215-225
+evals/contracts/api/commands/CreateProfile/invalid/unknown_property.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 5
+HACKATHON_DEMO.md
+  s_49ba057c5af1a1::t_564323ee6155d5 32-54
+content/curriculum/phy/o/kcs/sound.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 39-49,83-93,137-152,197-207
+packages/client-core/test/profile-renewal.test.ts
+  s_49ba057c5af1a1::t_9d9096e9c14b34 205-206,208-212
+  s_49ba057c5af1a1::t_3b5a49c2ec1380 207
+README.md
+  s_49ba057c5af1a1::t_564323ee6155d5 1,3-10
+services/study-worker/study_worker/__main__.py
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 52-53,73
+  s_49ba057c5af1a1::t_aa52933ea0764c 76
+content/curriculum/phy/o/kcs/energy.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 33-43,81-83,85-91,128-138,181-191,229-239,275-285,323-333,385-395
+  s_49ba057c5af1a1::t_e8ef25cd287168 84
+evals/contracts/study/workspace/AidProvenance/valid/minimal.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 1-3
+content/curriculum/chm/o/kcs/atoms.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 27-37,69-84,115-125,158-168,200-210,248-258,299-309,345-355,389-399
+content/curriculum/mth/o/kcs/statistics.yaml
+  s_49ba057c5af1a1::t_e8ef25cd287168 355
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 24-34,61-71,102-112,143-153,182-192,221-231,265-275,306-316,347-354,356-357
+content/curriculum/phy/o/kcs/circuits.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 150-160,198-208,254-264
+content/curriculum/phy/o/kcs/light.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 34-44,87-97,128-138,179-189,231-241
+packages/ui/src/setup/StudyFocusField.tsx
+  s_49ba057c5af1a1::t_3408b2606b7c1e 1-21
+content/curriculum/acc/o/kcs/incomplete_records.yaml
+  s_49ba057c5af1a1::t_e8ef25cd287168 211
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 40-50,95-105,150-160,203-210,212-213
+content/curriculum/acc/o/pack.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 7
+services/agent-core/agent_core/engine/companion.py
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 1018-1019
+  s_49ba057c5af1a1::t_2dbb2659c86f49 943-944,947-949,1011,1015
+content/curriculum/phy/o/kcs/em_spectrum.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 41-51,89-99,144-154
+content/curriculum/phy/o/kcs/projectiles.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 28-38,70-80,114-124,153-163,191-201,237-247
+content/curriculum/phy/o/kcs/pressure.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 34-44,84-94,133-143
+content/curriculum/acc/o/kcs/sole_trader_statements.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 54-64,120-130,187-197,253-263,318-328,387-397
+services/agent-core/agent_core/engine/study.py
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 39-41,2541-2542
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 42-43,45,578,1222,2261-2267
+  s_49ba057c5af1a1::t_956708080e5454 44,1946-1968,2074-2077
+  s_49ba057c5af1a1::t_4cd060f6ac18a0 46-53,55,2529-2540,2543-2549,2668-2669
+  s_49ba057c5af1a1::t_8044cbe683b3f4 54
+content/curriculum/phy/o/kcs/stars.yaml
+  s_49ba057c5af1a1::t_e8ef25cd287168 142
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 30-40,84-94,139-141,143-149
+evals/contracts/study/workspace/AnswerVerdict/valid/minimal.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 1-4
+content/curriculum/phy/o/kcs/thermal_properties.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 30-40,74-84,120-130,175-185
+content/curriculum/acc/o/kcs/clubs.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 33-43,81-91,128-138,177-187
+packages/ui/src/memory/KnowsPage.tsx
+  s_49ba057c5af1a1::t_743332af9d1c8c 84-87
+packages/ui/src/learn/StudyQuiz.tsx
+  s_49ba057c5af1a1::t_743332af9d1c8c 24,34,137
+  s_49ba057c5af1a1::t_539077669eaa35 109,141-144
+packages/ui/src/learn/StudyResearch.tsx
+  s_49ba057c5af1a1::t_743332af9d1c8c 174
+content/curriculum/acc/o/kcs/concepts.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 43-53,101-111
+evals/contracts/study/workspace/AidProvenance/invalid/unknown_property.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 1-4
+apps/desktop/src/App.tsx
+  s_49ba057c5af1a1::t_aa52933ea0764c 746,749-750,909-910,1053,1162,1169,1194,1219
+  s_49ba057c5af1a1::t_db0731c4252860 1246
+  s_49ba057c5af1a1::t_d1f598df8d713d 43,376-377,505-506,1226,1233,1235,1295,1327,1431,1433
+services/agent-core/agent_core/contracts/api/commands.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 2,575
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_49ba057c5af1a1::t_743332af9d1c8c 48,52,467-468,502
+  s_49ba057c5af1a1::t_db0731c4252860 30,279,526
+  s_49ba057c5af1a1::t_2dbb2659c86f49 249
+  s_49ba057c5af1a1::t_539077669eaa35 341
+content/curriculum/phy/o/kcs/momentum.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 27-37,71-81,116-126
+services/agent-core/agent_core/contracts/schemas/study/workspace.schema.json
+  s_49ba057c5af1a1::t_956708080e5454 2961-2962,2968,4318-4402
+  s_49ba057c5af1a1::t_30e9ae4886040d 68,86,1148-1149
+  s_49ba057c5af1a1::t_6c8a29589ba2ef 2,2960,2963-2967
+services/agent-core/agent_core/contracts/api/endpoints.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 2
+content/curriculum/mth/o/kcs/mensuration.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 35-45,79-89,116-126,155-165,202-212,246-256,292-302
+packages/ui/src/index.ts
+  s_49ba057c5af1a1::t_743332af9d1c8c 74
+packages/ui/test/study-quiz.test.tsx
+  s_49ba057c5af1a1::t_9d9096e9c14b34 50-73
+content/curriculum/phy/o/kcs/heat_transfer.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 33-43,79-89,128-143
+content/curriculum/phy/o/kcs/measurement.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 27-37,68-78,113-123,157-167
+content/curriculum/acc/o/kcs/ratios.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 51-61,117-127,181-191,245-255,309-319,373-383,438-448
+content/curriculum/phy/o/kcs/density.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 31-41,78-88,116-126
+contracts/study/research.schema.json
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 49-50,56-57
+services/cloud-gateway/cloud_gateway/contracts/schemas/study/research.schema.json
+  s_49ba057c5af1a1::t_30e9ae4886040d 2,47-48,54-55
+services/agent-core/agent_core/contracts/study/research.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 2,31-32
+content/curriculum/mth/o/kcs/transformations_and_vectors.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 37-47,79-89,116-126,155-165
+content/curriculum/acc/o/kcs/costing.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 30-40,75-85,120-130,166-176,211-221
+content/curriculum/phy/o/kcs/electrical_quantities.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 36-46,79-89,130-140,216-226,261-276
+content/curriculum/phy/o/kcs/motion.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 28-38,64-74,100-110,179-181,183-189,258-268,297-307,340-350,387-397
+  s_49ba057c5af1a1::t_e8ef25cd287168 182
+evals/lock.json
+  s_49ba057c5af1a1::t_06c80885437b7b 876-892,1156,2212-2223,2515,4258-4267,4628,6462-6487,7227,7451,8333-8349,8613,9669-9680,9972,11715-11724,12085,13919-13944,14684,14907,15957
+services/agent-core/agent_core/engine/research_chat.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 70,107,171-172
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 75
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 71
+  s_49ba057c5af1a1::t_5304d8c40934b8 72-74
+evals/contracts/study/workspace/AnswerMarking/valid/minimal.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 1-10
+services/cloud-gateway/cloud_gateway/study.py
+  s_49ba057c5af1a1::t_5304d8c40934b8 696-702,705-709
+  s_49ba057c5af1a1::t_4cd060f6ac18a0 730-748,1577-1580,1582-1589
+  s_49ba057c5af1a1::t_aa52933ea0764c 2315-2317,2351
+  s_49ba057c5af1a1::t_2d4028f5cf6ad8 714-717,720,727-729,1572-1576,1581
+  s_49ba057c5af1a1::t_956708080e5454 694-695,703-704,710-713,718-719,721-726,2105-2150,2153-2166,2475-2478
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 2067-2068,2151-2152
+  s_49ba057c5af1a1::t_30e9ae4886040d 36-38,2270
+  s_49ba057c5af1a1::t_f1c1c56bc86051 873,2167-2168,2479-2481
+content/curriculum/acc/o/kcs/accounting_equation.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 33-43,83-93,127-137,174-184
+content/curriculum/mth/o/kcs/calculus.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 26-36,69-79,112-122,150-160
+contracts/study/workspace.schema.json
+  s_49ba057c5af1a1::t_956708080e5454 4340-4426
+  s_49ba057c5af1a1::t_aa52933ea0764c 2970-2979
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 67,85,1155-1156
+packages/ui/src/setup/FirstRun.tsx
+  s_49ba057c5af1a1::t_aa52933ea0764c 27-28,50
+  s_49ba057c5af1a1::t_3408b2606b7c1e 17,36,47,85
+packages/ui/src/home/CourseAsk.tsx
+  s_49ba057c5af1a1::t_743332af9d1c8c 1-15
+packages/ui/src/learn/StudyOutline.tsx
+  s_49ba057c5af1a1::t_743332af9d1c8c 15-16,53
+packages/contracts-ts/src/generated/client.ts
+  s_49ba057c5af1a1::t_956708080e5454 4,410-581
+packages/client-core/src/study-workspace.ts
+  s_49ba057c5af1a1::t_539077669eaa35 274-275,277-280,865-866
+  s_49ba057c5af1a1::t_db0731c4252860 135-137
+  s_49ba057c5af1a1::t_2dbb2659c86f49 276
+  s_49ba057c5af1a1::t_3408b2606b7c1e 451
+content/agent/templates/engine.en.yaml
+  s_49ba057c5af1a1::t_2dbb2659c86f49 131-132,134
+services/cloud-gateway/cloud_gateway/contracts/cloud/gateway.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 215,223,546-547
+  s_49ba057c5af1a1::t_39ff583bf555fd 197-199,772
+content/curriculum/phy/o/kcs/practical_electricity.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 38-48,86-96,141-156
+content/curriculum/phy/o/kcs/wave_properties.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 38-48,83-93,137-147,195-210
+scripts/jana_tools/__main__.py
+  s_49ba057c5af1a1::t_e8ef25cd287168 77-79,973
+  s_49ba057c5af1a1::t_599eabba80f63c 974-985,989-990
+  s_49ba057c5af1a1::t_f67eaeaaa2e90f 991-992
+services/cloud-gateway/cloud_gateway/config.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 418
+packages/ui/src/settings/FamilyControls.tsx
+  s_49ba057c5af1a1::t_c15be5fab5b3cc 29-30
+services/agent-core/agent_core/net/study.py
+  s_49ba057c5af1a1::t_aa52933ea0764c 357-359,366-368
+  s_49ba057c5af1a1::t_956708080e5454 244-257
+content/curriculum/phy/o/kcs/solar_system.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 33-48,86-96,140-150
+packages/ui/test/study-workspace.test.tsx
+  s_49ba057c5af1a1::t_815219a4b00619 515
+packages/contracts-ts/src/generated/api/endpoints.ts
+  s_49ba057c5af1a1::t_30e9ae4886040d 2
+content/curriculum/phy/o/kcs/magnetism.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 36-46,82-92
+content/curriculum/chm/o/kcs/analysis.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 30-40,73-83,110-120,161-171,200-210,243-253,288-298,327-337
+content/curriculum/chm/o/kcs/states.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 23-33,64-74,103-113
+content/curriculum/mth/o/kcs/algebra_and_graphs.yaml
+  s_49ba057c5af1a1::t_e8ef25cd287168 767
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 29-39,69-79,111-121,153-163,237-247,278-288,318-328,356-366,396-406,438-448,476-486,514-524,553-563,594-604,637-647,676-686,715-725,759-766,768-769,801-811
+content/curriculum/phy/o/pack.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 8
+packages/contracts-ts/src/generated/study/workspace.ts
+  s_49ba057c5af1a1::t_30e9ae4886040d 523
+  s_49ba057c5af1a1::t_956708080e5454 1238,1240,1511-1538
+  s_49ba057c5af1a1::t_156968828da5dc 2,1239,1241
+services/agent-core/agent_core/contracts/study/workspace.py
+  s_49ba057c5af1a1::t_956708080e5454 1069-1092
+  s_49ba057c5af1a1::t_30e9ae4886040d 55,63,396
+  s_49ba057c5af1a1::t_a119af9610e3b1 2,624-626,1093-1094,1415
+content/curriculum/mth/o/kcs/geometry.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 35-45,76-86,112-122,149-159,186-196,228-238,280-290,322-332,360-370,401-411,441-451,481-491,522-532
+services/agent-core/agent_core/contracts/schemas/study/research.schema.json
+  s_49ba057c5af1a1::t_30e9ae4886040d 2,47-48,54-55
+services/agent-core/tests/test_study_any_material.py
+  s_49ba057c5af1a1::t_9d9096e9c14b34 2-9,14-15,17,21-90,94-107,110-115
+  s_49ba057c5af1a1::t_3b5a49c2ec1380 10,16,18-20,91-93,116-118
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 1
+  s_49ba057c5af1a1::t_5304d8c40934b8 108-109
+  s_49ba057c5af1a1::t_9c3f15a48aae27 11-13
+services/agent-core/tests/test_w9_companion_moment.py
+  s_49ba057c5af1a1::t_2dbb2659c86f49 202,288,294
+  s_49ba057c5af1a1::t_ff8de6aae02480 206
+packages/contracts-ts/src/generated/validators.d.ts
+  s_49ba057c5af1a1::t_956708080e5454 931-932
+evals/suites.toml
+  s_49ba057c5af1a1::t_06c80885437b7b 23,44,103
+packages/ui/src/profiles/ProfilePicker.tsx
+  s_49ba057c5af1a1::t_c15be5fab5b3cc 14,33,51,66
+packages/client-core/src/setup.ts
+  s_49ba057c5af1a1::t_3408b2606b7c1e 59-61
+content/curriculum/chm/o/kcs/acids.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 39-49,92-102,154-164,201-211,257-272,322-332
+services/agent-core/tests/test_learning_agent_journey.py
+  s_49ba057c5af1a1::t_2dbb2659c86f49 183
+services/agent-core/agent_core/memory/render.py
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 132
+  s_49ba057c5af1a1::t_bf3bdac3bf484e 133-134
+  s_49ba057c5af1a1::t_30e9ae4886040d 131
+content/curriculum/acc/o/kcs/depreciation.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 41-51,95-105,149-159,203-213,258-268,312-322
+services/cloud-gateway/cloud_gateway/contracts/schemas/study/workspace.schema.json
+  s_49ba057c5af1a1::t_30e9ae4886040d 68,86,1148-1149
+  s_49ba057c5af1a1::t_956708080e5454 2961-2962,2968,4318-4402
+  s_49ba057c5af1a1::t_3f48d2a9193d10 2,2960,2963-2967
+content/curriculum/acc/o/kcs/inventory.yaml
+  s_49ba057c5af1a1::t_e8ef25cd287168 137
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 36-46,85-95,134-136,138-144,184-194
+content/curriculum/acc/o/kcs/accruals_prepayments.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 43-53,99-109,153-163,208-218
+packages/ui/test/study-library-rename.test.tsx
+  s_49ba057c5af1a1::t_9d9096e9c14b34 1-21
+packages/ui/src/learn/StudyLibrary.tsx
+  s_49ba057c5af1a1::t_539077669eaa35 6,24,27-28,31,56-59,66-68,70-71
+  s_49ba057c5af1a1::t_2dbb2659c86f49 69
+content/curriculum/phy/o/kcs/particles.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 29-39,77-87,123-138,170-180
+services/agent-core/tests/test_study_workspace.py
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 1564-1567,1571-1573
+content/curriculum/chm/o/kcs/organic.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 30-40,84-94,127-137,173-183,213-223,264-274,308-318,356-366,403-413
+SPEC.md
+  s_49ba057c5af1a1::t_564323ee6155d5 3027-3061
+content/curriculum/mth/o/kcs/trigonometry.yaml
+  s_49ba057c5af1a1::t_e8ef25cd287168 268
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 25-35,69-79,111-121,152-162,190-200,228-238,265-267,269-275,310-320
+packages/ui/src/progress/Progress.tsx
+  s_49ba057c5af1a1::t_743332af9d1c8c 73,82,251-252,272,279,283
+  s_49ba057c5af1a1::t_8b9e4448cda776 341-342,349
+content/curriculum/acc/o/kcs/bank_reconciliation.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 37-47,91-101,142-152,193-203
+services/cloud-gateway/cloud_gateway/ask.py
+  s_49ba057c5af1a1::t_b0caf9caa03a7f 57-58
+  s_49ba057c5af1a1::t_30e9ae4886040d 52
+content/curriculum/acc/o/kcs/source_documents.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 47-57,108-118,170-180,232-242,297-307
+evals/contracts/api/commands/CreateProfile/valid/minimal.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 5
+evals/contracts/study/workspace/AnswerVerdict/invalid/unknown_property.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 1-5
+services/agent-core/agent_core/memory/snapshot.py
+  s_49ba057c5af1a1::t_30e9ae4886040d 125
+content/curriculum/acc/o/kcs/partnerships.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 34-44,82-92,133-143,183-193,231-241
+content/curriculum/chm/o/pack.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 7
+packages/contracts-ts/src/generated/client-validators.d.ts
+  s_49ba057c5af1a1::t_956708080e5454 396-397,465-466
+HACKATHON_SUBMISSION.md
+  s_49ba057c5af1a1::t_564323ee6155d5 6-9
+content/curriculum/phy/o/kcs/electromagnetism.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 41-51,92-107,152-162,204-214,265-275
+content/curriculum/chm/o/kcs/metals.yaml
+  s_49ba057c5af1a1::t_ba6f3e60b47ec0 25-35,63-73,101-111,141-151,183-193,228-238,272-282
+packages/i18n/locales/en.json
+  s_49ba057c5af1a1::t_743332af9d1c8c 430,1362-1363,1415-1419,1849,2260,2412,3092
+  s_49ba057c5af1a1::t_2dbb2659c86f49 1848,2295-2296,2344,2529,2742-2743,2765,3241
+  s_49ba057c5af1a1::t_815219a4b00619 2516,2764
+evals/contracts/study/workspace/AnswerMarking/invalid/unknown_property.json
+  s_49ba057c5af1a1::t_593c74e5d5d137 1-11
+packages/contracts-ts/src/generated/client-validators.js
+  s_49ba057c5af1a1::t_85a022d5c8c76a 10
+packages/contracts-ts/src/generated/validators.js
+  s_49ba057c5af1a1::t_34aec974abcf00 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "854298a1b196289cc328815d6854d20440776398",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
