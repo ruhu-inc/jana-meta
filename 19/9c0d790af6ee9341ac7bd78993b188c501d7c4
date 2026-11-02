@@ -1,0 +1,31 @@
+packages/ui/test/speech.test.tsx
+  s_49ba057c5af1a1::t_2b62d2800754f3 254-263,265-272,274-287
+  s_49ba057c5af1a1::t_aa8254313d48c5 264,273
+packages/i18n/locales/en.json
+  s_49ba057c5af1a1::t_503d80b3d22fad 1282
+apps/desktop/src/hosted-copy.ts
+  s_49ba057c5af1a1::t_aa8254313d48c5 8-9
+packages/ui/src/composer/Composer.tsx
+  s_49ba057c5af1a1::t_503d80b3d22fad 13,215-220
+packages/ui/src/transcript/Turn.tsx
+  s_49ba057c5af1a1::t_503d80b3d22fad 70-75,92-94,160,166
+packages/ui/test/photo-sources.test.tsx
+  s_49ba057c5af1a1::t_2b62d2800754f3 121-132
+  s_49ba057c5af1a1::t_503d80b3d22fad 37-41,48,72,86,100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "199c0d790af6ee9341ac7bd78993b188c501d7c4",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
