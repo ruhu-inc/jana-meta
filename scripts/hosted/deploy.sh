@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Creates or updates the hosted demo in one GCP project. Reads no key: you add it to Secret Manager yourself.
-#   scripts/hosted/deploy.sh PROJECT_ID [--domain NAME] [--commit SHA] [--judges N] [--template DIR]
+#   scripts/hosted/deploy.sh PROJECT_ID [--zone ZONE] [--domain NAME] [--commit SHA] [--judges N] [--template DIR]
 set -euo pipefail
-project=${1:?usage: deploy.sh PROJECT_ID [--domain NAME] [--commit SHA] [--judges N] [--template DIR]}; shift
-domain="" commit="" judges=10 template=""
+project=${1:?usage: deploy.sh PROJECT_ID [--zone ZONE] [--domain NAME] [--commit SHA] [--judges N] [--template DIR]}; shift
+domain="" commit="" judges=10 template="" zone=europe-west1-b # Belgium
 while (($#)); do
   case "$1" in
+    --zone) zone=$2; shift 2 ;;
     --domain) domain=$2; shift 2 ;;
     --commit) commit=$2; shift 2 ;;
     --judges) judges=$2; shift 2 ;;
@@ -15,7 +16,7 @@ while (($#)); do
 done
 here=$(cd "$(dirname "$0")" && pwd)
 repo=$(cd "$here/../.." && pwd)
-region=us-central1 zone=us-central1-a vm=jana-demo
+region=${zone%-*} vm=jana-demo
 gc() { gcloud --project "$project" --quiet "$@"; }
 [ -n "$commit" ] || commit=$(git -C "$repo" rev-parse origin/main)
 git -C "$repo" merge-base --is-ancestor "$commit" origin/main || { echo "$commit is not on origin/main, which the VM clones" >&2; exit 2; }

@@ -1,6 +1,6 @@
 # The hosted demo
 
-One Compute Engine VM runs the browser app for judges: one gateway, one front door and one core per private link. See
+One Compute Engine VM, in Belgium (`europe-west1-b`) by default, runs the browser app for judges: one gateway, one front door and one core per private link. See
 `scripts/jana_tools/hosted.py`. Offline tutoring with Muse Glimmer stays a desktop feature.
 
 Only the gateway reads the Meta key: systemd hands it over as a credential file, and no key goes in this repository,
@@ -20,7 +20,7 @@ uses `<address>.sslip.io`.
 ## After deploying
 
 ```bash
-gcloud compute ssh jana-demo --project PROJECT_ID --zone us-central1-a --command 'sudo journalctl -u jana-front -n 50'
+gcloud compute ssh jana-demo --project PROJECT_ID --zone europe-west1-b --command 'sudo journalctl -u jana-front -n 50'
 ```
 
 Delete everything after judging, including the learners' data:
