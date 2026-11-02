@@ -1,0 +1,78 @@
+packages/ui/test/companion-thread.test.tsx
+  s_d5c00ecab43fb6::t_8b9f3722fac4c0 109
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_d5c00ecab43fb6::t_d8b8f692853120 145
+  s_d5c00ecab43fb6::t_229fbd53eec8d8 240
+  s_d5c00ecab43fb6::t_b863e40f1a2695 248
+services/agent-core/agent_core/engine/state.py
+  s_d5c00ecab43fb6::t_db336f0e5f6503 259,262-274
+  s_d5c00ecab43fb6::t_4162ef05a3b12c 46-64
+  s_d5c00ecab43fb6::t_e1c7f19ddc7f2c 275
+packages/ui/src/learn/StudyResearch.tsx
+  s_d5c00ecab43fb6::t_600c1af51b1386 24,29-30
+  s_d5c00ecab43fb6::t_eee123901b5e46 93
+services/agent-core/tests/test_review_2026_11_02.py
+  s_d5c00ecab43fb6::t_aa89a439c82e83 1-12,14-22,24,26-181
+  s_d5c00ecab43fb6::t_2a1c92b59d369b 13
+  s_d5c00ecab43fb6::t_c1b32650db6046 23
+  s_d5c00ecab43fb6::t_9bea8ced324816 25
+README.md
+  s_d5c00ecab43fb6::t_c65f98d77c322c 51-52
+services/agent-core/agent_core/engine/gates.py
+  s_d5c00ecab43fb6::t_30f744cb1986a6 141
+  s_d5c00ecab43fb6::t_078535d4297c56 157
+  s_d5c00ecab43fb6::t_e9d8cddd237a0b 151
+  s_d5c00ecab43fb6::t_c3193acc325fd9 150,152-156,158-160
+  s_d5c00ecab43fb6::t_c574af2ef6ceef 125-127,129-133
+services/agent-core/agent_core/engine/marking.py
+  s_d5c00ecab43fb6::t_b41dff6c4a5a93 147-152
+  s_d5c00ecab43fb6::t_38fc685f002fff 162-163
+  s_d5c00ecab43fb6::t_1ff559d6a8d80f 279-282
+  s_d5c00ecab43fb6::t_1117a43a9eb385 180-181
+packages/ui/test/study-research.test.tsx
+  s_d5c00ecab43fb6::t_9fe21e8cfc6c7a 42-57
+HACKATHON_SUBMISSION.md
+  s_d5c00ecab43fb6::t_3d0243e745d002 76
+packages/ui/test/study-quiz.test.tsx
+  s_d5c00ecab43fb6::t_cf57fcbd3545a3 1-49
+services/agent-core/agent_core/net/layer.py
+  s_d5c00ecab43fb6::t_02ca2e571ffdc4 254-261,266
+  s_d5c00ecab43fb6::t_78d1587152e4fe 262-265
+packages/ui/src/learn/StudyQuiz.tsx
+  s_d5c00ecab43fb6::t_eb8dcc557f3847 6
+  s_d5c00ecab43fb6::t_937a44fc8f2c2e 68-75
+  s_d5c00ecab43fb6::t_7d3136aeb805ed 114
+  s_d5c00ecab43fb6::t_673e5743830c9f 168
+services/agent-core/agent_core/api/ask.py
+  s_d5c00ecab43fb6::t_f25514ecb27375 84
+services/agent-core/agent_core/api/core.py
+  s_d5c00ecab43fb6::t_80c6e784043661 637
+services/agent-core/agent_core/engine/turn.py
+  s_d5c00ecab43fb6::t_d33e92bc02161c 123-134
+  s_d5c00ecab43fb6::t_c219f82687877d 1705-1706
+  s_d5c00ecab43fb6::t_ff671b27e9c5d1 1699-1704,1707-1709
+  s_d5c00ecab43fb6::t_058095aaf146cc 3961-3962
+  s_d5c00ecab43fb6::t_b16328662e0162 1688
+  s_d5c00ecab43fb6::t_b71a0710538ef5 1726,1728-1729
+  s_d5c00ecab43fb6::t_278b80adf8bef2 3967
+  s_d5c00ecab43fb6::t_8863d26d72f755 3943-3960,3963-3966
+  s_d5c00ecab43fb6::t_e09d778e7d3afc 1650
+packages/i18n/locales/en.json
+  s_d5c00ecab43fb6::t_13b8a5893c82ea 2699,3170
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "faea007b5a996814b13d4d9155ef185c637b3b68",
+  "prompts": {},
+  "sessions": {
+    "s_d5c00ecab43fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44ba0f5a-afb1-425d-8e0e-cfd3bea8cdc4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
