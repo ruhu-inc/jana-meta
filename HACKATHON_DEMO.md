@@ -46,15 +46,56 @@ that does not name a model gives "Made online, then checked against your materia
 | Time | Beat | Screen | Muse Spark at work |
 | --- | --- | --- | --- |
 | 0:00–0:15 | Opening: Home leads with Continue learning, "Find the time of flight of a projectile from the vertical motion", Learn · Practise · Check | Home | none, code |
-| 0:15–0:50 | The lecture, understood: open the projectile lecture, then the saved **What it teaches** | My materials → YouTube video → My Sets | the outline, drafted and verified (observed: about 20 s when made) |
+| 0:15–0:50 | The lecture, understood: open the projectile lecture (the only YouTube video left in the library), then the saved **What it teaches** of 2 November, 4 objectives, 3 worked examples, "Made online with Muse Spark, then checked against your material." | My materials → YouTube video → My Sets | the outline, drafted and verified (observed: 10–20 s when made; one attempt in two was refused by the verifier and had to be pressed again) |
 | 0:50–1:15 | Its ideas: the saved **Concept map**, 7 concepts, 5 marked "Matches a syllabus skill" | My Sets → Concept map | drafted and verified (observed: about 25 s when made) |
 | 1:15–1:45 | Research the weak idea: Explore, the saved pack **Time of Flight of a Projectile**, "Your pack is ready, made from 25 pages", then **Open the pack**: the cited pages and its Quiz · 9 questions | Explore | the research agent: two questions, a six-question plan, web search, verification (minutes; made before recording) |
-| 1:45–2:30 | Practise from the lecture: **Quiz · 3 questions**. Swap the components on question 1: "Incorrect. Not quite yet. Try a hint, then have another go." (no answer shown). Correct it: "Correct · Judged, not checked" with the cited explanation at 0:48. Next question twice, **Finish quiz**: "2 of 3 correct" | My Sets → Quiz · 3 questions | drafting and the support check; the marking is judged by the model against the cited line |
-| 2:30–2:50 | Your tutor: `What haven't I got yet?` → one sentence from Muse Spark, then two facts bound by code: "not started (YouTube video teaches it at 1:02 / 4:12). Source: teaching outline (2026-11-01)", with **See what your tutor knows** | Your tutor | the companion turn (observed: about 25 s) |
-| 2:50–3:00 | Close: Progress → My map, the Projectile motion tile; the line "cited online with Muse Spark, private on this computer with Glimmer" | Progress | none |
+| 1:45–2:35 | Practise from the lecture, made live: Quiz settings, tick **Multiple choice only**, 3 questions, Generate (13 s). Swap the components on question 1: "Incorrect. Not quite yet. Try a hint, then have another go." (no answer shown). Correct it: "Correct · Judged, not checked" with the cited explanation at 0:48. Next question twice, **Finish quiz**: "3 of 3 correct" | Generate → Settings: Quiz | drafting and the support check; each answer judged by the model against the cited line in 4 s or less |
+| 2:35–2:55 | Your tutor (the material's tab): `What haven't I got yet?` → one sentence from Muse Spark, then two facts bound by code: "Of the skills YouTube video teaches, not yet secure: 5 skills" and "not started (YouTube video teaches it at 1:14). Source: teaching outline (2026-11-02)", with **See what your tutor knows** | Your tutor | the companion turn (observed: 10–20 s) |
+| 2:55–3:10 | Close: Progress → Show my map → Physics → the Projectile motion tile: "Learning, 0 of 6 secure, Practised today, 1 mistake being watched". Say, not read: cited online with Muse Spark, kept private on this computer. | Progress | none |
 
 **Captions.** Read the provenance line aloud once, on the outline, and let it stay on screen for the map, the quiz
 and the pack. Caption the tutor's two facts as code, the sentence above them as Muse Spark.
+
+### Timed pass, 2 November (early morning)
+
+Run end to end on the stable host (5197) and gateway 8081, both on commit f0b862f2, at a 1440 × 900 viewport, every
+beat driven for real. Wall clock for the whole pass was 12½ minutes because of the detours listed below; the beats
+themselves, once the detours are removed, add up to about 3:10 at a presenter's pace. The three-minute target holds
+only if the quiz is generated live in one press and the tutor answer lands in the 10–20 s seen tonight.
+
+| Beat | Measured | What the screen showed |
+| --- | --- | --- |
+| Home → My materials | 23 s (sidebar expanded first) | Home now says "Last time you worked on physics in Study on 2026-11-01; 1 card is due." |
+| Lecture → saved outline | 8 s | the 22:51 outline read "Made online, then checked" with no model name: it was made a minute before the 22:52 gateway restart. Regenerated; first attempt "Could not finish · 0/8, some generated content did not pass source verification", second attempt done in 10–20 s and named Muse Spark |
+| Saved concept map | 9 s | 7 concepts, 5 "Matches a syllabus skill", line names Muse Spark |
+| Explore → pack → Open the pack | 33 s | "Researched online with Muse Spark…", 25 pages, Key concepts and Quiz Ready, Quiz · 9 questions and Notes in My Sets. The pack's source view shows raw Markdown and LaTeX |
+| Quiz, generated live and taken | 13 s to generate, 91 s to take at automation pace (about 60 s by hand) | wrong answer refused in under 4 s with no answer shown; corrected answer "Correct · Judged, not checked" at 0:48; "3 of 3 correct" |
+| Your tutor | 10–20 s | sentence from Muse Spark plus two code-bound facts, sources dated 2026-11-02 |
+| Progress → map | 12 s to the map, 33 s with Layers | Projectile motion tile "Learning, 0 of 6 secure, Practised today, 1 mistake being watched" |
+
+Detours and what was changed for them:
+
+- **Two materials were both called "YouTube video"**, and the first was a one-hour talk on language models, not the
+  lecture. Opening it cost 20 s and would have derailed a recording. The actions menu offers only Archive, so that
+  material is now archived (the Archived tab holds it); the library shows the pack and the lecture only.
+- **The study panel (tools and My Sets) is hidden below a 896 px content width.** At 1024 px with the sidebar expanded
+  there is no way to reach My Sets. Record at 1280 px or wider, or collapse the sidebar.
+- **The saved Quiz · 3 questions cannot be retaken**: it opens on its review ("2 of 3 correct", every answer shown)
+  and has no retake control. The beat therefore generates the quiz live. Settings default to Multiple choice, Fill in
+  the blank and True or false all ticked: untick the last two by clicking their labels (a programmatic toggle does not
+  register). Pressing Generate with settings identical to a saved set brings up "This study set already exists" with
+  Open existing set / Generate a new set; different settings skip that dialog.
+- **"Back to study" on a material hides the source pane; it does not leave the material.** Use Back to library. After
+  leaving the pack, the Explore tab stays selected, so getting back to the lecture is Back to library → Materials →
+  the video → My Sets: 45 s in this pass. Plan the order so the quiz follows the outline and map directly, and visit
+  Explore last before the tutor, or accept the extra clicks.
+- **The closing line about Muse Spark and Glimmer is not on the Progress page** or anywhere in the product copy; it
+  was a narration line written as if it were on screen. The table now marks it as spoken.
+- **Small inconsistencies seen:** Home says "1 card is due" while the tutor's status line says "11 cards are due"; the
+  tutor's second fact truncates the skill name mid-word ("…changes its vertica:"); the Progress page opens on the
+  Mathematics tab, so Physics needs a click.
+- **Spend.** The pass (two outline attempts, one quiz, four markings, one tutor turn) added about $0.06 to the ledger
+  for 2 November.
 
 ### Seen live on 1 November (night), and what to do about it
 
@@ -87,8 +128,9 @@ and the pack. Caption the tutor's two facts as code, the sentence above them as 
 - **The profile closed itself** after about twenty minutes of the walk-through (the profile chooser came back, the
   draft answers and sets were kept). Unlock the profile just before recording; three minutes is well inside the limit.
 - **Hosts.** The provenance line needs the gateway and the host's engine on this build: the gateway on 8081 was
-  restarted at 22:50 for it. The pair on 8082/8083 and the ML Demo host on 5199 still run the earlier code and show
-  "Made online, then checked against your material" with no model name until restarted.
+  restarted at 22:50 for it, and on 2 November at 01:10 the ML Demo host on 5199 and the gateway on 8083 were
+  restarted on the pushed build too. (Port 8082 belongs to the jana-nebius project's gateway, not to this repository.)
+  Aids made before a restart keep the unnamed line; regenerate any aid the recording will show.
 - **Spend.** The gateway's ledger for 1 November stood at about $0.73 for the whole day after this preparation (the
   outline, the map, the quiz, two hint attempts, one companion turn and the 25-page research), within the $10 daily cap.
 
