@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_d5c00ecab43fb6::t_96b0df21dec127 57-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6873ba5c3326b43aa17a39acd750dc7758bb4cd9",
+  "prompts": {},
+  "sessions": {
+    "s_d5c00ecab43fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44ba0f5a-afb1-425d-8e0e-cfd3bea8cdc4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
