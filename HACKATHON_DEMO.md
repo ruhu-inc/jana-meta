@@ -68,7 +68,7 @@ only if the quiz is generated live in one press and the tutor answer lands in th
 | Home → My materials | 23 s (sidebar expanded first) | Home now says "Last time you worked on physics in Study on 2026-11-01; 1 card is due." |
 | Lecture → saved outline | 8 s | the 22:51 outline read "Made online, then checked" with no model name: it was made a minute before the 22:52 gateway restart. Regenerated; first attempt "Could not finish · 0/8, some generated content did not pass source verification", second attempt done in 10–20 s and named Muse Spark |
 | Saved concept map | 9 s | 7 concepts, 5 "Matches a syllabus skill", line names Muse Spark |
-| Explore → pack → Open the pack | 33 s | "Researched online with Muse Spark…", 25 pages, Key concepts and Quiz Ready, Quiz · 9 questions and Notes in My Sets. The pack's source view shows raw Markdown and LaTeX |
+| Explore → pack → Open the pack | 33 s | "Researched online with Muse Spark…", 25 pages, Key concepts and Quiz Ready, Quiz · 9 questions and Notes in My Sets. The pack's source view showed raw Markdown and LaTeX (fixed since) |
 | Quiz, generated live and taken | 13 s to generate, 91 s to take at automation pace (about 60 s by hand) | wrong answer refused in under 4 s with no answer shown; corrected answer "Correct · Judged, not checked" at 0:48; "3 of 3 correct" |
 | Your tutor | 10–20 s | sentence from Muse Spark plus two code-bound facts, sources dated 2026-11-02 |
 | Progress → map | 12 s to the map, 33 s with Layers | Projectile motion tile "Learning, 0 of 6 secure, Practised today, 1 mistake being watched" |
@@ -91,9 +91,14 @@ Detours and what was changed for them:
   Explore last before the tutor, or accept the extra clicks.
 - **The closing line about Muse Spark and Glimmer is not on the Progress page** or anywhere in the product copy; it
   was a narration line written as if it were on screen. The table now marks it as spoken.
-- **Small inconsistencies seen:** Home says "1 card is due" while the tutor's status line says "11 cards are due"; the
-  tutor's second fact truncates the skill name mid-word ("…changes its vertica:"); the Progress page opens on the
-  Mathematics tab, so Physics needs a click.
+- **Small inconsistencies seen, fixed the same morning:** Home said "1 card is due" while the tutor's status line
+  said "11 cards are due" (Home's card left out Study's own due cards; it now counts them the way the thread does);
+  the tutor's second fact truncated the skill name mid-word ("…changes its vertica:"; statements are now clipped at a
+  word with an ellipsis); Progress opened on the Mathematics tab with nothing in it (it now opens on the subject with
+  an idea that moved today, else the one with the most ideas past Not started); and the research pack's source view
+  showed raw Markdown and LaTeX (it now reads as Markdown with its maths, except while a citation is highlighted in
+  it). The thread's status line keeps the day's opener as worded when the episode opened, so after a session ends
+  it can lag Home's until the next day.
 - **Spend.** The pass (two outline attempts, one quiz, four markings, one tutor turn) added about $0.06 to the ledger
   for 2 November.
 
