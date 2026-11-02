@@ -1,0 +1,23 @@
+scripts/hosted/README.md
+  s_49ba057c5af1a1::t_883bc9cabb252b 3,23
+scripts/hosted/deploy.sh
+  s_49ba057c5af1a1::t_9385d3b13eb0b0 3,5-6,9,19
+scripts/hosted/teardown.sh
+  s_49ba057c5af1a1::t_4ac60acc2562c9 6-16,34-42,47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f4460cb22a5bf98ca6c0099ab37a3a887dc48ef2",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
