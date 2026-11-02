@@ -228,6 +228,22 @@ describe("Progress, simpler by default", () => {
     expect(screen.queryByRole("button", { name: /not started/ })).toBeNull();
   });
 
+  test("the subject shown first is the one with something in it, or the one that moved today", () => {
+    const view = canonical();
+    const physics = view.subjects[0]!;
+    const untouched = (s: typeof physics, name: string) => ({ ...s, subject: name, bands: { not_started: s.bands.not_started + s.bands.learning + s.bands.secure, learning: 0, secure: 0 },
+      topics: s.topics.map((topic) => ({ ...topic, topic_id: `${topic.topic_id}.${name}`, kcs: topic.kcs.map((kc) => ({ ...kc, kc_id: `${kc.kc_id}.${name}`, state: "not_started" as const, band: "not_started" as const })) })) });
+    const mathematics = untouched(physics, "mathematics");
+    // Mathematics is listed first with nothing started; Physics has ideas past Not started, so it is shown.
+    let shown = show({ ...view, moved_today: [], subjects: [mathematics, physics] });
+    expect([...shown.container.querySelectorAll("[data-progress-subject]")].map((s) => s.getAttribute("data-progress-subject"))).toEqual(["physics"]);
+    cleanup();
+    // An idea that moved today wins, whichever subject holds it.
+    const movedKc = mathematics.topics[0]!.kcs[0]!.kc_id;
+    shown = show({ ...view, moved_today: [movedKc], subjects: [physics, mathematics] });
+    expect([...shown.container.querySelectorAll("[data-progress-subject]")].map((s) => s.getAttribute("data-progress-subject"))).toEqual(["mathematics"]);
+  });
+
   test("a subject selector chooses the card shown", () => {
     const view = canonical();
     const physics = view.subjects[0]!;

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, timedelta
 from functools import cache
 from pathlib import Path
@@ -185,8 +185,14 @@ class OpenerDesk:
     settings: Any
     clock_ms: Callable[[], int] = lambda: int(datetime.now(UTC).timestamp() * 1000)
     templates: OpenerTemplates | None = None
+    # Study's own due cards (phase 2), counted the way the thread's opener counts them, so Home and Your tutor say
+    # the same number (the 2 November rehearsal: Home "1 card is due", the thread "11 cards are due").
+    study_cards: Callable[[int], int] | None = None
 
     def opener(self) -> dict[str, Any]:
-        found = facts(self.learner, self.settings, self.clock_ms())
+        now = self.clock_ms()
+        found = facts(self.learner, self.settings, now)
+        if self.study_cards is not None:
+            found = replace(found, study_cards_due=self.study_cards(now))
         text = word(found, chosen(found), self.templates or load_templates())
         return {"opener_id": found.today, "text": text[:240], "facts": found.view()}

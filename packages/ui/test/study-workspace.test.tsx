@@ -21,9 +21,9 @@ test("returning to curriculum material waits for workspace setup and retains the
   expect(controller.open).toHaveBeenCalledWith(sid, 2);
   expect(opened).toHaveBeenCalledTimes(1);
 });
-function show(extra: Partial<StudyWorkspaceView>, onReviewAccess?: () => void, onJourneyStarted?: (node: string, subject: string) => void) {
+function show(extra: Partial<StudyWorkspaceView>, onReviewAccess?: () => void, onJourneyStarted?: (node: string, subject: string) => void, packs: { source_id: string }[] = []) {
   const view = { ...EMPTY_STUDY, status: "ready", ...extra } as StudyWorkspaceView;
-  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadPage: vi.fn(async () => null), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}), loadTopicMaps: vi.fn(async () => {}) };
+  const controller = { subscribe: () => () => {}, getView: () => view, load: vi.fn(async () => {}), researchPacks: vi.fn(async () => packs), close: vi.fn(), open: vi.fn(), refreshOpened: vi.fn(), generate: vi.fn(async () => {}), upload: vi.fn(async () => {}), startExtraction: vi.fn(async () => {}), rate: vi.fn(), submit: vi.fn(), readCitation: vi.fn(async () => true), playOverview: vi.fn(), stopReading: vi.fn(), pauseOverview: vi.fn(), resumeOverview: vi.fn(), checkAnswer: vi.fn(async () => {}), jobAction: vi.fn(), loadTopics: vi.fn(async () => true), saveDraft: vi.fn(async () => {}), loadMaterialTopics: vi.fn(async () => {}), openSet: vi.fn(async () => {}), showAid: vi.fn(async () => {}), hideAid: vi.fn(), clearResult: vi.fn(), loadPage: vi.fn(async () => null), loadMedia: vi.fn(async () => null), seek: vi.fn(), archiveSources: vi.fn(async () => {}), requestQuizHelp: vi.fn(async () => {}), loadTopicMaps: vi.fn(async () => {}) };
   const connected = { ...controller, beginJourney: vi.fn(async () => true) };
   render(<StudyWorkspace controller={connected as unknown as StudyWorkspaceController} {...(onReviewAccess ? { onReviewAccess } : {})} {...(onJourneyStarted ? { onJourneyStarted } : {})} />);
   return connected;
@@ -563,4 +563,17 @@ test("a failed outline job is labelled in words, never by its copy key", () => {
 test("a study aid says which model made it and where, from its record", () => {
   show({ source, aid: { aid_id: `aid_${"7".repeat(26)}`, job_id: `stj_${"7".repeat(26)}`, kind: "notes", title: "Biology", sources: [{ source_id: sid, revision: 1 }], claims: [cited("DNA stores genetic information.")], status: "ready", created_at: now, made_by: { runtime: "online", model: "muse-spark-1.3" } } });
   expect(screen.getByText("Made online with Muse Spark, then checked against your material.")).toBeTruthy();
+});
+
+test("a research pack's text reads as Markdown with its maths; any other text source stays literal", async () => {
+  const text = "## 1. Zero Launch Angle\nTime of flight \\(T = \\frac{2v_0}{g}\\) from the vertical motion.";
+  const chunk = { chunk_id: `sck_${"0".repeat(26)}`, source_id: sid, revision: 1, ordinal: 0, text, locator: { kind: "text" as const, paragraph: 1 } };
+  show({ source: { ...source, title: "Web research: Time of Flight" }, chunks: [chunk] }, undefined, undefined, [{ source_id: sid }]);
+  await waitFor(() => expect(screen.getByText("1. Zero Launch Angle").className).toContain("text-heading"));
+  expect(document.querySelector(".katex")).toBeTruthy();
+  expect(screen.queryByText(/## 1\. Zero Launch Angle/)).toBeNull();
+  cleanup();
+  show({ source, chunks: [chunk] });
+  expect(screen.getByText(/## 1\. Zero Launch Angle/)).toBeTruthy();
+  expect(document.querySelector(".katex")).toBeNull();
 });

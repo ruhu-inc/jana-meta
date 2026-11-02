@@ -996,16 +996,16 @@ def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> OutlineFacts |
     not_yet: list[str] = []
     for i, entry in enumerate(rows):
         kc, band = str(entry.get("kc_id")), str(entry.get("band"))
-        statement = (content.kc_statement(kc) if content is not None else None) or kc
+        statement = companion_facts.clip((content.kc_statement(kc) if content is not None else None) or kc)
         if band != "secure":
-            not_yet.append(statement[:100])
+            not_yet.append(statement)
         if i >= 12:
             continue
         when = taught_at.get(kc)
         where = f" ({title} teaches it at {moment_label(when)})" if type(when) is int else f" ({title})"
         facts.append(companion_facts.Fact(
-            "outline:" + kc, "skill_band", band, "band", statement[:100], desk.day(now), "teaching outline",
-            f"Recorded practice band for {statement[:100]}: {companion_facts.band_words(band)}{where}."))  # fmt: skip
+            "outline:" + kc, "skill_band", band, "band", statement, desk.day(now), "teaching outline",
+            f"Recorded practice band for {statement}: {companion_facts.band_words(band)}{where}."))  # fmt: skip
     day = desk.day(now)
     facts.append(companion_facts.Fact(
         "outline:skills", "outline_skills", len(rows), "skills", title, day, "teaching outline",

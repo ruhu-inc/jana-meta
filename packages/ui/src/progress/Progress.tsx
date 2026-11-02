@@ -240,10 +240,18 @@ export function movedToday(progress: ProgressView): string[] {
   return progress.moved_today.filter((kc) => states.get(kc) !== "not_started");
 }
 
+/** The subject shown before one is chosen: the one with an idea that moved today, else the one with the most ideas
+ * past Not started, else the first. (The 2 November rehearsal opened on Mathematics, 0 of 102, with Physics in use.) */
+export function defaultSubject(progress: ProgressView): ProgressSubject | undefined {
+  const moved = new Set(progress.moved_today);
+  return progress.subjects.find((s) => s.topics.some((topic) => topic.kcs.some((kc) => moved.has(kc.kc_id))))
+    ?? [...progress.subjects].sort((a, b) => b.bands.learning + b.bands.secure - (a.bands.learning + a.bands.secure))[0];
+}
+
 export function ProgressContent({ state, names, actions, hero }: { state: ProgressState; names: ProgressNames; actions: ProgressActions; hero?: ReactNode }) {
   const t = useT();
   const progress = state.progress;
-  // The subject shown (the first until one is chosen) and whether the map is open; both stay while the screen lives.
+  // The subject shown (`defaultSubject` until one is chosen) and whether the map is open; both stay while the screen lives.
   const [chosen, setChosen] = useState<string | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
   const mapId = useId();
@@ -261,7 +269,7 @@ export function ProgressContent({ state, names, actions, hero }: { state: Progre
     for (const s of progress.subjects) for (const topic of s.topics) for (const kc of topic.kcs) states.set(kc.kc_id, { state: kc.state, topic: topic.title });
     const started = progress.subjects.some((s) => s.bands.learning + s.bands.secure > 0) || progress.time_studied.minutes_total > 0;
     const subjects = progress.subjects;
-    const subject = subjects.find((s) => s.subject === chosen) ?? subjects[0];
+    const subject = subjects.find((s) => s.subject === chosen) ?? defaultSubject(progress);
     const mapShown = hero !== undefined && mapOpen;
     return (
       <div className="flex flex-col gap-8">

@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from typing import Any
 
 from fastapi import FastAPI, Request, Response
@@ -30,7 +31,15 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
         records = core.records
         if records is None or records.learner is None or core.records_profile is None:
             raise ApiError("not_found", "the card needs an open learner database")
-        return OpenerDesk(records.learner, core.settings, core.clock_ms).opener()
+        companion = getattr(core, "companion", None)
+
+        def study_cards(now: int) -> int:
+            try:
+                return int(companion.study_cards_due(now)) if companion is not None else 0
+            except (sqlite3.Error, AttributeError, ValueError):
+                return 0
+
+        return OpenerDesk(records.learner, core.settings, core.clock_ms, study_cards=study_cards).opener()
 
     def opened(body: Any) -> str | None:
         profile_open()
