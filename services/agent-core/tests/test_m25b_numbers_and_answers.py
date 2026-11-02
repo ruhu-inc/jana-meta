@@ -97,7 +97,8 @@ def _suites_trace_every_number() -> None:
     assert {suites[s]["status"] for s in ("scenarios", "safety", "answer_oracles")} == {"ran"}
     cases = [c for c in report["cases"] if c["status"] != "skipped"]
     shown = [c for c in cases if c["suite"] in ("scenarios", "safety")]
-    assert shown and [c["case_id"] for c in shown if c["status"] != "passed"] == []
+    failed = [(c["case_id"], c["status"], c.get("reason")) for c in shown if c["status"] != "passed"]
+    assert shown and not failed, failed
     untraced = [c["case_id"] for c in shown if c.get("numbers_traced", 0) < c.get("numbers_total", 0)]
     assert untraced == [], f"cases showing a number without a check id: {untraced}"
     traced = [suites[s]["criteria"]["board_numbers_traced"] for s in ("scenarios", "safety")]
