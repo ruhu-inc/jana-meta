@@ -81,11 +81,7 @@ async def answer_question(core: CoreService, question: str, mode: str | None = N
     own = own_evidence(conn, question)
     # The learner's excerpts go to the cloud only when the profile may send study material (STU-01, PRV-05).
     layer = core.online
-    share = (
-        layer is not None
-        and "study_materials" in layer.features_on()
-        and layer.cloud_effective(CURRENT_PROFILE.get(), conn)
-    )
+    share = layer is not None and layer.study_effective(CURRENT_PROFILE.get(), conn)
     ask_id = new_id("ask")
     payload = request_body(ask_id, question, policy, own, share, config)
     try:

@@ -120,7 +120,18 @@ from agent_core.engine.safety import (
 from agent_core.engine.sketch_flow import SketchFlow, offer_schema
 from agent_core.engine.soft_rules import RuleMatcher, tutor_context_lines
 from agent_core.engine.soft_rules import signals as rule_signals
-from agent_core.engine.state import NUMBER, BoardStep, Plan, PlanStep, Problem, SessionState, expression_key, numbers_in
+from agent_core.engine.state import (
+    NUMBER,
+    BoardStep,
+    Plan,
+    PlanStep,
+    Problem,
+    SessionState,
+    expression_key,
+    numbers_in,
+    stated_unit,
+    stated_value,
+)
 from agent_core.engine.tone import cap_words, fit_spoken, word_cap
 from agent_core.engine.tool_drawings import checked
 from agent_core.engine.toolround import ToolRound
@@ -1636,7 +1647,7 @@ class Engine(Coordination, Offers, Predictions):
         state.attempts[state.step] = state.attempts.get(state.step, 0) + 1
         state.student_lines.append(text)
         plan = state.plan
-        stated = _stated_value(text)
+        stated = stated_value(text)
         status: str = "unchecked"
         check_id: str | None = None
         reached: PlanStep | str | None = None
@@ -1674,7 +1685,7 @@ class Engine(Coordination, Offers, Predictions):
                 )
                 if status == "correct" and at:
                     state.step, state.rung = min(max(state.step, at + 1), len(plan.steps)), 0
-                last_value = _stated_value(checked[-1].line) if checked else None
+                last_value = stated_value(checked[-1].line) if checked else None
                 if status == "correct" and last_value is not None:
                     final = numbers_in(plan.final_value)
                     if final and _close(last_value, final[0]):
@@ -1685,7 +1696,17 @@ class Engine(Coordination, Offers, Predictions):
             remaining = [s for s in plan.steps if s.index >= state.step and s.value is not None
                          and not (numbers_in(s.value) and numbers_in(s.value)[0] in givens)]  # fmt: skip
             final = numbers_in(plan.final_value)
-            hit = next((s for s in remaining if _close(stated, numbers_in(s.value or "")[0])), None)
+
+            async def run(name: str, args: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+                return await flows.run_tool(self, turn, name, args)
+
+            hit = None
+            for candidate in remaining:
+                checked_value = numbers_in(candidate.value or "")[0]
+                if await _stated_match(run, text, stated, checked_value, candidate.unit) == "yes":
+                    hit = candidate
+                    break
+            final_match = await _stated_match(run, text, stated, final[0], plan.final_unit) if final else "no"
             stated_eq = flows.equation_part(text)  # "oh, then s = 10 m" states "s = 10 m"
             named = stated_eq.rsplit("=", 1)[0].strip() if "=" in stated_eq else ""
             bare = flows.BARE_SIDE.fullmatch(named) is not None
@@ -1702,8 +1723,10 @@ class Engine(Coordination, Offers, Predictions):
                     check_id, reached = hit.check_id, hit
             elif not bare or system:
                 status = "unchecked"  # a line no tool could decide: read by the Checker, never marked wrong
-            elif final and _close(stated, final[0]):
+            elif final_match == "yes":
                 status, check_id, reached = "correct", plan.final_check_id, "final"
+            elif final_match == "unknown":
+                status = "unchecked"  # no tool could read the unit: never marked wrong
             elif hit:
                 status, check_id, reached = "correct", hit.check_id, hit
             elif named and named != flows.unknown_of(plan) and not flows.assigns(plan, named):
@@ -3917,14 +3940,31 @@ def command_only(text: str) -> bool:
     return found is not None and working_only(found.group(1).strip())
 
 
-def _stated_value(text: str) -> Fraction | None:
-    """The value a student states: the number after the last `=` when nothing but a unit follows it, or a bare number.
-    A working line ("0 = 14^2 - 2(9.8)s") states no value."""
-    tail = text.rsplit("=", 1)[-1].strip().rstrip(".?!")
-    if re.fullmatch(r"[-\u2212]?\d+(?:\.\d+)?(?:\s*/\s*\d+)?\s*[A-Za-z/^0-9\u00b0]*", tail):
-        found = numbers_in(tail)
-        return found[0] if found else None
-    return None
+def _unit_key(unit: str) -> str:
+    return re.sub(r"[\s^*\u00b7]", "", unit).replace("\u00b2", "2").replace("\u00b3", "3")
+
+
+async def _stated_match(
+    run: Callable[[str, dict[str, Any]], Awaitable[tuple[dict[str, Any] | None, str | None]]],
+    text: str,
+    stated: Fraction,
+    value: Fraction,
+    unit: str | None,
+) -> str:
+    """Whether a stated value is the plan's `value`: "yes", "no", or "unknown" when no tool could read the unit written.
+    The unit counts: "10 km" is not a checked 10 m, and "1000 mm" is. A correctly rounded decimal is the value."""
+    number = NUMBER.search(text.rsplit("=", 1)[-1].replace("\u2212", "-"))
+    written = stated_unit(text)
+    if not written or not unit or _unit_key(written) == _unit_key(unit):
+        rounded = number is not None and rounds_to(number.group(0), value)
+        return "yes" if _close(stated, value) or rounded else "no"
+    quantity = f"{number.group(0) if number else stated} {written}"
+    converted, _ = await run("units_convert", {"quantity": quantity, "to": unit})
+    decimal = ((converted or {}).get("value") or {}).get("decimal")
+    if decimal is not None:
+        return "yes" if _close(Fraction(str(decimal)), value) else "no"
+    readable, _ = await run("units_convert", {"quantity": f"1 {written}", "to": written})
+    return "no" if readable is not None else "unknown"  # another kind of quantity; else an unreadable unit or no tool
 
 
 _UNIT_TAIL = re.compile(r"(?<=\d)\s*[A-Za-z\u00b0\u03a9][A-Za-z0-9/^\u00b0\u03a9\s.*\u00b7()-]*$")

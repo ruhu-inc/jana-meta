@@ -39,6 +39,22 @@ function show(c: StudyWorkspaceController, opened = vi.fn()) {
   return render(<LocaleProvider locale="en"><StudyResearch controller={c} onOpenSource={opened} /></LocaleProvider>);
 }
 
+describe("Explore's research start", () => {
+  test("a_start_is_handed_back_so_returning_never_runs_it_again", async () => {
+    const { fake, as } = controller([QUESTION, QUESTION]);
+    const used = vi.fn();
+    const screenFor = (start: { topic: string; seq: number } | null) => <LocaleProvider locale="en"><StudyResearch controller={as} onOpenSource={vi.fn()} start={start} onStartUsed={used} /></LocaleProvider>;
+    const view = render(screenFor({ topic: "electrolysis of brine", seq: 1 }));
+    await waitFor(() => expect(fake.researchChat).toHaveBeenCalledTimes(1));
+    expect(used).toHaveBeenCalledTimes(1);
+    // The workspace cleared it: leaving Explore and coming back mounts a new panel with no start.
+    view.unmount();
+    render(screenFor(null));
+    await new Promise((done) => setTimeout(done));
+    expect(fake.researchChat).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("SPEC §18 research agent", () => {
   test("research_talk_then_plan_then_pack", async () => {
     const { fake, as } = controller([QUESTION, { kind: "brief", question: null, chips: [], asks: null, brief: BRIEF }], [record("researching"), record("ready")]);

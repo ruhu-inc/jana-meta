@@ -48,7 +48,8 @@ entry built, on top of it:
 - **An adult-only product** (18 and over, as Meta's terms require), with an age at sign-up.
 - **A research agent** that talks a topic through, then builds a cited study pack from the web.
 - **New teaching features**: checked figures on items and lessons, tracing a misconception to the earlier skill it
-  comes from, explain-it-back before a skill counts as mastered, and predict-before-you-see simulations.
+  comes from, explain-it-back before mastery on the few skills whose key points are written so far, and
+  predict-before-you-see simulations.
 - **The Study companion, YouTube lectures and the learner's map** described above, in commits `7a92235d` and
   `aed35cbf` (October 29–30) and `b814436d` (October 31).
 - **The demo build**, with the projectile-motion Physics subtopic, in `4ccd5c4c` (tagged `demo-2026-11-01`).

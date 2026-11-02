@@ -144,6 +144,12 @@ def canonical_number_text(text: str) -> str:
     return out
 
 
+# What follows the number is no unit if it carries on the sum or offers a second value: "3 or 4", "3+4", "3^2", "4x".
+_NOT_A_UNIT = re.compile(
+    r"^[-+*^=<>,;:)]|^/\s*\d|(?:^|\s)\d|\b(?:or|and|to|plus|minus|times)\b|^[xyz]$", re.IGNORECASE
+)
+
+
 def parse_numeric(text: str) -> Parsed | None:
     """A typed answer: a number (decimal, `e` or times-ten-to-the notation, or a simple fraction) and an optional
     unit."""
@@ -153,6 +159,8 @@ def parse_numeric(text: str) -> Parsed | None:
     fraction = _FRACTION.match(cleaned)
     if fraction is not None and int(fraction["q"]) != 0:
         unit = fraction["unit"].strip() or None
+        if unit is not None and _NOT_A_UNIT.search(unit):
+            return None
         return Parsed(Decimal(fraction["p"]) / Decimal(fraction["q"]), unit, EXACT_FIGURES)
     match = _NUMBER.match(cleaned.replace(",", ""))
     if match is None:
@@ -169,6 +177,8 @@ def parse_numeric(text: str) -> Parsed | None:
     unit = match.group("unit").replace("\\,", "").replace("\\ ", "").strip() or None
     if unit is not None and unit.startswith("\\text{") and unit.endswith("}"):
         unit = unit[6:-1].strip()
+    if unit is not None and _NOT_A_UNIT.search(unit):
+        return None
     return Parsed(value, unit, significant_figures(match.group("num")))
 
 
@@ -266,7 +276,10 @@ async def mark_numeric(part: Mapping[str, Any], response: str, convert: Convert,
     units_matter = key_unit is not None and answer["unit_policy"] != "none"
     if units_matter and parsed.unit is not None:
         converted = await convert(f"{parsed.value} {parsed.unit}", key_unit)
-        if converted is None:  # not the same kind of quantity
+        if converted is None:
+            # Not the same kind of quantity, unless the worker cannot convert anything: never mark past a missing check.
+            if await convert("1 m", "cm") is None:
+                return verdict("unverifiable")
             return verdict("incorrect", "unit_error" if matches(value) else "value")
         check_ids.append(converted.check_id)
         same_unit = converted.value == parsed.value

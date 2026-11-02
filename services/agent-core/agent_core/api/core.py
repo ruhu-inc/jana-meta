@@ -634,8 +634,7 @@ class CoreService:
         layer = getattr(self, "online", None)
         conn = self.records.learner.conn if self.records is not None and self.records.learner is not None else None
         try:
-            return bool(layer is not None and "study_materials" in layer.features_on()
-                        and layer.cloud_effective(self.records_profile, conn))  # fmt: skip
+            return bool(layer is not None and layer.study_effective(self.records_profile, conn))
         except Exception:
             return False
 
