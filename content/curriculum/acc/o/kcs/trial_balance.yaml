@@ -42,6 +42,17 @@
   - purchases returns
   - sales returns
   - transposition
+  key_points:
+  - id: kp_debit_balances
+    text:
+      en: Assets, expenses and drawings have debit balances in a trial balance.
+    follow_up:
+      en: Which kinds of account show their balances on the left?
+  - id: kp_credit_balances
+    text:
+      en: Liabilities, capital and income have credit balances in a trial balance.
+    follow_up:
+      en: Which kinds of account show their balances on the right?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -91,6 +102,17 @@
   - purchases returns
   - sales returns
   - transposition
+  key_points:
+  - id: kp_totals_agree
+    text:
+      en: The debit and credit totals of a trial balance should be equal if each entry was made as a debit and credit.
+    follow_up:
+      en: Why should both columns total the same if all entries were done twice?
+  - id: kp_difference
+    text:
+      en: A difference between the totals shows that an error has been made, and its size is the first clue to the cause.
+    follow_up:
+      en: What does an unequal total signal about the records?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -139,6 +161,17 @@
   - purchases returns
   - sales returns
   - transposition
+  key_points:
+  - id: kp_both_sides_same
+    text:
+      en: Some errors leave the totals equal, for example omission, a wrong account, a compensating error or reversal of entries.
+    follow_up:
+      en: What kind of mistake affects both sides by the same amount?
+  - id: kp_why_hidden
+    text:
+      en: The trial balance only tests that debits equal credits, not that entries are complete or in the right account.
+    follow_up:
+      en: What can the trial balance not prove about the records?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -190,6 +223,17 @@
   - purchases returns
   - sales returns
   - transposition
+  key_points:
+  - id: kp_undo_and_redo
+    text:
+      en: A correcting journal reverses the wrong entry and records the right one, or does the net of the two.
+    follow_up:
+      en: What two steps does the correction combine?
+  - id: kp_narration
+    text:
+      en: The journal shows the accounts debited and credited with a short narrative explaining the error.
+    follow_up:
+      en: What does the journal give to explain why the correction was made?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -238,6 +282,17 @@
   - purchases returns
   - sales returns
   - transposition
+  key_points:
+  - id: kp_holding
+    text:
+      en: A suspense account holds the difference when the trial balance fails, until the errors are found.
+    follow_up:
+      en: What is done with the amount that stops the totals agreeing?
+  - id: kp_clear
+    text:
+      en: Each corrected error is posted to the suspense account, and it should end at zero once all are found.
+    follow_up:
+      en: What should the suspense balance be after every error is fixed?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active

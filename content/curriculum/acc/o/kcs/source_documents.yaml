@@ -44,6 +44,17 @@
   - ledger
   - credit sale
   - credit purchase
+  key_points:
+  - id: kp_document_proof
+    text:
+      en: A source document is the first written evidence that a transaction took place.
+    follow_up:
+      en: What gives the business proof that a transaction really happened?
+  - id: kp_matching
+    text:
+      en: Each document matches a type of transaction, such as an invoice for a credit sale and a credit note for a return.
+    follow_up:
+      en: Which document would be raised if a customer sent goods back?
   difficulty_prior: -1.2
   version: 0.1.1
   status: active
@@ -94,6 +105,17 @@
   - ledger
   - credit sale
   - credit purchase
+  key_points:
+  - id: kp_first_record
+    text:
+      en: A book of prime entry is where a transaction is first recorded before it is posted to the ledger.
+    follow_up:
+      en: Where does a transaction go before reaching the ledger accounts?
+  - id: kp_match_book
+    text:
+      en: The book is chosen by the type of transaction, so credit sales and money movements are first recorded in different books.
+    follow_up:
+      en: How would you decide between the sales day book and the cash book?
   difficulty_prior: -0.9
   version: 0.1.1
   status: active
@@ -145,6 +167,17 @@
   - ledger
   - credit sale
   - credit purchase
+  key_points:
+  - id: kp_list_price
+    text:
+      en: Trade discount is a reduction from the list price given to a buyer, and it is not recorded as an account.
+    follow_up:
+      en: Is the discount ever entered in the ledger as an expense or income?
+  - id: kp_net_entry
+    text:
+      en: The entry for the sale or purchase is the list price less the trade discount.
+    follow_up:
+      en: What amount is shown on the invoice as the amount for the goods?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -196,6 +229,17 @@
   - ledger
   - credit sale
   - credit purchase
+  key_points:
+  - id: kp_for_prompt
+    text:
+      en: Cash discount is a reduction in the amount paid when the debt is settled early, so it is recorded in the accounts.
+    follow_up:
+      en: What condition must be met by the customer to take the reduction?
+  - id: kp_allowed_received
+    text:
+      en: Discount allowed is an expense for the seller and discount received is income for the buyer, and the payment is the debt less it.
+    follow_up:
+      en: Which party counts it as a cost and which as a gain?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -250,6 +294,17 @@
   - ledger
   - credit sale
   - credit purchase
+  key_points:
+  - id: kp_post_totals
+    text:
+      en: Day book totals are posted to the ledger as one entry for the period, and the individual items go to personal accounts.
+    follow_up:
+      en: How are the many small entries in a day book handled in the ledger?
+  - id: kp_sides
+    text:
+      en: The sales day book total is credited to the sales account and each customer's account is debited.
+    follow_up:
+      en: Which accounts get the debits when credit sales are posted?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active

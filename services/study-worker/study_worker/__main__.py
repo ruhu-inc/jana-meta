@@ -49,8 +49,8 @@ def main() -> None:
                 )
             sys.stdout.write(json.dumps(result) + "\n")
             return
-        limit = request.get("max_units", 300)
-        if type(limit) is not int or not 1 <= limit <= 300:
+        limit = request.get("max_units", 1000)
+        if type(limit) is not int or not 1 <= limit <= 1000:
             raise DocumentError("source_too_large")
         units = decode(data, request["kind"], "", limit)
         for unit in units:
@@ -70,10 +70,10 @@ def main() -> None:
                     and all(line["confidence"] >= 0.85 and not line.get("low_confidence_spans") for line in lines)
                     else ""
                 )
-        if sum(len(u["text"]) for u in units) > 2_000_000:
+        if sum(len(u["text"]) for u in units) > 6_000_000:  # a 1,000-page textbook
             raise DocumentError("source_too_large")
         result = {"units": units}
-        if len(json.dumps(result).encode()) > 4_000_000:
+        if len(json.dumps(result).encode()) > 16_000_000:  # within the gateway's read of this worker
             raise DocumentError("source_too_large")
     except DocumentError as error:
         result = {"error": str(error)}

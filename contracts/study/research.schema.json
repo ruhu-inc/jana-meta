@@ -46,13 +46,15 @@
       "physics",
       "chemistry",
       "accounting",
-      "biology"
+      "biology",
+      "other"
      ]
     },
     "level": {
      "enum": [
       "o_level",
-      "first_year"
+      "first_year",
+      "university"
      ]
     },
     "purpose": {

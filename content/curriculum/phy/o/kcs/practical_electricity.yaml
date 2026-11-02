@@ -35,6 +35,17 @@
   - resistor
   - voltage
   - power transferred
+  key_points:
+  - id: kp_p_iv
+    text:
+      en: Electrical power is the current multiplied by the voltage, P = IV, in watts.
+    follow_up:
+      en: Which two measurements give the power of an appliance?
+  - id: kp_p_i2r
+    text:
+      en: Combining P = IV with V = IR gives P = I²R, useful when current and resistance are known.
+    follow_up:
+      en: You know the current and resistance of a heater but not its voltage. How can you find its power?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -72,6 +83,17 @@
   - electrical energy
   - energy meter
   - power
+  key_points:
+  - id: kp_energy_units
+    text:
+      en: 'Energy is power × time: in joules with watts and seconds, or in kWh with kilowatts and hours.'
+    follow_up:
+      en: Which units of power and time go together to give an answer in joules, and which in kWh?
+  - id: kp_cost
+    text:
+      en: The cost is the number of kWh used multiplied by the price of one kWh.
+    follow_up:
+      en: Once you know the kWh used by an appliance, how do you get the cost?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -116,6 +138,22 @@
   - insulation
   - residual current device
   - current
+  key_points:
+  - id: kp_fuse_rating
+    text:
+      en: Choose a fuse rated just above the normal current of the appliance, found from I = P/V.
+    follow_up:
+      en: How do you decide the fuse rating for a 920 W appliance on a 230 V supply?
+  - id: kp_live_neutral
+    text:
+      en: The live wire brings the current in at high voltage and the neutral wire completes the circuit; the fuse goes in the live wire.
+    follow_up:
+      en: Which of the live and neutral wires should carry the fuse, and why?
+  - id: kp_earth
+    text:
+      en: The earth wire gives a low-resistance path for a fault current, so the fuse blows and the metal case stays safe.
+    follow_up:
+      en: What does the earth wire do if the live wire touches the metal case of an appliance?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active

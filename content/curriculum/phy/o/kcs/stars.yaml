@@ -27,6 +27,17 @@
   - speed of light
   - star
   - galaxy
+  key_points:
+  - id: kp_distance_unit
+    text:
+      en: 'A light-year is a unit of distance: how far light travels in one year.'
+    follow_up:
+      en: Is a light-year a measure of time or of distance, and what does it represent?
+  - id: kp_conversion
+    text:
+      en: One light-year is the speed of light × the number of seconds in a year, about 9.5 × 10¹⁵ m.
+    follow_up:
+      en: How would you work out the number of metres in one light-year from the speed of light?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -70,6 +81,17 @@
   - fusion
   - planetary nebula
   - star
+  key_points:
+  - id: kp_formation
+    text:
+      en: A star forms when gravity pulls a nebula of gas and dust together, and it shines for most of its life by fusing hydrogen.
+    follow_up:
+      en: What pulls the gas and dust together to make a new star, and what powers it through its long main stage?
+  - id: kp_mass_decides
+    text:
+      en: A star like the Sun ends as a red giant then a white dwarf, while a much more massive star explodes as a supernova.
+    follow_up:
+      en: How does the end of a very massive star differ from the end of one like the Sun?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -114,6 +136,17 @@
   - cosmic microwave background
   - radio telescope
   - microwave
+  key_points:
+  - id: kp_redshift
+    text:
+      en: Far galaxies show redshift, their light stretched to longer wavelengths, so they must be receding.
+    follow_up:
+      en: What does a shift of a galaxy's light towards longer wavelengths tell you about its motion?
+  - id: kp_hubble
+    text:
+      en: Recession speed = Hubble constant × distance, so farther galaxies move away faster, which suggests the Universe is expanding.
+    follow_up:
+      en: How is a galaxy's recession speed related to its distance, and what does this suggest about the Universe?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active

@@ -27,6 +27,17 @@
   - bimetallic strip
   - thermostat
   - thermometer
+  key_points:
+  - id: kp_particles
+    text:
+      en: Heating makes particles vibrate or move more and take up more space, so substances expand; gases expand most and solids least.
+    follow_up:
+      en: Why does a heated solid get bigger, and which state of matter expands the most?
+  - id: kp_effects
+    text:
+      en: Expansion is used in thermostats and thermometers, but must be allowed for in bridges and railway lines.
+    follow_up:
+      en: Why are small gaps left between sections of a railway track?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -60,6 +71,17 @@
   - joule
   - kilojoule
   - thermal store
+  key_points:
+  - id: kp_definition
+    text:
+      en: Specific heat capacity is the energy needed to raise the temperature of 1 kg of a substance by 1 °C.
+    follow_up:
+      en: What does a specific heat capacity of 4200 J/(kg °C) tell you about one kilogram of water?
+  - id: kp_formula
+    text:
+      en: The energy transferred equals mass × specific heat capacity × temperature change.
+    follow_up:
+      en: Which three quantities multiply together to give the energy needed to warm something up?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -95,6 +117,17 @@
   - fusion
   - vaporisation
   - kilojoule
+  key_points:
+  - id: kp_no_temp_change
+    text:
+      en: While a substance melts or boils, the energy supplied breaks bonds between particles instead of raising the temperature.
+    follow_up:
+      en: A kettle is boiling steadily. Where does the extra energy go, if not into the temperature?
+  - id: kp_latent_formula
+    text:
+      en: The energy for a change of state is mass × specific latent heat, with different values for melting and for boiling.
+    follow_up:
+      en: Which two quantities do you multiply to get the energy needed for melting or boiling?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -139,6 +172,17 @@
   - specific latent heat
   - vapour
   - melting
+  key_points:
+  - id: kp_curves
+    text:
+      en: On a heating curve the temperature stays flat while the substance melts or boils, and rises between those stages.
+    follow_up:
+      en: What happens to the temperature during melting or boiling?
+  - id: kp_evaporation_boiling
+    text:
+      en: Evaporation happens at any temperature from the surface only, while boiling happens at one temperature throughout the liquid.
+    follow_up:
+      en: Name two differences between evaporation and boiling.
   difficulty_prior: 0.1
   version: 0.1.1
   status: active

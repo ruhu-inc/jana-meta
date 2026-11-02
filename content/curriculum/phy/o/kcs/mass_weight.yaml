@@ -26,6 +26,17 @@
   - newton
   - kilogram
   - gravity
+  key_points:
+  - id: kp_w_mg
+    text:
+      en: Weight equals mass multiplied by gravitational field strength, W = mg, with g about 10 N/kg on Earth.
+    follow_up:
+      en: How do you get the weight of an object from its mass?
+  - id: kp_mass_from_weight
+    text:
+      en: To find mass from weight, divide by g, with weight in newtons and mass in kilograms.
+    follow_up:
+      en: A scale shows 50 N for an object. What do you divide by to find its mass in kg?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -62,6 +73,17 @@
   - newton
   - kilogram
   - planet
+  key_points:
+  - id: kp_mass_fixed
+    text:
+      en: Mass is the amount of matter in an object, and it does not change from place to place.
+    follow_up:
+      en: What happens to a person's mass when they stand on the Moon?
+  - id: kp_weight_varies
+    text:
+      en: Weight is a gravitational force, so it changes with g and is smaller on the Moon than on Earth.
+    follow_up:
+      en: Why would the same person weigh less on the Moon, and which quantity makes the difference?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active

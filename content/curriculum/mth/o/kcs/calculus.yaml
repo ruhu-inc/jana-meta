@@ -23,6 +23,17 @@
   - gradient
   - gradient function
   - tangent
+  key_points:
+  - id: kp_power_rule
+    text:
+      en: To differentiate a power of x, multiply by the power and then reduce the power by one.
+    follow_up:
+      en: What two things happen to the index when you differentiate a term such as x to the power n?
+  - id: kp_gradient_meaning
+    text:
+      en: The derivative gives the gradient of the curve, so putting in an x value gives the gradient at that point.
+    follow_up:
+      en: How do you get the steepness of a curve at one particular x value?
   difficulty_prior: 0.8
   version: 0.1.1
   status: active
@@ -55,6 +66,17 @@
   - derivative
   - differentiate
   - perpendicular
+  key_points:
+  - id: kp_tangent_gradient
+    text:
+      en: The tangent's gradient at a point equals the derivative worked out at that x value.
+    follow_up:
+      en: From what calculation does the gradient of the tangent come?
+  - id: kp_normal_perpendicular
+    text:
+      en: The normal is perpendicular to the tangent at the same point, so its gradient is the negative reciprocal.
+    follow_up:
+      en: How is the normal's gradient related to the tangent's gradient?
   difficulty_prior: 1.2
   version: 0.1.1
   status: active
@@ -87,6 +109,17 @@
   - second derivative
   - differentiate
   - gradient
+  key_points:
+  - id: kp_derivative_zero
+    text:
+      en: At a stationary point the gradient is zero, so the derivative is set equal to zero and solved.
+    follow_up:
+      en: What is the gradient of a curve at its highest or lowest point, and how do you use that?
+  - id: kp_nature_test
+    text:
+      en: Whether the point is a maximum or minimum is decided by the sign of the second derivative or by the gradient on either side.
+    follow_up:
+      en: After finding a stationary point, how can you decide which type it is?
   difficulty_prior: 1.2
   version: 0.1.1
   status: active
@@ -114,6 +147,17 @@
   - integration
   - limit
   - area under a curve
+  key_points:
+  - id: kp_integrate_limits
+    text:
+      en: Integrate each term by raising the power by one and dividing by it, then use the upper limit and subtract the lower.
+    follow_up:
+      en: In what order are the limits used once the integral has been found?
+  - id: kp_area_under_curve
+    text:
+      en: A definite integral gives the area between the curve and the x-axis, with area below the axis counting as negative.
+    follow_up:
+      en: What does the value of a definite integral represent on the graph?
   difficulty_prior: 1.0
   version: 0.1.1
   status: active

@@ -1,0 +1,86 @@
+id: itm.phy.o.projectiles.0016
+version: 0.1.0
+type: mcq
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.trajectory_graphs
+stem: A stone is thrown at an angle from level ground and lands on level ground. Ignore air resistance.
+parts:
+- id: a
+  prompt: What is the shape of its path?
+  marks: 1
+  answer:
+    kind: mcq
+    diagnostic: false
+    shuffle: false
+    options:
+    - id: A
+      text: A straight line up, then a straight line down
+      correct: false
+      feedback: The stone moves sideways all the time, and its vertical velocity changes smoothly.
+    - id: B
+      text: A symmetrical curve, the same shape going up as coming down
+      correct: true
+    - id: C
+      text: A curve that rises gently and then drops steeply
+      correct: false
+      feedback: That shape appears when air resistance matters. Here the two halves match.
+    - id: D
+      text: Part of a circle centred on the launch point
+      correct: false
+      feedback: A circle would need a force toward its centre. Here the force is straight down.
+  show_working: false
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: 'The path combines two motions: one along the ground and one up and down.'
+  - rung: 2
+    name: concept
+    text:
+      en: The horizontal velocity is constant while the vertical velocity changes steadily.
+  - rung: 3
+    name: first_step
+    text:
+      en: Compare the way up with the way down.
+  - rung: 4
+    name: worked_step
+    text:
+      en: The rise and the fall take the same time and cover the same height and sideways distance.
+  - rung: 5
+    name: full_step
+    text:
+      en: 'The answer is: a symmetrical curve, the same shape going up as coming down.'
+solution:
+  steps:
+  - n: 1
+    latex: x = u_x t,\ y = u_y t - \tfrac{1}{2} g t^2
+    reason: Steady sideways motion combined with steady acceleration downward
+difficulty:
+  prior: 0.1
+  band: core
+estimated_seconds: 60
+exam_style:
+  paper_style: objective
+  total_marks: 1
+  calculator: false
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-opus-5-5
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks: {}
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/study/research.schema.json sha256 9929e191f62dde2190f4792e2e93ad73d1a4ea54088fcd40488dee6e51f0c00c; do not edit",
+ "$comment": "GENERATED from contracts/study/research.schema.json sha256 29faa086560c86c1f564de9ba9fea22e812f5aed7ac9de2d35ae37f3e7bf5945; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/study/research",
  "title": "Study research agent",
@@ -44,13 +44,15 @@
       "physics",
       "chemistry",
       "accounting",
-      "biology"
+      "biology",
+      "other"
      ]
     },
     "level": {
      "enum": [
       "o_level",
-      "first_year"
+      "first_year",
+      "university"
      ]
     },
     "purpose": {

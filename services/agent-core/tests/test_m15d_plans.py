@@ -619,7 +619,8 @@ def uxs27_grade_band_gate(tmp_path: Path) -> None:
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1:8911") as c:
             return await _send(c, "GET", "/v1/progress")
 
-    assert asyncio.run(over_http()) == desk.progress()
+    # The route adds which of today's studied skills can take a real check; here none were studied.
+    assert asyncio.run(over_http()) == {**desk.progress(), "studied_checkable": []}
 
 
 def test_progress_shows_no_band_without_board_letters(tmp_path: Path) -> None:

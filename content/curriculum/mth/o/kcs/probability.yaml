@@ -22,6 +22,17 @@
   - outcome
   - event
   - equally likely
+  key_points:
+  - id: kp_favourable_over_total
+    text:
+      en: Probability is the number of favourable outcomes divided by the total number of equally likely outcomes.
+    follow_up:
+      en: What two counts form a probability?
+  - id: kp_complement
+    text:
+      en: The probability of an event not happening is 1 minus the probability that it does.
+    follow_up:
+      en: How do you find the chance that something does not happen?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -53,6 +64,17 @@
   - probabilities
   - trial
   - outcome
+  key_points:
+  - id: kp_relative_frequency
+    text:
+      en: Relative frequency is the number of times a result happened divided by the number of trials.
+    follow_up:
+      en: How is a relative frequency calculated from an experiment?
+  - id: kp_expected_product
+    text:
+      en: Expected frequency is probability multiplied by the number of trials, a prediction rather than a certain result.
+    follow_up:
+      en: How do you predict how many times something will happen in a set number of trials?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -86,6 +108,17 @@
   - tree diagram
   - sample space
   - event
+  key_points:
+  - id: kp_multiply_branches
+    text:
+      en: For independent events the probabilities along the branches are multiplied for the chance of both happening.
+    follow_up:
+      en: How are probabilities combined along a path of a tree diagram?
+  - id: kp_add_outcomes
+    text:
+      en: When several different paths give the wanted result, their probabilities are added.
+    follow_up:
+      en: What do you do if the outcome you want can happen in more than one way?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -114,6 +147,17 @@
   - tree diagram
   - outcome
   - event
+  key_points:
+  - id: kp_numbers_change
+    text:
+      en: Without replacement, the number of items left changes after each pick, so the second probability uses a smaller total.
+    follow_up:
+      en: What changes about the second pick when the first item is not put back?
+  - id: kp_conditional_branches
+    text:
+      en: The second set of branches shows probabilities that depend on what was picked first.
+    follow_up:
+      en: Why can the second pair of branches differ depending on the first branch?
   difficulty_prior: 0.7
   version: 0.1.1
   status: active

@@ -2269,7 +2269,7 @@
       "type": "string",
       "maxLength": 32
      },
-     "minItems": 1
+     "minItems": 0
     },
     "exam_date": {
      "anyOf": [
@@ -7906,6 +7906,22 @@
      "items": {
       "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/kc_id"
      }
+    },
+    "studied_today": {
+     "description": "The ideas Study practice touched today that are not yet secure, newest first. Activity, never mastery: a check is what makes them secure.",
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/kc_id"
+     },
+     "maxItems": 200
+    },
+    "studied_checkable": {
+     "description": "Those of studied_today with enough varied questions for a mastery check now. The others are offered practice instead, so no learner is sent to a check that cannot start.",
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/kc_id"
+     },
+     "maxItems": 200
     },
     "study_activity": {
      "description": "Study activity in the last seven local days (SPEC §19.3.2): quiz questions answered (a skipped one is not), how many were right by Study's judged key, cards reviewed and aids made.",

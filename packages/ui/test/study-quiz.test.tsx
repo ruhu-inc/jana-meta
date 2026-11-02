@@ -47,3 +47,27 @@ describe("StudyQuiz keyboard", () => {
     expect(onCheck).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("a finished quiz", () => {
+  const FINISHED = { attempt_id: "att_1", results: [{ item_id: "a", verdict: "incorrect", label: "Judged, not checked", explanation: { text: "Because.", citations: [] } }, { item_id: "b", verdict: "correct", label: "Judged, not checked", explanation: { text: "Yes.", citations: [] } }] } as unknown as W.QuizResult;
+  const results = (extra: Record<string, unknown> = {}) => {
+    const onRetake = vi.fn();
+    render(<LocaleProvider locale="en"><StudyQuiz quiz={QUIZ} result={FINISHED} resultAnswers={{ a: "x", b: "y" }} feedback={{}} busy={false} accessBlocked={false} stale={false}
+      quizHelp={{}} helpJob={undefined} helpPending={false} safeHelp={false} helpAids={[]} claim={(c) => <p>{c.text}</p>} jobs={() => null} onDraft={vi.fn()} onCheck={vi.fn(async () => true)} onSubmit={vi.fn()} onClearResult={vi.fn()} onHelp={vi.fn()} onFollowUp={vi.fn(async () => true)} onRetake={onRetake} {...extra} /></LocaleProvider>);
+    return onRetake;
+  };
+  test("can be retaken from the start", () => {
+    const onRetake = results();
+    fireEvent.click(screen.getByRole("button", { name: "Retake quiz" }));
+    expect(onRetake).toHaveBeenCalledTimes(1);
+  });
+  test("says practice from one's own material stays with that material when there is no curriculum", () => {
+    results({ ownCourse: true });
+    expect(screen.getByText("Saved as practice with this material.")).toBeTruthy();
+    expect(screen.queryByText(/Lessons or Practice/)).toBeNull();
+  });
+  test("says how practice reaches the map when there is a curriculum", () => {
+    results();
+    expect(screen.getByText(/shown on your map/)).toBeTruthy();
+  });
+});

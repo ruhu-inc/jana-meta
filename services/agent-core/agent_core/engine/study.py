@@ -36,6 +36,23 @@ from agent_core.tools.study_document import DocumentError, extract, raster
 
 PREFIX = "study/workspace#/$defs/"
 TERMINAL = ("completed", "failed", "cancelled")
+# Plain text a university course hands out: LaTeX, data and code. Read as text like .txt (study_worker goes by bytes).
+TEXT_SUFFIXES = (".tex", ".bib", ".rst", ".csv", ".tsv", ".py", ".r", ".m", ".jl", ".java", ".c", ".h", ".cpp", ".cs",
+                 ".js",
+                 ".ts", ".go", ".rs", ".sql", ".ipynb", ".json", ".yaml", ".yml", ".html")  # fmt: skip
+LONG_SOURCE_BATCHES = 24  # sections one aid reads of a long source with no focus: spread evenly across it
+ONLINE_MARKED = ("fill_blank", "free_response", "numeric", "expression")
+SAMPLED_KINDS = ("summary", "notes", "flashcards", "quiz", "concept_map", "audio_overview")
+RETRIED_KINDS = (
+    "summary",
+    "notes",
+    "flashcards",
+    "quiz",
+    "concept_map",
+    "teaching_outline",
+    "chapters",
+    "audio_overview",
+)
 MAX_CHUNK = 1024 * 1024
 SCHEDULER = "fsrs-6-source-v1"
 # STU-21: the Generate panel settings each tool takes; anything else is refused rather than silently ignored.
@@ -558,7 +575,7 @@ class StudyDesk:
     def accept_file(kind: str, name: str) -> None:
         allowed = {
             "pdf": (".pdf",),
-            "document": (".txt", ".md", ".docx", ".odt"),
+            "document": (".txt", ".md", ".docx", ".odt", *TEXT_SUFFIXES),
             "slides": (".pptx", ".odp"),
             "photo": (".png", ".jpg", ".jpeg", ".webp"),
             "recording": (".wav", ".mp3", ".m4a", ".mp4", ".webm", ".ogg", ".flac", ".aac", ".mov", ".mkv", ".avi"),
@@ -1202,7 +1219,7 @@ class StudyDesk:
         page_scope = re.search(r"(?:^|\n)PDF pages?\s+(\d+)(?:\s*[-\u2013\u2014]\s*(\d+))?\s*:", focus, re.I)
         if page_scope and request["kind"] in ("quiz", "flashcards", "summary", "notes", "lesson_plan"):
             first, last = int(page_scope[1]), int(page_scope[2] or page_scope[1])
-            if not 1 <= first <= last <= 300:
+            if not 1 <= first <= last <= 1000:
                 raise StudyError("insufficient_evidence")
             chunks = [c for c in chunks if c["locator"]["kind"] == "page" and first <= c["locator"]["page"] <= last]
             if not chunks:
@@ -1792,8 +1809,14 @@ class StudyDesk:
                 (order.get(r["item_id"], i), item_text(items.get(r["item_id"], {}), keys.get(r["item_id"], {})),
                  r["verdict"])
                 for i, r in enumerate(result["results"])
-            ])  # fmt: skip
+            ], material=self.quiz_material(quiz["view"]["aid_id"]))  # fmt: skip
         return result
+
+    def quiz_material(self, aid_id: str) -> str:
+        """The text of a quiz's sources, bounded, which names the topics its questions belong to. Used for tags only."""
+        with contextlib.suppress(StudyError, sqlite3.Error, KeyError):
+            return "\n".join(c["text"] for c in self.selected(self.aid(aid_id)["sources"], ready=False))[:200_000]
+        return ""
 
     def save_draft(self, qid: str, body: dict[str, Any]) -> dict[str, Any]:
         """STU-21: keep a quiz's unsubmitted answers and place so the set opens where it was left. Never marked."""
@@ -1926,6 +1949,29 @@ class StudyQueue:
                 aid = desk.aid(aid_id)
                 self.activity.aid(aid_id, aid["kind"], aid_count(desk.conn, aid), aid_text(aid))
 
+    async def mark_online(
+        self, desk: StudyDesk, aid_id: str, item: dict[str, Any], key: dict[str, Any], answer: str
+    ) -> str | None:
+        """A written answer no local marker could settle, marked through the gateway when this profile may use it: only
+        the passages the question cites go, and any failure leaves it unmarked, which the learner is told."""
+        if self.cloud is None or not hasattr(self.cloud, "mark_answer"):
+            return None
+        cited = {c["chunk_id"] for claim in (item["stem"], key["explanation"]) for c in claim["citations"]}
+        with contextlib.suppress(StudyError, ValueError, TimeoutError, OSError):
+            aid = desk.aid(aid_id)
+            passages = [c["text"] for c in desk.selected(aid["sources"], ready=False) if c["chunk_id"] in cited]
+            if not passages or not answer:
+                return None
+            said = await self.cloud.mark_answer(desk.conn, new_id("req"), {
+                "item_type": item["type"],
+                "question": item["stem"]["text"][:3000],
+                "answer": answer[:4000],
+                "reference": f"{key.get('answer', '')}\n{key['explanation']['text']}"[:6000],
+                "passages": passages[:12],
+            })  # fmt: skip
+            return said if said in ("correct", "incorrect", "partial") else None
+        return None
+
     async def submit_quiz(self, qid: str, body: dict[str, Any]) -> dict[str, Any]:
         if self.busy():
             raise StudyError("queue_full")
@@ -2031,6 +2077,10 @@ class StudyQueue:
                         support, local = await model.study_support({}, chunks, {"claims": [reason]})
                         if local and support == [True]:
                             value.update(verdict=judgement["verdict"], explanation=reason)
+            if value["verdict"] == "unverifiable" and item["type"] in ONLINE_MARKED:
+                said = await self.mark_online(desk, stored["view"]["aid_id"], item, key, answer)
+                if said is not None:
+                    value["verdict"] = said
             graded[identity] = value
             if self.connection() is not desk.conn:
                 raise StudyError("source_deleted")
@@ -2214,6 +2264,13 @@ class StudyQueue:
         if not batches or len(batches) > 128:
             raise StudyError("source_too_large")
         jid = job["job_id"]
+        focused = bool(request.get("settings", {}).get("focus", "").strip())
+        if len(batches) > LONG_SOURCE_BATCHES and not focused and request["kind"] in SAMPLED_KINDS:
+            # A textbook's whole length would be 100 model calls for ten questions. Spread evenly and say so; a focus
+            # (PDF pages 14-16, a chapter's name) reads exactly what was asked for.
+            step = (len(batches) - 1) / (LONG_SOURCE_BATCHES - 1)
+            batches = [batches[round(i * step)] for i in range(LONG_SOURCE_BATCHES)]
+            job["notice"] = "sampled_long_source"
         if request["kind"] in ("concept_map", "teaching_outline") and request["execution"] != "prefer_cloud":
             raise StudyError("model_unavailable")  # drafted and verified by Muse Spark only
         checkpoint = desk.one("SELECT checkpoint FROM study_jobs WHERE job_id=?", (jid,))
@@ -2475,6 +2532,27 @@ class StudyQueue:
         desk.commit_aid(job, combined, [True] * groups, self.content() if self.content is not None else None)
         desk.conn.execute("UPDATE study_jobs SET checkpoint=json_remove(checkpoint,'$.batches') WHERE job_id=?", (jid,))
 
+    def retry_refused(self, desk: StudyDesk, jid: str) -> bool:
+        """A generated aid the verifier refused goes again once by itself, from its verified sections, so one weak draft
+        is not the learner's failure (the 2 November rehearsal). The attempt number is the gateway's billing identity:
+        each press of Try again earns one more automatic try, never a loop. A learner's question that the material
+        cannot answer is not a weak draft: chat and quiz help stay refused."""
+        row = desk.one("SELECT checkpoint FROM study_jobs WHERE job_id=?", (jid,))
+        request = row["request"]
+        if request.get("execution") != "prefer_cloud" or request.get("kind") not in RETRIED_KINDS:
+            return False
+        if int(row.get("attempt", 1)) % 2 == 0:
+            return False  # this press has had its automatic try
+        desk.conn.execute(
+            "UPDATE study_jobs SET attempt=attempt+1,checkpoint=json_set(checkpoint,'$.attempt',attempt+1) "
+            "WHERE job_id=?",
+            (jid,),
+        )
+        job = desk.job(jid)
+        job.update(state="queued", error=None)
+        desk.save_job(job)
+        return True
+
     async def run(self, desk: StudyDesk, jid: str) -> None:
         try:
             job = desk.job(jid)
@@ -2593,6 +2671,8 @@ class StudyQueue:
                             return
                         if errors(PREFIX + "StudyError", reason):
                             reason = "processing_failed"
+                        if reason == "insufficient_evidence" and self.retry_refused(desk, jid):
+                            return
                         job.update(state="failed", error=reason)
                         desk.save_job(job)
         finally:

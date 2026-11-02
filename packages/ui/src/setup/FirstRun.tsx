@@ -14,6 +14,7 @@ import { Icon } from "../icons.js";
 import { Button, ErrorState, FIELD_LOOK } from "../primitives/index.js";
 import { Avatar, discOf } from "../profiles/Avatar.js";
 import { AgeField, ageCheck } from "./AgeField.js";
+import { StudyFocusField } from "./StudyFocusField.js";
 import { WelcomeCard } from "./Welcome.js";
 
 export function FirstRun({ profiles, packs, existing = [], onStarted, onRestore }: {
@@ -23,7 +24,8 @@ export function FirstRun({ profiles, packs, existing = [], onStarted, onRestore 
   /** Students added before first run was left part way (UXS-10 resume): shown, not added again. */
   existing?: readonly { profileId: string; name: string; avatar: string }[];
   /** The first student was added and opened: the hand-off follows. */
-  onStarted: (name: string) => void;
+  /** `curriculum` is false when a new learner chose their own course and materials. */
+  onStarted: (name: string, curriculum: boolean) => void;
   onRestore?: () => void;
 }) {
   const t = useT();
@@ -31,6 +33,7 @@ export function FirstRun({ profiles, packs, existing = [], onStarted, onRestore 
   const heading = useRef<HTMLHeadingElement>(null);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
+  const [curriculum, setCurriculum] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const added = useRef<string | null>(null); // the profile made from the form, so a retry does not add it twice
@@ -41,10 +44,10 @@ export function FirstRun({ profiles, packs, existing = [], onStarted, onRestore 
     setPending(true);
     setError(null);
     try {
-      if (asking && added.current === null) added.current = (await profiles.family.addProfile(firstRunProfile(name, packs, 0))).profile_id;
+      if (asking && added.current === null) added.current = (await profiles.family.addProfile(firstRunProfile(name, packs, 0, curriculum))).profile_id;
       const opening = existing[0] !== undefined ? { id: existing[0].profileId, name: existing[0].name } : { id: added.current ?? undefined, name: name.trim() };
       if (opening.id === undefined || !(await profiles.unlock(opening.id))) throw new Error("open_failed");
-      onStarted(opening.name);
+      onStarted(opening.name, curriculum);
     } catch (failure) {
       setError((failure as { code?: string }).code ?? "internal_error");
     } finally {
@@ -79,6 +82,7 @@ export function FirstRun({ profiles, packs, existing = [], onStarted, onRestore 
               <input className={FIELD_LOOK} autoComplete="off" maxLength={40} value={name} disabled={added.current !== null} onChange={(event) => setName(event.target.value)} />
             </label>
             <AgeField value={age} onChange={setAge} disabled={pending || added.current !== null} />
+            <StudyFocusField curriculum={curriculum} onChange={setCurriculum} disabled={pending || added.current !== null} />
           </>
         )}
         <Button type="submit" tone="primary" disabled={pending || !ready}>{t("first_run.start")}<Icon name="go-next" size={16} /></Button>

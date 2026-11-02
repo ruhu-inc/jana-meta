@@ -1,0 +1,89 @@
+id: itm.phy.o.projectiles.0015
+version: 0.1.0
+type: mcq
+subject: phy
+level: o
+kc_ids:
+- kc.phy.o.projectiles.trajectory_graphs
+stem: A ball is thrown at an angle and lands on level ground. Take upward as positive and ignore air resistance.
+parts:
+- id: a
+  prompt: Which graph shows the ball's vertical velocity against time?
+  marks: 1
+  answer:
+    kind: mcq
+    diagnostic: false
+    shuffle: false
+    options:
+    - id: A
+      text: A horizontal line above the time axis
+      correct: false
+      feedback: A horizontal line means no acceleration. That is the horizontal velocity, not the vertical one.
+    - id: B
+      text: A curve rising to a peak and then falling
+      correct: false
+      feedback: That is the shape of the height against time. Velocity changes at a steady rate here.
+    - id: C
+      text: A straight line sloping down, crossing zero at the top of the flight
+      correct: true
+    - id: D
+      text: A straight line sloping up from the origin
+      correct: false
+      feedback: The ball is slowing as it rises, so its upward velocity falls.
+  show_working: false
+  hints:
+  - rung: 1
+    name: orient
+    text:
+      en: Vertical velocity is how fast the ball is rising or falling.
+  - rung: 2
+    name: concept
+    text:
+      en: The gradient of a velocity-time graph is the acceleration.
+  - rung: 3
+    name: first_step
+    text:
+      en: Ask what the vertical acceleration is during the flight.
+  - rung: 4
+    name: worked_step
+    text:
+      en: It is a constant g downward, so the gradient is constant and negative.
+  - rung: 5
+    name: full_step
+    text:
+      en: 'The answer is: a straight line sloping down, crossing zero at the top of the flight.'
+solution:
+  steps:
+  - n: 1
+    latex: a_y = -g
+    reason: The vertical acceleration is constant and downward
+  - n: 2
+    latex: v_y = u_y - g t
+    reason: A straight line with negative gradient, zero at the top
+difficulty:
+  prior: 0.2
+  band: core
+estimated_seconds: 60
+exam_style:
+  paper_style: objective
+  total_marks: 1
+  calculator: false
+context_tags:
+- none
+provenance:
+  origin: original
+  licence: LicenseRef-Own
+  drafted_with_ai: true
+  ai_model: claude-opus-5-5
+  sources: []
+review:
+  status: published
+  reviewers: []
+checks: {}
+authoring:
+  drafted_by: rev_author_agent
+  history:
+  - drafted
+  - verified
+  - in_eval_bank
+  - published

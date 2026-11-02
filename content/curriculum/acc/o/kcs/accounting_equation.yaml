@@ -30,6 +30,17 @@
   - investor
   - profitability
   - liquidity
+  key_points:
+  - id: kp_records_and_reports
+    text:
+      en: Accounting records transactions and turns them into financial statements that help people make decisions.
+    follow_up:
+      en: What does the business do with its records of transactions once they have been collected?
+  - id: kp_users_differ
+    text:
+      en: Each user group wants different information, such as an owner wanting profit and a lender wanting security for repayment.
+    follow_up:
+      en: Why would a bank and the owner look at the same accounts for different things?
   difficulty_prior: -1.5
   version: 0.1.1
   status: active
@@ -69,6 +80,17 @@
   - commission
   - non-current asset
   - current asset
+  key_points:
+  - id: kp_owned_vs_owed
+    text:
+      en: Assets are what the business owns, liabilities are what it owes to outsiders, and capital is what it owes the owner.
+    follow_up:
+      en: How would you tell a bank loan from the owner's own money put into the business?
+  - id: kp_income_expense
+    text:
+      en: Income is what the business earns from its activities and an expense is a cost of running it, and both change profit.
+    follow_up:
+      en: What happens to the owner's capital over the year when income is more than expenses?
   difficulty_prior: -1.2
   version: 0.1.1
   status: active
@@ -102,6 +124,17 @@
   - trade payables
   - premises
   - drawings
+  key_points:
+  - id: kp_equation_balance
+    text:
+      en: Assets always equal capital plus liabilities, so the two sides of the equation are equal.
+    follow_up:
+      en: Which two totals must be the same after every transaction?
+  - id: kp_find_missing
+    text:
+      en: A missing figure is found by working from the other two, for example capital is assets less liabilities.
+    follow_up:
+      en: If you know the assets and the liabilities only, how do you find the owner's share?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -138,6 +171,17 @@
   - drawings
   - credit supplier
   - on credit
+  key_points:
+  - id: kp_two_effects
+    text:
+      en: Every transaction changes at least two items, so the equation stays balanced after it.
+    follow_up:
+      en: Why can a single transaction never change just one figure in the equation?
+  - id: kp_which_way
+    text:
+      en: Profit and owner's money in raise capital, while expenses and drawings reduce it.
+    follow_up:
+      en: How does taking cash out of the business for personal use affect the owner's stake?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active

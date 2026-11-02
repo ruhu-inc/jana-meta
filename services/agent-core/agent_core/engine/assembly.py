@@ -32,7 +32,7 @@ from agent_core.config.operations import DevicePolicy
 from agent_core.config.revocation import HELD as HELD_REVOCATIONS
 from agent_core.config.revocation import RevocationStore
 from agent_core.config.trust import TrustStore
-from agent_core.engine import adaptation, health, soft_rules
+from agent_core.engine import adaptation, health, job_scope, soft_rules
 from agent_core.engine.assessment.evidence import assessment_projections
 from agent_core.engine.assessment.remark import RemarkReport, job_id, remark_withdrawn
 from agent_core.engine.assessment.service import AssessmentDesk
@@ -819,6 +819,7 @@ class AppRuntime:
                 run_tool=self._lesson_tool,
                 judge_method=self._assessment_judge,
                 explain_judge=self._explanation_judge,
+                explain_possible=self._explanation_possible,
                 recover=True,
             )
         else:
@@ -913,7 +914,8 @@ class AppRuntime:
         text = judge_text(self.settings, working)
         if text is None:
             return None
-        judged, fallback = await auxiliary.judge([(str(criterion["criterion_id"]), rule)], text)
+        with job_scope(new_id("job")):
+            judged, fallback = await auxiliary.judge([(str(criterion["criterion_id"]), rule)], text)
         if fallback or not judged or judged[0]["status"] != "judged":
             return None
         return bool(judged[0]["pass"])
@@ -927,9 +929,32 @@ class AppRuntime:
         words = judge_text(self.settings, [text])
         if not words:
             return None
-        auxiliary = Auxiliaries.load(self._router(), self.settings, self.content_root, self.hardware_class() or "mid")
-        judged, fallback = await auxiliary.judge(criteria, words)
+        auxiliary = Auxiliaries.load(self._judge_router(), self.settings, self.content_root,
+                                     self.hardware_class() or "mid")  # fmt: skip
+        # The router refuses a call outside a turn or a job, and this one comes from an API request, not a tutor turn.
+        with job_scope(new_id("job")):
+            judged, fallback = await auxiliary.judge(criteria, words)
+        if fallback:
+            # Fixed reason codes only, never the learner's words: an unanswered judge blocks mastery, so it must show.
+            reasons = [o.fallback_reason for o in auxiliary.log]
+            log.warning("explanation judge did not answer: %s", reasons)
         return None if fallback else judged
+
+    def _judge_router(self) -> Router:
+        """The explanation judge's router, with the profile's cloud tier when it has one, because every skill now asks
+        for an explanation: a learner with no local model must still be able to reach mastery."""
+        cloud = self.cloud_for_session()
+        if cloud is None:
+            return self._router()
+        router = self._router(cloud.providers)
+        router.network, router.recheck, router.recheck_soon = cloud.network, cloud.recheck, cloud.recheck_soon
+        router.budget = cloud.budget
+        return router
+
+    def _explanation_possible(self) -> bool:
+        """Whether any judge could answer: a local tutor model, or the profile's cloud tier turned on. With neither, a
+        check confirms as it did before key points: it never waits on a judge that cannot exist."""
+        return not self.tutor_unavailable() or self.cloud_tier_on()
 
     def research_router(self) -> Router | None:
         """The router for the research agent's conversation (SPEC §18.1a), online only: the open profile's cloud tier

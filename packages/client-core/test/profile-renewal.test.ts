@@ -202,3 +202,11 @@ describe("JM-D15", () => {
     expect(isAdultAge("")).toBeNull();
   });
 });
+
+describe("what a new learner studies", () => {
+  test("has no subjects when they study their own course, and the curriculum's otherwise", () => {
+    const own = firstRunProfile("Ada", [], 0, false);
+    expect(own.subjects).toEqual([]);
+    expect(firstRunProfile("Ada", [], 0).subjects.length).toBeGreaterThan(0);
+  });
+});

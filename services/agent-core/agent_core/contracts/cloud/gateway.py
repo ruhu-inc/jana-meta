@@ -194,6 +194,9 @@ type StudyResearchOutput = Annotated[
 type UnreadableUnit = Annotated[int, Field(ge=1, le=10000)]
 
 
+type ScannedUnit = Annotated[int, Field(ge=1, le=1000)]
+
+
 class StudyWorkspaceFrame(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -209,7 +212,7 @@ class StudyWorkspaceLocatorOneOf1(BaseModel):
         extra="forbid",
     )
     kind: Literal["page"]
-    page: Annotated[int, Field(ge=1, le=300)]
+    page: Annotated[int, Field(ge=1, le=1000)]
 
 
 class StudyWorkspaceLocatorOneOf2(BaseModel):
@@ -217,7 +220,7 @@ class StudyWorkspaceLocatorOneOf2(BaseModel):
         extra="forbid",
     )
     kind: Literal["slide"]
-    slide: Annotated[int, Field(ge=1, le=300)]
+    slide: Annotated[int, Field(ge=1, le=1000)]
 
 
 class StudyWorkspaceLocatorOneOf3(BaseModel):
@@ -540,8 +543,8 @@ class StudyResearchBrief(BaseModel):
         extra="forbid",
     )
     title: Annotated[str, Field(max_length=120, min_length=3)]
-    subject: Literal["mathematics", "physics", "chemistry", "accounting", "biology"]
-    level: Literal["o_level", "first_year"]
+    subject: Literal["mathematics", "physics", "chemistry", "accounting", "biology", "other"]
+    level: Literal["o_level", "first_year", "university"]
     purpose: Literal["exam", "lesson", "curiosity"]
     known: Annotated[str, Field(max_length=300, min_length=0)]
     focus: Annotated[str, Field(max_length=300, min_length=0)]
@@ -766,6 +769,7 @@ class StudyWorkspaceExtractionResponse(BaseModel):
     sha256: StudyWorkspaceDigest
     chunks: Annotated[list[StudyWorkspaceChunk], Field(max_length=64, min_length=0)]
     unreadable_units: Annotated[list[UnreadableUnit], Field(max_length=10000)]
+    scanned_units: Annotated[list[ScannedUnit] | None, Field(max_length=1000)] = None
     extractor_version: Annotated[str, Field(max_length=80, min_length=1)]
     next_cursor: Annotated[str | None, Field(max_length=256)]
     duration_ms: Annotated[int | None, Field(ge=1, le=7200000)] = None

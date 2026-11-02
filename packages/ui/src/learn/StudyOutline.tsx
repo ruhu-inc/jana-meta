@@ -12,8 +12,8 @@ import { Button } from "../primitives/index.js";
 type Outline = NonNullable<W.Aid["outline"]>;
 type Timed = { text?: string; name?: string; at_ms?: number; citations: W.Citation[] };
 
-export function StudyOutline({ outline, sourceTitle, chunks, busy, onOpenMoment, onCite, onSkill, skillName }: {
-  outline: Outline; sourceTitle: string; chunks: readonly W.Chunk[]; busy: boolean;
+export function StudyOutline({ ownCourse = false, outline, sourceTitle, chunks, busy, onOpenMoment, onCite, onSkill, skillName }: {
+  ownCourse?: boolean; outline: Outline; sourceTitle: string; chunks: readonly W.Chunk[]; busy: boolean;
   /** Open at m:ss: the browser for a YouTube video, the player for a file. */
   onOpenMoment: (ms: number) => void;
   onCite: (citation: W.Citation) => void;
@@ -50,7 +50,7 @@ export function StudyOutline({ outline, sourceTitle, chunks, busy, onOpenMoment,
         <div className="flex flex-wrap items-baseline gap-2"><span className="text-body font-medium text-ink"><StudyInline text={c.name} /></span>{moment(c)}<StudyCitations citations={c.citations} locate={locate} title={() => sourceTitle} disabled={busy} onOpen={onCite} numbered={timed(c)} /></div>
         <div className="flex flex-wrap gap-2">
           {(c.kc_ids ?? []).map((kc) => <Button key={kc} size="xs" tone="secondary" data-skill={kc} aria-label={t("study.outline.skill_full", { skill: name(kc), band: t(`study.outline.band.${bands.get(kc) ?? "not_started"}`) })} disabled={!onSkill} onClick={() => onSkill?.(kc)}>{name(kc)}</Button>)}
-          {c.outside_packs && <span data-outside-packs="" className="text-meta text-muted">{t("study.outline.outside_packs")}</span>}
+          {c.outside_packs && !ownCourse && <span data-outside-packs="" className="text-meta text-muted">{t("study.outline.outside_packs")}</span>}
         </div>
       </li>)}</ul>}
     </section>

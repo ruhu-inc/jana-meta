@@ -25,6 +25,17 @@
   - launch angle
   - resolve
   - velocity
+  key_points:
+  - id: kp_components
+    text:
+      en: A launch velocity splits into a horizontal part, v cos θ, and a vertical part, v sin θ, with θ above the horizontal.
+    follow_up:
+      en: Which trigonometric functions of the launch angle give the horizontal and the vertical parts?
+  - id: kp_triangle
+    text:
+      en: The two components and the launch velocity form a right-angled triangle, with the launch velocity as the hypotenuse.
+    follow_up:
+      en: Where does the original velocity sit in the triangle that contains its two components?
   difficulty_prior: 0.2
   version: 0.1.0
   status: active
@@ -56,6 +67,17 @@
   - constant
   - air resistance
   - acceleration
+  key_points:
+  - id: kp_horizontal_constant
+    text:
+      en: With no horizontal force acting, the horizontal velocity of a projectile stays constant.
+    follow_up:
+      en: What force acts sideways on a projectile, and what does that mean for its horizontal speed?
+  - id: kp_vertical_changes
+    text:
+      en: Gravity acts downwards, so the vertical velocity changes by about 10 m/s every second.
+    follow_up:
+      en: How does the vertical velocity of a ball change each second as it flies?
   difficulty_prior: 0.3
   version: 0.1.0
   status: active
@@ -89,6 +111,17 @@
   - vertical
   - displacement
   - velocity
+  key_points:
+  - id: kp_parabola
+    text:
+      en: The path curves because the horizontal motion is steady while the vertical motion is accelerated.
+    follow_up:
+      en: What combination of motions gives a projectile its curved path?
+  - id: kp_vt_graphs
+    text:
+      en: The horizontal velocity-time graph is flat, while the vertical one is a sloping straight line with gradient -g.
+    follow_up:
+      en: What shape do the velocity-time graphs take for the horizontal and the vertical components?
   difficulty_prior: 0.4
   version: 0.1.0
   status: active
@@ -117,6 +150,17 @@
   - vertical
   - launch
   - gravity
+  key_points:
+  - id: kp_vertical_only
+    text:
+      en: The time of flight depends only on the vertical motion, as the horizontal motion does not affect how long it stays up.
+    follow_up:
+      en: Which component of the motion decides how long a projectile stays in the air?
+  - id: kp_symmetric
+    text:
+      en: From level ground the climb and the fall take equal times, so the total is twice the time to reach the top.
+    follow_up:
+      en: How does the time to rise to the top compare with the time to fall back to the launch height?
   difficulty_prior: 0.5
   version: 0.1.0
   status: active
@@ -144,6 +188,17 @@
   - vertical component
   - vertical
   - gravity
+  key_points:
+  - id: kp_zero_at_top
+    text:
+      en: At the highest point the vertical velocity is zero, so v = 0 is used in the vertical equations.
+    follow_up:
+      en: What is the vertical velocity of a projectile at the top of its flight?
+  - id: kp_vertical_inputs
+    text:
+      en: The maximum height and time to the top come from the vertical component of the launch velocity and g only.
+    follow_up:
+      en: Which part of the launch velocity goes into the equation for the maximum height?
   difficulty_prior: 0.5
   version: 0.1.0
   status: active
@@ -179,6 +234,17 @@
   - level ground
   - horizontal
   - velocity
+  key_points:
+  - id: kp_horizontal_times_time
+    text:
+      en: The range is the horizontal velocity multiplied by the time of flight.
+    follow_up:
+      en: Which two quantities give how far along the ground a projectile lands?
+  - id: kp_45
+    text:
+      en: On level ground the range is greatest at a launch angle of 45°, and falls for steeper or flatter angles.
+    follow_up:
+      en: Which launch angle gives the longest range on level ground, and what happens either side of it?
   difficulty_prior: 0.7
   version: 0.1.0
   status: active

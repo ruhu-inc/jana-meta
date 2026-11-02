@@ -76,6 +76,24 @@ def band_words(band: object) -> str:
     return BAND_WORDS.get(str(band), str(band).replace("_", " "))
 
 
+def counted(count: int, noun: str) -> str:
+    """A count with its noun, so a fact never says "1 skills"."""
+    return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
+
+
+STATEMENT_MAX = 100  # a skill statement inside a fact, clipped at a word boundary
+
+
+def clip(text: str, limit: int = STATEMENT_MAX) -> str:
+    """`text` within `limit` characters, cut at the last space before the limit with an ellipsis, so a fact never
+    ends mid-word ("…changes its vertica:" on the 2 November rehearsal)."""
+    if len(text) <= limit:
+        return text
+    head = text[: limit - 1]
+    cut = head.rfind(" ")
+    return (head[:cut] if cut > limit // 2 else head).rstrip() + "…"
+
+
 @dataclass(frozen=True)
 class Fact:
     key: str
@@ -128,7 +146,7 @@ def from_progress(data: dict[str, Any], *, period: str) -> list[Fact]:
     for band in data.get("bands") or []:
         if not isinstance(band, dict) or band.get("band") not in ("not_started", "learning", "secure"):
             continue
-        skill = str(band.get("skill", ""))[:100]
+        skill = clip(str(band.get("skill", "")))
         if not skill:
             continue
         facts.append(
@@ -140,7 +158,7 @@ def from_progress(data: dict[str, Any], *, period: str) -> list[Fact]:
                 skill,
                 period,
                 PROGRESS_SOURCE,
-                f"Recorded practice band for {skill}: {band_words(band['band'])}.",
+                f"Your practice on {skill}: {band_words(band['band'])}.",
             )
         )
     return facts

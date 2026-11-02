@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import json
 from typing import Any
 
 
@@ -77,6 +78,7 @@ def decode(data: bytes, kind: str, name: str, max_units: int = 30) -> list[dict[
             raise DocumentError("corrupt_source") from None
         if "\x00" in text:
             raise DocumentError("corrupt_source")
+        text = notebook_text(text)
         if len(text) > max_units * 4000:
             raise DocumentError("source_too_large")
         return [{"locator": {"kind": "text", "paragraph": 1}, "text": text}]
@@ -163,3 +165,15 @@ def decode(data: bytes, kind: str, name: str, max_units: int = 30) -> list[dict[
         if len(values) > 10000 or sum(len(v) for v in values) > max_units * 4000:
             raise DocumentError("source_too_large")
         return [{"locator": {"kind": "text", "paragraph": i + 1}, "text": text} for i, text in enumerate(values)]
+
+
+def notebook_text(text: str) -> str:
+    """A Jupyter notebook's cells as text, in order, without its outputs and metadata; any other text as it is."""
+    if '"cells"' not in text[:4096] and '"nbformat"' not in text:
+        return text
+    try:
+        cells = json.loads(text)["cells"]
+        parts = ["".join(c["source"]) if isinstance(c["source"], list) else str(c["source"]) for c in cells]
+    except (ValueError, KeyError, TypeError):
+        return text
+    return "\n\n".join(p for p in parts if p.strip()) or text

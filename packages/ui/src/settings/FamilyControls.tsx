@@ -26,7 +26,8 @@ function AddStudent({ profiles, run }: { profiles: ProfileController; run: Run }
   const [level, setLevel] = useState<CreateProfile["level"]>("O");
   const [subjects, setSubjects] = useState<string[]>([]);
   const count = useProfiles(profiles).profiles.length;
-  const ready = name.trim() !== "" && subjects.length > 0 && ageCheck(age) === "adult";
+  // No subject ticked is a learner studying their own course and materials.
+  const ready = name.trim() !== "" && ageCheck(age) === "adult";
   const field = "min-h-8 rounded-control border border-line-strong bg-canvas px-3 text-body text-ink";
   return (
     <Disclosure summary={t("settings.profiles.add")} open={open} onToggle={toggle}>

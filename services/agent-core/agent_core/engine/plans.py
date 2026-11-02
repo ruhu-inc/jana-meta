@@ -30,7 +30,7 @@ from agent_core.learner.mastery import BANDS, DAY_MS, KcEvidence, MasteryParams,
 from agent_core.learner.profile import merge_profile
 from agent_core.learner.projections import local_date, week_start
 from agent_core.learner.service import Learner, NewEvent
-from agent_core.memory.queries import study_activity_counts
+from agent_core.memory.queries import studied_kcs, study_activity_counts
 from agent_core.store.assessment import AssessmentStore
 from agent_core.store.ids import new_ulid
 from agent_core.store.pack_index import PackIndex
@@ -509,6 +509,12 @@ class PlanDesk:
             },
             "streak": {"days": streak.days, "freezes_left": streak.freezes_left, "counted_today": streak.counted_today},
             "moved_today": moved,
+            # Study practice today, for "Check this idea": the way practice becomes mastery (activity, never mastery).
+            "studied_today": [
+                k
+                for k in studied_kcs(self.conn, p.local_day(now) * DAY_MS - p.learner_day_offset_minutes * 60_000)
+                if k in self.content.kcs and (k not in views or views[k].state != "mastered")
+            ],
             # SPEC §19.1: the week's Study activity, one quiet line (activity, never mastery; JM-D26).
             "study_activity": study_activity_counts(
                 self.conn, (p.local_day(now) - 6) * DAY_MS - p.learner_day_offset_minutes * 60_000

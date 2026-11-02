@@ -89,7 +89,12 @@ def add_routes(app: FastAPI, core: CoreService, mutating: Mutating) -> None:
 
     @app.get("/v1/progress")
     async def progress(subject: str | None = None) -> Any:
-        return desk(core).progress(subject)
+        view = desk(core).progress(subject)
+        assessments = core.assessments() if core.assessments is not None else None
+        view["studied_checkable"] = [
+            kc for kc in view["studied_today"] if assessments is not None and assessments.check_possible(kc)
+        ]
+        return view
 
     def refused(error: ExamDateRefused) -> ApiError:
         code = "not_found" if error.reason == "not_found" else "validation_failed"

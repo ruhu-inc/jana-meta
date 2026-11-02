@@ -36,6 +36,17 @@
   - vibrate
   - vacuum
   - sound wave
+  key_points:
+  - id: kp_longitudinal
+    text:
+      en: 'Sound is a longitudinal wave: particles vibrate parallel to the wave''s direction, making compressions and rarefactions.'
+    follow_up:
+      en: How do air particles move compared with the direction in which a sound wave travels?
+  - id: kp_needs_medium
+    text:
+      en: Sound needs a medium of particles to travel through, so it cannot pass through a vacuum.
+    follow_up:
+      en: Why can no sound be heard from a ringing bell once the air is pumped out of its jar?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -69,6 +80,17 @@
   - reflection
   - reflect
   - sound wave
+  key_points:
+  - id: kp_speed_def
+    text:
+      en: Speed of sound is distance travelled divided by time taken, about 330 m/s in air.
+    follow_up:
+      en: How do you find the speed of sound from a measured distance and time?
+  - id: kp_there_and_back
+    text:
+      en: An echo travels to the wall and back, so the sound covers twice the distance to the wall.
+    follow_up:
+      en: An echo returns after time t. How does the wall's distance compare with the total path the sound took?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -112,6 +134,22 @@
   - vibration
   - audible
   - oscilloscope
+  key_points:
+  - id: kp_pitch
+    text:
+      en: 'Pitch depends on frequency: a higher frequency gives a higher note.'
+    follow_up:
+      en: What property of a sound wave decides how high or low the note sounds?
+  - id: kp_loudness
+    text:
+      en: 'Loudness depends on amplitude: a larger amplitude gives a louder sound.'
+    follow_up:
+      en: What changes on an oscilloscope trace when a sound gets louder but keeps the same pitch?
+  - id: kp_hearing_range
+    text:
+      en: The human ear hears about 20 Hz to 20 000 Hz, and sound above this range is ultrasound.
+    follow_up:
+      en: What range of frequencies can a healthy young person hear?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -156,6 +194,17 @@
   - sonar
   - pulse
   - boundary
+  key_points:
+  - id: kp_reflects
+    text:
+      en: Ultrasound reflects from boundaries between materials, so it is used for body scans, sonar and flaw detection.
+    follow_up:
+      en: Why does an ultrasound scan produce echoes from inside the body?
+  - id: kp_depth
+    text:
+      en: Depth is speed × time ÷ 2, because the pulse travels down and back.
+    follow_up:
+      en: A sonar pulse returns after 0.4 s. What do you do with the 0.4 s to find the depth?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active

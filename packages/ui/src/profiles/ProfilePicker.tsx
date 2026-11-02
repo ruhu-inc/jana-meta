@@ -11,6 +11,7 @@ import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
 import { Button, EmptyState, ErrorState, FIELD_LOOK, Loader, Notice } from "../primitives/index.js";
 import { AgeField, ageCheck } from "../setup/AgeField.js";
+import { StudyFocusField } from "../setup/StudyFocusField.js";
 import { WelcomeCard } from "../setup/Welcome.js";
 import { ProfileRecovery } from "./ProfileRecovery.js";
 import { Avatar, discOf } from "./Avatar.js";
@@ -29,6 +30,7 @@ export function AddStudent({ profiles, onAdded }: { profiles: ProfileController;
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
+  const [curriculum, setCurriculum] = useState(true);
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   if (!open) {
@@ -46,7 +48,7 @@ export function AddStudent({ profiles, onAdded }: { profiles: ProfileController;
       setPending(true);
       setFailed(null);
       void profiles.family.packs().catch(() => [])
-        .then((packs) => profiles.family.addProfile(firstRunProfile(name, packs, count)))
+        .then((packs) => profiles.family.addProfile(firstRunProfile(name, packs, count, curriculum)))
         .then((created) => {
           setName("");
           setAge("");
@@ -61,6 +63,7 @@ export function AddStudent({ profiles, onAdded }: { profiles: ProfileController;
         <input autoFocus className={FIELD_LOOK} autoComplete="off" maxLength={40} value={name} onChange={(event) => setName(event.target.value)} />
       </label>
       <AgeField value={age} onChange={setAge} disabled={pending} />
+      <StudyFocusField curriculum={curriculum} onChange={setCurriculum} disabled={pending} />
       <div className="flex gap-2">
         <Button type="submit" tone="primary" disabled={pending || name.trim() === "" || ageCheck(age) !== "adult"}>{t("settings.profiles.create")}</Button>
         <Button onClick={() => setOpen(false)}>{t("action.cancel")}</Button>

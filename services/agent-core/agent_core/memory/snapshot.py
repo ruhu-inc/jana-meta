@@ -122,7 +122,7 @@ def learner_block_data(frozen: FrozenMemory, variant: Literal["cloud"] = "cloud"
     kcs = [{"kc_id": k.kc_id, "band": BANDS.get(k.state, "learning")} for k in frozen.kcs if _KC_ID.match(k.kc_id)]
     misconceptions = [m.misconception_id for m in frozen.misconceptions if _MC_ID.match(m.misconception_id)]
     return {
-        "level": profile.level if profile.level in ("O", "A") else None,
+        "level": profile.level if profile.level in ("O", "A") and profile.subjects else None,
         "subjects": subjects,
         "kcs": kcs[:LEARNER_BLOCK_KCS],
         "misconception_ids": list(dict.fromkeys(misconceptions))[:LEARNER_BLOCK_MISCONCEPTIONS],

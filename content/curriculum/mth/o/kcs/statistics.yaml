@@ -21,6 +21,17 @@
   - continuous
   - data
   - categorical
+  key_points:
+  - id: kp_qual_quant
+    text:
+      en: Qualitative data is described in words or categories, while quantitative data is measured or counted as numbers.
+    follow_up:
+      en: What distinguishes data that is a category from data that is a number?
+  - id: kp_discrete_continuous
+    text:
+      en: Discrete data takes separate values that can be counted, while continuous data can take any value in a range and is measured.
+    follow_up:
+      en: How would you decide whether a quantity is counted or measured?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -47,6 +58,17 @@
   - frequency table
   - two-way table
   - tally
+  key_points:
+  - id: kp_row_column
+    text:
+      en: A value in a table is found where its row and column meet, so both headings must be read.
+    follow_up:
+      en: What two headings do you use to locate a single entry in a two-way table?
+  - id: kp_totals_missing
+    text:
+      en: Missing entries come from totals, since the parts in a row or column must add to the total given.
+    follow_up:
+      en: How can a missing number in a table be worked out?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -77,6 +99,17 @@
   - range
   - average
   - data
+  key_points:
+  - id: kp_three_averages
+    text:
+      en: The mean is the total divided by the count, the median the middle value once ordered, and the mode the most common.
+    follow_up:
+      en: Which of the averages needs the data in order first?
+  - id: kp_range_spread
+    text:
+      en: The range is the largest minus the smallest value and shows how spread out the data is.
+    follow_up:
+      en: What does the range tell you about a set of data, and how is it found?
   difficulty_prior: -0.7
   version: 0.1.1
   status: active
@@ -107,6 +140,17 @@
   - frequency table
   - total frequency
   - average
+  key_points:
+  - id: kp_mean_fx
+    text:
+      en: The mean is the total of frequency times value divided by the total frequency.
+    follow_up:
+      en: How do the frequencies come into finding the mean?
+  - id: kp_median_position
+    text:
+      en: The median is found by locating the middle position in the total frequency, and the mode is the value with the highest frequency.
+    follow_up:
+      en: How do you work out which value is the median from a frequency table?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -135,6 +179,17 @@
   - frequency
   - estimate
   - mean
+  key_points:
+  - id: kp_midpoint_stand_in
+    text:
+      en: Each class is represented by its midpoint, since the actual values inside it are not known.
+    follow_up:
+      en: What value stands in for each class when the data is grouped?
+  - id: kp_estimate_only
+    text:
+      en: The result is an estimate because the midpoints are only assumed to be typical, not the real values.
+    follow_up:
+      en: Why is the answer called an estimate rather than the exact mean?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -163,6 +218,17 @@
   - sector angle
   - frequency
   - proportion
+  key_points:
+  - id: kp_angle_proportion
+    text:
+      en: A sector angle is the fraction of the total for that category multiplied by 360 degrees.
+    follow_up:
+      en: How is the angle of a sector linked to the share of the data it shows?
+  - id: kp_frequency_from_angle
+    text:
+      en: A frequency from an angle is the angle divided by 360, multiplied by the total frequency.
+    follow_up:
+      en: If a sector angle is known, how do you get the number it represents?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -196,6 +262,17 @@
   - line of best fit
   - outlier
   - estimate
+  key_points:
+  - id: kp_correlation_type
+    text:
+      en: Positive correlation means both variables rise together, negative means one falls as the other rises, none means no pattern.
+    follow_up:
+      en: What does the direction of the points tell you about the relationship?
+  - id: kp_best_fit_estimate
+    text:
+      en: A line of best fit runs close to the points with a balance either side, and is read to estimate values within the data.
+    follow_up:
+      en: How would you use a drawn line of best fit to predict a missing value?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -226,6 +303,17 @@
   - interquartile range
   - percentile
   - estimate
+  key_points:
+  - id: kp_running_total
+    text:
+      en: Cumulative frequency is a running total, plotted against the upper end of each class.
+    follow_up:
+      en: Which end of each class is used when plotting the cumulative frequency?
+  - id: kp_quartile_positions
+    text:
+      en: The median is read at half the total frequency and the quartiles at a quarter and three quarters; the IQR is their difference.
+    follow_up:
+      en: At which heights on the vertical axis are the median and quartiles read?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -256,6 +344,17 @@
   - frequency
   - class width
   - class
+  key_points:
+  - id: kp_area_frequency
+    text:
+      en: In a histogram with unequal classes the area of each bar represents the frequency, not the height.
+    follow_up:
+      en: What does the area of a bar show, as compared with its height?
+  - id: kp_frequency_density
+    text:
+      en: Each bar's height shows frequency density, a class's frequency shared over its width.
+    follow_up:
+      en: How is the height of a bar worked out from the data?
   difficulty_prior: 0.7
   version: 0.1.1
   status: active

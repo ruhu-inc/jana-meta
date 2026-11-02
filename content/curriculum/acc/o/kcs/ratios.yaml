@@ -48,6 +48,17 @@
   - non-current liabilities
   - profitability
   - efficiency
+  key_points:
+  - id: kp_gm_pm
+    text:
+      en: Gross margin is gross profit over revenue, and profit margin is profit for the year over revenue, both shown as percentages.
+    follow_up:
+      en: What is the figure underneath in both of these percentages?
+  - id: kp_margin_meaning
+    text:
+      en: A margin shows how much of each unit of sales is kept as profit before and after running expenses.
+    follow_up:
+      en: What does a gross margin of 30% say about each dollar of sales?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -103,6 +114,17 @@
   - non-current liabilities
   - profitability
   - efficiency
+  key_points:
+  - id: kp_markup_formula
+    text:
+      en: Mark-up is gross profit as a percentage of cost of sales.
+    follow_up:
+      en: Which base is the gross profit divided by to get this ratio?
+  - id: kp_markup_margin
+    text:
+      en: Because mark-up uses cost as the base, it is always larger than the margin on the same goods.
+    follow_up:
+      en: Why do the two percentages for the same sale not match?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -156,6 +178,17 @@
   - non-current liabilities
   - profitability
   - efficiency
+  key_points:
+  - id: kp_current_ratio
+    text:
+      en: The current ratio compares current assets with current liabilities to show whether short-term debts can be met.
+    follow_up:
+      en: What two groups of items are compared to judge short-term safety?
+  - id: kp_acid_test
+    text:
+      en: The acid-test ratio is the same comparison with inventory left out, as inventory is hard to turn into cash quickly.
+    follow_up:
+      en: Which current asset is taken out to give a stricter test?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -209,6 +242,17 @@
   - non-current liabilities
   - profitability
   - efficiency
+  key_points:
+  - id: kp_times
+    text:
+      en: Inventory turnover is cost of sales divided by average inventory, giving how many times stock is sold and replaced in a year.
+    follow_up:
+      en: What does a result of six tell you about the year?
+  - id: kp_days
+    text:
+      en: Turnover in days is average inventory over cost of sales times 365, showing how long stock is held.
+    follow_up:
+      en: How do you change the figure into the number of days on the shelf?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -262,6 +306,17 @@
   - non-current liabilities
   - profitability
   - efficiency
+  key_points:
+  - id: kp_receivables_days
+    text:
+      en: The receivables collection period is trade receivables over credit sales times 365, the days customers take to pay.
+    follow_up:
+      en: Which sales figure is used with receivables, and why?
+  - id: kp_payables_days
+    text:
+      en: The payables period is trade payables over credit purchases times 365, the days the business takes to pay suppliers.
+    follow_up:
+      en: Which purchases figure is used with payables?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -315,6 +370,17 @@
   - non-current liabilities
   - profitability
   - efficiency
+  key_points:
+  - id: kp_profit_over_capital
+    text:
+      en: ROCE is profit from operations divided by capital employed, shown as a percentage.
+    follow_up:
+      en: Which two figures are divided to show the return?
+  - id: kp_capital_employed
+    text:
+      en: Capital employed is the owner's capital plus non-current liabilities, or equally total assets less current liabilities.
+    follow_up:
+      en: What is the total of long-term funding used in the business?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -369,6 +435,17 @@
   - non-current liabilities
   - profitability
   - efficiency
+  key_points:
+  - id: kp_say_direction
+    text:
+      en: Interpreting a ratio means saying whether it has improved or worsened and what that means for the business.
+    follow_up:
+      en: What should a comment say beyond the new figure?
+  - id: kp_give_cause
+    text:
+      en: A sound comment links the change to a likely cause, such as lower selling prices, higher costs or slower payment by customers.
+    follow_up:
+      en: How would you explain why a margin dropped?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active

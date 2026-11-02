@@ -32,6 +32,17 @@
   - hertz
   - oscillation
   - cycle
+  key_points:
+  - id: kp_period
+    text:
+      en: The period is the width of one full cycle in divisions multiplied by the time-base setting.
+    follow_up:
+      en: How do you turn the width of one wave on the screen into a time?
+  - id: kp_frequency
+    text:
+      en: The frequency is found as 1 divided by the period.
+    follow_up:
+      en: Once you know the period from the trace, how do you get the frequency?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -66,6 +77,17 @@
   - amplitude
   - division
   - voltage
+  key_points:
+  - id: kp_peak_height
+    text:
+      en: The peak voltage is the height of the peak above the centre line in divisions, multiplied by the Y-gain in V per division.
+    follow_up:
+      en: How do you turn the height of a trace into a voltage?
+  - id: kp_halve
+    text:
+      en: Peak voltage is measured from the centre line, so a peak-to-peak height must be halved.
+    follow_up:
+      en: If you measure from the lowest to the highest point of the wave, what must you do to get the peak voltage?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active

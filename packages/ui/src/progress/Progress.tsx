@@ -33,6 +33,10 @@ export interface ProgressActions {
   /** Where to start when nothing has been studied yet. */
   onLearn?: () => void;
   onDiagnostic?: () => void;
+  /** A mastery check of one idea practised in Study: how practice becomes mastery. */
+  onCheck?: (kcId: string) => void;
+  /** Practice of one idea with too few varied questions for a check yet. */
+  onPractise?: (kcId: string) => void;
 }
 
 export interface ProgressNames {
@@ -70,7 +74,8 @@ function StudyLine({ days, freezes, minutes, sessions }: { days: number; freezes
 }
 
 /** The ideas whose bars moved today (LRN-34's reflection block), each with its state now. */
-function MovedToday({ moved: seen, names, states, onLearn, outlined = false }: { moved: string[]; names: ProgressNames; states: Map<string, { state: KcState; topic: string }>; onLearn?: () => void; outlined?: boolean }) {
+function MovedToday({ moved: seen, names, states, onLearn, outlined = false, studied = false, ownCourse = false, studiedToday = [], checkable = [], onCheck, onPractise }: { moved: string[]; names: ProgressNames; states: Map<string, { state: KcState; topic: string }>; onLearn?: () => void; outlined?: boolean; studied?: boolean; ownCourse?: boolean; studiedToday?: readonly string[]; checkable?: readonly string[]; onCheck?: (kcId: string) => void; onPractise?: (kcId: string) => void }) {
+  const shownStudied = studiedToday.slice(0, 5);
   const t = useT();
   // The core lists every idea worked on today; one still at Not started has not moved, so it is counted on one quiet
   // line instead of being listed under "moved" beside its Not started mark.
@@ -79,7 +84,7 @@ function MovedToday({ moved: seen, names, states, onLearn, outlined = false }: {
   return (
     <section aria-labelledby="progress-moved" data-progress-moved={moved.length} className="flex flex-col gap-3 rounded-card border border-line bg-canvas p-6">
       <h2 id="progress-moved" className="text-heading text-ink">{moved.length === 0 ? t("progress.moved.lead_none") : t("progress.moved.lead", { count: moved.length })}</h2>
-      {moved.length === 0 && still === 0 ? <div className="flex flex-wrap items-center gap-3"><p className="text-ui text-muted">{t("progress.moved.invite")}</p>{onLearn !== undefined && <Button size="sm" onClick={onLearn}>{t("home.browse_topics")}</Button>}</div> : moved.length > 0 && (
+      {moved.length === 0 && still === 0 && shownStudied.length > 0 ? null : moved.length === 0 && still === 0 ? <div className="flex flex-wrap items-center gap-3"><p className="text-ui text-muted">{t(ownCourse ? "progress.moved.own_course" : studied ? "progress.moved.study_note" : "progress.moved.invite")}</p>{onLearn !== undefined && !ownCourse && <Button size="sm" onClick={onLearn}>{t("home.browse_topics")}</Button>}</div> : moved.length > 0 && (
         <ul className="flex flex-col gap-2">
           {moved.map((kc) => {
             const known = states.get(kc);
@@ -93,6 +98,23 @@ function MovedToday({ moved: seen, names, states, onLearn, outlined = false }: {
         </ul>
       )}
       {still > 0 && <p data-progress-still={still} className="text-meta text-muted">{t("progress.moved.still", { count: still })}</p>}
+      {shownStudied.length > 0 && (
+        <div data-progress-studied={studiedToday.length} className="flex flex-col gap-2 border-t border-line pt-3">
+          <h3 className="text-ui font-semibold text-ink">{t("progress.moved.studied_lead")}</h3>
+          <p className="text-meta text-muted">{t("progress.moved.studied_help")}</p>
+          <ul className="flex flex-col gap-2">
+            {shownStudied.map((kc) => (
+              <li key={kc} data-studied-kc={kc} className="flex flex-wrap items-center justify-between gap-3">
+                <span className="min-w-0 flex-1 text-ui text-ink">{names.kc(kc) ?? states.get(kc)?.topic ?? kc}</span>
+                {checkable.includes(kc)
+                  ? onCheck !== undefined && <Button size="sm" onClick={() => onCheck(kc)}>{t("progress.moved.check")}</Button>
+                  : onPractise !== undefined && <Button size="sm" onClick={() => onPractise(kc)}>{t("progress.moved.practise")}</Button>}
+              </li>
+            ))}
+          </ul>
+          {studiedToday.length > shownStudied.length && <p className="text-meta text-muted">{t("progress.moved.studied_more", { count: studiedToday.length - shownStudied.length })}</p>}
+        </div>
+      )}
       {outlined && moved.length > 0 && <p data-moved-outlined="" className="text-meta text-muted">{t("progress.map.moved_outline")}</p>}
     </section>
   );
@@ -240,10 +262,19 @@ export function movedToday(progress: ProgressView): string[] {
   return progress.moved_today.filter((kc) => states.get(kc) !== "not_started");
 }
 
-export function ProgressContent({ state, names, actions, hero }: { state: ProgressState; names: ProgressNames; actions: ProgressActions; hero?: ReactNode }) {
+/** The subject shown before one is chosen: the one with an idea that moved today, else the one with the most ideas
+ * past Not started, else the first. (The 2 November rehearsal opened on Mathematics, 0 of 102, with Physics in use.) */
+export function defaultSubject(progress: ProgressView): ProgressSubject | undefined {
+  const moved = new Set(progress.moved_today);
+  return progress.subjects.find((s) => s.topics.some((topic) => topic.kcs.some((kc) => moved.has(kc.kc_id))))
+    ?? [...progress.subjects].sort((a, b) => b.bands.learning + b.bands.secure - (a.bands.learning + a.bands.secure))[0];
+}
+
+export function ProgressContent({ state, names, actions, hero: heroIn, ownCourse = false }: { state: ProgressState; names: ProgressNames; actions: ProgressActions; hero?: ReactNode; ownCourse?: boolean }) {
+  const hero = ownCourse ? undefined : heroIn;
   const t = useT();
   const progress = state.progress;
-  // The subject shown (the first until one is chosen) and whether the map is open; both stay while the screen lives.
+  // The subject shown (`defaultSubject` until one is chosen) and whether the map is open; both stay while the screen lives.
   const [chosen, setChosen] = useState<string | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
   const mapId = useId();
@@ -260,18 +291,18 @@ export function ProgressContent({ state, names, actions, hero }: { state: Progre
     const states = new Map<string, { state: KcState; topic: string }>();
     for (const s of progress.subjects) for (const topic of s.topics) for (const kc of topic.kcs) states.set(kc.kc_id, { state: kc.state, topic: topic.title });
     const started = progress.subjects.some((s) => s.bands.learning + s.bands.secure > 0) || progress.time_studied.minutes_total > 0;
-    const subjects = progress.subjects;
-    const subject = subjects.find((s) => s.subject === chosen) ?? subjects[0];
+    const subjects = ownCourse ? [] : progress.subjects;
+    const subject = subjects.find((s) => s.subject === chosen) ?? defaultSubject(progress);
     const mapShown = hero !== undefined && mapOpen;
     return (
       <div className="flex flex-col gap-8">
         {/* Recent activity leads: what moved today, then the streak and time studied as one quiet line (G1, D109). */}
         <div className="flex flex-col gap-3">
-          <MovedToday moved={progress.moved_today} names={names} states={states} outlined={mapShown} {...(actions.onLearn !== undefined && started ? { onLearn: actions.onLearn } : {})} />
+          <MovedToday moved={progress.moved_today} names={names} states={states} outlined={mapShown} studied={(progress.study_activity?.quiz_items ?? 0) + (progress.study_activity?.cards_reviewed ?? 0) > 0} ownCourse={ownCourse} studiedToday={ownCourse ? [] : progress.studied_today ?? []} checkable={progress.studied_checkable ?? []} {...(actions.onCheck !== undefined ? { onCheck: actions.onCheck } : {})} {...(actions.onPractise !== undefined ? { onPractise: actions.onPractise } : {})} {...(actions.onLearn !== undefined && started ? { onLearn: actions.onLearn } : {})} />
           <StudyLine days={progress.streak.days} freezes={progress.streak.freezes_left} minutes={progress.time_studied.minutes_7d} sessions={progress.time_studied.sessions_7d} />
           {progress.study_activity !== undefined && <StudyActivityLine activity={progress.study_activity} />}
         </div>
-        {!started && (
+        {!started && !ownCourse && (
           <section data-progress-empty="" className="flex flex-col items-start gap-3 rounded-card border border-line bg-canvas p-6">
             <p className="text-body text-ink">{t("progress.empty")}</p>
             {actions.onLearn !== undefined && <Button tone="primary" onClick={actions.onLearn}>{t("home.browse_topics")}</Button>}
@@ -329,13 +360,13 @@ function Hero({ map, names, progress, version }: { map: ProgressMap; names: Prog
 }
 
 /** The Progress place (Ctrl+5): read when it opens, and again whenever a mastery change is reported. */
-export function Progress({ controller, names, actions, version = 0, map }: {
-  controller: ProgressController; names: ProgressNames; actions: Omit<ProgressActions, "onRetry">; version?: number; map?: ProgressMap;
+export function Progress({ controller, names, actions, version = 0, map, ownCourse = false }: {
+  controller: ProgressController; names: ProgressNames; actions: Omit<ProgressActions, "onRetry">; version?: number; map?: ProgressMap; ownCourse?: boolean;
 }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getView, controller.getView);
   useEffect(() => {
     void controller.load();
   }, [controller, version]);
   const hero = map !== undefined && state.status !== "unavailable" ? <Hero map={map} names={names} progress={state.progress} version={version} /> : undefined;
-  return <ProgressContent state={state} names={names} actions={{ ...actions, onRetry: () => void controller.load() }} {...(hero !== undefined ? { hero } : {})} />;
+  return <ProgressContent state={state} names={names} actions={{ ...actions, onRetry: () => void controller.load() }} {...(hero !== undefined ? { hero } : {})} ownCourse={ownCourse} />;
 }

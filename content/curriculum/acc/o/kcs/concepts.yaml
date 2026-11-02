@@ -40,6 +40,17 @@
   - depreciation
   - net realisable value
   - non-current asset
+  key_points:
+  - id: kp_match_situation
+    text:
+      en: Each accounting concept describes a rule, and a situation is matched to the concept whose rule it follows or breaks.
+    follow_up:
+      en: How would you decide which rule a described treatment is following?
+  - id: kp_common_concepts
+    text:
+      en: Prudence avoids overstating profit, going concern assumes the business continues, and consistency keeps methods the same.
+    follow_up:
+      en: What does each of these ideas ask the accountant to do?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -87,6 +98,17 @@
   - depreciation
   - net realisable value
   - non-current asset
+  key_points:
+  - id: kp_apply_prudence
+    text:
+      en: Under prudence, losses are recognised as soon as they are expected, while profits wait until they are earned.
+    follow_up:
+      en: How should an expected loss and an expected gain be treated differently?
+  - id: kp_apply_other
+    text:
+      en: Business entity keeps the owner's affairs apart from the business, and money measurement records only items with a money value.
+    follow_up:
+      en: Why is the owner's private spending kept out of the business records?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active

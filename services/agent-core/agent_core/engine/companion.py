@@ -940,10 +940,13 @@ def outline_line(templates: Any, outline: OutlineFacts) -> str | None:
         return None
     count = len(outline.not_yet_secure)
     if count == 0:
-        return str(templates.text("outline.all_secure", skills=outline.skills))
+        key = "outline.all_secure_one" if outline.skills == 1 else "outline.all_secure"
+        return str(templates.text(key, skills=outline.skills))
     statements = "; ".join(outline.not_yet_secure[:OUTLINE_LINE_MAX])
     key = "outline.not_yet_one" if count == 1 else "outline.not_yet"
-    return str(templates.text(key, skills=outline.skills, count=count, statements=statements))
+    return str(
+        templates.text(key, skills=companion_facts.counted(outline.skills, "skill"), count=count, statements=statements)
+    )
 
 
 PROGRESS_LINE_MAX = 6  # skills named in the code-built progress line
@@ -996,23 +999,24 @@ def _outline_facts(engine: Any, desk: CompanionDesk, now: int) -> OutlineFacts |
     not_yet: list[str] = []
     for i, entry in enumerate(rows):
         kc, band = str(entry.get("kc_id")), str(entry.get("band"))
-        statement = (content.kc_statement(kc) if content is not None else None) or kc
+        statement = companion_facts.clip((content.kc_statement(kc) if content is not None else None) or kc)
         if band != "secure":
-            not_yet.append(statement[:100])
+            not_yet.append(statement)
         if i >= 12:
             continue
         when = taught_at.get(kc)
         where = f" ({title} teaches it at {moment_label(when)})" if type(when) is int else f" ({title})"
         facts.append(companion_facts.Fact(
-            "outline:" + kc, "skill_band", band, "band", statement[:100], desk.day(now), "teaching outline",
-            f"Recorded practice band for {statement[:100]}: {companion_facts.band_words(band)}{where}."))  # fmt: skip
+            "outline:" + kc, "skill_band", band, "band", statement, desk.day(now), "teaching outline",
+            f"Your practice on {statement}: {companion_facts.band_words(band)}{where}."))  # fmt: skip
     day = desk.day(now)
     facts.append(companion_facts.Fact(
         "outline:skills", "outline_skills", len(rows), "skills", title, day, "teaching outline",
-        f"{title} teaches {len(rows)} skills."))  # fmt: skip
+        f"{title} teaches {companion_facts.counted(len(rows), 'skill')}."))  # fmt: skip
     facts.append(companion_facts.Fact(
         "outline:not_yet_secure", "outline_skills_not_yet_secure", len(not_yet), "skills", title, day,
-        "teaching outline", f"Of the skills {title} teaches, not yet secure: {len(not_yet)} skills."))  # fmt: skip
+        "teaching outline",
+        f"Not yet secure from {title}: {companion_facts.counted(len(not_yet), 'skill')}."))  # fmt: skip
     return OutlineFacts(title, len(rows), not_yet, facts)
 
 

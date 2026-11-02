@@ -85,11 +85,13 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
         run_tool: RunTool | None = None,
         judge_method: JudgeCriterion | None = None,
         explain_judge: ExplainJudge | None = None,
+        explain_possible: Callable[[], bool] = lambda: True,
         recover: bool = False,
     ) -> None:
         self.learner, self.content, self.settings = learner, content, settings
         self.clock_ms, self.monotonic_ms, self.run_tool = clock_ms, monotonic_ms, run_tool
         self.judge_method = judge_method
+        self.explain_possible = explain_possible
         self.explain_judge = explain_judge  # explain it back before mastery; None keeps the check as it was
         install(learner, settings)
         self.store = AssessmentStore(learner.conn)
@@ -190,6 +192,12 @@ class AssessmentDesk(MockCommands, PastPaperCommands, VariantCommands, ProbeComm
                 item_id = event.payload["item_id"]
                 seen[item_id] = max(seen.get(item_id, 0), event.occurred_at)
         return seen
+
+    def check_possible(self, kc_id: str) -> bool:
+        """Whether a mastery check of this KC can start now: enough differently worded questions for all its items.
+        With fewer the check would open on "the next question is not available yet", so practice is offered instead."""
+        questions = self.eligible("mastery_check", [kc_id])
+        return len({self._surface(i) for i in questions}) >= int(self.settings.mastery_check_items)
 
     def eligible(self, surface: str, kc_ids: Sequence[str] = (), subject: str | None = None) -> list[dict[str, Any]]:
         reserved = self._reserved()

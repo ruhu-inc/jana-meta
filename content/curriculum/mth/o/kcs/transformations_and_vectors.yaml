@@ -34,6 +34,17 @@
   - clockwise
   - anticlockwise
   - column vector
+  key_points:
+  - id: kp_describe_moves
+    text:
+      en: A translation shifts every point by one vector, a reflection mirrors in a line, and a rotation turns about a centre by an angle.
+    follow_up:
+      en: What information is needed to carry out a rotation?
+  - id: kp_enlargement_centre
+    text:
+      en: An enlargement multiplies each distance from the centre by the scale factor, so image points lie along lines through the centre.
+    follow_up:
+      en: What does the scale factor do to a point's distance from the centre?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -65,6 +76,17 @@
   - centre of enlargement
   - image
   - area scale factor
+  key_points:
+  - id: kp_scale_factor_lengths
+    text:
+      en: The scale factor is image length divided by object length, and a factor between 0 and 1 makes the shape smaller.
+    follow_up:
+      en: How do you get the scale factor from a pair of matching lengths?
+  - id: kp_area_factor
+    text:
+      en: Areas change by the scale factor squared, though angles stay the same.
+    follow_up:
+      en: If the scale factor is 3, what factor applies to the area?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -91,6 +113,17 @@
   - component
   - scalar
   - resultant
+  key_points:
+  - id: kp_add_components
+    text:
+      en: Vectors are added or subtracted by working with the top numbers and the bottom numbers separately.
+    follow_up:
+      en: How do you combine two column vectors?
+  - id: kp_scalar_multiple
+    text:
+      en: Multiplying a vector by a number multiplies both of its components by that number.
+    follow_up:
+      en: What happens to each part of a column vector when it is multiplied by 3?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -119,6 +152,17 @@
   - column vector
   - component
   - Pythagoras' theorem
+  key_points:
+  - id: kp_magnitude_meaning
+    text:
+      en: The magnitude of a vector is its length, found from the two components using Pythagoras' theorem.
+    follow_up:
+      en: What does the magnitude measure, and which theorem is behind the calculation?
+  - id: kp_sign_ignored
+    text:
+      en: Signs of the components do not change the length, because they are squared.
+    follow_up:
+      en: Why does a negative component not make the magnitude negative?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active

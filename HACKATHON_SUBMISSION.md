@@ -3,6 +3,10 @@
 Status: draft materials prepared; no submission or video upload performed. The code is public at
 <https://github.com/ruhu-inc/jana-meta> (`main` at `4ccd5c4c`, tagged `demo-2026-11-01`).
 
+**Update, 2 November:** Jana is no longer only an O-level tutor. Study works for any material, and a new learner can
+choose "My own course and materials", which hides the curriculum. HACKATHON_DEMO.md has the matching script. Check the
+copy below against this before submitting.
+
 ## Official requirements checked
 
 The [event page](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) lists the deadline as **4 November 2026,

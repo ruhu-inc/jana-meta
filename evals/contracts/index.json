@@ -4542,6 +4542,42 @@
     "origin": "synthesised"
   },
   {
+    "file": "study/workspace/AidProvenance/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/AidProvenance",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/AidProvenance/valid/minimal.json",
+    "contract": "study/workspace#/$defs/AidProvenance",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/AnswerMarking/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/AnswerMarking",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/AnswerMarking/valid/minimal.json",
+    "contract": "study/workspace#/$defs/AnswerMarking",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
+    "file": "study/workspace/AnswerVerdict/invalid/unknown_property.json",
+    "contract": "study/workspace#/$defs/AnswerVerdict",
+    "expect": "invalid",
+    "origin": "derived"
+  },
+  {
+    "file": "study/workspace/AnswerVerdict/valid/minimal.json",
+    "contract": "study/workspace#/$defs/AnswerVerdict",
+    "expect": "valid",
+    "origin": "synthesised"
+  },
+  {
     "file": "study/workspace/AttemptId/invalid/wrong_type.json",
     "contract": "study/workspace#/$defs/AttemptId",
     "expect": "invalid",

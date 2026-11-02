@@ -124,3 +124,102 @@ def test_an_outline_with_no_supported_item_is_refused(tmp_path):
         assert reply.json()["error"]["code"] == "insufficient_evidence"
 
     asyncio.run(run())
+
+
+def long_draft() -> dict:
+    long = draft()
+    too_long = "derive the range equation " + "in a great many words " * 12
+    long["outline"]["objectives"].append(cite(too_long))
+    long["claims"].append(cite(too_long))
+    return long
+
+
+def test_a_draft_that_runs_long_gets_the_reserved_second_draft_with_the_limits(tmp_path):
+    """The outline refused on the 2 November rehearsal (`draft_response_maxLength`): told the limits, it comes back."""
+
+    async def run():
+        h = harness(gateway_config(tmp_path))
+        device = Device()
+        await device.login(h.client)
+        h.stubs["meta"].say(Output(text=json.dumps(long_draft())), Output(text=json.dumps(draft())),
+                            Output(text=json.dumps(verdict([True] * 4))))  # fmt: skip
+        reply = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
+        assert reply.status_code == 200, reply.text
+        assert len(reply.json()["outline"]["objectives"]) == 1
+        second = repr(h.stubs["meta"].seen[1])
+        assert "ran past its limit" in second
+
+    asyncio.run(run())
+
+
+def test_a_second_long_draft_keeps_its_whole_items_and_drops_the_long_one(tmp_path):
+    async def run():
+        h = harness(gateway_config(tmp_path))
+        device = Device()
+        await device.login(h.client)
+        h.stubs["meta"].say(Output(text=json.dumps(long_draft())), Output(text=json.dumps(long_draft())),
+                            Output(text=json.dumps(verdict([True] * 4))))  # fmt: skip
+        reply = await h.client.post("/v1/study/process", json=payload(), headers=device.headers())
+        assert reply.status_code == 200, reply.text
+        assert [o["text"] for o in reply.json()["outline"]["objectives"]] == [
+            "derive the range equation for a launch from level ground"
+        ]
+
+    asyncio.run(run())
+
+
+def marking() -> dict:
+    return {"request_id": "req_" + "0" * 26, "item_type": "fill_blank", "question": "The time of flight is ____.",
+            "answer": "2u sin theta / g", "reference": "T = 2u sin(theta)/g", "passages": [TEXT],
+            "output_locale": "en"}  # fmt: skip
+
+
+def test_a_written_answer_is_marked_online_only_when_the_judge_and_the_check_agree(tmp_path):
+    async def run():
+        h = harness(gateway_config(tmp_path))
+        device = Device()
+        await device.login(h.client)
+        h.stubs["meta"].say(Output(text=json.dumps({"verdict": "correct"})),
+                            Output(text=json.dumps({"verdict": "entailed"})))  # fmt: skip
+        reply = await h.client.post("/v1/study/mark", json=marking(), headers=device.headers())
+        assert reply.status_code == 200, reply.text
+        assert reply.json()["verdict"] == "correct"
+        checker = repr(h.stubs["meta"].seen[1])
+        assert "2u sin(theta)/g" not in checker  # the separate check never sees the reference answer
+        h.stubs["meta"].say(Output(text=json.dumps({"verdict": "correct"})),
+                            Output(text=json.dumps({"verdict": "unknown"})))  # fmt: skip
+        again = await h.client.post("/v1/study/mark", json={**marking(), "request_id": "req_" + "1" * 26},
+                                    headers=device.headers())  # fmt: skip
+        assert again.json()["verdict"] == "unverifiable"
+
+    asyncio.run(run())
+
+
+def test_agreement_rules_never_turn_a_disagreement_into_a_verdict():
+    from cloud_gateway.study import agreed_verdict
+
+    assert agreed_verdict("correct", "entailed") == "correct"
+    assert agreed_verdict("incorrect", "contradicted") == "incorrect"
+    assert agreed_verdict("partial", "unknown") == "partial"
+    assert agreed_verdict("partial", "contradicted") == "unverifiable"
+    assert agreed_verdict("correct", "contradicted") == "unverifiable"
+    assert agreed_verdict("incorrect", "entailed") == "unverifiable"
+    assert agreed_verdict("incorrect", "unknown") == "incorrect"  # off target, and nothing supports it
+    assert agreed_verdict("correct", "unknown") == "unverifiable"
+
+
+def test_a_transcript_line_can_be_the_prerequisite_a_hint_offers():
+    """A recall question from a lecture had no cue at all: transcript lines have no capitals or full stops, so every
+    hint fell back to general strategy (the 1 November rehearsal). A line that gives the answer away is left out."""
+    from cloud_gateway.study import coaching_cues
+
+    quote = (
+        "[0:48] start with a ball launched at speed u at an angle theta above the horizontal\n"
+        "[0:55] I assume you already know how to resolve a vector into perpendicular components\n"
+        "[1:02] the horizontal component of the velocity is u cos theta\n"
+    )
+    body = {"kind": "chat", "prompt": "Give me one short hint", "settings": {"focus": "Coaching withheld wording: "
+            '["horizontal component of the velocity is u cos theta"]'}}  # fmt: skip
+    texts = [c["text"] for c in coaching_cues(body, [{"passage_id": "p0", "quote": quote}])]
+    assert "I assume you already know how to resolve a vector into perpendicular components." in texts
+    assert not any("0:55" in t for t in texts)

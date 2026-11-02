@@ -21,7 +21,7 @@ export type StudyHelpKind = (typeof STUDY_HELP)[number];
 const picked = (answer: string | undefined) => (answer ?? "").split(",").filter(Boolean);
 const missed = (r: Verdict | undefined) => r !== undefined && (r.verdict === "incorrect" || r.verdict === "partial");
 
-export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessBlocked, stale, quizHelp, helpJob, helpPending, safeHelp, helpAids, claim, jobs, onDraft, onCheck, onSubmit, onClearResult, onHelp, onFollowUp }: {
+export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessBlocked, stale, quizHelp, helpJob, helpPending, safeHelp, helpAids, claim, jobs, onDraft, onCheck, onSubmit, onClearResult, onRetake, ownCourse = false, onHelp, onFollowUp }: {
   quiz: W.QuizView; result: W.QuizResult | null; resultAnswers: Record<string, string>; feedback: Record<string, Verdict>;
   busy: boolean; accessBlocked: boolean; stale: boolean;
   quizHelp: StudyWorkspaceView["quizHelp"]; helpJob: W.Job | undefined; helpPending: boolean; safeHelp: boolean;
@@ -31,7 +31,7 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
   onDraft: (answers: Record<string, string>, position: number) => void;
   /** Check one answer; resolves true when the check went through (the feedback is in `feedback`). */
   onCheck: (itemId: string, value: string) => Promise<boolean>;
-  onSubmit: (answers: Record<string, string>) => void; onClearResult: () => void;
+  onSubmit: (answers: Record<string, string>) => void; onClearResult: () => void; onRetake?: () => void; ownCourse?: boolean;
   onHelp: (kind: StudyHelpKind, itemId: string) => void;
   /** A follow-up to the coaching shown for a question; resolves true when it was sent. */
   onFollowUp: (itemId: string, kind: StudyHelpKind, text: string) => Promise<boolean>;
@@ -105,7 +105,8 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
         <h3 className="text-ui font-semibold">{t(`help.chip.${here.kind}`)}</h3>
         {here.aid ? here.aid.claims.map((c, i) => claim(c, String(i))) : safeHelp && helpJob ? <>
           <p className="text-meta text-muted">{t("study.quiz_help_general")}</p>
-          <p className="text-ui">{t(here.kind === "hint" ? "study.quiz_help_safe_hint" : "study.quiz_help_safe_walk")}</p>
+          <p className="text-ui">{t(item.type === "choice" || item.type === "multi_select" ? (here.kind === "hint" ? "study.quiz_help_safe_hint" : "study.quiz_help_safe_walk") : (here.kind === "hint" ? "study.quiz_help_safe_hint_written" : "study.quiz_help_safe_walk_written"))}</p>
+          {item.stem.citations.length > 0 && claim({ text: t("study.quiz_help_read_source"), citations: item.stem.citations }, "safe-help-source")}
           <p className="text-ui">{t("study.quiz_help_safe_followup")}</p>
           <details><summary className="cursor-pointer text-meta text-muted">{t("study.quiz_help_tailored")}</summary>{jobs([helpJob], true)}</details>
         </> : helpJob && ["failed", "paused", "waiting_online", "cancelled"].includes(helpJob.state) ? jobs([helpJob], true) : <Loader label={t("study.quiz_help_loading")} />}
@@ -133,11 +134,14 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
     return <section className="flex flex-col gap-5" aria-label={t("study.results")} data-quiz-results>
       <header className="flex flex-col gap-1">
         <p role="status" className="text-heading text-ink" data-quiz-score>{t("study.results_score", { correct, total })}</p>
-        <p className="text-meta text-muted">{t("study.no_mastery")}</p>
+        <p className="text-meta text-muted">{t(ownCourse ? "study.no_mastery_material" : "study.no_mastery")}</p>
         {labels.length === 1 && <p className="text-meta text-muted" data-quiz-grading>{labels[0]}</p>}
         <details className="text-meta text-muted"><summary className="cursor-pointer">{t("study.grading_details")}</summary><p className="mt-2">{t("study.grading_help")}</p></details>
       </header>
-      {retry && <span><Button tone="primary" disabled={busy} onClick={onClearResult}>{t("study.try_again")}</Button></span>}
+      <span className="flex flex-wrap gap-2">
+        {retry && <Button tone="primary" disabled={busy} onClick={onClearResult}>{t("study.try_again")}</Button>}
+        {onRetake && <Button tone={retry ? "secondary" : "primary"} disabled={busy} onClick={() => { setAnswers({}); setPosition(0); setChecked({}); setTries({}); setRound(0); setShownAnswers([]); setHelpOpen(false); onRetake(); }}>{t("study.retake")}</Button>}
+      </span>
       <ol className="flex flex-col gap-4">{order.map(([i, item]) => {
         const r = verdicts.get(item.item_id);
         const wrong = missed(r);

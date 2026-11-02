@@ -30,6 +30,17 @@
   - asset
   - liability
   - liabilities
+  key_points:
+  - id: kp_cash_only
+    text:
+      en: A receipts and payments account is a summary of cash received and paid in a period, with no adjustments.
+    follow_up:
+      en: Which items does a summary of cash movements leave out?
+  - id: kp_income_expenditure
+    text:
+      en: An income and expenditure account matches the income and costs that belong to the year, including accruals and depreciation.
+    follow_up:
+      en: How does a club work out what the year cost, as distinct from what it paid?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -67,6 +78,17 @@
   - asset
   - liability
   - liabilities
+  key_points:
+  - id: kp_year_belongs
+    text:
+      en: Subscriptions income for the year is the amount that relates to that year, not the cash received during it.
+    follow_up:
+      en: Why is cash received from members not always the income for the year?
+  - id: kp_arrears_advance
+    text:
+      en: Arrears from the past or current year, and subscriptions paid in advance, are adjusted to the cash to reach that income.
+    follow_up:
+      en: What adjustments turn the cash members paid into the income of this year?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -103,6 +125,17 @@
   - asset
   - liability
   - liabilities
+  key_points:
+  - id: kp_fund_is_capital
+    text:
+      en: The accumulated fund is the club's equivalent of capital, as there is no single owner.
+    follow_up:
+      en: What does a club use in place of an owner's capital?
+  - id: kp_assets_less_liabilities
+    text:
+      en: It is found as total assets less total liabilities at the date in question.
+    follow_up:
+      en: From which two totals can you work out the fund at the start of the year?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -141,6 +174,17 @@
   - asset
   - liability
   - liabilities
+  key_points:
+  - id: kp_income_vs_expenditure
+    text:
+      en: A surplus arises when income is greater than expenditure and a deficit when expenditure is greater.
+    follow_up:
+      en: What comparison tells you whether the club ends the year better off or worse off?
+  - id: kp_adds_to_fund
+    text:
+      en: The surplus or deficit is added to or taken from the accumulated fund at the year end.
+    follow_up:
+      en: Where does the result of the year go in the club's statement of financial position?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active

@@ -241,6 +241,20 @@ class StudyCloud:
         self.meter(conn, output)
         return cast(dict[str, Any], output)
 
+    async def mark_answer(self, conn: Any, request_id: str, body: dict[str, Any]) -> str:
+        """A written answer marked online (`AnswerMarking`): consent, subscription and the redaction check as any Study
+        request. Only the question, the answer, the reference and the passages the question cites are sent."""
+        self.guard(conn)
+        payload = {"request_id": request_id, **body, "output_locale": "en"}
+        profile = conn.execute("SELECT display_name,profile_id FROM profile").fetchone()
+        if Redactor(profile or ()).blocks(payload):
+            raise StudyCloudError("safety_blocked")
+        output = await self.send(conn, "POST", "/v1/study/mark", payload)
+        if errors("study/workspace#/$defs/AnswerVerdict", output) or output["request_id"] != request_id:
+            raise StudyCloudError("insufficient_evidence")
+        self.meter(conn, output)
+        return str(output["verdict"])
+
     async def research_start(self, conn: Any, request: dict[str, Any]) -> dict[str, Any]:
         """The approved brief, and a photographed diagram's confirmed part names, to the gateway's research job (SPEC
         §18.3): consent, subscription and the redaction check as any Study request. The brief's fields are the only
@@ -340,13 +354,18 @@ class StudyCloud:
                 conn, "GET", f"/v1/study/extractions/{jid}/chunks?cursor={cursor}", attempt=attempt, request_id=jid
             )
         self.meter(conn, page)
+        # Only pages read from an image need the learner's review: a text-layer PDF is ready as it stands.
+        scanned = page.get("scanned_units")
+        kind_has_text_layer = source["kind"] in ("pdf", "document", "slides")
         # The local store owns final chunk identities, normalization and redaction. Never trust remote offsets.
         units: dict[str, dict[str, Any]] = {}
         for chunk in chunks:
             if chunk["source_id"] != source["source_id"] or chunk["revision"] != source["revision"]:
                 raise StudyCloudError("processing_failed")
             key = json.dumps(chunk["locator"], sort_keys=True)
-            unit = units.setdefault(key, {"locator": chunk["locator"], "text": "", "ocr": True})
+            number = chunk["locator"].get("page") or chunk["locator"].get("slide")
+            read_as_text = scanned is not None and (number is None or number not in scanned) and kind_has_text_layer
+            unit = units.setdefault(key, {"locator": chunk["locator"], "text": "", "ocr": not read_as_text})
             unit["text"] += chunk["text"]
         result = Extracted(units.values())
         result.frames, result.has_video = [dict(f) for f in frames], has_video

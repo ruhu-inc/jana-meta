@@ -29,6 +29,34 @@ product; `HACKATHON_SUBMISSION.md` lists the event work in full. Caption each be
 Muse Glimmer as the tutor, the Projectile motion subtopic, the Companion, the YouTube lecture outline and the learner's
 map. Existing foundation: the checking worker, the hint ladder and the Study desk the new features sit in.
 
+## Storyboard, 2 November (later): any material, for a university student
+
+This is the recommended recording script. It shows the widest use of Muse Spark online and the broadest audience, and
+it needs no curriculum. Every time below was measured live on 2 November against this build, on a new learner, with
+a synthetic six-page lecture (Intermediate Microeconomics, monopoly). Bring a real lecture of your own if you can.
+
+| Time | Beat | Screen | Measured |
+| --- | --- | --- | --- |
+| 0:00–0:20 | New learner: name, age, **My own course and materials**. Straight to Home: no syllabus, no lessons in the sidebar | First run, Home | 4 s to Home |
+| 0:20–0:45 | Add material: the lecture PDF. "Ready to study", no review step, page images beside the tools. Mention the same path took a 1,000-page PDF | My materials | under 12 s; 1,000 pages under 23 s |
+| 0:45–1:10 | One press of **Summary**: cited page by page, maths rendered, "Made online with Muse Spark, then checked against your material." | Generate | 21 s |
+| 1:10–2:10 | **Quiz** with Number or expression, Fill in the blank and Written answer. Answer a blank with "MR": **Correct** (an abbreviation, marked online, not a string match). Write a wrong explanation: **Incorrect**, no answer shown. Correct it: **Correct**. The numeric question: "Q = 20" **Correct**. **Finish quiz**: 4 of 4, then **Retake quiz** exists | Generate → Settings: Quiz | 25 s to make, 3–9 s per answer |
+| 2:10–2:40 | **Your tutor**: "Why does a monopolist never operate on the inelastic part of demand?" A grounded answer that ends with a guiding question | Your tutor | 12 s |
+| 2:40–3:00 | Close on the two-model line: online with Muse Spark, private on this computer with Muse Glimmer. Optionally a glance at the O-level learner's map to show the curriculum depth is still there | Spoken | none |
+
+Tick **Written answer** and **Number or expression** and untick the others in the quiz settings before Generate. Make
+the quiz before recording if you would rather cut the 25 s; the tutor and marking are fast enough to show live.
+
+After a quiz, three things now carry on from it. **Help with this question** on a lecture question gives a tailored, cited hint
+rather than the fallback sentence. **Progress** lists "Practised in Study today" with **Check this idea** when a real
+check can run, or **Practise this idea** when it cannot yet. A saved quiz has **Retake quiz**. A window narrower than 1180 px
+opens a material on the study tools, with **View source** and **Study tools** to swap sides.
+
+Rough edges still to know about: a marking the judge and the separate check disagree on says **Not marked** and shows
+the explanation; a long source with no focus reads 24 sections spread across it and says so; research still asks the
+level as a quick reply. PDF formulas come from the text layer, so a heavily mathematical PDF can read badly in the
+source pane, though the page image beside it is always right.
+
 ## Storyboard, 2 November build: one lecture, fully learned
 
 This replaces the 1 November storyboard below as the recording script. It was walked live, beat by beat, on the night
@@ -68,7 +96,7 @@ only if the quiz is generated live in one press and the tutor answer lands in th
 | Home → My materials | 23 s (sidebar expanded first) | Home now says "Last time you worked on physics in Study on 2026-11-01; 1 card is due." |
 | Lecture → saved outline | 8 s | the 22:51 outline read "Made online, then checked" with no model name: it was made a minute before the 22:52 gateway restart. Regenerated; first attempt "Could not finish · 0/8, some generated content did not pass source verification", second attempt done in 10–20 s and named Muse Spark |
 | Saved concept map | 9 s | 7 concepts, 5 "Matches a syllabus skill", line names Muse Spark |
-| Explore → pack → Open the pack | 33 s | "Researched online with Muse Spark…", 25 pages, Key concepts and Quiz Ready, Quiz · 9 questions and Notes in My Sets. The pack's source view shows raw Markdown and LaTeX |
+| Explore → pack → Open the pack | 33 s | "Researched online with Muse Spark…", 25 pages, Key concepts and Quiz Ready, Quiz · 9 questions and Notes in My Sets. The pack's source view showed raw Markdown and LaTeX (fixed since) |
 | Quiz, generated live and taken | 13 s to generate, 91 s to take at automation pace (about 60 s by hand) | wrong answer refused in under 4 s with no answer shown; corrected answer "Correct · Judged, not checked" at 0:48; "3 of 3 correct" |
 | Your tutor | 10–20 s | sentence from Muse Spark plus two code-bound facts, sources dated 2026-11-02 |
 | Progress → map | 12 s to the map, 33 s with Layers | Projectile motion tile "Learning, 0 of 6 secure, Practised today, 1 mistake being watched" |
@@ -91,9 +119,14 @@ Detours and what was changed for them:
   Explore last before the tutor, or accept the extra clicks.
 - **The closing line about Muse Spark and Glimmer is not on the Progress page** or anywhere in the product copy; it
   was a narration line written as if it were on screen. The table now marks it as spoken.
-- **Small inconsistencies seen:** Home says "1 card is due" while the tutor's status line says "11 cards are due"; the
-  tutor's second fact truncates the skill name mid-word ("…changes its vertica:"); the Progress page opens on the
-  Mathematics tab, so Physics needs a click.
+- **Small inconsistencies seen, fixed the same morning:** Home said "1 card is due" while the tutor's status line
+  said "11 cards are due" (Home's card left out Study's own due cards; it now counts them the way the thread does);
+  the tutor's second fact truncated the skill name mid-word ("…changes its vertica:"; statements are now clipped at a
+  word with an ellipsis); Progress opened on the Mathematics tab with nothing in it (it now opens on the subject with
+  an idea that moved today, else the one with the most ideas past Not started); and the research pack's source view
+  showed raw Markdown and LaTeX (it now reads as Markdown with its maths, except while a citation is highlighted in
+  it). The thread's status line keeps the day's opener as worded when the episode opened, so after a session ends
+  it can lag Home's until the next day.
 - **Spend.** The pass (two outline attempts, one quiz, four markings, one tutor turn) added about $0.06 to the ledger
   for 2 November.
 

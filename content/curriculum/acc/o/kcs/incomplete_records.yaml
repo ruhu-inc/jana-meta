@@ -37,6 +37,17 @@
   - asset
   - liability
   - liabilities
+  key_points:
+  - id: kp_list_assets_liabilities
+    text:
+      en: A statement of affairs lists assets and liabilities at one date because there is no ledger to take capital from.
+    follow_up:
+      en: Why does a trader without full records have to list items to find capital?
+  - id: kp_capital_difference
+    text:
+      en: Capital is the total of the assets less the total of the liabilities.
+    follow_up:
+      en: How do you get capital once all items have been listed?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -81,6 +92,17 @@
   - asset
   - liability
   - liabilities
+  key_points:
+  - id: kp_change_in_capital
+    text:
+      en: Profit is the increase in capital over the year, after allowing for what the owner took out or put in.
+    follow_up:
+      en: Why does the change in capital not equal profit on its own?
+  - id: kp_adjustments
+    text:
+      en: Drawings are added back and capital introduced is deducted from the change in capital.
+    follow_up:
+      en: What two owner movements must be adjusted before the change is called profit?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -125,6 +147,17 @@
   - asset
   - liability
   - liabilities
+  key_points:
+  - id: kp_account_workings
+    text:
+      en: A missing credit sales or purchases figure is found by building the control account and balancing it.
+    follow_up:
+      en: What is built from the known figures to reveal the unknown one?
+  - id: kp_balancing_figure
+    text:
+      en: The unknown is the balancing figure that makes both sides of that account equal.
+    follow_up:
+      en: How does the missing amount appear after the other items are entered?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -167,6 +200,17 @@
   - asset
   - liability
   - liabilities
+  key_points:
+  - id: kp_margin_on_sales
+    text:
+      en: A margin is a percentage of revenue, so cost of sales is revenue less the gross profit.
+    follow_up:
+      en: What base is a margin worked out on?
+  - id: kp_markup_on_cost
+    text:
+      en: Mark-up is worked out on cost, so adding it to the cost gives the revenue.
+    follow_up:
+      en: What base is a mark-up worked out on, compared with a margin?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active

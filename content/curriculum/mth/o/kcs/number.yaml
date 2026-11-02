@@ -24,6 +24,17 @@
   - product of prime factors
   - index
   - indices
+  key_points:
+  - id: kp_prime_meaning
+    text:
+      en: A prime number has exactly two factors, itself and one, and prime factors are found by dividing by primes in turn.
+    follow_up:
+      en: What do you divide by at each step, and when do you stop?
+  - id: kp_product_form
+    text:
+      en: The answer is written as a product of primes, using index notation for repeats, and multiplying it back gives the number.
+    follow_up:
+      en: How can you check that your list of prime factors is correct?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -52,6 +63,17 @@
   - factor
   - multiple
   - prime factor
+  key_points:
+  - id: kp_hcf_meaning
+    text:
+      en: The HCF is the largest number that divides into both numbers, and the LCM is the smallest number that both divide into.
+    follow_up:
+      en: What is the difference in meaning between the HCF and the LCM?
+  - id: kp_prime_method
+    text:
+      en: Using prime factorisations, the HCF takes the primes common to both and the LCM takes every prime at its highest power.
+    follow_up:
+      en: Starting from prime factors, how do you build the HCF as compared with the LCM?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -80,6 +102,17 @@
   - complement
   - element
   - universal set
+  key_points:
+  - id: kp_regions
+    text:
+      en: The intersection is in both sets, the union is in at least one set, and the complement is outside the set.
+    follow_up:
+      en: What does the union include that the intersection does not?
+  - id: kp_fill_overlap
+    text:
+      en: Filling in the overlap first avoids counting elements twice, and the total is checked against the universal set.
+    follow_up:
+      en: Which region is best filled first, and why?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -110,6 +143,17 @@
   - cube root
   - power
   - index
+  key_points:
+  - id: kp_inverse_operations
+    text:
+      en: A root undoes a power, so the square root of 49 is the number whose square is 49.
+    follow_up:
+      en: How are squares and square roots connected?
+  - id: kp_cube_negative
+    text:
+      en: A cube of a negative number is negative, while a square of a negative number is positive.
+    follow_up:
+      en: Why does cubing a negative number behave differently from squaring one?
   difficulty_prior: -1.2
   version: 0.1.1
   status: active
@@ -143,6 +187,17 @@
   - reciprocal
   - simplify
   - simplest form
+  key_points:
+  - id: kp_common_denominator
+    text:
+      en: Adding or subtracting fractions needs a common denominator, and only the numerators are then combined.
+    follow_up:
+      en: Why can fractions not simply be added across the top and bottom?
+  - id: kp_multiply_divide
+    text:
+      en: To multiply fractions multiply tops and bottoms, and to divide, turn the second fraction upside down and multiply.
+    follow_up:
+      en: What changes in a division of fractions before you multiply?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -173,6 +228,17 @@
   - percentage
   - recurring decimal
   - simplest form
+  key_points:
+  - id: kp_percent_means
+    text:
+      en: Percent means out of one hundred, so a percentage becomes a decimal by dividing by 100.
+    follow_up:
+      en: What does the word percent tell you about how to convert it to a decimal?
+  - id: kp_fraction_decimal
+    text:
+      en: A fraction becomes a decimal by dividing its numerator by its denominator.
+    follow_up:
+      en: How do you turn a fraction into a decimal?
   difficulty_prior: -0.9
   version: 0.1.1
   status: active
@@ -199,6 +265,17 @@
   - percentage
   - ascending
   - descending
+  key_points:
+  - id: kp_common_form
+    text:
+      en: Numbers are compared by first writing them all in the same form, such as decimals.
+    follow_up:
+      en: What do you do to the numbers before you can compare them fairly?
+  - id: kp_order_direction
+    text:
+      en: The list follows the direction asked, ascending or descending, and the answer is shown in the original forms.
+    follow_up:
+      en: Which form should the final list use, and which direction does it follow?
   difficulty_prior: -0.7
   version: 0.1.1
   status: active
@@ -227,6 +304,17 @@
   - power
   - indices
   - negative number
+  key_points:
+  - id: kp_bidmas
+    text:
+      en: Brackets come first, then powers, then multiplication and division, then addition and subtraction, left to right.
+    follow_up:
+      en: In what order should the operations in a calculation be carried out?
+  - id: kp_negative_signs
+    text:
+      en: Subtracting a negative number is the same as adding, and the sign of a negative number is kept when it is squared in brackets.
+    follow_up:
+      en: What happens to a minus sign directly in front of a negative number?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -257,6 +345,17 @@
   - fractional index
   - reciprocal
   - root
+  key_points:
+  - id: kp_zero_index
+    text:
+      en: Raising a non-zero number to the index zero always gives 1.
+    follow_up:
+      en: What is the value of any number raised to the power zero?
+  - id: kp_negative_fractional
+    text:
+      en: A negative index means the reciprocal, and a fractional index means a root, such as one half giving the square root.
+    follow_up:
+      en: What does a minus sign in an index do, and what does a fraction in the index do?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -283,6 +382,17 @@
   - ordinary form
   - power of ten
   - power
+  key_points:
+  - id: kp_a_times_ten_n
+    text:
+      en: Standard form is a number between 1 and 10 multiplied by a power of ten.
+    follow_up:
+      en: What conditions must the first number satisfy in standard form?
+  - id: kp_power_direction
+    text:
+      en: Large numbers have a positive power of ten and numbers between 0 and 1 a negative power, matching the decimal point's move.
+    follow_up:
+      en: How do you decide whether the power of ten is positive or negative?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -310,6 +420,17 @@
   - power
   - index
   - indices
+  key_points:
+  - id: kp_separate_parts
+    text:
+      en: Multiply or divide the front numbers, then deal with the powers of ten using the index laws.
+    follow_up:
+      en: How are the two parts of each number handled separately in a product?
+  - id: kp_renormalise
+    text:
+      en: If the front number ends up outside 1 to 10, adjust it and change the power of ten to keep standard form.
+    follow_up:
+      en: What must you do if the result is not in proper standard form?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -336,6 +457,17 @@
   - significant figure
   - round
   - rounding
+  key_points:
+  - id: kp_round_one_sf
+    text:
+      en: Each number is rounded to one significant figure, then the easier calculation is done.
+    follow_up:
+      en: What do you do to each number before calculating an estimate?
+  - id: kp_reasonableness
+    text:
+      en: An estimate checks that the exact answer is about the right size, so it should be close but need not be equal.
+    follow_up:
+      en: What is an estimate used for after the real calculation is done?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -363,6 +495,17 @@
   - accuracy
   - significant figure
   - decimal place
+  key_points:
+  - id: kp_half_unit
+    text:
+      en: The bounds of a rounded value lie half a unit of the rounding accuracy below and above it.
+    follow_up:
+      en: If a length is given to the nearest 10, how far either side can the true value be?
+  - id: kp_upper_not_reached
+    text:
+      en: The lower bound is included in the range but the upper bound is the limit that is not quite reached.
+    follow_up:
+      en: Which end of the range of values is included and which is only a limit?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -392,6 +535,17 @@
   - accuracy
   - maximum
   - minimum
+  key_points:
+  - id: kp_choose_bounds
+    text:
+      en: For a sum or product the largest result uses both upper bounds, and the smallest uses both lower bounds.
+    follow_up:
+      en: Which bounds go into a calculation to make the result as large as possible?
+  - id: kp_subtract_divide
+    text:
+      en: For a difference or quotient, the largest result uses the upper bound of one value with the lower bound of the other.
+    follow_up:
+      en: Why does a subtraction need a mix of upper and lower bounds?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -418,6 +572,17 @@
   - ratio
   - simplest form
   - proportion
+  key_points:
+  - id: kp_total_parts
+    text:
+      en: Add the parts of the ratio to get the total number of parts, then divide the quantity by that total to get one part.
+    follow_up:
+      en: What do you work out first from the ratio before dividing the quantity?
+  - id: kp_share_multiply
+    text:
+      en: Each share is its number of parts multiplied by the value of one part, and the shares add up to the original quantity.
+    follow_up:
+      en: How can you check that the shares are correct?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -446,6 +611,17 @@
   - unitary method
   - proportion
   - proportional
+  key_points:
+  - id: kp_unitary_one
+    text:
+      en: The unitary method finds the value of one item first and then scales to the number needed.
+    follow_up:
+      en: What quantity do you find first in the unitary method?
+  - id: kp_inverse_opposite
+    text:
+      en: In inverse proportion, more of one thing means less of the other, such as more workers taking less time.
+    follow_up:
+      en: In what way does the unitary step differ when the proportion is inverse?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -472,6 +648,17 @@
   - average speed
   - density
   - unit price
+  key_points:
+  - id: kp_rate_formula
+    text:
+      en: A rate compares two quantities by division, such as speed as distance divided by time and density as mass divided by volume.
+    follow_up:
+      en: What two quantities are divided to give an average speed?
+  - id: kp_units_per
+    text:
+      en: The units of a rate are made from the two quantities, such as kilometres per hour or grams per cubic centimetre.
+    follow_up:
+      en: How do the units of the answer come from the quantities used?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -501,6 +688,17 @@
   - percentage change
   - multiplier
   - original amount
+  key_points:
+  - id: kp_percent_of
+    text:
+      en: A percentage of a quantity is found by turning the percentage into a fraction or decimal and multiplying.
+    follow_up:
+      en: How do you find 15 percent of a quantity?
+  - id: kp_multiplier
+    text:
+      en: A percentage increase or decrease is done with one multiplier, such as 1.2 for an increase of 20 percent.
+    follow_up:
+      en: How can an increase or decrease be done in a single multiplication?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -527,6 +725,17 @@
   - multiplier
   - original amount
   - original price
+  key_points:
+  - id: kp_hundred_percent
+    text:
+      en: The new amount is a known percentage of the original, which is 100 percent, so divide to find 1 percent or use the multiplier.
+    follow_up:
+      en: What percentage of the original does the given final value represent?
+  - id: kp_divide_not_subtract
+    text:
+      en: The original is found by dividing by the multiplier, not by adding or subtracting the percentage from the final amount.
+    follow_up:
+      en: Why does taking the percentage off the final value give the wrong original?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -554,6 +763,17 @@
   - rounding
   - significant figure
   - decimal place
+  key_points:
+  - id: kp_decimal_places
+    text:
+      en: Decimal places are counted after the decimal point, while significant figures are counted from the first non-zero digit.
+    follow_up:
+      en: Where does counting start for significant figures, as compared with decimal places?
+  - id: kp_look_next_digit
+    text:
+      en: 'Look at the next digit: five or more rounds up, less than five leaves the digit alone, and only round at the end.'
+    follow_up:
+      en: Which digit decides whether to round up, and when in the working should rounding be done?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -579,6 +799,17 @@
   - 12-hour clock
   - 24-hour clock
   - timetable
+  key_points:
+  - id: kp_hours_minutes
+    text:
+      en: Time intervals are worked out in hours and minutes, with 60 minutes to the hour rather than 100.
+    follow_up:
+      en: Why can a time difference not be found by ordinary decimal subtraction?
+  - id: kp_24_hour
+    text:
+      en: The 24-hour clock adds 12 to afternoon hours, which makes intervals across noon or midnight easier.
+    follow_up:
+      en: How does the 24-hour clock help when a journey passes midday?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -603,6 +834,17 @@
   - exchange rate
   - currency
   - conversion
+  key_points:
+  - id: kp_rate_direction
+    text:
+      en: Multiply by the rate when changing into the currency that the rate gives, and divide by it when going back.
+    follow_up:
+      en: How do you decide whether to multiply or divide by the exchange rate?
+  - id: kp_sense_check
+    text:
+      en: 'The answer is checked for sense: the currency worth less per unit gives a larger number of units.'
+    follow_up:
+      en: How can you tell whether your converted amount should be bigger or smaller than the original?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -630,6 +872,17 @@
   - principal
   - interest rate
   - per annum
+  key_points:
+  - id: kp_same_each_year
+    text:
+      en: Simple interest is the same amount every year, found as principal times rate times time.
+    follow_up:
+      en: How does the interest in the second year compare with the first year?
+  - id: kp_interest_vs_total
+    text:
+      en: The interest is only the extra money earned, and the total amount is the principal plus the interest.
+    follow_up:
+      en: What is the difference between the interest and the total amount?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -665,6 +918,17 @@
   - multiplier
   - per annum
   - principal
+  key_points:
+  - id: kp_repeated_multiplier
+    text:
+      en: Compound change multiplies by the same multiplier each period, so the multiplier is raised to the number of periods.
+    follow_up:
+      en: How is the multiplier used when there are several periods?
+  - id: kp_interest_on_interest
+    text:
+      en: Each period the change is worked out on the new amount, so growth builds on earlier growth, unlike simple interest.
+    follow_up:
+      en: What does the percentage get applied to in the second period?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -698,6 +962,17 @@
   - denominator
   - square factor
   - simplify
+  key_points:
+  - id: kp_square_factor
+    text:
+      en: A surd is simplified by splitting out the largest square factor, so root 50 becomes 5 root 2.
+    follow_up:
+      en: What do you look for inside the root to simplify it?
+  - id: kp_rationalise
+    text:
+      en: To remove a root from the denominator, multiply top and bottom by that root.
+    follow_up:
+      en: How can a fraction be changed to have a whole-number denominator without changing its value?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active

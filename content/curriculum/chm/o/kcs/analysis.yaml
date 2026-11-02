@@ -27,6 +27,17 @@
   - indicator
   - alkali
   - solution
+  key_points:
+  - id: kp_choose_by_precision
+    text:
+      en: 'Choose apparatus whose precision suits the job: a burette or pipette for accurate volumes, a measuring cylinder for rough ones.'
+    follow_up:
+      en: Which pieces of volume apparatus give accurate readings, and which give approximate ones?
+  - id: kp_quantity_tool
+    text:
+      en: 'Each quantity has its own tool: a stopwatch for time, a thermometer for temperature, a balance for mass.'
+    follow_up:
+      en: Which instrument measures each of time, temperature and mass?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -59,6 +70,17 @@
   - titre
   - concordant
   - rough titre
+  key_points:
+  - id: kp_set_up
+    text:
+      en: Measure a fixed volume of one solution into a flask with an indicator and fill the burette with the other solution.
+    follow_up:
+      en: What goes in the flask, what goes in the burette, and what else is added to the flask?
+  - id: kp_endpoint_repeat
+    text:
+      en: Add from the burette, swirling, until the indicator just changes colour, then repeat until the results agree.
+    follow_up:
+      en: How do you know when to stop adding, and how do you make sure the result is reliable?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -85,6 +107,17 @@
   - solvent front
   - baseline
   - locating agent
+  key_points:
+  - id: kp_rf_value
+    text:
+      en: The Rf value is the distance moved by the substance divided by the distance moved by the solvent front.
+    follow_up:
+      en: Which two distances are measured to find an Rf, and which one goes on top of the division?
+  - id: kp_interpret
+    text:
+      en: Spots at the same height as a known substance, or a single spot, show which substances are present and whether a sample is pure.
+    follow_up:
+      en: What does it tell you if a sample makes several spots, and how do you match a spot to a known compound?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -125,6 +158,17 @@
   - mixture
   - boiling point
   - solution
+  key_points:
+  - id: kp_property_match
+    text:
+      en: Choose the method from a difference in a property, such as solubility, particle size or boiling point.
+    follow_up:
+      en: What differences between two substances decide which separation method you pick?
+  - id: kp_method_pairs
+    text:
+      en: Filtration removes an insoluble solid, crystallisation recovers a dissolved solid and distillation separates liquids.
+    follow_up:
+      en: Which method would you use to separate sand from water, and which to separate two liquids?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -153,6 +197,17 @@
   - melting point
   - boiling point
   - chromatography
+  key_points:
+  - id: kp_sharp_point
+    text:
+      en: A pure substance melts or boils at one sharp, fixed temperature.
+    follow_up:
+      en: What would you expect to see on a thermometer while a pure solid melts?
+  - id: kp_impure_range
+    text:
+      en: An impure substance melts over a range of temperatures and at a lower melting point, and boils at a higher point.
+    follow_up:
+      en: How do the melting behaviour and the melting point of a sample change if impurities are in it?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -185,6 +240,17 @@
   - excess
   - relative formula mass
   - solution
+  key_points:
+  - id: kp_naoh_colour
+    text:
+      en: Add aqueous sodium hydroxide to the solution and the colour of the precipitate points to the metal ion.
+    follow_up:
+      en: What do you add, and what do you look at to tell cations apart?
+  - id: kp_excess_ammonia
+    text:
+      en: Whether the precipitate dissolves in excess of the sodium hydroxide or ammonia separates ions that give similar precipitates.
+    follow_up:
+      en: What extra step helps tell apart two ions that first give the same colour of precipitate?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active
@@ -219,6 +285,17 @@
   - halide
   - relative formula mass
   - solution
+  key_points:
+  - id: kp_reagent_observation
+    text:
+      en: Each anion is identified by adding a specific reagent and noting the observation, such as a precipitate or gas.
+    follow_up:
+      en: For each anion, what do you add and what sign do you look for?
+  - id: kp_acidify_first
+    text:
+      en: Dilute acid or dilute nitric acid is added first in some tests to remove carbonate ions that would interfere.
+    follow_up:
+      en: Why is a little acid added before testing for halide or sulfate ions?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -247,6 +324,17 @@
   - hydrogen
   - oxygen
   - carbon dioxide
+  key_points:
+  - id: kp_gas_reagent
+    text:
+      en: 'Each gas has a simple test: a lighted splint, a glowing splint, limewater, or damp litmus paper.'
+    follow_up:
+      en: Which test do you use for hydrogen, oxygen, carbon dioxide and ammonia?
+  - id: kp_observation
+    text:
+      en: The positive result is specific, such as a squeaky pop for hydrogen or limewater turning milky for carbon dioxide.
+    follow_up:
+      en: What exactly do you see for a positive result in each of those tests?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active

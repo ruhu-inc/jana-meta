@@ -1,5 +1,5 @@
 {
- "$comment": "GENERATED from contracts/api/commands.schema.json sha256 95dcad07463284d449940e30b909d27a5fa1c7fdf9dc1823e5d2c7e413a66aad; do not edit",
+ "$comment": "GENERATED from contracts/api/commands.schema.json sha256 cba887b07acadad37125c0094d77a52afe68e5cc31c34fb123f6d93b0d0ce962; do not edit",
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$id": "https://jana.dev/contracts/api/commands",
  "title": "Command bodies",
@@ -2269,7 +2269,7 @@
       "type": "string",
       "maxLength": 32
      },
-     "minItems": 1
+     "minItems": 0
     },
     "exam_date": {
      "anyOf": [
@@ -7900,6 +7900,20 @@
      "items": {
       "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/kc_id"
      }
+    },
+    "studied_today": {
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/kc_id"
+     },
+     "maxItems": 200
+    },
+    "studied_checkable": {
+     "type": "array",
+     "items": {
+      "$ref": "https://jana.dev/contracts/learning/learning-event#/$defs/kc_id"
+     },
+     "maxItems": 200
     },
     "study_activity": {
      "type": "object",

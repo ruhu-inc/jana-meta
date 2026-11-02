@@ -46,6 +46,22 @@
   - electromagnetic
   - helium nucleus
   - radioactive
+  key_points:
+  - id: kp_nature
+    text:
+      en: Alpha particles are helium nuclei, beta particles are fast electrons, and gamma rays are electromagnetic waves.
+    follow_up:
+      en: What is each of the three types of radiation actually made of?
+  - id: kp_penetration_ionising
+    text:
+      en: 'The more ionising a radiation is, the less it penetrates: alpha stops in paper, beta in thin aluminium, gamma in thick lead.'
+    follow_up:
+      en: How is a radiation's ionising power related to how far it penetrates?
+  - id: kp_deflection
+    text:
+      en: Alpha and beta are charged oppositely so they bend opposite ways in a field, while uncharged gamma is not deflected.
+    follow_up:
+      en: Why is gamma not deflected by a magnetic or electric field when alpha and beta are?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -95,6 +111,17 @@
   - decay equation
   - radioactive
   - uranium
+  key_points:
+  - id: kp_alpha
+    text:
+      en: Alpha decay lowers the nucleon number by 4 and the proton number by 2.
+    follow_up:
+      en: By how much do the two numbers describing a nucleus change when it emits an alpha particle?
+  - id: kp_beta
+    text:
+      en: Beta decay leaves the nucleon number unchanged and raises the proton number by 1, as a neutron becomes a proton.
+    follow_up:
+      en: What happens to the two numbers of a nucleus when it emits a beta particle, and what changes inside it?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -134,6 +161,17 @@
   - nuclei
   - undecayed
   - isotope
+  key_points:
+  - id: kp_definition
+    text:
+      en: Half-life is the time for the activity of a sample, or the number of undecayed nuclei, to fall to half.
+    follow_up:
+      en: What exactly is halved after one half-life?
+  - id: kp_repeated_halving
+    text:
+      en: After each half-life the amount left halves again, so count how many half-lives fit into the time.
+    follow_up:
+      en: How do you work out the fraction of a sample left after a given time?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -175,6 +213,17 @@
   - Geiger-Muller tube
   - Geiger counter
   - corrected count rate
+  key_points:
+  - id: kp_subtract
+    text:
+      en: Subtract the background count rate from the measured count rate to get the count rate of the source alone.
+    follow_up:
+      en: How do you get the count rate due only to the source?
+  - id: kp_sources
+    text:
+      en: Natural background comes from rocks, radon gas, cosmic rays, food and building materials, as well as some man-made sources.
+    follow_up:
+      en: Name two natural sources of the radiation a detector picks up when no source is nearby.
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -226,6 +275,22 @@
   - ionising
   - penetrate
   - contamination
+  key_points:
+  - id: kp_radiation_choice
+    text:
+      en: 'The radiation chosen must suit the job: it must penetrate enough to reach the detector, but no more than needed.'
+    follow_up:
+      en: Why is an alpha source no use for checking the thickness of steel?
+  - id: kp_half_life_choice
+    text:
+      en: 'The half-life must suit the use: short for a medical tracer that should vanish soon, long for a source used for years.'
+    follow_up:
+      en: Why does a medical tracer need a short half-life, while a thickness gauge needs a long one?
+  - id: kp_safety
+    text:
+      en: Reduce exposure by keeping the source in a lead-lined box, handling it with tongs, keeping a distance and limiting the time.
+    follow_up:
+      en: What precautions cut the dose a person receives when handling a radioactive source?
   difficulty_prior: 0.2
   version: 0.1.1
   status: active

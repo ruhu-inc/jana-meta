@@ -26,6 +26,17 @@
   - formula
   - formulae
   - evaluate
+  key_points:
+  - id: kp_replace_letters
+    text:
+      en: Each letter is replaced by its given number, keeping the brackets, and then the expression is worked out.
+    follow_up:
+      en: What do you do with each letter before you start calculating?
+  - id: kp_negatives_care
+    text:
+      en: When a negative number replaces a letter, it goes in brackets so that signs and powers are handled correctly.
+    follow_up:
+      en: Why can it matter how you write a negative value into a squared term?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -55,6 +66,17 @@
   - like terms
   - expression
   - coefficient
+  key_points:
+  - id: kp_multiply_each
+    text:
+      en: Every term inside a bracket is multiplied by the term outside, and in a double bracket every term meets every term.
+    follow_up:
+      en: In a double bracket, how many separate products do you form, and between which terms?
+  - id: kp_collect_like
+    text:
+      en: After expanding, only like terms, those with the same letters and powers, are added or subtracted.
+    follow_up:
+      en: After expanding, which terms may be combined, and which may not?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -86,6 +108,17 @@
   - highest common factor
   - difference of two squares
   - expression
+  key_points:
+  - id: kp_factorise_reverse
+    text:
+      en: 'Factorising is expanding in reverse: take out the largest factor that divides every term and write the rest in a bracket.'
+    follow_up:
+      en: How could you check that a factorised answer is right?
+  - id: kp_diff_squares
+    text:
+      en: A difference of two squares, a squared minus b squared, factorises into two brackets with the same terms and opposite signs.
+    follow_up:
+      en: What must be true of an expression with two terms before it can be split into two such brackets?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -117,6 +150,17 @@
   - factor pair
   - coefficient
   - expression
+  key_points:
+  - id: kp_pair_conditions
+    text:
+      en: For x squared plus bx plus c, look for two numbers that multiply to c and add to b.
+    follow_up:
+      en: What two conditions must the pair of numbers satisfy, and which coefficient does each relate to?
+  - id: kp_check_expand
+    text:
+      en: The factorisation is checked by expanding the two brackets and comparing with the original quadratic.
+    follow_up:
+      en: How can you be sure your brackets are correct without looking at an answer?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -190,6 +234,17 @@
   - factorise
   - simplify
   - expression
+  key_points:
+  - id: kp_factorise_cancel
+    text:
+      en: Numerator and denominator are factorised first, and only whole common factors are cancelled, never separate terms.
+    follow_up:
+      en: Why can you not cancel a term that is added to something else?
+  - id: kp_common_denominator
+    text:
+      en: To add or subtract algebraic fractions, rewrite them over one common denominator, then combine the numerators.
+    follow_up:
+      en: What has to be the same before two fractions can be added?
   difficulty_prior: 0.8
   version: 0.1.1
   status: active
@@ -220,6 +275,17 @@
   - exponent
   - simplify
   - expression
+  key_points:
+  - id: kp_add_subtract_powers
+    text:
+      en: When multiplying powers of the same letter the indices are added, and when dividing they are subtracted.
+    follow_up:
+      en: What happens to the indices when you multiply a to the power 5 by a cubed?
+  - id: kp_power_of_power
+    text:
+      en: Raising a power to a power multiplies the indices, and the power applies to the coefficient as well.
+    follow_up:
+      en: In a bracket such as 2x squared raised to the power 3, what does the 3 apply to?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -249,6 +315,17 @@
   - unknown
   - solve
   - solution
+  key_points:
+  - id: kp_balance
+    text:
+      en: Whatever is done to one side of an equation must be done to the other so that the equation stays balanced.
+    follow_up:
+      en: Why must a step such as adding a number be done to both sides?
+  - id: kp_inverse_order
+    text:
+      en: Unknowns are gathered on one side and numbers on the other by undoing operations, and brackets or fractions are cleared first.
+    follow_up:
+      en: Which kinds of terms do you move to which side, and what do you deal with before that?
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
@@ -276,6 +353,17 @@
   - elimination
   - substitution
   - equation
+  key_points:
+  - id: kp_eliminate
+    text:
+      en: Eliminate one letter by making its coefficients match, then add or subtract the equations to leave one equation.
+    follow_up:
+      en: What must be true of a letter's coefficients before it can disappear?
+  - id: kp_substitute_back
+    text:
+      en: After one letter is found, put its value into an original equation to find the other, then check in the other equation.
+    follow_up:
+      en: Once you know one value, how do you obtain the second one?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -305,6 +393,17 @@
   - discriminant
   - coefficient
   - solution
+  key_points:
+  - id: kp_zero_product
+    text:
+      en: After rearranging so one side is zero, factorising gives two brackets, and each bracket in turn is set equal to zero.
+    follow_up:
+      en: Why does the equation need to be arranged with zero on one side first?
+  - id: kp_two_solutions
+    text:
+      en: A quadratic can have two solutions, and the formula is used when it does not factorise easily.
+    follow_up:
+      en: How many answers might you expect, and when would you choose the formula?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -336,6 +435,17 @@
   - rectangle
   - rectangular
   - expression
+  key_points:
+  - id: kp_define_unknown
+    text:
+      en: Choose a letter for the unknown quantity and say what it stands for before writing the equation.
+    follow_up:
+      en: What is the very first thing to settle before writing any algebra?
+  - id: kp_translate_words
+    text:
+      en: Translate each phrase of the problem into algebra, solve, then check the answer against the original wording.
+    follow_up:
+      en: How can you tell whether your solution makes sense for the problem?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -363,6 +473,17 @@
   - integer
   - solve
   - number line
+  key_points:
+  - id: kp_flip_sign
+    text:
+      en: Solving an inequality works like an equation, except that multiplying or dividing by a negative reverses the sign.
+    follow_up:
+      en: What is special about the final step when the coefficient of x is negative?
+  - id: kp_integer_list
+    text:
+      en: Integers that satisfy an inequality are the whole numbers within the solution range, and a strict sign excludes its end value.
+    follow_up:
+      en: How does a less than sign differ from a less than or equal sign for the end value?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -390,6 +511,17 @@
   - term
   - common difference
   - consecutive
+  key_points:
+  - id: kp_common_difference
+    text:
+      en: The common difference between terms gives the number multiplying n in the nth term.
+    follow_up:
+      en: Where in the nth term formula does the step between terms appear?
+  - id: kp_adjust_constant
+    text:
+      en: The constant is what is needed to make the formula give the first term, found by testing n equal to 1.
+    follow_up:
+      en: How do you decide the number added or subtracted at the end?
   difficulty_prior: -0.3
   version: 0.1.1
   status: active
@@ -418,6 +550,17 @@
   - first difference
   - second difference
   - coefficient
+  key_points:
+  - id: kp_second_difference
+    text:
+      en: The second difference is constant, and half of it is the coefficient of n squared.
+    follow_up:
+      en: What do you do with the second difference to get the n squared part?
+  - id: kp_subtract_remainder
+    text:
+      en: Subtract the n squared part from the sequence, and what is left is a linear sequence that gives the remaining terms.
+    follow_up:
+      en: After removing the n squared part, what kind of sequence remains?
   difficulty_prior: 0.9
   version: 0.1.1
   status: active
@@ -448,6 +591,17 @@
   - proportional
   - inversely proportional
   - constant of proportionality
+  key_points:
+  - id: kp_constant_k
+    text:
+      en: A variation statement is written as an equation with a constant k, which is found from one pair of given values.
+    follow_up:
+      en: How is the value of k found before answering the question?
+  - id: kp_direct_vs_inverse
+    text:
+      en: In direct variation both quantities rise together, while in inverse variation one rises as the other falls.
+    follow_up:
+      en: How does the way the two quantities move differ between direct and inverse?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -480,6 +634,17 @@
   - gradient
   - velocity
   - average speed
+  key_points:
+  - id: kp_slope_meaning
+    text:
+      en: On a distance-time graph the gradient is speed, and on a speed-time graph the gradient is acceleration.
+    follow_up:
+      en: What does the steepness of the line tell you in each of the two graph types?
+  - id: kp_area_distance
+    text:
+      en: On a speed-time graph the area under the line gives the distance travelled.
+    follow_up:
+      en: How can a distance be found from a speed-time graph?
   difficulty_prior: 0.1
   version: 0.1.1
   status: active
@@ -508,6 +673,17 @@
   - cubic
   - reciprocal
   - function
+  key_points:
+  - id: kp_substitute_each_x
+    text:
+      en: Each y value comes from substituting the matching x value into the function, taking care with negative x values.
+    follow_up:
+      en: How is each missing entry in the table found?
+  - id: kp_plot_smooth
+    text:
+      en: The completed pairs are plotted as points and joined with a smooth curve, not straight segments.
+    follow_up:
+      en: How should plotted points be joined for a curve such as a cubic?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -536,6 +712,17 @@
   - y-coordinate
   - coordinate
   - equation
+  key_points:
+  - id: kp_intersection_x
+    text:
+      en: The solutions of an equation are the x-coordinates of the points where the two graphs meet.
+    follow_up:
+      en: Which coordinate of a meeting point gives the answer, and why?
+  - id: kp_rearrange_line
+    text:
+      en: To solve an equation with a drawn curve, rearrange it into the curve's expression equal to a straight line, then draw that line.
+    follow_up:
+      en: How do you decide which line to draw across a given curve?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -569,6 +756,17 @@
   - line of symmetry
   - maximum
   - minimum
+  key_points:
+  - id: kp_intercepts
+    text:
+      en: The y-intercept is found by putting x equal to zero, and the x-intercepts by putting y equal to zero.
+    follow_up:
+      en: What value do you give x to find where the curve crosses the y-axis?
+  - id: kp_turning_point
+    text:
+      en: The curve turns on its axis of symmetry, at the midpoint of the two places it crosses the x-axis.
+    follow_up:
+      en: Where does the turning point sit in relation to the places the curve meets the x-axis?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active
@@ -600,6 +798,17 @@
   - inverse function
   - input
   - output
+  key_points:
+  - id: kp_input_output
+    text:
+      en: In f(x), the bracket holds the input, and f(3) means replace every x in the rule with 3.
+    follow_up:
+      en: What does it mean to be asked for f of 3?
+  - id: kp_composite_inverse
+    text:
+      en: In a composite function the inner function is applied first, and an inverse function undoes what the function did.
+    follow_up:
+      en: In fg(x), which of the two functions acts on x first?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active

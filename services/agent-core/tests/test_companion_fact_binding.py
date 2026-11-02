@@ -3,6 +3,22 @@
 from agent_core.engine.companion import fact_binding_errors
 
 
+def test_a_long_skill_statement_is_clipped_at_a_word_never_mid_word() -> None:
+    from agent_core.engine.companion_facts import STATEMENT_MAX, clip, from_progress
+
+    long = (
+        "Explain why the horizontal velocity of a projectile stays constant while gravity changes its vertical velocity"
+    )
+    assert len(long) > STATEMENT_MAX
+    clipped = clip(long)
+    assert len(clipped) <= STATEMENT_MAX and clipped.endswith("…") and not clipped.endswith("vertica…")
+    assert clipped == "Explain why the horizontal velocity of a projectile stays constant while gravity changes its…"
+    assert clip("short") == "short"
+    assert clip("x" * 150) == "x" * 99 + "…"  # no space to cut at: a hard cut
+    facts = from_progress({"bands": [{"ref": "r1", "skill": long, "band": "learning"}]}, period="2026-11-02")
+    assert facts[0].statement == f"Your practice on {clipped}: learning."
+
+
 def test_neighbouring_card_word_cannot_bind_an_exam_count() -> None:
     assert fact_binding_errors("Your exam is in 12 days; cards are due.", ["cards due 12; exam in 19 days"])
 

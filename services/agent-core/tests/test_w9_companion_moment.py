@@ -199,11 +199,11 @@ def test_what_i_have_not_got_yet_is_a_code_fact_set_from_the_outline_and_the_lea
             # The skills not yet secure first, then the labelled counts: skills 2, not yet secure 1.
             assert [(f["value"], f["unit"]) for f in outline_facts] == [
                 ("not_started", "band"), ("secure", "band"), (2, "skills"), (1, "skills")]  # fmt: skip
-            assert outline_facts[0]["statement"].startswith(f"Recorded practice band for {NOT_YET}: not started")
+            assert outline_facts[0]["statement"].startswith(f"Your practice on {NOT_YET}: not started")
             assert "Projectile motion teaches it at 6:40" in outline_facts[0]["statement"]
             assert [f["metric"] for f in outline_facts[2:]] == ["outline_skills", "outline_skills_not_yet_secure"]
             assert outline_facts[2]["statement"] == "Projectile motion teaches 2 skills."
-            assert outline_facts[3]["statement"].endswith("not yet secure: 1 skills.")
+            assert outline_facts[3]["statement"] == "Not yet secure from Projectile motion: 1 skill."
             # The model selects a fact; code renders it: the words come from the record, never the model.
             engine_facts = t.r.core.sessions[opened["session_id"]].engine.companion.facts  # type: ignore[union-attr]
             rendered = companion_facts.selected_text(engine_facts, [outline_facts[0]["ref"]])
@@ -285,13 +285,13 @@ def test_a_reply_refused_twice_with_only_progress_read_falls_back_to_the_bands_i
             snapshot = await t.snapshot(opened["session_id"])
             said = " ".join(p.get("text", "") for p in snapshot["parts"].values() if p.get("kind") == "text")
             assert "where your checked practice records stand" in said
-            assert f"Recorded practice band for {NOT_YET}: learning." in said and ": secure." in said
+            assert f"Your practice on {NOT_YET}: learning." in said and ": secure." in said
             assert said.index(": learning.") < said.index(": secure.")  # not yet secure first
             assert "Source: checked practice records (" in said
             assert (
                 "not_started" not in said and "couldn't put that together" not in said and "1 left for you" not in said
             )
-            assert said.count("Recorded practice band for ") <= 6
+            assert said.count("Your practice on ") <= 6
             assert [a["action"] for a in snapshot["actions"].values()] == ["open_knows"]  # "See what your tutor knows"
             (trace,) = _companion_traces(t)
             gates = {g["gate"]: g for g in trace["gates"]}

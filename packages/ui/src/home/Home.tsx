@@ -116,9 +116,11 @@ function Materials({ id, materials }: { id: string; materials: HomeMaterials }) 
   );
 }
 
-export function Home({ name, ask, materials, answer, notice, plan, countdown, lastTime, checkin, goal, mock, more, subjects, onSubject, pickup, onPickup, practice, onPractice }: {
+export function Home({ materialsOpen = false, name, ask, materials, answer, notice, plan, countdown, lastTime, checkin, goal, mock, more, subjects, onSubject, pickup, onPickup, practice, onPractice }: {
   name: string;
   /** The one box (the composer, inline), revealed by Ask a question; or null where no tutor answers here. */
+  /** Add material starts open, for a learner whose study is their own material. */
+  materialsOpen?: boolean;
   ask: ReactNode | null;
   /** The three ways to add material, revealed by Add material, or null where the study area is not available. */
   materials?: HomeMaterials | null;
@@ -161,7 +163,9 @@ export function Home({ name, ask, materials, answer, notice, plan, countdown, la
   // The box stays on Home (UXS-12: the hub is the greeting and the Ask box; UXS-67's one input) but after the block,
   // under its own small heading; Add material reveals its three ways on demand (one more click, nothing removed).
   const addId = useId();
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(materialsOpen);
+  // The profile reads after the first render: open once it says their study is their own material.
+  useEffect(() => { if (materialsOpen) setAddOpen(true); }, [materialsOpen]);
   const addable = ask !== null && materials != null;
   return (
     <div className="flex h-full min-h-0 flex-col">

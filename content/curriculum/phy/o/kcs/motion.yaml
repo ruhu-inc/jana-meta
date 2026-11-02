@@ -25,6 +25,17 @@
   - velocity
   - scalar
   - vector
+  key_points:
+  - id: kp_distance_displacement
+    text:
+      en: Distance is the total path length and has no direction; displacement is the straight-line change in position with a direction.
+    follow_up:
+      en: A runner completes one full lap of a track. How do her distance and displacement compare?
+  - id: kp_speed_velocity
+    text:
+      en: Speed is a scalar, while velocity is speed in a given direction, so a change of direction changes velocity.
+    follow_up:
+      en: A car goes round a roundabout at a steady 30 km/h. Is its velocity constant, and why?
   difficulty_prior: -1.0
   version: 0.1.1
   status: active
@@ -50,6 +61,17 @@
   - speed
   - total distance
   - total time
+  key_points:
+  - id: kp_total_over_total
+    text:
+      en: Average speed is the total distance divided by the total time, including any stops.
+    follow_up:
+      en: A journey has a rest stop in the middle. Which distance and which time go into the average speed?
+  - id: kp_not_mean
+    text:
+      en: Average speed is not the mean of the speeds on each part unless the times are equal.
+    follow_up:
+      en: A car covers 30 km at 60 km/h then 30 km at 30 km/h. Why can you not just average 60 and 30?
   difficulty_prior: -0.8
   version: 0.1.1
   status: active
@@ -75,6 +97,17 @@
   - kilometres per hour
   - metres per second
   - speed
+  key_points:
+  - id: kp_both_units
+    text:
+      en: 'Converting a speed changes both units: kilometres to metres (×1000) and hours to seconds (÷3600).'
+    follow_up:
+      en: Why does the time unit matter as much as the distance unit when converting a speed?
+  - id: kp_factor_3_6
+    text:
+      en: So a speed in m/s is the speed in km/h divided by 3.6, giving a smaller number.
+    follow_up:
+      en: What single number can you use to convert km/h to m/s, and in which direction?
   difficulty_prior: -0.5
   version: 0.1.1
   status: active
@@ -143,6 +176,17 @@
   - gradient
   - speed
   - constant speed
+  key_points:
+  - id: kp_gradient_speed
+    text:
+      en: 'On a distance-time graph the slope gives the speed, as distance covered over the time taken.'
+    follow_up:
+      en: What does a steeper line on a distance-time graph tell you about the motion?
+  - id: kp_shapes
+    text:
+      en: A sloping straight line means constant speed, a horizontal line means at rest, and a curve means the speed is changing.
+    follow_up:
+      en: What do a flat section and a curved section of a distance-time graph each show?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -211,6 +255,17 @@
   - distance travelled
   - velocity
   - displacement
+  key_points:
+  - id: kp_area_distance
+    text:
+      en: The area between a velocity-time graph and the time axis equals the distance travelled.
+    follow_up:
+      en: Which part of a velocity-time graph do you measure to get the distance travelled?
+  - id: kp_split_shapes
+    text:
+      en: Split the area under the line into rectangles and triangles, and add the parts for the total distance.
+    follow_up:
+      en: How do you find the area under a line that rises and then levels off?
   difficulty_prior: 0.4
   version: 0.1.1
   status: active
@@ -239,6 +294,17 @@
   - displacement
   - equation of motion
   - velocity
+  key_points:
+  - id: kp_list_knowns
+    text:
+      en: List the known quantities and the unknown, then pick the equation that contains exactly those and no other unknown.
+    follow_up:
+      en: How do you decide which equation of motion to use for a problem?
+  - id: kp_missing_quantity
+    text:
+      en: Each equation links four of the five quantities s, u, v, a and t, so pick the one missing the quantity you neither know nor need.
+    follow_up:
+      en: A problem gives u, a and s and asks for v. Which quantity does the equation not need?
   difficulty_prior: 0.3
   version: 0.1.1
   status: active
@@ -271,6 +337,17 @@
   - equation of motion
   - velocity
   - deceleration
+  key_points:
+  - id: kp_rearrange_units
+    text:
+      en: 'Rearrange for the unknown, then substitute values in SI units: metres, m/s, m/s² and seconds.'
+    follow_up:
+      en: What should you check about each given value before substituting it into the equation?
+  - id: kp_hidden_values
+    text:
+      en: 'Wording hides values: starting from rest means u = 0, and coming to a stop means v = 0.'
+    follow_up:
+      en: What initial speed do you use for a car that starts from rest?
   difficulty_prior: 0.5
   version: 0.1.1
   status: active
@@ -307,6 +384,17 @@
   - air resistance
   - initial velocity
   - maximum height
+  key_points:
+  - id: kp_g_any_mass
+    text:
+      en: Without air resistance every falling object accelerates downwards at about 10 m/s², whatever its mass.
+    follow_up:
+      en: What acceleration does a freely falling object have, and does its mass matter?
+  - id: kp_up_and_down
+    text:
+      en: A ball thrown upwards slows to zero at the top then speeds up again, with the same acceleration throughout.
+    follow_up:
+      en: What is the ball's velocity at its highest point and what is its acceleration there?
   difficulty_prior: 0.6
   version: 0.1.1
   status: active

@@ -51,6 +51,18 @@ def _desk(held: Store) -> OpenerDesk:
     return OpenerDesk(held.learner, Settings(), held.clock)
 
 
+def test_study_cards_count_with_the_learner_cards_on_home() -> None:
+    """Home's card and the thread's opener count the same cards: the learner model's plus Study's own (2 November)."""
+    held = store(day="2026-10-11")
+    _due(held, "phy.o.kin.1", at_ms("2026-10-11") + 3_600_000)
+    alone = _desk(held).opener()
+    assert alone["facts"]["learner_cards_due"] == 1 and alone["facts"]["study_cards_due"] == 0
+    assert "1 card is due" in alone["text"]
+    both = OpenerDesk(held.learner, Settings(), held.clock, study_cards=lambda now: 10).opener()
+    assert (both["facts"]["learner_cards_due"], both["facts"]["study_cards_due"]) == (1, 10)
+    assert "11 cards are due" in both["text"] and "1 card is due" not in both["text"]
+
+
 def test_facts_pick_the_last_ended_session_of_any_mode() -> None:
     held = store(day="2026-10-11")
     _session(held, "S1", "guided", "mathematics", at_ms("2026-10-08"), at_ms("2026-10-08") + 600_000)

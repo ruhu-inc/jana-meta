@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { StudyContracts as W } from "@jana/client-core";
 import { useT } from "../i18n.js";
 import { Icon } from "../icons.js";
-import { Button, EmptyState, FIELD_LOOK, IconButton, MenuButton, SegmentedControl } from "../primitives/index.js";
+import { Button, Dialog, EmptyState, FIELD_LOOK, IconButton, MenuButton, SegmentedControl } from "../primitives/index.js";
 
 type Source = W.SourceList["items"][number];
 export function materialGroups(sources: Source[], sets: W.StudySet[]) {
@@ -21,11 +21,14 @@ export function materialGroups(sources: Source[], sets: W.StudySet[]) {
     .sort((a, b) => b[0].updated_at.localeCompare(a[0].updated_at));
 }
 
-export function StudyLibrary({ sources, sets, archivedIds, busy, onOpen, onArchive }: {
+export function StudyLibrary({ sources, sets, archivedIds, busy, onOpen, onArchive, onRename }: {
   sources: Source[]; sets: W.StudySet[]; archivedIds: string[]; busy: boolean;
   onOpen: (source: Source) => void; onArchive: (ids: string[], archived: boolean) => void;
+  /** Every copy of a material takes the new name, so a library of "YouTube video" rows can be told apart. */
+  onRename?: (ids: string[], title: string) => void;
 }) {
   const t = useT(), [query, setQuery] = useState(""), [shelf, setShelf] = useState<"library" | "archive">("library");
+  const [renaming, setRenaming] = useState<{ ids: string[]; title: string } | null>(null);
   const [limit, setLimit] = useState(8), [expanded, setExpanded] = useState<string[]>([]);
   const archived = new Set(archivedIds);
   const groups = materialGroups(sources.filter((s) => archived.has(s.source_id) === (shelf === "archive")), sets)
@@ -50,12 +53,21 @@ export function StudyLibrary({ sources, sets, archivedIds, busy, onOpen, onArchi
           {row(source)}
           {copies.length > 1 && <Button size="sm" tone="ghost" aria-expanded={open} aria-label={t("study.library_copies_of", { count: copies.length, title: title(source) })} onClick={() => setExpanded((ids) => open ? ids.filter((id) => id !== source.source_id) : [...ids, source.source_id])}>{t("study.library_copies", { count: copies.length })}<Icon name={open ? "collapse" : "expand"} size={16} /></Button>}
           <MenuButton label={t("study.library_actions", { title: title(source) })} trigger={(props) => <IconButton {...props} icon="more" size="sm" label={t("study.library_actions", { title: title(source) })} disabled={busy} />}
-            items={[{ id: "archive", label: t(shelf === "archive" ? "study.library_restore" : "study.library_archive_action"), onSelect: () => onArchive(copies.map((s) => s.source_id), shelf !== "archive") }]} />
+            items={[
+              ...(onRename && "title" in source ? [{ id: "rename", label: t("study.library_rename"), onSelect: () => setRenaming({ ids: copies.map((s) => s.source_id), title: title(source) }) }] : []),
+              { id: "archive", label: t(shelf === "archive" ? "study.library_restore" : "study.library_archive_action"), onSelect: () => onArchive(copies.map((s) => s.source_id), shelf !== "archive") },
+            ]} />
         </div>
         {open && <ul className="ms-6 flex flex-col gap-1 border-s border-line ps-2" aria-label={t("study.library_copies_of", { count: copies.length, title: title(source) })}>{copies.map((copy) => <li key={copy.source_id} className="flex">{row(copy, true)}</li>)}</ul>}
       </li>; })}
     </ul>
     {groups.length > limit && <span><Button size="sm" tone="ghost" onClick={() => setLimit((n) => n + 8)}>{t("study.library_show_more", { count: groups.length - limit })}</Button></span>}
     {shelf === "archive" && <p className="text-meta text-muted">{t("study.library_archive_help")}</p>}
+    <Dialog open={renaming !== null} heading={t("study.library_rename")} closeLabel={t("action.cancel")} onClose={() => setRenaming(null)}>
+      <form className="flex flex-col items-start gap-3" onSubmit={(e) => { e.preventDefault(); const name = renaming?.title.trim(); if (renaming && name) { onRename?.(renaming.ids, name); setRenaming(null); } }}>
+        <label className="flex w-full flex-col gap-2 text-ui text-ink">{t("study.source_title")}<input autoFocus required maxLength={200} value={renaming?.title ?? ""} onChange={(e) => setRenaming((now) => now && { ...now, title: e.target.value })} className={FIELD_LOOK} /></label>
+        <Button type="submit" tone="primary" disabled={busy || !renaming?.title.trim()}>{t("study.library_rename_save")}</Button>
+      </form>
+    </Dialog>
   </section>;
 }

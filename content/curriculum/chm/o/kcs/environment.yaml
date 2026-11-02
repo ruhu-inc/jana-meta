@@ -20,6 +20,17 @@
   - chlorination
   - boiling point
   - water treatment
+  key_points:
+  - id: kp_water_tests
+    text:
+      en: Water is shown by turning anhydrous copper(II) sulfate from white to blue or blue cobalt chloride paper from blue to pink.
+    follow_up:
+      en: What colour changes show that a liquid contains water?
+  - id: kp_treatment
+    text:
+      en: Water supply is treated by filtering out solids and using chlorine to kill microbes.
+    follow_up:
+      en: What two stages treat supply water, and what is each one for?
   difficulty_prior: -0.6
   version: 0.1.1
   status: active
@@ -55,6 +66,17 @@
   - urea
   - percentage by mass
   - relative formula mass
+  key_points:
+  - id: kp_nitrogen_needed
+    text:
+      en: Fertilisers supply nitrogen, phosphorus and potassium that crops need to grow.
+    follow_up:
+      en: Which elements do plants take from a fertiliser?
+  - id: kp_percent_n
+    text:
+      en: The percentage of nitrogen is the mass of nitrogen atoms in one formula divided by the relative formula mass, times 100.
+    follow_up:
+      en: How do you compare two fertilisers fairly on their nitrogen content?
   difficulty_prior: 0.0
   version: 0.1.1
   status: active
@@ -88,6 +110,17 @@
   - particulates
   - calcium carbonate
   - carbonate
+  key_points:
+  - id: kp_sources_effects
+    text:
+      en: Carbon monoxide, sulfur dioxide and nitrogen oxides come from burning fuels and cause poisoning and acid rain.
+    follow_up:
+      en: Where do these pollutants come from, and what harm does each one cause?
+  - id: kp_reduction
+    text:
+      en: Pollution is reduced with catalytic converters, by removing sulfur from fuels, or by scrubbing the waste gases.
+    follow_up:
+      en: What can be done to stop each of these gases leaving a car or a power station?
   difficulty_prior: -0.4
   version: 0.1.1
   status: active
@@ -116,6 +149,17 @@
   - deforestation
   - infrared radiation
   - parts per million
+  key_points:
+  - id: kp_greenhouse
+    text:
+      en: Greenhouse gases such as carbon dioxide and methane absorb thermal radiation from the Earth, so the atmosphere warms.
+    follow_up:
+      en: What do these gases do to the energy leaving the Earth?
+  - id: kp_reduce_emissions
+    text:
+      en: Emissions fall by burning less fossil fuel, using renewable energy and planting trees.
+    follow_up:
+      en: Name ways to reduce the amount of these gases added to the atmosphere.
   difficulty_prior: -0.2
   version: 0.1.1
   status: active
