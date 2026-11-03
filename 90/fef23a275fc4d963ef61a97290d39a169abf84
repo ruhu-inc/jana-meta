@@ -1,0 +1,21 @@
+.github/workflows/probe-maths-slice.yml
+  s_8b98d3b3e22c20::t_a7599bcb07c310 1-31
+scripts/ci/probe/gcprobe.py
+  s_8b98d3b3e22c20::t_7e91a5a6e4b773 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "90fef23a275fc4d963ef61a97290d39a169abf84",
+  "prompts": {},
+  "sessions": {
+    "s_8b98d3b3e22c20": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa94af6b-69da-49e5-b474-0aca5560f5d8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
