@@ -223,3 +223,10 @@ def test_a_transcript_line_can_be_the_prerequisite_a_hint_offers():
     texts = [c["text"] for c in coaching_cues(body, [{"passage_id": "p0", "quote": quote}])]
     assert "I assume you already know how to resolve a vector into perpendicular components." in texts
     assert not any("0:55" in t for t in texts)
+
+
+def test_marking_leaves_room_for_a_verdict_after_any_reasoning():
+    """At 256 output tokens a reply was sometimes cut off before its verdict, so a right answer came back unmarked."""
+    from cloud_gateway.study import MARKING_TOKENS
+
+    assert MARKING_TOKENS >= 2048
