@@ -1,0 +1,104 @@
+{
+ "threshold": 0.6,
+ "counts": {
+  "people": 500,
+  "photographed_pages": 118,
+  "synthetic_pages": 862,
+  "regression_pages": 29
+ },
+ "refused": {
+  "face_score>=0.4": {
+   "people": 411,
+   "photographed_pages": 5,
+   "synthetic_pages": 1,
+   "regression_pages": 0
+  },
+  "face_score>=0.5": {
+   "people": 380,
+   "photographed_pages": 3,
+   "synthetic_pages": 0,
+   "regression_pages": 0
+  },
+  "face_score>=0.6": {
+   "people": 347,
+   "photographed_pages": 1,
+   "synthetic_pages": 0,
+   "regression_pages": 0
+  },
+  "face_score>=0.7": {
+   "people": 319,
+   "photographed_pages": 1,
+   "synthetic_pages": 0,
+   "regression_pages": 0
+  },
+  "face_score>=0.8": {
+   "people": 275,
+   "photographed_pages": 0,
+   "synthetic_pages": 0,
+   "regression_pages": 0
+  },
+  "face_score>=0.9": {
+   "people": 159,
+   "photographed_pages": 0,
+   "synthetic_pages": 0,
+   "regression_pages": 0
+  },
+  "legacy_hog_min_weight=0.0": {
+   "people": 340,
+   "photographed_pages": 49,
+   "synthetic_pages": 404,
+   "regression_pages": 0
+  },
+  "legacy_hog_min_weight=0.4": {
+   "people": 334,
+   "photographed_pages": 47,
+   "synthetic_pages": 387,
+   "regression_pages": 0
+  },
+  "legacy_hog_min_weight=1.0": {
+   "people": 304,
+   "photographed_pages": 38,
+   "synthetic_pages": 281,
+   "regression_pages": 0
+  },
+  "legacy_hog_min_weight=2.0": {
+   "people": 284,
+   "photographed_pages": 29,
+   "synthetic_pages": 136,
+   "regression_pages": 0
+  },
+  "legacy_haar_only": {
+   "people": 278,
+   "photographed_pages": 28,
+   "synthetic_pages": 115,
+   "regression_pages": 0
+  }
+ },
+ "people_by_stratum": {
+  "large": {
+   "n": 160,
+   "refused": 130
+  },
+  "medium": {
+   "n": 160,
+   "refused": 109
+  },
+  "small": {
+   "n": 120,
+   "refused": 83
+  },
+  "tiny": {
+   "n": 60,
+   "refused": 25
+  }
+ },
+ "max_face_score_on_pages": 0.7051,
+ "pages_refused": [
+  "open_images/e04b47eb70fcfef5"
+ ],
+ "legacy_refused_now_passed": 71,
+ "newly_refused": 78,
+ "set_version": "2026-10-23.1",
+ "detectors": "2026-10-23.1",
+ "opencv": "4.14.0"
+}

@@ -6,9 +6,13 @@ and process creation, gives read-only access to the worker/runtime and installed
 on cancellation or its 20-second deadline. Without an OS sandbox, photo processing fails closed. The worker preloads
 fixed native codecs and then installs import and audit restrictions; it cannot read learner databases or attachments.
 
-The pipeline checks encoded bytes and pixel dimensions, applies EXIF orientation, face/person screening on the whole
+The pipeline checks encoded bytes and pixel dimensions, applies EXIF orientation, face screening on the whole
 original, crop/perspective correction, deskew, local text privacy masking, quality checks and a metadata-free JPEG
-no larger than 1,600 pixels / 2 MB. Detector XML hashes and the OpenCV version are pinned in `detectors.json`.
+no larger than 1,600 pixels / 2 MB. The INP-20 person gate is the YuNet face detector (opencv_zoo, MIT), shipped as
+`face_detection_yunet_2023mar.onnx`; `detectors.json` pins its SHA-256, the OpenCV version, the 1,200-pixel input and
+the 0.4 score threshold, and the worker loads exactly the bytes it hashed. It replaced the Haar cascades and HOG people
+detector, which refused 42% of photographed pages and 47% of rendered worksheets while refusing fewer people photos
+(`evals/perception/person`). It sees faces, not bodies: a person whose face is not visible is not refused.
 Tesseract is accessed through the fixed `tesserocr` native extension, with no direct ctypes or child process API.
 Uncertain OCR tokens become `[?]`. A missing local text privacy pass permits volatile local vision reading, but no
 stored derivative or outbound image. Reading never starts a tutoring turn: editable student confirmation is required.
@@ -30,8 +34,10 @@ Install its folder through Settings → Content → Install from folder. The cor
 atomic rename, then rechecks signatures/revocations and hashes before every launch. The pack is under
 `packs/perception/`, separate from 7B+ tutor models. Invalid, wrong-platform or missing packs keep photo reading off.
 
-Synthetic tests exercise the worker, privacy masking, bounded decoding and capture lifecycle. They do not certify
-face/person detection accuracy, printed-formula recognition, confidence calibration or reference-laptop latency.
+Synthetic tests exercise the worker, privacy masking, bounded decoding and capture lifecycle. The person-gate
+calibration in `evals/perception/person` measures Open Images people photos and photographed/rendered pages; it is not
+ordinary-camera release evidence. Nothing here certifies printed-formula recognition, confidence calibration or
+reference-laptop latency.
 EVL-12/INP-18/23/29 remain real-device and labelled-fixture acceptance gates. On Windows the worker runs in its own
 AppContainer inside a job object (SEC-06, G16; `agent_core.tools.worker.winsandbox`), verified on the Windows CI
 runner; where it cannot be applied photo reading stays off. A signed, licence-reviewed traineddata/model pack remains
