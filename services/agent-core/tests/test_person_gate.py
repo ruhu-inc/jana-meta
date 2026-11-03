@@ -12,6 +12,7 @@ import pytest
 from agent_core.api.errors import ApiError
 from agent_core.engine.events import new_id
 from agent_core.tools.perception import PerceptionClient
+from agent_core.tools.worker.sandbox import bubblewrap_argv
 from perception_worker import image
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from test_m21_capture_drafts import QUAD, setup
@@ -113,6 +114,14 @@ def test_face_detector_is_pinned(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(image.PERSON_DATA, "face_detector", detector)
     with pytest.raises(image.ImageRejected, match="photo_reading_unavailable"):
         image.contains_person(picture)
+
+
+def test_bubblewrap_keeps_the_worker_thread_limits(tmp_path: Path) -> None:
+    # Without them OpenBLAS starts a thread per core, and on 16 cores the face detector cannot allocate its memory.
+    argv = bubblewrap_argv("bwrap", [], tmp_path, env={"OPENBLAS_NUM_THREADS": "1"})
+    at = argv.index("OPENBLAS_NUM_THREADS")
+    assert argv[at - 1 : at + 2] == ["--setenv", "OPENBLAS_NUM_THREADS", "1"]
+    assert argv.index("--clearenv") < at < argv.index("--")
 
 
 def test_opencv_version_is_pinned(monkeypatch: pytest.MonkeyPatch) -> None:
