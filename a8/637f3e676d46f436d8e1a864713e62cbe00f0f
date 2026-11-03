@@ -1,0 +1,37 @@
+scripts/jana_tools/hosted_accounts.py
+  s_49ba057c5af1a1::t_f4e780ce0d986f 173-174
+  s_49ba057c5af1a1::t_c7cd16af3ee63d 1-172,175-204
+scripts/jana_tools/hosted_signin.html
+  s_49ba057c5af1a1::t_c7cd16af3ee63d 1-18
+scripts/hosted/deploy.sh
+  s_49ba057c5af1a1::t_89a69d38d070a9 3,5-6,10,53
+scripts/hosted/setup-vm.sh
+  s_49ba057c5af1a1::t_89a69d38d070a9 46-47,49-56
+scripts/jana_tools/hosted_landing.html
+  s_49ba057c5af1a1::t_c7cd16af3ee63d 13
+scripts/tests/test_hosted_accounts.py
+  s_49ba057c5af1a1::t_f4e780ce0d986f 1,22
+  s_49ba057c5af1a1::t_89a69d38d070a9 2-21,23-361
+scripts/jana_tools/hosted.py
+  s_49ba057c5af1a1::t_c7cd16af3ee63d 15,19,28,30,41-48,54-62,67-73,103-115,131-133,143-147,275-287,296-320,323-337,347-348,351-354,357-527,529-543,650,661,666-667,679-686,699-704,718,754-758,765-766,773,777-781,783-794
+  s_49ba057c5af1a1::t_f4e780ce0d986f 321-322,753
+  s_49ba057c5af1a1::t_89a69d38d070a9 528,770-772
+scripts/hosted/README.md
+  s_49ba057c5af1a1::t_89a69d38d070a9 20-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a8637f3e676d46f436d8e1a864713e62cbe00f0f",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
