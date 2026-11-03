@@ -226,8 +226,8 @@ async def _run_once(
                 result.checks.append(_check(expectation, engine, None, final, set(), cloud))
         except Exception as error:  # one scenario's failure is a result, never the end of the run
             traces = engine.traces if engine else []
-            tools = [f"{c['name']}={c['status']}" for t in traces for c in t.get("tool_calls", [])
-                     if c.get("status") != "ok"]  # fmt: skip
+            tools = [f"{c['name']}={c.get('error_code', c['status'])} after {c.get('duration_ms')} ms"
+                     for t in traces for c in t.get("tool_calls", []) if c.get("status") != "ok"]  # fmt: skip
             result.status = "failed"
             result.reason = f"{type(error).__name__}: {str(error)[:200]}" + (
                 f" (tool calls not ok: {', '.join(tools)})" if tools else "")  # fmt: skip

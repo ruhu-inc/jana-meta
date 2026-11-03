@@ -30,6 +30,7 @@ from agent_core.config import Settings
 from agent_core.engine.state import numbers_in
 from api_harness import cli
 from engine_harness import reply, tutor
+from fixture_font import FONT
 from jana_tools import REPO_ROOT
 from jana_tools import scenarios as traced
 from jana_tools.journeys import runner
@@ -39,7 +40,6 @@ from journey_harness import branches, core, learner, scripted, session, turn
 from PIL import Image, ImageDraw, ImageFont
 
 KEYS = Settings()
-FONT = Path("/System/Library/Fonts/Supplemental/Arial.ttf")
 QUAD = [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}, {"x": 0, "y": 1}]
 SEEDED = Path(__file__).parent / "fixtures" / "seeded_errors.yaml"
 

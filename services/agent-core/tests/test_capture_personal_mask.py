@@ -9,6 +9,7 @@ import numpy as np
 from agent_core.engine.events import new_id
 from agent_core.tools.perception import PerceptionClient
 from engine_harness import close
+from fixture_font import FONT
 from PIL import Image, ImageDraw, ImageFont
 from test_m11f_vision import images_in, reader_engine, run
 from test_m21_capture_drafts import QUAD, setup
@@ -17,7 +18,7 @@ from test_m21_capture_drafts import QUAD, setup
 def inp20_personal_data_masked(tmp_path: Path) -> None:
     picture = Image.new("RGB", (1400, 1000), "white")
     draw = ImageDraw.Draw(picture)
-    font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 46)
+    font = ImageFont.truetype(str(FONT), 46)
     for y, text in [
         (110, "Name: Synthetic Person"),
         (210, "Phone: +234 800 123 4567"),

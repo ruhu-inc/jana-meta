@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
-import hashlib
+import io
 import json
 import shutil
 from pathlib import Path
@@ -20,6 +20,7 @@ from jana_tools.harness.report import errors as report_errors
 from jana_tools.harness.run import run
 from jana_tools.perception_fixtures import ROOT, build
 from jsonschema import Draft202012Validator
+from PIL import Image
 
 
 def test_decoder_preserves_inline_definitions_and_nested_table_types() -> None:
@@ -53,11 +54,20 @@ def test_local_definitions_keep_caller_changes_instead_of_reloading_the_canonica
     assert external["properties"]["region"]["properties"]["region_id"]["type"] == "string"
 
 
+def _content(data: bytes, name: str) -> bytes:
+    """What must reproduce: an image's pixels and the manifest without its image hashes, since each platform's zlib
+    encodes the same PNG differently (the stored bytes are hash-locked by `corpus_errors`)."""
+    if name == "set.json":
+        manifest = json.loads(data)
+        return json.dumps([{**item, "sha256": None} for item in manifest["items"]], sort_keys=True).encode()
+    return Image.open(io.BytesIO(data)).convert("RGB").tobytes()
+
+
 def test_regression_images_and_labels_are_hash_locked_and_reproducible() -> None:
     assert capture_eval.corpus_errors() == []
     generated = build()
     for name, data in generated.items():
-        assert hashlib.sha256((ROOT / name).read_bytes()).digest() == hashlib.sha256(data).digest(), name
+        assert _content((ROOT / name).read_bytes(), name) == _content(data, name), name
     manifest = json.loads(generated["set.json"])
     assert not manifest["release_evidence"] and len(manifest["items"]) == 29
     assert {item["expected"].get("blocking") for item in manifest["items"]} >= {

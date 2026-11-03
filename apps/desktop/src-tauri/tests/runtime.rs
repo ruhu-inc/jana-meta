@@ -500,7 +500,9 @@ fn plt04_vulkan_failure_falls_back() {
     let order: Vec<_> = builds.ladder.iter().map(|b| b.variant.unwrap()).collect();
     assert_eq!(
         order,
-        [Variant::Vulkan, Variant::CpuAvx2, Variant::CpuBaseline]
+        [Variant::Vulkan, Variant::CpuAvx2, Variant::CpuBaseline],
+        "skipped: {:?}",
+        builds.skipped
     );
     let plan = write_plan(&dir, &["big-model"], &[0.05, 0.1, 0.2]);
     let core = TouchingCore::new();

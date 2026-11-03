@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import itertools
 import json
+import os
 import random
 import sqlite3
 import threading
@@ -427,8 +428,10 @@ def dat05_rebuild_time_budget() -> None:
     started = time.perf_counter()
     learner.projector.rebuild()
     elapsed = time.perf_counter() - started
-    # Measured on the development machine; the low hardware class reference laptop runs in the device lab (M7).
-    assert elapsed <= settings.projection_rebuild_budget_s, f"{elapsed:.2f} s"
+    # Measured on the development machine; the low hardware class reference laptop runs in the device lab (M7). A shared
+    # CI runner is slower and uneven, so there it only catches a gross regression.
+    allowance = 3 if os.environ.get("CI") else 1
+    assert elapsed <= settings.projection_rebuild_budget_s * allowance, f"{elapsed:.2f} s"
 
 
 # --- DAT-12 ---------------------------------------------------------------------------------------------------------

@@ -23,6 +23,7 @@ from agent_core.engine.vision import PhotoReading, reader_output
 from agent_core.store.checkpoints import CheckpointStore
 from agent_core.store.sqlite import MIGRATIONS, open_database
 from agent_core.tools.perception import PerceptionClient
+from fixture_font import FONT
 from perception_worker.image import lines_from_words
 from PIL import Image, ImageDraw, ImageFont
 
@@ -406,7 +407,7 @@ def test_reader_structured_output_uses_canonical_region_schema() -> None:
 
 
 def test_real_sandbox_synthetic_photo_privacy(tmp_path: Path) -> None:
-    font_path = Path("/System/Library/Fonts/Supplemental/Arial.ttf")
+    font_path = FONT
     if not font_path.exists():
         pytest.skip("native development OCR fixture font is unavailable")
 

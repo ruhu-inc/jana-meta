@@ -76,7 +76,7 @@ describe("VSL-16", () => {
     expect(drawn + words).toBe(10_000);
     expect(drawn).toBeGreaterThan(0);
     expect(words).toBeGreaterThan(0);
-  });
+  }, 120_000);
 
   test("the text-only rung shows the words, never empty axes", () => {
     const html = draw(spec({ curves: [{ id: "h", expr: "14*t -* 4.9" }], x_range: [0, 3] }, { status: "text_only" }));

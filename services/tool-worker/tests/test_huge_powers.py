@@ -187,15 +187,18 @@ _CASES: dict[str, tuple[str, str, dict[str, Any], str]] = {
 }
 
 TIMEOUT_S = 60  # from the start of all the children, which share the machine
+# On a slow machine the 800 ms symbolic slice can expire before the value is reached, which answers "unknown" safely.
+# A refusal case must reach its refusal, so its slice is long; TIMEOUT_S still fails a computation that escapes.
+_REFUSAL_SETTINGS = {"symbolic_slice_ms": 30_000}
 
 
-def _script(module: str, function: str, args: dict[str, Any]) -> str:
+def _script(module: str, function: str, args: dict[str, Any], settings: dict[str, Any]) -> str:
     return (
         "import json\n"
         "from tool_worker.protocol import WorkerError\n"
         "from tool_worker.registry import CallContext\n"
         f"from tool_worker.functions.{module} import {function}\n"
-        "context = CallContext('x', 't', {}, {}, lambda: False)\n"
+        f"context = CallContext('x', 't', {{}}, {{}}, lambda: False, settings={settings!r})\n"
         "try:\n"
         f"    {function}(json.loads({json.dumps(args)!r}), context)\n"
         "    print(json.dumps({'outcome': 'answered'}))\n"
@@ -208,12 +211,12 @@ def _script(module: str, function: str, args: dict[str, Any]) -> str:
 def children() -> Iterator[dict[str, subprocess.Popen[str]]]:
     started = {
         case: subprocess.Popen(
-            [sys.executable, "-c", _script(module, function, args)],
+            [sys.executable, "-c", _script(module, function, args, _REFUSAL_SETTINGS if expected == "refused" else {})],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
         )
-        for case, (module, function, args, _) in _CASES.items()
+        for case, (module, function, args, expected) in _CASES.items()
     }
     yield started
     for child in started.values():

@@ -81,6 +81,8 @@ jobs:
       - name: Pinned browser for the desktop's browser tests
         run: corepack pnpm exec playwright install --with-deps chromium
       - run: scripts/ci/run-all-tests.sh
+        env:
+          JANA_WHOLE_GALLERY_TESTS: elsewhere # the gallery stage runs them; they would take this job past its time limit
 
   sidecar-builds:
     # A clean clone builds all three toolchains with one command on each OS.
@@ -145,9 +147,13 @@ jobs:
         with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Connection monitor
         run: sudo apt-get install -y --no-install-recommends strace
+      - name: Pinned browser for the desktop's browser tests
+        run: corepack pnpm exec playwright install --with-deps chromium
       - name: Monitor self-test (egress must be caught)
         run: sudo -E scripts/ci/offline-selftest.sh
       - name: Full test suite with all egress dropped except loopback
+        env:
+          JANA_WHOLE_GALLERY_TESTS: elsewhere # the gallery stage runs them; they would take this job past its time limit
         run: sudo -E scripts/ci/offline-run.sh --user "$(id -un)" -- scripts/ci/run-all-tests.sh
 
   gallery:
@@ -164,6 +170,10 @@ jobs:
           corepack pnpm --filter @jana/renderers test
       - name: Pinned browser for UI benchmarks
         run: corepack pnpm exec playwright install --with-deps chromium
+      - name: Whole-gallery browser journeys
+        run: >-
+          corepack pnpm --filter @jana/desktop exec vitest run test/capture-gallery.test.ts
+          test/gallery-accessibility.test.ts test/target-size.test.ts test/text-scale.test.ts
       - name: Production replay, 4x CPU, typing, scrolling and slow-board mutation
         run: |
           node --test scripts/ci/performance-evidence.test.mjs

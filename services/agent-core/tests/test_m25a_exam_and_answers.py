@@ -39,6 +39,7 @@ from agent_core.store.pack_store import PackStore
 from agent_core.store.packs import TABLES
 from api_harness import STATEMENT, Running, cli, sse, stop_core
 from engine_harness import checker_steps, last_check_id, reply, tutor
+from fixture_font import FONT
 from jana_tools import scenarios
 from jana_tools.journeys.runner import Probe, Run
 from journey_harness import SETTINGS, branches, core, learner, play, restart, scripted, session, start
@@ -52,7 +53,6 @@ from test_m13g_learn import Client, item_record, key_answer, source
 
 STRUCTURAL = {Fraction(0), Fraction(1), Fraction(2)}
 QUAD = [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}, {"x": 0, "y": 1}]
-FONT = Path("/System/Library/Fonts/Supplemental/Arial.ttf")
 
 
 class ProductGap(AssertionError):

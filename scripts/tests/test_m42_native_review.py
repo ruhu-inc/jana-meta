@@ -21,7 +21,7 @@ def test_native_review_hashes_and_scoped_policy_exception(tmp_path):
     shutil.copytree(site / "pypdfium2-5.13.0.dist-info", target / "pypdfium2-5.13.0.dist-info")
     shutil.copytree(site / "pypdfium2_raw", target / "pypdfium2_raw")
     assert not audit(target)
-    binary = target / "pypdfium2_raw/libpdfium.dylib"
+    binary = next(p for p in (target / "pypdfium2_raw").iterdir() if p.suffix in {".dylib", ".so", ".dll"})
     binary.write_bytes(b"changed binary")
     assert any("binary differs" in e for e in audit(target))
     (target / "pypdfium2-5.13.0.dist-info/licenses/new.txt").write_text("unreviewed library")
