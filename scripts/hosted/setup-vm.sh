@@ -43,7 +43,17 @@ data_root = "/var/lib/jana/data"
 gateway_config = "services/cloud-gateway/deploy/meta-hosted.toml"
 gateway_port = 8081
 warm = true
+member_slots = 10
+accounts_db = "/var/lib/jana/accounts.sqlite3"
 CONFIG
+# Google sign-in stays off until deploy.sh is given a client id and its secret is in Secret Manager.
+google_client=$(meta jana-google-client-id 2>/dev/null || true)
+if [ -n "$google_client" ]; then
+  gcloud secrets versions access latest --secret=jana-google-client-secret > /etc/jana/google_client_secret
+  chown root:jana /etc/jana/google_client_secret
+  chmod 0640 /etc/jana/google_client_secret
+  printf 'google_client_id = "%s"\ngoogle_secret_file = "/etc/jana/google_client_secret"\n' "$google_client" >> /etc/jana/hosted.toml
+fi
 cat /etc/jana/slots.toml >> /etc/jana/hosted.toml
 chown root:jana /etc/jana /etc/jana/hosted.toml
 chmod 0750 /etc/jana
