@@ -1,0 +1,43 @@
+services/perception-worker/perception_worker/image.py
+  s_1986730f570c7f::t_a40f8cbd69edb1 67-69,72-91
+services/perception-worker/perception_worker/detectors.json
+  s_1986730f570c7f::t_a40f8cbd69edb1 2,4-31
+evals/perception/person/README.md
+  s_1986730f570c7f::t_b243ed5f248595 1-93
+evals/perception/person/runs/2026-10-23/observations.jsonl
+  s_1986730f570c7f::t_17c190ceb9ae38 1-1509
+evals/perception/person/runs/2026-10-23/report.json
+  s_1986730f570c7f::t_8b706a588a01d8 1-104
+evals/perception/person/runs/2026-11-03/report.json
+  s_1986730f570c7f::t_ebd0b7197cc782 1-48
+evals/perception/person/set.json
+  s_1986730f570c7f::t_7d02783ab905d1 1-8864
+scripts/governance/app-completion-acceptance-map.json
+  s_1986730f570c7f::t_2558cce5d75503 985-989,991,993-994
+scripts/packaging/perception-worker.spec
+  s_1986730f570c7f::t_eb892139f6ecab 15,18
+services/agent-core/tests/fixtures/person/SOURCE.md
+  s_1986730f570c7f::t_17785d57b32e48 1-9
+services/agent-core/tests/test_person_gate.py
+  s_1986730f570c7f::t_49e0ef42c80e93 1-121
+services/perception-worker/README.md
+  s_1986730f570c7f::t_495e9942d96ff5 9,11-15,37-40
+services/perception-worker/licences/opencv_zoo-face_detection_yunet-LICENSE
+  s_1986730f570c7f::t_ddf6fc1bd587fa 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "54cd1e53036c1204545a96639a79638fc356c655",
+  "prompts": {},
+  "sessions": {
+    "s_1986730f570c7f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1949f363-8e99-49c0-9f25-439ec4fee0bf",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
