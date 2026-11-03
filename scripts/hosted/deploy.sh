@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Creates or updates the hosted demo in one GCP project. Reads no key: you add it to Secret Manager yourself.
-#   scripts/hosted/deploy.sh PROJECT_ID [--zone ZONE] [--domain NAME] [--commit SHA] [--judges N] [--template DIR]
+#   scripts/hosted/deploy.sh PROJECT_ID [--zone ZONE] [--domain NAME] [--commit SHA] [--judges N] [--template DIR] [--google-client-id ID]
 set -euo pipefail
-project=${1:?usage: deploy.sh PROJECT_ID [--zone ZONE] [--domain NAME] [--commit SHA] [--judges N] [--template DIR]}; shift
-domain="" commit="" judges=10 template="" zone=europe-west1-b # Belgium
+project=${1:?usage: deploy.sh PROJECT_ID [--zone ZONE] [--domain NAME] [--commit SHA] [--judges N] [--template DIR] [--google-client-id ID]}; shift
+domain="" commit="" judges=10 template="" google="" zone=europe-west1-b # Belgium
 while (($#)); do
   case "$1" in
     --zone) zone=$2; shift 2 ;;
+    --google-client-id) google=$2; shift 2 ;;
     --domain) domain=$2; shift 2 ;;
     --commit) commit=$2; shift 2 ;;
     --judges) judges=$2; shift 2 ;;
@@ -49,7 +50,7 @@ fi
 chmod 600 "$state/slots.toml" "$state/links.txt"
 
 wanted=no; [ -n "$template" ] && wanted=yes
-metadata=(--metadata "jana-commit=$commit,jana-host=$host,jana-template=$wanted" --metadata-from-file "jana-slots=$state/slots.toml,startup-script=$here/startup.sh")
+metadata=(--metadata "jana-commit=$commit,jana-host=$host,jana-template=$wanted,jana-google-client-id=$google" --metadata-from-file "jana-slots=$state/slots.toml,startup-script=$here/startup.sh")
 if gc compute instances describe "$vm" --zone "$zone" > /dev/null 2>&1; then
   gc compute instances add-metadata "$vm" --zone "$zone" "${metadata[@]}" > /dev/null
 else
