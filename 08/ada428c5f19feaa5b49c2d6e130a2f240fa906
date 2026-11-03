@@ -1,0 +1,23 @@
+HACKATHON_SUBMISSION.md
+  s_49ba057c5af1a1::t_d5d87f92bd678a 102
+README.md
+  s_49ba057c5af1a1::t_fd10670ef59af5 105-107
+SPEC.md
+  s_49ba057c5af1a1::t_e0df9c4993b46e 3072-3074
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "08ada428c5f19feaa5b49c2d6e130a2f240fa906",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "unknown"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
