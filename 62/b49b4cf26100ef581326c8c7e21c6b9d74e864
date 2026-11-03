@@ -1,0 +1,65 @@
+scripts/tests/test_m21_perception_evaluation.py
+  s_d5c00ecab43fb6::t_2c9dde58849c1d 57,64-65
+  s_d5c00ecab43fb6::t_29fdcd1e147402 23
+  s_d5c00ecab43fb6::t_f9232625296118 70
+  s_d5c00ecab43fb6::t_db1eecfc9a8629 7
+  s_d5c00ecab43fb6::t_671f9130612483 58-63
+apps/desktop/src-tauri/tests/runtime.rs
+  s_d5c00ecab43fb6::t_d22f8e1ddd292f 503-505
+services/agent-core/tests/test_m6b_events.py
+  s_d5c00ecab43fb6::t_a82afbc9369abf 7
+  s_d5c00ecab43fb6::t_54a9954576a013 431-434
+.github/workflows/ci.yml
+  s_d5c00ecab43fb6::t_8e9480c0f42834 84-85,150-151,155-156,173-176
+services/agent-core/tests/fixture_font.py
+  s_d5c00ecab43fb6::t_5ec8f1e23738d7 1-10
+packages/renderers/test/catalogue.test.tsx
+  s_d5c00ecab43fb6::t_a82afbc9369abf 169,273-274,285,289
+apps/desktop/test/capture-gallery.test.ts
+  s_d5c00ecab43fb6::t_8e9480c0f42834 8-11,15,20
+services/tool-worker/tests/test_huge_powers.py
+  s_d5c00ecab43fb6::t_fd792da31e8904 214,219
+  s_d5c00ecab43fb6::t_59680ff23cb164 190-192
+  s_d5c00ecab43fb6::t_2c7fe334dead49 195
+  s_d5c00ecab43fb6::t_3ca7cafea64779 201
+services/agent-core/tests/test_m25a_safety.py
+  s_d5c00ecab43fb6::t_b9c0e472e86c1a 26
+services/agent-core/tests/test_m21_capture_drafts.py
+  s_d5c00ecab43fb6::t_b9c0e472e86c1a 26,410
+scripts/tests/test_m42_native_review.py
+  s_d5c00ecab43fb6::t_f788cbf834cc38 24
+apps/desktop/test/target-size.test.ts
+  s_d5c00ecab43fb6::t_8e9480c0f42834 11-14,18,26
+apps/desktop/test/text-scale.test.ts
+  s_d5c00ecab43fb6::t_8e9480c0f42834 10-13,17,25
+scripts/jana_tools/scenarios.py
+  s_d5c00ecab43fb6::t_f2ee5be54e75c6 229-230
+.github/actions/setup/action.yml
+  s_d5c00ecab43fb6::t_01ec47aa45f9b1 35-36,39-40
+services/agent-core/tests/test_m25a_snap_and_working.py
+  s_d5c00ecab43fb6::t_b9c0e472e86c1a 33
+services/agent-core/tests/test_m25a_exam_and_answers.py
+  s_d5c00ecab43fb6::t_b9c0e472e86c1a 42
+apps/desktop/test/gallery-accessibility.test.ts
+  s_d5c00ecab43fb6::t_8e9480c0f42834 11-14,20,31
+services/agent-core/tests/test_capture_personal_mask.py
+  s_d5c00ecab43fb6::t_b9c0e472e86c1a 12,21
+packages/renderers/test/renderers.test.tsx
+  s_d5c00ecab43fb6::t_3112520d9bfdfe 79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "62b49b4cf26100ef581326c8c7e21c6b9d74e864",
+  "prompts": {},
+  "sessions": {
+    "s_d5c00ecab43fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44ba0f5a-afb1-425d-8e0e-cfd3bea8cdc4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
