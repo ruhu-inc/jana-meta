@@ -3069,6 +3069,9 @@ adopted is no: the material is the curriculum, and one first-run choice is enoug
 - **Coming back.** Home lists an own-course learner's flashcard sets with cards due (`DueToday`).
 - **Hosted demo.** `scripts/hosted` and `jana_tools.hosted` run the browser app on one VM for judges: one core per private
   link, gateway and cores on loopback, no provider key in a core. Offline tutoring, voice and podcasts are not hosted.
+  Besides the links, invite-only sign-in with email and password (`jana_tools.hosted_accounts`), so nobody who finds the
+  address can spend the Meta credit. Google sign-in is built but off until a client is configured. There is no email
+  delivery, and billing is not built.
 - **Public checkouts.** `jana_tools` reports checks that read the private specification as skipped when `docs/` is
   absent, instead of crashing or failing; `spec.lock` is untracked, so CI's pinned checkout needs it restored to run.
 

@@ -102,8 +102,9 @@ authored hints, mock papers and saved study packs.
 
 ## Try the hosted demo
 
-Judges receive a private link. It opens Jana online with Muse Spark, with no install: start from **Demo Ada** to see a
-learner's saved work, or add a profile, choose **My own course and materials** and upload a PDF, slides or notes.
+Judges receive a private link, or an invite code to create an account. Either opens Jana online with Muse Spark, with no
+install: start from **Demo Ada** to see a learner's saved work, or add a profile, choose **My own course and materials**
+and upload a PDF, slides or notes.
 Offline tutoring with Muse Glimmer, voice and podcasts need the desktop app. `scripts/hosted/README.md` says how the
 demo is deployed.
 
