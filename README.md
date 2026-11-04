@@ -1,6 +1,8 @@
 # Jana: a personal AI tutor and study companion for adults
 
-[Architecture (PDF)](ARCHITECTURE.pdf) · [HTML reference](ARCHITECTURE.html)
+[Watch the demo on YouTube](https://www.youtube.com/watch?v=zh5N-kQlwgc) · [Architecture (PDF)](ARCHITECTURE.pdf) · [HTML reference](ARCHITECTURE.html)
+
+For the clearest app text in the demo, select **1080p** in YouTube’s **Settings → Quality** menu.
 
 The architecture explains how Jana uses Meta models, coordinates its agent roles, checks outputs and manages learner
 memory and cloud/local routes. Code excerpts and test evidence show the implementation behind those capabilities.
