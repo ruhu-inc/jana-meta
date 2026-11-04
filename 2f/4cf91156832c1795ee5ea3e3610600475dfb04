@@ -1,0 +1,21 @@
+scripts/packaging/README.md
+  s_d5c00ecab43fb6::t_ea8ec647dbbb3a 61-62
+.github/workflows/ci.yml
+  s_d5c00ecab43fb6::t_fe79aff8cf9712 4-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2f4cf91156832c1795ee5ea3e3610600475dfb04",
+  "prompts": {},
+  "sessions": {
+    "s_d5c00ecab43fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44ba0f5a-afb1-425d-8e0e-cfd3bea8cdc4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
