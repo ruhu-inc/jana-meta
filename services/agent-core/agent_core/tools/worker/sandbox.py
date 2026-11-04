@@ -126,7 +126,8 @@ def seatbelt_profile(read_paths: list[Path], scratch: Path, executable: Path) ->
 """
 
 
-def bubblewrap_argv(bwrap: str, read_paths: list[Path], scratch: Path, seccomp_fd: int | None = None) -> list[str]:
+def bubblewrap_argv(bwrap: str, read_paths: list[Path], scratch: Path, seccomp_fd: int | None = None,
+                    env: Mapping[str, str] | None = None) -> list[str]:  # fmt: skip
     argv = [bwrap, "--unshare-all", "--die-with-parent", "--new-session", "--clearenv"]
     for system in ("/usr", "/lib", "/lib64", "/bin", "/etc/alternatives"):
         argv += ["--ro-bind-try", system, system]
@@ -134,6 +135,8 @@ def bubblewrap_argv(bwrap: str, read_paths: list[Path], scratch: Path, seccomp_f
         argv += ["--ro-bind-try", str(path), str(path)]
     argv += ["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp", "--bind", str(scratch), str(scratch)]  # noqa: S108 (a private tmpfs)
     argv += ["--setenv", "HOME", str(scratch), "--setenv", "TMPDIR", str(scratch), "--chdir", str(scratch)]
+    for name, value in (env or {}).items():
+        argv += ["--setenv", name, value]
     argv += ["--remount-ro", "/"]  # the sandbox's own root is read-only; only the scratch bind is writable
     if seccomp_fd is not None:
         argv += ["--seccomp", str(seccomp_fd)]
@@ -191,8 +194,8 @@ def sandboxed(argv: list[str], scratch: Path, platform: str = sys.platform, *, r
               limits: winsandbox.JobLimits | None = None, profile: str = TOOL_PROFILE,
               env: Mapping[str, str] | None = None) -> SandboxedCommand:  # fmt: skip
     """`argv` wrapped in the platform's sandbox. `reads` replaces the default read paths (the runtime and the tool
-    worker's code); `limits`, `profile` and `env` are the Windows job limits, AppContainer and extra worker
-    environment (on Windows the launcher, not the caller, sets the worker's environment)."""
+    worker's code); `limits` and `profile` are the Windows job limits and AppContainer; `env` is extra worker
+    environment (bubblewrap clears the caller's; on Windows the launcher, not the caller, sets the worker's)."""
     scratch.mkdir(parents=True, exist_ok=True)
     scratch = scratch.resolve()
     reads = runtime_paths(argv[0]) if reads is None else reads
@@ -207,7 +210,7 @@ def sandboxed(argv: list[str], scratch: Path, platform: str = sys.platform, *, r
             program_file.write_bytes(seccomp.program())
             fd = os.open(program_file, os.O_RDONLY)
             program_file.unlink()
-            wrapped = [*bubblewrap_argv(bwrap, reads, scratch, fd), *argv]
+            wrapped = [*bubblewrap_argv(bwrap, reads, scratch, fd, env), *argv]
             return SandboxedCommand(wrapped, "bubblewrap", False, pass_fds=(fd,))
         missing = "bubblewrap is not installed" if not bwrap else "bubblewrap cannot create its namespaces"
         if landlock.abi(platform) >= 1:  # TABLE SEC-06a: the Landlock fallback

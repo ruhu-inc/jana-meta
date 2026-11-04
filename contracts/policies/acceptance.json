@@ -1921,6 +1921,9 @@
     ]
   },
   "INP-20": {
+    "inp20_person_photo_discarded": [
+      "services/agent-core/tests/test_person_gate.py"
+    ],
     "inp20_personal_data_masked": [
       "services/agent-core/tests/test_capture_personal_mask.py"
     ],

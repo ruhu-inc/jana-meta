@@ -64,28 +64,31 @@ def shrink(image: np.ndarray[Any, Any], long_edge: int) -> np.ndarray[Any, Any]:
     )
 
 
-def contains_person(image: np.ndarray[Any, Any]) -> bool:
+def face_score(image: np.ndarray[Any, Any], floor: float | None = None) -> float:
+    """The best face score of the pinned detector (0 below `floor`); the hashed model bytes are the bytes loaded."""
+    face = PERSON_DATA["face_detector"]
     if cv2.__version__ != PERSON_DATA["opencv_version"]:
         raise ImageRejected("photo_reading_unavailable")
-    sample = shrink(image, 1200)
-    gray = cv2.cvtColor(sample, cv2.COLOR_RGB2GRAY)
-    for filename, digest in PERSON_DATA["files"].items():
-        path = Path(CV.data.haarcascades) / filename
-        if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
-            raise ImageRejected("photo_reading_unavailable")
-        detector = cv2.CascadeClassifier(str(path))
-        if detector.empty():
-            raise ImageRejected("photo_reading_unavailable")
-        if len(detector.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=5, minSize=(30, 30))) > 0:
-            return True
-    sample = shrink(image, 640)
-    if sample.shape[0] >= 128 and sample.shape[1] >= 64:
-        hog = cv2.HOGDescriptor()
-        hog.setSVMDetector(CV.HOGDescriptor_getDefaultPeopleDetector())
-        boxes, _ = hog.detectMultiScale(sample, winStride=(8, 8), padding=(8, 8), scale=1.08)
-        if len(boxes) > 0:
-            return True
-    return False
+    model = (Path(__file__).parent / face["file"]).read_bytes()
+    if hashlib.sha256(model).hexdigest() != face["sha256"]:
+        raise ImageRejected("photo_reading_unavailable")
+    sample = cv2.cvtColor(shrink(image, face["long_edge"]), cv2.COLOR_RGB2BGR)
+    detector = CV.FaceDetectorYN.create(
+        "onnx",
+        np.frombuffer(model, np.uint8),
+        np.zeros(0, np.uint8),
+        (sample.shape[1], sample.shape[0]),
+        face["score_threshold"] if floor is None else floor,
+        face["nms_threshold"],
+        face["top_k"],
+    )
+    _, faces = detector.detect(sample)
+    return 0.0 if faces is None else float(faces[:, 14].max())
+
+
+def contains_person(image: np.ndarray[Any, Any]) -> bool:
+    # Calibration and the measured trade-off: PERSON_DATA["calibration"] (INP-20).
+    return bool(face_score(image) >= PERSON_DATA["face_detector"]["score_threshold"])
 
 
 def ordered_quad(points: np.ndarray[Any, Any]) -> np.ndarray[Any, Any]:

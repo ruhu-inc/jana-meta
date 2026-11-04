@@ -1,0 +1,48 @@
+{
+ "platform": "macOS arm64",
+ "opencv": "4.14.0",
+ "release_evidence": false,
+ "two_line_grid": {
+  "n": 216,
+  "current_refused": 7,
+  "hog": 5,
+  "upperbody": 2,
+  "face_score_max": 0.0,
+  "face_score_ge_0_4": 0
+ },
+ "two_line_grid_through_camera": {
+  "n": 216,
+  "current_refused": 2,
+  "hog": 1,
+  "upperbody": 1,
+  "face_score_max": 0.0,
+  "face_score_ge_0_4": 0
+ },
+ "three_line_worksheet_sizes_28_to_60": {
+  "n": 132,
+  "current_refused": 85,
+  "hog": 85,
+  "upperbody": 1,
+  "face_score_max": 0.0,
+  "face_score_ge_0_4": 0,
+  "by_font": {
+   "Arial": 22,
+   "Times": 21,
+   "Courier": 17,
+   "default": 25
+  }
+ },
+ "regression": {
+  "n": 29,
+  "current_refused": 0,
+  "hog": 0,
+  "upperbody": 0,
+  "face_score_max": 0.0,
+  "face_score_ge_0_4": 0,
+  "same_as_2026_10_23_linux": 29
+ },
+ "drawn_face_on_page": {
+  "face_score": 0.8874,
+  "current_refused": false
+ }
+}

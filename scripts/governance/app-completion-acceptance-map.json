@@ -982,16 +982,16 @@
     },
     "inp20_person_photo_discarded": {
       "software": [
-        "services/agent-core/tests/test_m21_capture_drafts.py",
-        "services/agent-core/tests/test_m21_typed_working.py",
-        "packages/client-core/test/capture-lifecycle.test.ts",
-        "packages/client-core/test/maths-input.test.ts",
-        "packages/ui/test/subject-inputs.test.tsx",
-        "scripts/tests/test_m21_perception_evaluation.py"
+        "services/agent-core/tests/test_person_gate.py",
+        "services/perception-worker/perception_worker/image.py",
+        "services/perception-worker/perception_worker/detectors.json",
+        "services/agent-core/agent_core/api/captures.py",
+        "evals/perception/person/runs/2026-10-23/report.json"
       ],
-      "scope": "Source-area trace only. These paths are not a substitute for the exact acceptance case; inspect assertions and the governing acceptance before closing a gap.",
+      "scope": "A face painted in code (no real person's photo is committed) traverses the actual sandboxed perception worker and capture desk: refused as contains_person before crop/OCR, no attachment row or file, volatile original dropped, reading refused. The pinned model hash and OpenCV version fail closed. Recall on real people is the recorded calibration, not this test.",
       "external": [
-        "Calibrated person-detector observations on real photos"
+        "Calibrated person-detector observations on ordinary-camera student photos and reference devices",
+        "Independent review of the page labels"
       ]
     },
     "inp20_personal_data_masked": {
