@@ -40,3 +40,18 @@ apps/studio/src-tauri/resources/
 .env.*
 *.env
 !.env.example
+
+# Local planning records and demo production assets. Keep the active schema-check inputs tracked.
+/contract-additions-*.json
+!/contract-additions-gates.json
+!/contract-additions-m33a.json
+!/contract-additions-m33b.json
+/SPEC.md
+/SPEC_*_REVIEW.md
+/LEARNING_AGENT.md
+/LEARNING_AGENT_REVIEW.md
+/FEATURE_IMPORT.md
+/HACKATHON_DEMO.md
+/HACKATHON_SUBMISSION.md
+/HACKATHON_SUBMISSION_ANSWERS.txt
+/demo-recordings/
