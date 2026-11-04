@@ -1,0 +1,29 @@
+packages/ui/src/board/PhotoRegions.tsx
+  s_49ba057c5af1a1::t_05a00b3d0c9423 7,11,48-49,64
+packages/ui/src/learn/StudyQuiz.tsx
+  s_49ba057c5af1a1::t_05a00b3d0c9423 182,185-186,193-194
+packages/ui/test/study-quiz.test.tsx
+  s_49ba057c5af1a1::t_ef5c3cf5a0daf9 21-40,42-51,54-63
+  s_49ba057c5af1a1::t_c75846c3104faf 41,52-53
+packages/ui/test/photo-regions.test.tsx
+  s_49ba057c5af1a1::t_05a00b3d0c9423 39,73-86
+  s_49ba057c5af1a1::t_b2c8ff025de45e 87-89
+packages/ui/src/composer/PhotoCapture.tsx
+  s_49ba057c5af1a1::t_05a00b3d0c9423 7,261
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e474c82542418bc266411ddc73047ac0bea75a28",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
