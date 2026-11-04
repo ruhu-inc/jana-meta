@@ -1,0 +1,21 @@
+scripts/packaging/README.md
+  s_49ba057c5af1a1::t_46836f17cd9ccc 27
+scripts/packaging/tauri-cli.version
+  s_49ba057c5af1a1::t_771531b0af2a8b 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3891797e2cd0584cf1ee14a1f0ca0b6f01fc44a4",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
