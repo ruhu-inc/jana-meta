@@ -1,0 +1,51 @@
+packages/ui/test/companion-thread.test.tsx
+  s_49ba057c5af1a1::t_6f25d71bc3c44c 184-197
+packages/ui/src/learn/CompanionThread.tsx
+  s_49ba057c5af1a1::t_021cc3d10e3a02 187
+  s_49ba057c5af1a1::t_d67f7a72df0617 121-122,124,127-131
+packages/client-core/src/study-workspace.ts
+  s_49ba057c5af1a1::t_6fff7b50188686 96-97,787,868,877
+packages/ui/src/learn/StudyWorkspace.tsx
+  s_49ba057c5af1a1::t_6fff7b50188686 525
+packages/ui/src/learn/StudyQuiz.tsx
+  s_49ba057c5af1a1::t_6fff7b50188686 34,45,90
+  s_49ba057c5af1a1::t_d67f7a72df0617 24
+services/agent-core/tests/test_companion_any_material.py
+  s_49ba057c5af1a1::t_2a03226ada3307 78-95
+  s_49ba057c5af1a1::t_6f25d71bc3c44c 53,73
+  s_49ba057c5af1a1::t_e135f7971c56a1 1-52,54-72,74-77,96-98
+packages/ui/test/study-quiz.test.tsx
+  s_49ba057c5af1a1::t_021cc3d10e3a02 75,80,85
+  s_49ba057c5af1a1::t_d67f7a72df0617 64-74,76-79,81-84,86-88
+services/agent-core/agent_core/engine/companion.py
+  s_49ba057c5af1a1::t_0c6c6bf67a450a 191
+  s_49ba057c5af1a1::t_00be8d3fce1340 766-767
+  s_49ba057c5af1a1::t_ccaf7c6b831a7d 59-60,78,169-189,742-746,902-908
+  s_49ba057c5af1a1::t_a925bd44f962ee 192
+  s_49ba057c5af1a1::t_2a03226ada3307 829,1243-1248
+  s_49ba057c5af1a1::t_cc236d90b5a270 190,193-202,212,747-748,1249-1251
+content/agent/roles/companion.md
+  s_49ba057c5af1a1::t_168b0e28c5af70 36,43-44
+services/agent-core/agent_core/engine/memory_tools.py
+  s_49ba057c5af1a1::t_e135f7971c56a1 22,47,50-52,259
+  s_49ba057c5af1a1::t_ccaf7c6b831a7d 465-467
+  s_49ba057c5af1a1::t_9db0ff92709268 48-49
+  s_49ba057c5af1a1::t_2a03226ada3307 394-398
+  s_49ba057c5af1a1::t_00be8d3fce1340 267
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "23e9c9a33849ee655d15388fa6ba32f27ef56e4c",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
