@@ -1,0 +1,25 @@
+apps/desktop/README.md
+  s_49ba057c5af1a1::t_eabb9ca1a22def 45-60
+apps/desktop/dev/seed_local_model.py
+  s_49ba057c5af1a1::t_ff1e813aa38e87 1-62
+services/agent-core/agent_core/config/resolve.py
+  s_49ba057c5af1a1::t_30034b512bc56f 116-117,119
+services/agent-core/tests/test_study_workspace.py
+  s_49ba057c5af1a1::t_f9ae715eb820b6 803-811
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "875f665978bc5fa9f236c6ec6045c14899d4a3c2",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
