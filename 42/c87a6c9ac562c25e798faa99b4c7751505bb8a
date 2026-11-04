@@ -1,0 +1,19 @@
+ARCHITECTURE.html
+  s_49ba057c5af1a1::t_43efede6d9994f 186,192,208,220,225,234,236,274,281,284,296,300,312,314,321,326,333
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "42c87a6c9ac562c25e798faa99b4c7751505bb8a",
+  "prompts": {},
+  "sessions": {
+    "s_49ba057c5af1a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f072ad02-35ad-4a33-a46f-bafdd099ecef",
+        "model": "unknown"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
