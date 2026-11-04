@@ -4,6 +4,7 @@ import { captureRegionText, PhotoCommands, checkPhotoHeader, type CapturedQuesti
 import { useT } from "../i18n.js";
 import { useSession } from "../store.js";
 import { Button, ErrorState } from "../primitives/index.js";
+import { StudyInline } from "../learn/StudyText.js";
 const QUAD: Corner[] = [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }];
 export type CapturePreviewStage = "camera-live" | "camera-still" | "camera-light" | "camera-missing" | "camera-blocked" | "camera-busy" | "corner-focused";
 interface Props { /** A static gallery fixture may represent processing already in progress. */ previewProcessingElapsed?: boolean; previewStage?: CapturePreviewStage; previewCapture?: CapturedQuestion; previewImage?: string; sessionId: string; purpose: CapturePurpose; file?: Blob; source?: CaptureSource; onConfirmed: (capture: CapturedQuestion) => void; onTyped: (text: string) => void; onDiscardSource?: () => void; onClose: () => void }
@@ -257,7 +258,7 @@ export function PhotoCapture({ previewProcessingElapsed = false, previewStage, p
         {capture.questions.length > 0 && <fieldset><legend>{t("photo.choose_question")}</legend>{capture.questions.map((question) => <label key={question.label} className="flex min-h-11 items-center gap-2"><input type="radio" name="captured-question" checked={selected === question.label} onChange={() => { setSelected(question.label); setText(capture.regions.filter((r) => question.region_ids.includes(r.region_id)).map(captureRegionText).join("\n")); }} /> {question.label}</label>)}</fieldset>}
         {selected !== null && capture.questions.length > 1 && <div><p>{t("photo.up_next")}</p><ol>{capture.questions.filter((question) => question.label !== selected).map((question) => <li key={question.label}>{question.label}</li>)}</ol></div>}
         <EntryEditor key={selected ?? capture.capture_id} ref={transcript} label={t("photo.confirm_text")} placeholder={t("photo.confirm_text")} initialText={text} multiline onChange={setText} onSubmit={() => false} />
-        {capture.regions.filter((r) => r.needs_confirmation).map((region) => <p key={region.region_id} tabIndex={0} onFocus={() => setHighlight(region.region_id)} onMouseEnter={() => setHighlight(region.region_id)} className="text-meta"><span>{t("photo.check_line")}: </span><u>{region.text}</u></p>)}
+        {capture.regions.filter((r) => r.needs_confirmation).map((region) => <p key={region.region_id} tabIndex={0} onFocus={() => setHighlight(region.region_id)} onMouseEnter={() => setHighlight(region.region_id)} className="text-meta"><span>{t("photo.check_line")}: </span><u><StudyInline text={region.text} /></u></p>)}
         <Button onClick={() => transcript.current?.focus()}>{t("photo.edit")}</Button>
         <Button disabled={busy || text.trim() === "" || (capture.questions.length > 0 && selected === null)} onClick={() => { void confirm(); }}>{t("photo.confirm")}</Button>
       </div>}

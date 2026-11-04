@@ -18,6 +18,49 @@ function show() {
   return { onCheck, onSubmit };
 }
 
+describe("StudyQuiz navigation", () => {
+  const items = [ITEM("a"), ITEM("b"), ITEM("c")];
+  const three = { ...QUIZ, items } as unknown as W.QuizView;
+  const verdict = { verdict: "correct", marking: "judged" };
+
+  function quiz(feedback: Record<string, unknown> = {}) {
+    const onSubmit = vi.fn();
+    render(<LocaleProvider locale="en"><StudyQuiz quiz={three} result={null} resultAnswers={{}} feedback={feedback as never} busy={false} accessBlocked={false} stale={false}
+      quizHelp={null} helpJob={undefined} helpPending={false} safeHelp={false} helpAids={[]} claim={() => null} jobs={() => null}
+      onDraft={vi.fn()} onCheck={vi.fn(async () => true)} onSubmit={onSubmit} onClearResult={vi.fn()} onHelp={vi.fn()} onFollowUp={vi.fn(async () => true)} /></LocaleProvider>);
+    return { onSubmit };
+  }
+
+  // A browser submits the form when the button under the click has become a submit button by the time the click
+  // finishes. Finish quiz must therefore be a new element, never Next question with its type changed.
+  test("next_question_onto_the_last_question_does_not_become_finish_quiz", () => {
+    const { onSubmit } = quiz();
+    fireEvent.click(screen.getByRole("button", { name: "Next question" }));
+    const next = screen.getByRole("button", { name: "Next question" });
+    fireEvent.click(next);
+    expect(screen.getByText("Question 3 of 3")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Finish quiz" })).not.toBe(next);
+    expect(next.isConnected).toBe(false);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  test("next_question_onto_a_checked_last_question_does_not_become_finish_quiz", async () => {
+    const { onSubmit } = quiz({ a: verdict, b: verdict, c: verdict });
+    for (const id of ["a", "b", "c"]) {
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: "answer" } });
+      fireEvent.click(screen.getByRole("button", { name: "Check answer" }));
+      await waitFor(() => expect(screen.queryByRole("button", { name: "Check answer" })).toBeNull());
+      if (id !== "c") fireEvent.click(screen.getByRole("button", { name: "Next question" }));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Previous question" }));
+    const next = await screen.findByRole("button", { name: "Next question" });
+    fireEvent.click(next);
+    expect(screen.getByRole("button", { name: "Finish quiz" })).not.toBe(next);
+    expect(next.isConnected).toBe(false);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
 describe("StudyQuiz keyboard", () => {
   test("enter_checks_the_answer_and_never_submits_the_quiz", async () => {
     const { onCheck, onSubmit } = show();

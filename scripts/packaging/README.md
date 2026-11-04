@@ -58,8 +58,8 @@ secrets, so engineering cannot fill them.
   (`/v1/check/<channel>/{{target}}/{{current_version}}`) is fixed.
 - [ ] **CI secrets** for the `release` environment: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`,
   `APPLE_API_ISSUER`, `APPLE_API_KEY`, `APPLE_API_KEY_PATH`, `JANA_AUTHENTICODE_KEY_REF`,
-  `JANA_AUTHENTICODE_CREDENTIALS`, and `JANA_SPEC_DEPLOY_KEY` for every stage. There is no updater key secret: CI
-  never signs an app update.
+  and `JANA_AUTHENTICODE_CREDENTIALS`. `JANA_SPEC_DEPLOY_KEY` is read only by the feature-review checklist, not by
+  the `ci` stages. There is no updater key secret: CI never signs an app update.
 - [ ] **Release runners and the device lab**: these produce the evidence that `scripts/tests/test_m20a_packaging.py`
   and the M20 pack tests read, and each test skips until its evidence exists:
   - `JANA_PACKAGED_RESULTS`: the `packaged-smoke` reports, including the Windows 10 USB-kit run without WebView2
