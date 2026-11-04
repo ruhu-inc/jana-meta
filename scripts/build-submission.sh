@@ -44,7 +44,7 @@ subjects=(mth phy)
 include=(
   # Root manifests, lockfiles, toolchain pins and licences
   .dependency-cruiser.cjs .editorconfig .gitignore .importlinter .nvmrc .python-version
-  Cargo.lock Cargo.toml LICENSE NOTICE README.md THIRD_PARTY_NOTICES
+  ARCHITECTURE.html ARCHITECTURE.pdf Cargo.lock Cargo.toml LICENSE NOTICE README.md THIRD_PARTY_NOTICES
   deny.toml dependency-reviews.toml eslint.config.js package.json pnpm-lock.yaml pnpm-workspace.yaml
   pyproject.toml rust-toolchain.toml tsconfig.base.json turbo.json uv.lock
   # The desktop app and its shared packages

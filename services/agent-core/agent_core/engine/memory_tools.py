@@ -179,8 +179,11 @@ class MemoryTools:
         except RecallRefused as refused:
             raise InvalidArguments(str(refused)) from None
         self.reads.append(len(found))
-        return {"marker": RECALL_MARKER, "matches": [{"turn": m.turn_ref, "from": m.source, "text": m.text}
-                                                     for m in found]}  # fmt: skip
+        result = {"marker": RECALL_MARKER, "matches": [{"turn": m.turn_ref, "from": m.source, "text": m.text}
+                                                       for m in found]}  # fmt: skip
+        if not found:  # a literal search that missed is not a lost conversation: the model must not say it cannot see
+            result["note"] = "No line has that exact text. Their earlier messages are above in this conversation."
+        return result
 
     async def note(self, args: dict[str, Any], context: CallContext) -> dict[str, Any]:
         if self.job is None:

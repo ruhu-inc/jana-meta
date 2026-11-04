@@ -1141,6 +1141,11 @@ class Engine(Coordination, Offers, Predictions):
         if s2:
             note = "; ".join(n for n in (note, *self._after_answer(turn, verdict)) if n)
         if s2 and verdict == "correct":
+            if self.state.solved:  # a small local model otherwise carries on with the hint rung it was on
+                note += (
+                    "; the student's final answer is correct and this question is finished. Say so plainly and "
+                    "ask what they would like to do next; do not ask for the givens or any further working"
+                )
             return await self._coach_turn(turn, intent_note=note, tools=(), text_only=True)
         return await self._coach_turn(turn, intent_note=note)
 
@@ -1653,7 +1658,8 @@ class Engine(Coordination, Offers, Predictions):
         reached: PlanStep | str | None = None
         if plan is not None and (stated is None or text.count("=") > 1) and not state.solved:
             checked, at = await flows.check_guided(self, turn, text, plan)
-            if checked:
+            # A chained line it could not read ("a = 20 / 4 = 5 m/s^2") still states a value: that is compared below.
+            if checked and not (stated is not None and all(line.status == "unchecked" for line in checked)):
                 opened = open_board(state)
                 working_events: list[dict[str, Any]] = []
                 for line in checked:
@@ -1707,14 +1713,17 @@ class Engine(Coordination, Offers, Predictions):
                     hit = candidate
                     break
             final_match = await _stated_match(run, text, stated, final[0], plan.final_unit) if final else "no"
-            stated_eq = flows.equation_part(text)  # "oh, then s = 10 m" states "s = 10 m"
+            # "oh, then s = 10 m" states "s = 10 m"; "a = 20 / 4 = 5" states "a = 5" when its arithmetic agrees
+            stated_eq, consistent = await flows.reduced_chain(self, turn, flows.equation_part(text), stated)
             named = stated_eq.rsplit("=", 1)[0].strip() if "=" in stated_eq else ""
             bare = flows.BARE_SIDE.fullmatch(named) is not None
             system = flows.system_of(self, plan)
             # An equation in the problem's unknowns is checked on its own maths, so a valid line of any route is
             # accepted and a wrong one is caught; only a stated value is matched against the plan (ASM-09).
             decided = await flows.check_reply_equation(self, turn, stated_eq, plan) if system or not bare else None
-            if decided is not None:
+            if not consistent:
+                status = "incorrect"
+            elif decided is not None:
                 status, check_id = decided
                 if status == "correct":  # an accepted route the plan did not take is named for the tutor (ASM-09)
                     turn.method = flows.method_of(state.problem.statement if state.problem else "", plan, stated_eq,
@@ -1804,7 +1813,7 @@ class Engine(Coordination, Offers, Predictions):
         rounds = 0
         malformed_streak = 0
         plan_due = False
-        deadline = started + float(limits["wall_clock_s"])
+        deadline = started + self._wall_clock(role, limits)
         envelope_status, stop, output, raw_text, errors, valid, corrected = (
             "partial",
             "max_steps",
@@ -3765,6 +3774,11 @@ class Engine(Coordination, Offers, Predictions):
     async def _stop_call(self, call: asyncio.Future[Any]) -> None:
         await self.cancelled.wait()
         call.cancel()
+
+    def _wall_clock(self, role: str, limits: dict[str, Any]) -> float:
+        """A delegated role's time limit: its manifest's, stretched when the device's own model serves it."""
+        budget = float(limits["wall_clock_s"])
+        return budget * self.deps.settings.local_wall_clock_scale if self.deps.router.serves_locally(role) else budget
 
     def _limits(self, role: str) -> dict[str, Any]:
         """Per-call limits from the role manifest and the hardware class (AGT-28, TABLE MDL-16a): the output token cap.

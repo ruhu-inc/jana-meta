@@ -30,6 +30,7 @@ import contextlib
 import json
 import re
 import sqlite3
+import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta
@@ -615,6 +616,7 @@ class CompanionContext:
     failure: dict[str, Any] | None = None  # the last failed model call's diagnosis, by code (`_traced`)
     turn_history: list[Any] = field(default_factory=list)  # the messages this turn's final call saw
     searched: bool = False  # a search of the student's materials ran this turn (by code, or study_search)
+    read_progress: bool = False  # `plan` or `progress_read` ran this turn: their facts answer the question
     figures: frozenset[str] = frozenset()  # numbers this turn's excerpts and moment lines say (fact binding)
     correct_memory: Callable[[str, str, str, str], bool] = lambda *_: False
     memory_changed: Callable[[], None] = lambda: None
@@ -735,8 +737,12 @@ def action_event(action: str, payload: Mapping[str, Any]) -> dict[str, Any]:
             "label_key": ACTION_LABELS[action]}  # fmt: skip
 
 
+_QUOTED = re.compile(r'"[^"]*"|\u201c[^\u201d]*\u201d')
+
+
 def one_ask_errors(text: str) -> list[str]:
-    return ["more than one question"] if text.count("?") > 1 else []
+    # A question it quotes back ("your first question was ...") is the student's, not one it asks.
+    return ["more than one question"] if _QUOTED.sub("", text).count("?") > 1 else []
 
 
 def keep_last_question(text: str) -> str:
@@ -744,6 +750,39 @@ def keep_last_question(text: str) -> str:
     sentences = _SENTENCE_END.split(text.strip())
     asked = [at for at, sentence in enumerate(sentences) if sentence.rstrip().endswith("?")]
     return " ".join(s for at, s in enumerate(sentences) if at not in asked[:-1])
+
+
+def fit_reply(text: str, limit: int) -> str:
+    """Keep complete prose at the display limit, including a draft cut at the schema's character cap."""
+    text = text.strip()
+    at_cap = len(text) >= MAX_REPLY_CHARS - 2 and not re.search(r"[.!?][\"')\]\u2019\u201d]*$", text)
+    if len(text) <= limit and not at_cap:
+        return text
+    if limit <= 0:
+        return ""
+    clipped = text[:limit].rstrip()
+    endings = list(re.finditer(r"[.!?](?=\s|$)", clipped))
+    if endings:
+        return clipped[: endings[-1].end()]
+    # A single sentence may not fit. Make shortening visible, without cutting a word into another claim.
+    prefix = text[: max(0, limit - 1)]
+    clipped = prefix.rsplit(" ", 1)[0].rstrip() if " " in prefix else ""
+    return clipped + "…"
+
+
+# What a reply may add a schedule fact to: a question about it, or a turn that read the plan or progress this turn.
+_SCHEDULE_FACTS = frozenset({"due_cards", "exam_distance_days", "streak_days"})
+_ASKS_SCHEDULE = re.compile(
+    r"\b(?:due|cards?|reviews?|revise|progress|streak|exams?|schedule|plan|next|how am i|how far|what'?s left)\b",
+    re.I,
+)
+
+
+def wanted_refs(facts: list[companion_facts.Fact], refs: Any, text: str, read_progress: bool) -> Any:
+    """The selected facts without schedule facts nobody asked about: a lecture question never ends in due counts."""
+    if read_progress or _ASKS_SCHEDULE.search(text) or not isinstance(refs, list):
+        return refs
+    return [r for r in refs if not (type(r) is int and 1 <= r <= len(facts) and facts[r - 1].metric in _SCHEDULE_FACTS)]
 
 
 def _today_iso(ms: int) -> str:
@@ -768,6 +807,7 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     context.failure = None
     context.turn_history = []
     context.searched = False
+    context.read_progress = False
     context.figures = frozenset()
     context.egress = {}
     context.facts = []
@@ -872,18 +912,30 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     reply: dict[str, Any] | None = None
     nudged = False
     decisions: dict[str, dict[str, Any]] = {}
+    # A computer too slow for its own model gets a plain answer in bounded time, never an endless wait. A cloud call
+    # keeps the provider's own limits.
+    local_limit = engine.deps.settings.companion_local_turn_s if engine.deps.router.serves_locally(ROLE) else None
+    started = time.monotonic()
     for attempt in range(2):
         try:
             # The second pass is a correction of a final reply: no new tool round, only the decode call (§19.5.1:
             # at most two tool rounds a turn; §19 fix, 2026-10-30).
-            reply = await _call(engine, turn, messages, offer, output, prepare,
-                                tool_rounds=MAX_TOOL_ROUNDS if attempt == 0 else 0)  # fmt: skip
+            async with asyncio.timeout(None if local_limit is None else local_limit - (time.monotonic() - started)):
+                reply = await _call(engine, turn, messages, offer, output, prepare,
+                                    tool_rounds=MAX_TOOL_ROUNDS if attempt == 0 else 0)  # fmt: skip
+        except TimeoutError:
+            context.require_scope()
+            engine._log("warning", "companion", "turn.too_slow")
+            context.failure = {"router_reason": "local_time_limit"}
+            return _finish(engine, turn, templates.text("too_slow"), [], user=text, stop="degraded")
         except Exception as error:
             context.require_scope()  # never finish a stale turn into the newly active profile
             engine._log("warning", "companion", "turn.failed", error=type(error).__name__)
             return _finish(engine, turn, canned(templates), [], user=text, stop="degraded")
         if reply is None:
             break
+        if "fact_refs" in reply:
+            reply["fact_refs"] = wanted_refs(context.facts, reply["fact_refs"], text, context.read_progress)
         results = gate_results(engine, context, reply)
         for gate, found, detail in results:  # every decision goes in the trace (§19 fix, 2026-10-30)
             entry = decisions.setdefault(gate, {"gate": gate, "fired": False, "nudges": 0, "attempt": attempt + 1,
@@ -948,7 +1000,7 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     while len(fact_text) > MAX_REPLY_CHARS - 100 and refs:
         refs.pop()
         fact_text = companion_facts.selected_text(context.facts, refs)
-    words = reply["text"][: MAX_REPLY_CHARS - len(fact_text) - 2]
+    words = fit_reply(reply["text"], MAX_REPLY_CHARS - len(fact_text) - (2 if fact_text else 0))
     words = "\n\n".join(p for p in (words, fact_text) if p)
     return _finish(engine, turn, words, actions, user=text, stop="completed")
 
@@ -1129,8 +1181,12 @@ def _system(engine: Any, variant: str = "local") -> str:
         for p in (
             soul.exposure("full"),
             role.body if role is not None else "",
-            "Select fact_refs for personal progress or schedule facts. Do not state those claims in text; code will "
-            "render them with their source. Use text for a question or teaching suggestion.",
+            "Select fact_refs for personal progress or schedule facts, only when the student asks about them. Do not "
+            "state those claims in text; code will render them with their source. Use text for a question or teaching "
+            "suggestion.",
+            "The earlier messages above are the student's own conversation in order, also after a restart. When they "
+            "ask what they said or asked earlier, answer from those messages. Call session_recall only for an exact "
+            "phrase that is no longer in view. Answer their latest message, not an earlier one.",
             text,
             observations,
         )
@@ -1310,6 +1366,8 @@ async def _call(engine: Any, turn: Any, messages: list[Message], offer: list[Any
                                            name=outcome.name))  # fmt: skip
                     if outcome.name == "study_search" and outcome.result.get("status") == "ok":
                         context.searched = True
+                    if outcome.name in ("plan", "progress_read") and outcome.result.get("status") == "ok":
+                        context.read_progress = True
                     data = outcome.result.get("data")
                     if outcome.result.get("status") == "ok" and data is not None:
                         context.sources.append(data)
@@ -1347,8 +1405,9 @@ async def _traced(engine: Any, turn: Any, router: Any, messages: list[Message], 
     `degraded_reason`. Codes only, never prompt text."""
     from agent_core.engine.research_chat import diagnosis
 
+    limits = {**engine._limits(ROLE), **kw}
     try:
-        result = await router.complete(ROLE, messages, tools, **kw)
+        result = await router.complete(ROLE, messages, tools, **limits)
     except Exception as error:
         record = getattr(error, "record", None)
         if record is not None:

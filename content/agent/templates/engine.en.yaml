@@ -114,6 +114,8 @@ companion:
     to_tutor: "That one is for the tutor: they'll work through it with you step by step. Open it below."
     to_study: "That looks like material to study from. Add it to Study and I can help you work through it."
     canned: "Sorry, I couldn't put that together just now. Could you ask me again in a different way?"
+    # When this computer's own model cannot answer in time (a machine with no graphics processor, for example).
+    too_slow: "This computer is taking too long to answer with its own model. Try a shorter question, or go online if you can."
     # When the reply was refused but the turn started an aid (SPEC §19 fix, 2026-10-30): what was made, by code.
     made:
       flashcards: "I've started {count} flashcards from {source}. Open them below."

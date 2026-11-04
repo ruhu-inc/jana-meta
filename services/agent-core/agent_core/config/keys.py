@@ -264,6 +264,11 @@ class Settings(BaseModel):
     vision_confirm_threshold: float = key(0.6, serves="AGT-02", layers=ENGINEERING, ge=0, le=1)
     title_max_words: int = key(6, serves="AGT-02", layers=ENGINEERING, unit="words", ge=1, le=20)
     diagnoser_attempts: int = key(2, serves="AGT-27", layers=ENGINEERING, unit="attempts", ge=1, le=5)
+    # A delegated role served by the device's own model has its manifest limit stretched by this (measured on Muse
+    # Glimmer, 4 Nov: the Checker needs tool rounds and shares the runtime with the Diagnoser).
+    local_wall_clock_scale: float = key(3.0, serves="AGT-27", layers=ENGINEERING, unit="ratio", ge=1, le=10)
+    # The whole of a Your tutor turn on the device's own model; the slowest complete turn measured was 123 s.
+    companion_local_turn_s: float = key(240.0, serves="AGT-27", layers=ENGINEERING, unit="seconds", ge=1, le=1800)
     # SPEC §12: on a new question served online, the Solver starts beside the Diagnoser on a guessed teaching skill.
     speculative_solver: bool = key(True, serves="AGT-15", layers=ENGINEERING)
     topic_chooser_options: int = key(3, serves="AGT-27", layers=ENGINEERING, unit="options", ge=1, le=4)

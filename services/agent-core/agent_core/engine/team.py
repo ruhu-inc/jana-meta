@@ -375,9 +375,13 @@ async def read_answer(engine: Any, turn: Any, text: str, status: str) -> str:
     checker_task = (f"<student-message>\n{_escape(statement)}\n</student-message>\n\n"
                     "Check this student answer (subject_of_check: student_answer). Verify it with the tools; cite "
                     f"the checks you used.\n<student-message>\n{_escape(text)}\n</student-message>")  # fmt: skip
+
+    async def checked() -> dict[str, Any]:
+        # On a lean class the code's own "incorrect" stands: the Checker's second opinion would only slow the Diagnoser.
+        return {} if status == "incorrect" and engine._lean() else await engine.delegate("checker", checker_task, turn)
+
     verdict_envelope, diagnosed = await asyncio.gather(
-        engine.delegate("checker", checker_task, turn),
-        diagnose(engine, turn, statement, answer=text, attempts=1),
+        checked(), diagnose(engine, turn, statement, answer=text, attempts=1)
     )
     note = []
     output = verdict_envelope.get("output") if verdict_envelope.get("schema_valid") else None

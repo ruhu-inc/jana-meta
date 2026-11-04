@@ -286,6 +286,26 @@ def equation_part(text: str) -> str:
     return found.group(2)
 
 
+async def reduced_chain(engine: Any, turn: Any, line: str, stated: Fraction) -> tuple[str, bool]:
+    """A chained line ("a = 20 / 4 = 5 m/s^2") as the value it states ("a = 5 m/s^2"), and whether its plain arithmetic
+    agrees with that value. A side with symbols or units ("(v - u)/t") stays unjudged here; so does a line whose first
+    side is not one symbol, or one the checker cannot evaluate."""
+    sides = [side.strip() for side in line.split("=")]
+    if len(sides) < 3 or not BARE_SIDE.fullmatch(sides[0]) or not sides[0]:
+        return line, True
+    for side in sides[1:-1]:
+        if re.search(r"[A-Za-z]", side):
+            continue
+        result, _ = await run_tool(engine, turn, "math_evaluate", {"expression": for_tool(side), "values": {}})
+        found = ((result or {}).get("exact") or {}).get("text") if (result or {}).get("status") == "ok" else None
+        try:
+            if found is not None and Fraction(str(found)) != stated:
+                return line, False
+        except (ValueError, ZeroDivisionError):
+            continue
+    return f"{sides[0]} = {sides[-1]}", True
+
+
 async def check_reply_equation(engine: Any, turn: Any, text: str, plan: Plan) -> tuple[str, str | None] | None:
     """A guided reply that is one equation in the problem's own quantities, checked on its own maths whatever the
     route ("x - 2 = 5" after dividing first, "4x - 8 = 20" after expanding; elimination or substitution for a pair).

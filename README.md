@@ -394,8 +394,10 @@ quantization:
 
 Allow roughly **20 GB for the three weights**, plus dependencies, build/cache space and your materials. These sizes
 are storage estimates, not the total application footprint. High-memory Apple silicon is the development target;
-plan for **32 GB RAM or more**, with room beyond weights for four inference slots, context and the app. This is not a
-validated minimum or a promise for every 32 GB machine; lower-memory and other-platform performance is unverified.
+plan for **32 GB RAM or more**, with room beyond weights for four inference slots, context and the app. On a 24 GB
+NVIDIA L4 the runtime peaked at 20.7 GB of GPU memory, so a smaller GPU cannot hold all of it. This is not a validated
+minimum or a promise for every 32 GB machine; other laptops and platforms are unverified. With no GPU, Glimmer is not
+usable: the tutor says so after four minutes rather than leaving you waiting.
 Authored lessons and saved tools do not need the 30B weights.
 
 Install a compatible `llama-server` following the [official llama.cpp build instructions](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md).
@@ -432,22 +434,27 @@ that flag records cloud consent for isolated demonstrations and should be omitte
 5. Restore connectivity, turn on cloud features only with consent, and check a new cloud request. Check the displayed
    route and persisted model trace instead of assuming a network indicator proves the provider used.
 
-**Observed local-model checks and limits.** On 4 November, the Companion was fixed to apply its role's output
-budget and keep replies complete at the display boundary. Real-model checks ran on revision `66e5dc68` plus that
-uncommitted fix through Jana's local API, with the browser settings, a synthetic adult own-course learner and one
-ready text source. Three fresh Glimmer replies completed with full sentences, including a source-based follow-up
-and a continuation after a core restart on the same learner thread. They used **3, 2 and 2 local calls**, with no
-cloud provider configured, and took approximately **87, 58 and 45 seconds**. All seven requests carried the role's
-output cap plus the configured reasoning allowance. This small sample is not a latency guarantee.
+**Observed local-model checks and limits.** These are real-model runs from 4 November, with synthetic adult learners,
+one ready text source and no cloud provider configured.
 
-The fix passed **121 focused regression checks** in its isolated checkout. Its seven new regressions also passed in
-the main checkout after applying the narrow change. Nine desktop runtime-supervisor tests passed separately. These
-are API and component checks, not an installed Tauri release, Windows-installer test, local-image-inference check or
-fully disconnected cold-start qualification. Mac Wi-Fi was unchanged. The Companion code fixes described here
-are local changes pending publication.
+| Check | Apple M4 Max, 128 GB | Linux VM, 24 GB NVIDIA L4 |
+|---|---|---|
+| Your tutor, 9 turns across a core restart | 9 complete, 21.9 to 122 s, median 46.6 s | 9 complete, 22.8 to 49 s, median 34.9 s |
+| Guided physics, new question | 76 s | 68 s |
+| Guided physics, wrong line | 109 s | 49 s |
+| Guided physics, correct final line | 62 s | 15 s |
+| Prepared photo, 4 lines, with line boxes | 84.88 s | 42.6 s |
 
-Earlier rehearsals stalled, and an exploratory O-level run asked to reopen a source on two follow-ups. The new fix
-addresses reply clipping and request budgets; it does not establish that all retrieval cases are resolved or prove
+After the restart the tutor named the first question correctly on both machines. Due-card counts appeared only when
+asked for. A separate Linux VM, 8 vCPUs and 32 GB with all outbound traffic blocked by a firewall rule, cold-started the
+gateway, core, client and Glimmer in 132 s and marked practice answers. The local gateway process is still required.
+
+These ran through Jana's local API, not an installed release. Not checked: an installed Tauri release, a Windows
+installer, real handwriting, the capture screen with Glimmer, turning Wi-Fi off on a laptop, and laptops other than
+the M4 Max. These small samples are not latency guarantees.
+
+Earlier rehearsals stalled, and an exploratory O-level run asked to reopen a source on two follow-ups. These fixes
+address reply clipping, request budgets and role time limits; they do not establish that all retrieval cases are resolved or prove
 reliable first-send behavior, seamless fallback or learning gains. If a fresh reply stalls, cancel/retry and keep
 the authored/saved workflow available; do not present it as successful local inference. For startup failures check the named gateway port, version/budget headers and expiry first. For
 model failures check exact filenames/hashes, RAM, compatible flags and readiness logs. Keep `JANA_META_GATEWAY_PORT`
