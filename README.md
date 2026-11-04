@@ -109,8 +109,8 @@ offline study, not a fresh Glimmer reply. Earlier Physics and Companion rehearsa
 
 Jana started on **8 October 2026**. Its earlier tutoring engine, authored curriculum packs, desktop shell and
 maths/unit-checking tools were imported into this repository on **25 October 2026**, as baseline commit `7cf6c6ed`.
-The work below was recorded after that baseline. Some of it, including the first Muse Spark integration, SAM 3.1
-photo outlines and several teaching features, was committed before the event's listed opening, as set out below:
+The work below was recorded after that baseline. The dated entries and implementation commits identify the
+additions to the imported code. Dates follow the recorded commit dates.
 
 - **Muse Spark cloud integration** (October 26): moved the tutor's diagnosis, solving, checking and coaching
   roles onto Spark through the budgeted gateway (`4e299cdc`). The tutoring engine and maths tools existed before
@@ -173,14 +173,13 @@ photo outlines and several teaching features, was committed before the event's l
   sign-in (`beaa8465`, `76db7b9c`). The hosted and local paths have different capabilities; the setup sections
   describe those boundaries. This does not establish a signed desktop release or Windows installer acceptance.
 
-The October 25 baseline imports earlier Jana code without its prior Git history. This repository keeps
-three categories apart: the imported baseline; 45 commits after it but before the opening listed on the event page
-(October 26, 5:00 PM GMT); and 214 commits after that opening, to `66e5dc68`. Those counts use committer timestamps
-(author timestamps give 49 and 210). Timestamps record commits, not when all the underlying work was done.
+The October 25 baseline imports earlier Jana code without its prior Git history. The entries above distinguish
+those foundations from subsequent additions. Commit timestamps identify recorded revisions; they do not establish
+when all the underlying work began or define the event's eligibility period.
 
 **Changes visible in the psychology recording.** The recording follows the new document concept-map experience,
-original-PDF reader and rebuilt quiz interface within one revised Study workflow. These changes were committed
-after the event's listed opening:
+original-PDF reader and rebuilt quiz interface within one revised Study workflow. The following commits identify
+the new implementations visible in that recording:
 
 | Visible experience | New implementation | Commit evidence |
 | --- | --- | --- |
