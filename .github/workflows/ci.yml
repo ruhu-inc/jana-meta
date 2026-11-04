@@ -1,8 +1,9 @@
 name: ci
 # One pipeline with the required stages of ARC-17, in order. Every stage is a required check;
 # `stages-complete` fails if any stage was skipped or failed, and `release` needs it.
-# Actions are pinned by commit (SEC-22). The private specification is checked out into docs/
-# at the commit in spec.lock with the read-only deploy key JANA_SPEC_DEPLOY_KEY (ARC-16).
+# Actions are pinned by commit (SEC-22). This pipeline runs without the private specification:
+# there is no docs/ here, so the checks read the public contracts. The repository has no spec.lock
+# and has diverged from the specification; pass spec-key again only once it matches (ARC-16).
 
 on:
   push:
@@ -34,7 +35,6 @@ jobs:
       - name: No specification in the monorepo
         run: sh scripts/git-hooks/check-no-spec.sh tree
       - uses: ./.github/actions/setup
-        with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Layout, layers, spec pin and pipeline stages
         run: uv run --frozen python -m jana_tools
       - name: One tuning unit per revision; a regression item for every fixed incident (EVL-19, EVL-20)
@@ -66,7 +66,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
       - uses: ./.github/actions/setup
-        with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Regenerate contract bindings and fail on any difference
         run: scripts/ci/codegen-check.sh
 
@@ -77,7 +76,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
       - uses: ./.github/actions/setup
-        with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Pinned browser for the desktop's browser tests
         run: corepack pnpm exec playwright install --with-deps chromium
       - run: scripts/ci/run-all-tests.sh
@@ -144,7 +142,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
       - uses: ./.github/actions/setup
-        with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Connection monitor
         run: sudo apt-get install -y --no-install-recommends strace
       - name: Pinned browser for the desktop's browser tests
@@ -163,7 +160,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
       - uses: ./.github/actions/setup
-        with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Gallery states, themes, accessibility and visual renderers
         run: |
           corepack pnpm --filter @jana/desktop exec vitest run test/gallery.test.tsx
@@ -225,7 +221,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
       - uses: ./.github/actions/setup
-        with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Offline development evaluations
         run: uv run --frozen python -m jana_tools eval run --stage S2 --only scenarios,safety,marking,prompt_regression,memory_recall --out "${{ runner.temp }}/eval-report"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -241,7 +236,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false, fetch-depth: 0 }
       - uses: ./.github/actions/setup
-        with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Content CI (AUT-06) - validate, verify, lint, coverage, reproducible build, review records
         # A development job: it never holds the held-out release key (EVL-18), and the check fails if it does.
         env:
@@ -397,7 +391,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false, fetch-depth: 0 }
       - uses: ./.github/actions/setup
-        with: { spec-key: "${{ secrets.JANA_SPEC_DEPLOY_KEY }}" }
       - name: Every owner pin is set
         shell: bash
         run: uv run --frozen python -m jana_tools release pins --release
