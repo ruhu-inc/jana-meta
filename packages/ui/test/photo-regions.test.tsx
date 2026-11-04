@@ -36,8 +36,7 @@ function workingCapture(): CapturedQuestion {
   } as CapturedQuestion;
 }
 
-function session(reads: string[]): SessionController {
-  const capture = workingCapture();
+function session(reads: string[], capture = workingCapture()): SessionController {
   return new SessionController({ endpoint: async () => ({ baseUrl: "http://core.test", token: "synthetic" }) }, new Fixture().holder, SESSION, {
     fetch: async (url) => {
       reads.push(String(url));
@@ -68,6 +67,23 @@ describe("JM-D10 photo regions", () => {
       expect(view.container.querySelector("figcaption")?.textContent).toBe("Showing on your photo: 3x = 20 + 5");
       view.unmount();
       expect(revoke).toHaveBeenCalledWith("blob:working-photo");
+    } finally { controller.close(); }
+  });
+
+  test("photo_region_caption_renders_a_maths_line_instead_of_its_raw_delimiters", async () => {
+    const capture = workingCapture();
+    capture.regions[1] = line(1, "\\(3x = 27\\)", 0.3);
+    const controller = session([], capture);
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:working-photo");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    const view = render(<LocaleProvider locale="en"><StoreProvider holder={new Fixture().holder} session={controller}>
+      <PhotoRegions sessionId={SESSION} captureId={CAP} lit={[`${CAP}:rgn_1`]} />
+    </StoreProvider></LocaleProvider>);
+    try {
+      await waitFor(() => expect(view.container.querySelector("figcaption")?.textContent).toMatch(/^Showing on your photo: /));
+      const caption = view.container.querySelector("figcaption")!;
+      expect(caption.textContent).not.toContain("\\(");
+      expect(caption.querySelector(".katex")).not.toBeNull();
     } finally { controller.close(); }
   });
 

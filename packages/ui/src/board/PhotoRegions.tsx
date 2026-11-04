@@ -4,10 +4,11 @@
 // capture record's 0..1 polygons over the same screened image the reader saw; a region without an outline falls back
 // to its box. Each outline carries `data-photo-region` so the pen and the voice pointer can find it (VSL-45).
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { PhotoCommands, type CapturedQuestion } from "@jana/client-core";
 import { useSession } from "../store.js";
 import { useT } from "../i18n.js";
+import { StudyInline } from "../learn/StudyText.js";
 
 type Region = CapturedQuestion["regions"][number];
 
@@ -44,6 +45,8 @@ export function PhotoRegions({ sessionId, captureId, lit }: { sessionId: string;
   if (view === null) return null;
   const shown = view.capture.regions.filter((region) => regionPoints(region) !== null);
   const litRegions = shown.filter((region) => lit.includes(`${captureId}:${region.region_id}`));
+  // A line read from a photo can hold maths, so the words go around it and it renders as maths.
+  const [before, after = ""] = t("photo.showing_region", { text: "\u0000" }).split("\u0000");
   return <figure data-photo-capture={captureId} className="rounded-card border border-line bg-panel p-2">
     <div className="relative">
       <img src={view.url} alt={t("photo.your_photo")} className="block w-full" />
@@ -58,7 +61,7 @@ export function PhotoRegions({ sessionId, captureId, lit }: { sessionId: string;
     </div>
     {/* The place in words for a screen reader, and for anyone who cannot see the outline. */}
     <figcaption className="mt-1 text-meta" aria-live="polite">
-      {litRegions.length > 0 ? t("photo.showing_region", { text: litRegions.map((r) => r.text).join("; ") }) : t("photo.your_photo")}
+      {litRegions.length > 0 ? <>{before}{litRegions.map((r, i) => <Fragment key={r.region_id}>{i > 0 && "; "}<StudyInline text={r.text} /></Fragment>)}{after}</> : t("photo.your_photo")}
     </figcaption>
   </figure>;
 }

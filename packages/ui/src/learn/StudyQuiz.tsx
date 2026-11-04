@@ -179,18 +179,19 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
     </> : <>
       <div className="flex items-start justify-between gap-2">{question(current, position, true)}</div>
       {feedbackFor(current)}
+      {/* Each button keeps its own element: one whose type changed to submit during its own click would finish the quiz. */}
       <div className="flex flex-wrap items-center gap-2">
         {checkedNow
-          ? last ? <Button type="submit" tone="primary" disabled={busy || quiz.status !== "ready"}>{t("study.submit")}</Button> : <Button tone="primary" disabled={busy} onClick={() => move(position + 1)}>{t("study.next_question")}</Button>
-          : <Button tone="primary" disabled={busy || !answers[current.item_id]?.trim() || quiz.status !== "ready"} onClick={() => check(current.item_id)}>{t("study.check_answer")}</Button>}
+          ? last ? <Button key="finish" type="submit" tone="primary" disabled={busy || quiz.status !== "ready"}>{t("study.submit")}</Button> : <Button key="next" tone="primary" disabled={busy} onClick={() => move(position + 1)}>{t("study.next_question")}</Button>
+          : <Button key="check" tone="primary" disabled={busy || !answers[current.item_id]?.trim() || quiz.status !== "ready"} onClick={() => check(current.item_id)}>{t("study.check_answer")}</Button>}
         <Button size="sm" tone="ghost" aria-expanded={helpOpen} aria-controls={helpId} disabled={quiz.status !== "ready"} onClick={() => setHelpOpen((o) => !o)}><Icon name="hint" size={16} />{t("study.need_help")}</Button>
       </div>
       {helpPanelFor(current)}
       <nav aria-label={t("study.quiz_navigation")} className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
         <Button size="sm" tone="ghost" disabled={busy || position === 0} onClick={() => move(position - 1)}>{t("study.previous_question")}</Button>
         {!checkedNow && (last
-          ? <Button size="sm" tone="ghost" type="submit" disabled={busy || quiz.status !== "ready"}>{t("study.submit")}</Button>
-          : <Button size="sm" tone="ghost" disabled={busy} onClick={() => move(position + 1)}>{t("study.next_question")}</Button>)}
+          ? <Button key="finish" size="sm" tone="ghost" type="submit" disabled={busy || quiz.status !== "ready"}>{t("study.submit")}</Button>
+          : <Button key="next" size="sm" tone="ghost" disabled={busy} onClick={() => move(position + 1)}>{t("study.next_question")}</Button>)}
         <span className="flex-1" />
         {navigator}
       </nav>
