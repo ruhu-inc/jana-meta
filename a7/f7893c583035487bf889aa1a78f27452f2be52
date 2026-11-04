@@ -1,0 +1,14 @@
+README.md
+  h_137cc690990511 112-113,176-178,181-182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a7f7893c583035487bf889aa1a78f27452f2be52",
+  "prompts": {},
+  "humans": {
+    "h_137cc690990511": {
+      "author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
