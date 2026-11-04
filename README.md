@@ -121,8 +121,13 @@ photo outlines and several teaching features, was committed before the event's l
   sketch-reading path compares supported photographed sketches with checked figures (`c232ada4`, `244203ee`,
   `e69381d4`). Unread regions are labelled rather than treated as checked.
 - **New teaching interactions** (October 26): checked figures in lessons and questions, tracing a misconception
-  to an earlier skill, explaining a skill back before mastery, and predict-before-you-see Physics simulations
-  (`ea598fb5`, `16b25f12`, `b3dbe87a`, `c2a4d0eb`). These extend the earlier curriculum and checking engine.
+  to an earlier skill, explaining a skill back before mastery where supporting key points are authored, and
+  predict-before-you-see Physics simulations (`ea598fb5`, `16b25f12`, `b3dbe87a`, `c2a4d0eb`). These extend the
+  earlier curriculum and checking engine; the explain-back content does not yet cover every skill.
+- **New curriculum content and distribution** (October 27–November 1): added the projectile-motion subtopic,
+  including a lesson, skills, worked examples, misconceptions and practice items (`4ccd5c4c`), and included the
+  existing Chemistry pack in the submission build by default (`e0fb8844`). The earlier subject packs remain prior
+  work; this does not claim the whole curriculum was authored during this period.
 - **Subject concept maps** (October 26): connect the installed curriculum's skills with the learner's questions,
   mistakes and prerequisite gaps, including a highlighted path to an earlier skill (`b5248d8e`, `017f0d3c`).
 - **Document and topic concept maps** (October 26): generate concepts and relationships with source-support
@@ -152,12 +157,17 @@ photo outlines and several teaching features, was committed before the event's l
   since the last visit and a history scrubber that reconstructs the map at an earlier date (`b814436d`). This is
   distinct from the document concept maps shown in the recording.
 - **Rebuilt Study screens** (November 1): the original-PDF reader, library tabs and simpler tool selection
-  (`6ab54e13`), followed by a focused Study chat and quiz interface (`7844132a`). These are new interfaces over
+  (`6ab54e13`), followed by a focused Study chat and quiz interface (`7844132a`). Study aids also record and show
+  whether they were made online or on the device and which model served them (`f0b862f2`). These changes build on
   earlier material-ingestion, citation, quiz-marking and storage foundations.
 - **Broader own-material study** (November 2–4): own-course profiles, sources up to 1,000 pages, online marking
   of written answers and lecture hints (`854298a1`, `584111d0`); scan-reading and job-recovery improvements
   (`816b627f`, `fc7b0ac2`); and further open-material tutoring and saved-quiz verdict fixes (`66e5dc68`).
   The limit is an input allowance, not evidence that every document or every generated claim is correct.
+- **Photo screening and consent hardening** (November 2–3): rechecked active Study-material consent before
+  excerpts go online (`faea007b`) and revised the local photo gate to use a pinned YuNet face detector
+  (`d3e80cdf`). The detector has documented trade-offs and does not identify every photo containing a person;
+  these changes strengthen earlier privacy controls rather than introducing consent or screening from scratch.
 - **Deployment and integration hardening** (October 28–November 4): stronger numerical and tool-budget checks
   (`29645e3f`, `6777484e`, `74711af7`), plus a hosted review deployment with isolated learner cores and invite-only
   sign-in (`beaa8465`, `76db7b9c`). The hosted and local paths have different capabilities; the setup sections
