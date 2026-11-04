@@ -8,10 +8,14 @@ A slice is measured in the calling thread's CPU time, not wall time: equal argum
 result (VER-01), and a wall-clock slice turned a verdict into `unknown`/`timeout` whenever the machine was busy
 (other processes, other threads holding the GIL), a different golden case each run. The CPU clock costs about six
 times a monotonic read, so it is read every `CHECK_EVERY` calls.
+
+The cyclic collector runs in whichever thread's allocation starts it, and its cost follows the size of the whole heap,
+not the question being checked: a slice does not charge it. The per-call budget below still does (SEC-08).
 """
 
 from __future__ import annotations
 
+import gc
 import sys
 import threading
 import time
@@ -32,21 +36,39 @@ CHECK_EVERY = 32  # calls between reads of the thread's CPU clock
 def time_slice(seconds: float, clock: Callable[[], float] = time.thread_time) -> Iterator[None]:
     deadline = clock() + seconds
     previous = sys.gettrace()
+    thread = threading.get_ident()
     calls = 0
+    collecting = False
+    collection_started = 0.0
+    collected = 0.0  # this thread's CPU time in the collector, since the slice began
+
+    def on_collection(phase: str, info: dict[str, int]) -> None:
+        nonlocal collecting, collection_started, collected
+        if threading.get_ident() != thread:
+            return  # another thread's collection is not on this thread's clock
+        if phase == "start":
+            collecting = True
+            collection_started = clock()
+        elif collecting:
+            collected += clock() - collection_started
+            collecting = False
 
     def tracer(frame: FrameType, event: str, arg: Any) -> None:
         nonlocal calls
-        if event == "call":
+        # Raising during a collection would be lost, and would remove this trace function with the slice still open.
+        if event == "call" and not collecting and frame.f_code is not on_collection.__code__:
             calls += 1
-            if calls % CHECK_EVERY == 0 and clock() > deadline:
+            if calls % CHECK_EVERY == 0 and clock() - collected > deadline:
                 raise SliceExpired
         return None  # no line tracing: only calls are checked
 
+    gc.callbacks.append(on_collection)
     sys.settrace(tracer)
     try:
         yield
     finally:
         sys.settrace(previous)
+        gc.callbacks.remove(on_collection)
 
 
 # --- the per-call budget (SEC-08, TOL-24) ------------------------------------------------------------------------
