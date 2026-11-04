@@ -93,6 +93,8 @@ export interface StudyWorkspaceView {
   reading: boolean; spokenClaim: number; canSpeak: boolean; audioPreparing?: boolean;
   audioPaused?: boolean; audioCompleted?: boolean;
   quizFeedback?: Record<string, W.QuizResult["results"][number]>;
+  /** The answer each verdict in `quizFeedback` marked, so a verdict comes back with the quiz after leaving its tab. */
+  quizChecked?: Record<string, string>;
   requestedJobId?: string | null;
   /** Contextual coaching stays beside its quiz; never replaces its draft, feedback or result. */
   quizHelp?: { quizId: string; itemId: string; kind: "hint" | "walk_through"; jobId: string; aid: W.Aid | null } | null;
@@ -782,7 +784,7 @@ export class StudyWorkspaceController {
     if (!current()) return;
     const journey = valid<W.StudyJourneyReply>("StudyJourneyReply", await this.mutate("POST", `/v1/study/aids/${id}/journey`, { action: "resume" })).journey;
     if (current()) this.patch({ aid, deck, quiz, result: saved?.result ?? null,
-      resultAnswers: Object.fromEntries((saved?.answers ?? []).map((a) => [a.item_id, a.answer])), journey, quizFeedback: {}, quizHelp: null, requestedJobId: null });
+      resultAnswers: Object.fromEntries((saved?.answers ?? []).map((a) => [a.item_id, a.answer])), journey, quizFeedback: {}, quizChecked: {}, quizHelp: null, requestedJobId: null });
     if (current() && aid.kind === "audio_overview") await this.loadPodcastVoice();
   }
   /** Explicit actions update only the saved journey; generated aids and assessment evidence stay unchanged. */
@@ -863,7 +865,7 @@ export class StudyWorkspaceController {
   /** Back to the questions after a result, keeping the answers, for a second attempt (ASM-28). */
   clearResult(): void { if (this.view.result) this.patch({ result: null }); }
   /** A finished quiz, taken again from the start: its questions stay, the saved answers go; earlier attempts remain. */
-  async retakeQuiz(): Promise<void> { this.clearResult(); await this.saveDraft({}, 0); }
+  async retakeQuiz(): Promise<void> { this.clearResult(); this.patch({ quizFeedback: {}, quizChecked: {} }); await this.saveDraft({}, 0); }
   /** Mark only the requested question through the existing native marker; no answer keys reach the client. */
   async checkAnswer(itemId: string, answer: string): Promise<void> {
     const quiz = this.view.quiz;
@@ -872,7 +874,7 @@ export class StudyWorkspaceController {
       const result = valid<W.QuizResult>("QuizResult", await this.mutate("POST", `/v1/study/quizzes/${quiz.quiz_id}/attempts`, { quiz_revision: quiz.revision, submission_kind: "check", answers: [{ item_id: itemId, answer }] }));
       if (current() && this.view.quiz?.quiz_id === quiz.quiz_id) {
         const feedback = result.results.find((r) => r.item_id === itemId);
-        if (feedback) this.patch({ quizFeedback: { ...this.view.quizFeedback, [itemId]: feedback } });
+        if (feedback) this.patch({ quizFeedback: { ...this.view.quizFeedback, [itemId]: feedback }, quizChecked: { ...this.view.quizChecked, [itemId]: answer } });
       }
     });
   }

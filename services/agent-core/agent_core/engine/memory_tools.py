@@ -19,6 +19,7 @@ number of records a read returned, from which the engine's memory-use line is ma
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from collections.abc import Callable, Collection, Sequence
 from dataclasses import dataclass, field, replace
@@ -42,6 +43,12 @@ from agent_core.memory.refs import RefOutOfRange, RefTable
 from agent_core.memory.render import BANDS, escape_note
 from agent_core.memory.write import Applied, NoteAction, WriterRole, apply_reflection, summary_text
 from agent_core.tools.spec import CallContext, InvalidArguments
+
+ASKS_FOR_AID = re.compile(
+    r"\b(flash ?cards?|quiz(zes)?|test me|summar(y|ies|ise|ize)|concept map|mind map|podcast|lesson plan|outline"
+    r"|chapters|make|create|generate|build|give me|yes|yeah|yep|sure|okay|ok|go ahead|do it|start)\b",
+    re.IGNORECASE,
+)
 
 READ_TOOLS = frozenset({"memory_recall", "session_recall"})
 MEMORY_TOOLS = frozenset({*READ_TOOLS, "memory_note", "progress_update"})
@@ -249,6 +256,7 @@ class StudyTools:
     refs: dict[int, tuple[str, str, int]] = field(default_factory=dict)  # this turn's study_search refs
     bands: dict[int, str] = field(default_factory=dict)  # this turn's progress_read refs -> KC ids
     moments: dict[int, tuple[str, int]] = field(default_factory=dict)  # refs with a moment -> (source_id, at_ms)
+    student_text: str | None = None  # what the learner said this turn, for `make_aid`
 
     def bind(self, executors: dict[str, Any]) -> None:
         executors.update({"study_search": self.search, "progress_read": self.progress, "plan": self.plan,
@@ -256,6 +264,7 @@ class StudyTools:
 
     def new_turn(self) -> None:
         self.refs, self.bands, self.moments = {}, {}, {}
+        self.student_text = None
 
     def _conn(self) -> tuple[sqlite3.Connection, Any]:
         source = self.memory.source()
@@ -382,6 +391,11 @@ class StudyTools:
         # the learner's own wording for a source never has to match its title (§19 fix, 2026-10-30).
         return {"marker": RECALL_MARKER, "items": [], "sources": self._sources(conn)}
 
+    def material_titles(self) -> list[str]:
+        """The ready materials' titles: the learner's own words, so a number in one ("MIT 9.00") is theirs."""
+        conn, _ = self._conn()
+        return [ready[2] for ready in self._ready(conn)]
+
     def _ready(self, conn: sqlite3.Connection) -> list[tuple[str, int, str, str, str]]:
         """The library's ready, unarchived sources, newest first, at most eight: (id, revision, title, kind, day). A
         private source is left out of an online call (STU-15)."""
@@ -448,6 +462,9 @@ class StudyTools:
         return {"marker": RECALL_MARKER, "plan": current.get("plan") if isinstance(current, dict) else current}
 
     async def make_aid(self, args: dict[str, Any], context: CallContext) -> dict[str, Any]:
+        # "Help me understand this" is a question. A study tool starts only when the learner asks for one or says yes.
+        if self.student_text is not None and not ASKS_FOR_AID.search(self.student_text):
+            raise InvalidArguments("they did not ask for a study tool: answer their question from their materials")
         kind = str(args["kind"])
         ref = args.get("source_ref")
         found = self.refs.get(ref) if type(ref) is int else None

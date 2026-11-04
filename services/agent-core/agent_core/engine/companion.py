@@ -56,6 +56,8 @@ MAX_TOOL_ROUNDS = 2
 MAX_REPLY_CHARS = 600
 OPENER_MAX_CHARS = 240
 STUDY_TOOLS = ("study_search", "progress_read", "plan", "make_aid", "start_research")
+_LIST_MARKER = re.compile(r"^\s*(\d{1,2})[.)]\s+")
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 RECALL_TOOLS = ("memory_recall", "session_recall")
 ACTION_LABELS = {
     "open_tutor": "study.companion.action.open_tutor",
@@ -73,6 +75,7 @@ _NUMBER = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)(?![\w.]*\d)")
 # A moment, `h:mm:ss` or `m:ss`, is one number with the label `moment` (SPEC §20.4; review non-blocking 8).
 _MOMENT = re.compile(r"(?<![\w:.])(\d{1,2}:)?(\d{1,2}):(\d{2})(?![\w:])(?!\.\d)")
 _WORD = re.compile(r"[a-z]+")
+_COUNTING_WORD = re.compile(r"\b(?:one|two|three)\b", re.I)
 _NOTES_REGION = re.compile(re.escape(NOTES_OPEN) + r".*?" + re.escape(NOTES_CLOSE), re.S)
 _STUDY_REGION = re.compile(r"<own-materials>.*?</own-materials>", re.S)
 
@@ -163,6 +166,40 @@ FACT_UNITS = frozenset(
 )
 
 
+def without_list_numbers(text: str) -> str:
+    """A numbered list's own markers are not claims. Only a run counting up from 1 at the start of lines is a list, so
+    a lone "12. Review" still has to bind."""
+    lines = text.split("\n")
+    expected = 1
+    marked: list[int] = []
+    for at, line in enumerate(lines):
+        found = _LIST_MARKER.match(line)
+        if found is None:
+            continue
+        if int(found.group(1)) != expected:
+            return text
+        marked.append(at)
+        expected += 1
+    if len(marked) < 2:
+        return text
+    for at in marked:
+        lines[at] = _LIST_MARKER.sub("", lines[at], count=1)
+    return "\n".join(lines)
+
+
+def without_plain_number_words(text: str) -> str:
+    """Saying "the two kinds" is English, not a claim. "One", "two" and "three" stay only where a unit of progress
+    stands beside them ("two cards"), so those still have to bind. A larger number word ("seventy") always does."""
+
+    def plain(match: re.Match[str]) -> str:
+        before = re.split(r"[;.!?]", text[max(0, match.start() - 40) : match.start()].lower())[-1]
+        after = re.split(r"[;.!?]", text[match.end() : match.end() + 40].lower())[0]
+        near = {_singular(word) for word in (*_WORD.findall(before)[-2:], *_WORD.findall(after)[:2])}
+        return match[0] if near & FACT_UNITS else ""
+
+    return _COUNTING_WORD.sub(plain, text)
+
+
 def fact_binding_findings(text: str, sources: Sequence[Any],
                           figures: frozenset[str] = frozenset()) -> list[tuple[str, str]]:  # fmt: skip
     """Each number in the reply that no tool result or status line gives beside the same unit, as (number, unit kind:
@@ -172,7 +209,7 @@ def fact_binding_findings(text: str, sources: Sequence[Any],
         return [("progress", "claim")]
     allowed = allowed_numbers(sources)
     found = []
-    for number, label in labelled_numbers(text):
+    for number, label in labelled_numbers(without_plain_number_words(without_list_numbers(text))):
         words = allowed.get(number)
         # Only unit words establish a numeric relationship. Generic words such as 'in' or 'your' prove nothing.
         said_units = label & FACT_UNITS
@@ -702,6 +739,13 @@ def one_ask_errors(text: str) -> list[str]:
     return ["more than one question"] if text.count("?") > 1 else []
 
 
+def keep_last_question(text: str) -> str:
+    """The reply without its earlier questions: what it says, then the one question it ends on."""
+    sentences = _SENTENCE_END.split(text.strip())
+    asked = [at for at, sentence in enumerate(sentences) if sentence.rstrip().endswith("?")]
+    return " ".join(s for at, s in enumerate(sentences) if at not in asked[:-1])
+
+
 def _today_iso(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000, UTC).date().isoformat()
 
@@ -719,6 +763,8 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
     desk = context.desk
     templates = desk.templates
     context.sources, context.actions, context.search_refs, context.served_cloud = [], [], {}, False
+    if (tools := getattr(engine, "study_tools", None)) is not None:
+        tools.student_text = text
     context.failure = None
     context.turn_history = []
     context.searched = False
@@ -780,7 +826,7 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
         companion_facts.add_facts(context.facts, outline.facts)
         context.sources.append({"outline": {"title": outline.title, "skills": outline.skills,
                                             "skills_not_yet_secure": len(outline.not_yet_secure)}})  # fmt: skip
-    context.figures = companion_facts.figures(excerpts)  # the lecture's own words, moment lines included
+    context.figures = companion_facts.figures([*excerpts, *_material_titles(engine)])  # their own words, titles too
     fence = records_fence(notes, excerpts)
     parts = [p for p in (fence, moment_line, f"Status: {line}" if key != context.status_key else "") if p]
     context.status_key = key
@@ -853,6 +899,13 @@ async def run_turn(engine: Any, turn: Any, text: str) -> Any:
         if not problems:
             break
         if nudged:
+            if [gate for gate, found, _ in results if found] == ["one_ask"]:
+                # A good answer that still asks twice keeps its words and its last question (2026-11-04).
+                trimmed = {**reply, "text": keep_last_question(str(reply.get("text") or ""))}
+                if not any(found for _, found, _ in gate_results(engine, context, trimmed)):
+                    decisions["one_ask"]["outcome"] = "passed_after_nudge"
+                    reply = trimmed
+                    break
             reply = None
             break
         nudged = True
@@ -1184,6 +1237,15 @@ def _excerpts(engine: Any, text: str) -> list[str]:
     with contextlib.suppress(Exception):
         found = tools.search_text(text)
         return [f"[{i['ref']}] {escape_note(i['source_label'])}: {escape_note(i['text'])}" for i in found]
+    return []
+
+
+def _material_titles(engine: Any) -> list[str]:
+    tools = getattr(engine, "study_tools", None)
+    if tools is None:
+        return []
+    with contextlib.suppress(Exception):
+        return list(tools.material_titles())
     return []
 
 

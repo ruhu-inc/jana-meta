@@ -522,7 +522,7 @@ export function StudyWorkspace({ controller, curriculum = true, companion, reque
             })}</div></> : <span><Button tone="primary" onClick={() => setRevealed(true)}>{t("study.reveal")}</Button></span>}
           </section>)}
           {view.deck && <span><Button disabled={view.busy || !canConfigure || shown.status !== "ready"} onClick={() => pick("quiz", shown.aid_id)}>{t("study.generate.quiz")}</Button></span>}
-          {view.quiz && <StudyQuiz key={view.quiz.quiz_id} quiz={view.quiz} result={view.result} resultAnswers={view.resultAnswers ?? {}} feedback={view.quizFeedback ?? {}} busy={view.busy} accessBlocked={Boolean(accessBlocked)} stale={shown.status === "stale"}
+          {view.quiz && <StudyQuiz key={view.quiz.quiz_id} quiz={view.quiz} result={view.result} resultAnswers={view.resultAnswers ?? {}} feedback={view.quizFeedback ?? {}} checkedAnswers={view.quizChecked ?? {}} busy={view.busy} accessBlocked={Boolean(accessBlocked)} stale={shown.status === "stale"}
             quizHelp={view.quizHelp} helpJob={helpJob} helpPending={helpPending} safeHelp={safeHelp} helpAids={helpAids} claim={claim} jobs={jobs}
             onDraft={(answers, position) => { void controller.saveDraft(answers, position); }}
             onCheck={(id, value) => { const quizId = view.quiz?.quiz_id; return controller.checkAnswer(id, value).then(() => controller.getView().quiz?.quiz_id === quizId && !controller.getView().error); }}

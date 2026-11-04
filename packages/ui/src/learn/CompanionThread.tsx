@@ -118,9 +118,17 @@ export function CompanionThread({ companion, onAction, place = "panel", draft: g
     if (el !== null) el.scrollTop = el.scrollHeight;
   }, [entries.length, lastText, actions.length]);
   const ready = thread.status === "ready" && thread.notice === null && sessionId !== null;
+  // The thread can reopen while a message is being typed (a greeting loading): Enter then sends it once it is ready.
+  const [queued, setQueued] = useState(false);
   const send = () => {
+    if (!ready) { setQueued(true); return; }
     if (companion.send(draft) !== null) setDraft("");
   };
+  useEffect(() => {
+    if (!queued || !ready) return;
+    setQueued(false);
+    send();
+  }, [queued, ready]);
   const heading = place === "tab" ? "companion-title-tab" : "companion-title";
   const answer = (choice: "accepted" | "declined") => {
     setAnswering(true);
@@ -176,7 +184,7 @@ export function CompanionThread({ companion, onAction, place = "panel", draft: g
       <form onSubmit={(e) => { e.preventDefault(); send(); }}>
         <ComposerShell send={<IconButton type="submit" tone="action" icon="send" tip="above" label={t("study.companion.send")} disabled={!ready || draft.trim() === ""} />}>
           <label htmlFor={`${heading}-message`} className="sr-only">{t("study.companion.message_label")}</label>
-          <textarea ref={composer} id={`${heading}-message`} data-companion-draft={draft !== "" ? "" : undefined} rows={1} maxLength={COMPANION_MESSAGE_MAX} disabled={!ready} placeholder={t("study.companion.placeholder")} value={draft}
+          <textarea ref={composer} id={`${heading}-message`} data-companion-draft={draft !== "" ? "" : undefined} rows={1} maxLength={COMPANION_MESSAGE_MAX} disabled={!ready && !(draft !== "" && (thread.status === "idle" || thread.status === "opening"))} placeholder={t("study.companion.placeholder")} value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
             className="w-full resize-none bg-transparent px-1 text-body text-ink outline-none placeholder:text-placeholder" />

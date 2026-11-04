@@ -21,7 +21,7 @@ export type StudyHelpKind = (typeof STUDY_HELP)[number];
 const picked = (answer: string | undefined) => (answer ?? "").split(",").filter(Boolean);
 const missed = (r: Verdict | undefined) => r !== undefined && (r.verdict === "incorrect" || r.verdict === "partial");
 
-export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessBlocked, stale, quizHelp, helpJob, helpPending, safeHelp, helpAids, claim, jobs, onDraft, onCheck, onSubmit, onClearResult, onRetake, ownCourse = false, onHelp, onFollowUp }: {
+export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessBlocked, stale, quizHelp, helpJob, helpPending, safeHelp, helpAids, claim, jobs, onDraft, onCheck, onSubmit, onClearResult, onRetake, ownCourse = false, checkedAnswers, onHelp, onFollowUp }: {
   quiz: W.QuizView; result: W.QuizResult | null; resultAnswers: Record<string, string>; feedback: Record<string, Verdict>;
   busy: boolean; accessBlocked: boolean; stale: boolean;
   quizHelp: StudyWorkspaceView["quizHelp"]; helpJob: W.Job | undefined; helpPending: boolean; safeHelp: boolean;
@@ -31,7 +31,7 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
   onDraft: (answers: Record<string, string>, position: number) => void;
   /** Check one answer; resolves true when the check went through (the feedback is in `feedback`). */
   onCheck: (itemId: string, value: string) => Promise<boolean>;
-  onSubmit: (answers: Record<string, string>) => void; onClearResult: () => void; onRetake?: () => void; ownCourse?: boolean;
+  onSubmit: (answers: Record<string, string>) => void; onClearResult: () => void; onRetake?: () => void; ownCourse?: boolean; checkedAnswers?: Record<string, string>;
   onHelp: (kind: StudyHelpKind, itemId: string) => void;
   /** A follow-up to the coaching shown for a question; resolves true when it was sent. */
   onFollowUp: (itemId: string, kind: StudyHelpKind, text: string) => Promise<boolean>;
@@ -42,7 +42,7 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
   const [position, setPosition] = useState(Math.min(quiz.draft?.position ?? 0, total - 1));
   const [allQuestions, setAllQuestions] = useState(false);
   const [tries, setTries] = useState<Record<string, number>>({});
-  const [checked, setChecked] = useState<Record<string, string>>({});
+  const [checked, setChecked] = useState<Record<string, string>>(() => checkedAnswers ?? {});
   const [round, setRound] = useState(0), [shownAnswers, setShownAnswers] = useState<string[]>([]);
   const [helpOpen, setHelpOpen] = useState(false), [followUp, setFollowUp] = useState("");
   const helpId = useId(), helpPanel = useRef<HTMLElement>(null), followUpField = useRef<HTMLTextAreaElement>(null);
@@ -87,7 +87,7 @@ export function StudyQuiz({ quiz, result, resultAnswers, feedback, busy, accessB
   // Feedback for a checked answer (ASM-28): the explanation only after the second try or on request.
   const feedbackFor = (item: W.QuizItem) => {
     const fb = feedback[item.item_id];
-    if (!fb || checked[item.item_id] !== answers[item.item_id]) return null;
+    if (!fb || checked[item.item_id] === undefined || checked[item.item_id] !== answers[item.item_id]) return null;
     const open = !missed(fb) || (tries[item.item_id] ?? 0) >= 2 || shownAnswers.includes(item.item_id);
     return <section aria-label={t("study.question_feedback")} className="flex flex-col gap-2 rounded-card bg-panel px-4 py-3" aria-live="polite">
       <p className="text-ui font-semibold">{t(`study.verdict.${fb.verdict}`)}</p>

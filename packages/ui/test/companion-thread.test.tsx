@@ -181,6 +181,20 @@ describe("W8 Your tutor", () => {
     expect(screen.getByText("Your tutor is not available on this computer yet.")).toBeDefined();
   });
 
+  test("a message being typed survives the thread reopening, and Enter sends it once the thread is ready", () => {
+    const companion = new FakeCompanion();
+    shown(companion);
+    const box = screen.getByRole("textbox", { name: "Message to your tutor" }) as HTMLTextAreaElement;
+    fireEvent.change(box, { target: { value: "Why is that operant?" } });
+    companion.setThread({ ...EMPTY_THREAD, status: "opening" });
+    expect(box.disabled).toBe(false);
+    fireEvent.keyDown(box, { key: "Enter" });
+    expect(companion.sent).toEqual([]);
+    companion.setThread(OPENED);
+    expect(companion.sent).toEqual(["Why is that operant?"]);
+    expect(box.value).toBe("");
+  });
+
   test("the online tutor's first-use notice is asked in the thread, and the learner's answer is sent with the open", async () => {
     const companion = new FakeCompanion({ ...EMPTY_THREAD, status: "notice", notice: "notice_required" });
     const { container } = shown(companion);

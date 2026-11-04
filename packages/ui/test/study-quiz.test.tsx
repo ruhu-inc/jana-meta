@@ -61,6 +61,31 @@ describe("StudyQuiz navigation", () => {
   });
 });
 
+describe("StudyQuiz verdicts", () => {
+  const verdict = { item_id: "a", verdict: "correct", marking: "judged" };
+  const saved = { ...QUIZ, draft: { answers: [{ item_id: "a", answer: "photosynthesis" }], position: 0 } } as unknown as W.QuizView;
+  function mount(quiz: W.QuizView, checkedAnswers?: Record<string, string>) {
+    return render(<LocaleProvider locale="en"><StudyQuiz quiz={quiz} result={null} resultAnswers={{}} feedback={{ a: verdict } as never} {...(checkedAnswers ? { checkedAnswers } : {})} busy={false} accessBlocked={false} stale={false}
+      quizHelp={null} helpJob={undefined} helpPending={false} safeHelp={false} helpAids={[]} claim={() => null} jobs={() => null}
+      onDraft={vi.fn()} onCheck={vi.fn(async () => true)} onSubmit={vi.fn()} onClearResult={vi.fn()} onHelp={vi.fn()} onFollowUp={vi.fn(async () => true)} /></LocaleProvider>);
+  }
+
+  test("a_checked_answer_keeps_its_verdict_when_the_quiz_comes_back", () => {
+    mount(saved, { a: "photosynthesis" });
+    expect(screen.getByRole("region", { name: "Answer feedback" })).toBeTruthy();
+  });
+
+  test("a_changed_answer_does_not_show_the_old_verdict", () => {
+    mount(saved, { a: "something else" });
+    expect(screen.queryByRole("region", { name: "Answer feedback" })).toBeNull();
+  });
+
+  test("an_empty_answer_after_a_retake_does_not_show_the_old_verdict", () => {
+    mount(QUIZ);
+    expect(screen.queryByRole("region", { name: "Answer feedback" })).toBeNull();
+  });
+});
+
 describe("StudyQuiz keyboard", () => {
   test("enter_checks_the_answer_and_never_submits_the_quiz", async () => {
     const { onCheck, onSubmit } = show();
