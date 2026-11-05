@@ -115,6 +115,10 @@ The dated entries below describe what we added during the hackathon and cite the
 Jana started on 8 October 2026. The baseline included its tutoring engine, authored curriculum packs, desktop
 shell and maths and unit checks.
 
+By 25 October, we had tested PDF import, summaries, flashcards, quizzes and links to extracted passages in an
+early version of Study. During the hackathon, we added document concept maps, built a reader that opens the
+original PDF page and rebuilt the quiz interface. The psychology demo shows these three additions together.
+
 - **Muse Spark cloud integration** (October 26): moved the tutor's diagnosis, solving, checking and coaching
   roles onto Spark through the budgeted gateway (`4e299cdc`). The tutoring engine and maths tools existed before
   this integration. Per-role reasoning settings and parallel diagnosis/solving reduced the measured cloud-turn
