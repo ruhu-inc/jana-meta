@@ -1,0 +1,19 @@
+README.md
+  s_e8385af89aeea3::t_ed24d5abd43e59 112-117,181
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "034b0b123b8cc101dc694c64c2c778cfc41e4bb4",
+  "prompts": {},
+  "sessions": {
+    "s_e8385af89aeea3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a4bd-c864-73a3-aa4f-a73008cd3e9d",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ijidai Lassa <ijidai@cued.app>"
+    }
+  }
+}
