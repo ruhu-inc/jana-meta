@@ -110,8 +110,7 @@ offline study, not a fresh Glimmer reply. Earlier Physics and Companion rehearsa
 ## Hackathon contribution
 
 Hackathon development began on **26 October 2026** from the baseline imported on **25 October** (commit `7cf6c6ed`).
-The dated entries below identify what was already in that baseline and cite the implementation commits for each
-hackathon addition.
+The dated entries below describe what we added during the hackathon and cite the commits for each addition.
 
 Jana started on 8 October 2026. The baseline included its tutoring engine, authored curriculum packs, desktop
 shell and maths and unit checks.
