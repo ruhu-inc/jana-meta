@@ -109,10 +109,12 @@ offline study, not a fresh Glimmer reply. Earlier Physics and Companion rehearsa
 
 ## Hackathon contribution
 
-Jana started on **8 October 2026**. Its earlier tutoring engine, authored curriculum packs, desktop shell and
-maths/unit-checking tools were imported into this repository on **25 October 2026**, as baseline commit `7cf6c6ed`.
-The work below was recorded after that baseline. The dated entries and implementation commits identify the
-additions to the imported code. Dates follow the recorded commit dates.
+Hackathon development began on **26 October 2026** from the baseline imported on **25 October** (commit `7cf6c6ed`).
+The dated entries below identify what was already in that baseline and cite the implementation commits for each
+hackathon addition.
+
+Jana started on 8 October 2026. The baseline included its tutoring engine, authored curriculum packs, desktop
+shell and maths and unit checks.
 
 - **Muse Spark cloud integration** (October 26): moved the tutor's diagnosis, solving, checking and coaching
   roles onto Spark through the budgeted gateway (`4e299cdc`). The tutoring engine and maths tools existed before
@@ -176,8 +178,7 @@ additions to the imported code. Dates follow the recorded commit dates.
   describe those boundaries. This does not establish a signed desktop release or Windows installer acceptance.
 
 The October 25 baseline imports earlier Jana code without its prior Git history. The entries above distinguish
-those foundations from subsequent additions. Commit timestamps identify recorded revisions; they do not establish
-when all the underlying work began or define the event's eligibility period.
+those foundations from subsequent additions.
 
 **Changes visible in the psychology recording.** The recording follows the new document concept-map experience,
 original-PDF reader and rebuilt quiz interface within one revised Study workflow. The following commits identify
